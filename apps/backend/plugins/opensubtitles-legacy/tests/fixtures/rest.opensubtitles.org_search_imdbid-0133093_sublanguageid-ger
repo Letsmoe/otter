@@ -1,0 +1,80 @@
+[
+ {
+  "SubDownloadLink": "https://dl.opensubtitles.org/en/download/src-api/vrf-19c30c51/filead/1956098200.gz",
+  "SubFormat": "srt",
+  "SubLanguageID": "ger",
+  "ISO639": "de",
+  "SubFileName": "The.Matrix.1999.UHD2BD.1080p.german.srt",
+  "MovieReleaseName": "The.Matrix.1999.UHD2BD.1080p.german.srt",
+  "SubHearingImpaired": "0",
+  "SubAutoTranslation": "0",
+  "SubBad": "0",
+  "SubEncoding": "UTF-8",
+  "IDSubtitleFile": "1956098200"
+ },
+ {
+  "SubDownloadLink": "https://dl.opensubtitles.org/en/download/src-api/vrf-19c10c59/filead/1955162892.gz",
+  "SubFormat": "srt",
+  "SubLanguageID": "ger",
+  "ISO639": "de",
+  "SubFileName": "The Matrix 1999 Open Matte Theatrical Colors HDTV 720p x264 german.srt",
+  "MovieReleaseName": "The Matrix 1999 Open Matte Theatrical Colors HDTV 720p x264 german.srt",
+  "SubHearingImpaired": "0",
+  "SubAutoTranslation": "0",
+  "SubBad": "0",
+  "SubEncoding": "CP1252",
+  "IDSubtitleFile": "1955162892"
+ },
+ {
+  "SubDownloadLink": "https://dl.opensubtitles.org/en/download/src-api/vrf-1a020c67/filead/1956938885.gz",
+  "SubFormat": "srt",
+  "SubLanguageID": "ger",
+  "ISO639": "de",
+  "SubFileName": "1999_Matrix.deu.srt",
+  "MovieReleaseName": "dTV kabel1 color",
+  "SubHearingImpaired": "1",
+  "SubAutoTranslation": "0",
+  "SubBad": "0",
+  "SubEncoding": "UTF-8",
+  "IDSubtitleFile": "1956938885"
+ },
+ {
+  "SubDownloadLink": "https://dl.opensubtitles.org/en/download/src-api/vrf-de220b5c/filead/45899.gz",
+  "SubFormat": "srt",
+  "SubLanguageID": "ger",
+  "ISO639": "de",
+  "SubFileName": "_matrix_ger2.srt",
+  "MovieReleaseName": "Matrix, The (1999)",
+  "SubHearingImpaired": "1",
+  "SubAutoTranslation": "0",
+  "SubBad": "0",
+  "SubEncoding": "CP1252",
+  "IDSubtitleFile": "45899"
+ },
+ {
+  "SubDownloadLink": "https://dl.opensubtitles.org/en/download/src-api/vrf-19cd0c5b/filead/1962357971.gz",
+  "SubFormat": "srt",
+  "SubLanguageID": "ger",
+  "ISO639": "de",
+  "SubFileName": "Matrix (1999) {imdb-tt0133093} {tmdb-603}.de.sdh.srt",
+  "MovieReleaseName": " Matrix (1999) {imdb-tt0133093} {tmdb-603}",
+  "SubHearingImpaired": "1",
+  "SubAutoTranslation": "0",
+  "SubBad": "0",
+  "SubEncoding": "UTF-8",
+  "IDSubtitleFile": "1962357971"
+ },
+ {
+  "SubDownloadLink": "https://dl.opensubtitles.org/en/download/src-api/vrf-ddf10b4b/filead/20484.gz",
+  "SubFormat": "srt",
+  "SubLanguageID": "ger",
+  "ISO639": "de",
+  "SubFileName": "The Matrix German Subtitle.srt",
+  "MovieReleaseName": "The Matrix",
+  "SubHearingImpaired": "0",
+  "SubAutoTranslation": "0",
+  "SubBad": "0",
+  "SubEncoding": "CP1252",
+  "IDSubtitleFile": "20484"
+ }
+]

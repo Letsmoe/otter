@@ -152,12 +152,16 @@ func progressModel(entry *profiles.WatchEntry) *model.WatchProgress {
 
 func profileModel(profile profiles.Profile) *model.Profile {
 	return &model.Profile{
-		ID:        formatID(kindProfile, profile.ID),
-		Name:      profile.Name,
-		AvatarURL: optional(profile.AvatarURL),
-		HasPin:    profile.HasPin(),
-		IsChild:   profile.IsChild,
-		Languages: profile.LanguageList(),
+		ID:               formatID(kindProfile, profile.ID),
+		Name:             profile.Name,
+		AvatarURL:        optional(profile.AvatarURL),
+		HasPin:           profile.HasPin(),
+		IsChild:          profile.IsChild,
+		Languages:        profile.LanguageList(),
+		SubtitlesEnabled: profile.SubtitlesEnabled,
+		SubtitleLanguage: optional(profile.SubtitleLanguage),
+		SubtitleSize:     modelSubtitleSize(profile.SubtitleSize),
+		VoiceBoost:       profile.VoiceBoost,
 	}
 }
 

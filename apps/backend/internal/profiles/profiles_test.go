@@ -117,3 +117,69 @@ func TestLanguagesRejectsInvalidCodes(t *testing.T) {
 		}
 	}
 }
+
+func TestCaptionPreferencesDefaultAndUpdate(t *testing.T) {
+	ctx := context.Background()
+	service := newTestService(t)
+	created, err := service.Create(ctx, "Frank", "", "", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if created.SubtitlesEnabled || created.VoiceBoost || created.SubtitleSize != SubtitleSizeMedium || created.SubtitleLanguage != "" {
+		t.Fatalf("unexpected caption defaults: %+v", created)
+	}
+	if created.CaptionLanguage() != "de" {
+		t.Errorf("caption language falls back to the first audio language, got %q", created.CaptionLanguage())
+	}
+
+	enabled, size, language := true, SubtitleSizeLarge, "EN"
+	updated, err := service.Update(ctx, created.ID, Update{SubtitlesEnabled: &enabled, SubtitleSize: &size, SubtitleLanguage: &language})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !updated.SubtitlesEnabled || updated.SubtitleSize != SubtitleSizeLarge || updated.CaptionLanguage() != "en" {
+		t.Fatalf("unexpected profile after caption update: %+v", updated)
+	}
+
+	cleared := ""
+	updated, err = service.Update(ctx, created.ID, Update{SubtitleLanguage: &cleared})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.SubtitleLanguage != "" || !updated.SubtitlesEnabled || updated.CaptionLanguage() != "de" {
+		t.Fatalf("clearing the language should leave other fields alone: %+v", updated)
+	}
+}
+
+func TestCaptionPreferencesRejectInvalidValues(t *testing.T) {
+	ctx := context.Background()
+	service := newTestService(t)
+	created, err := service.Create(ctx, "Frank", "", "", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	badSize, badLanguage := "huge", "deu"
+	if _, err := service.Update(ctx, created.ID, Update{SubtitleSize: &badSize}); err == nil {
+		t.Error("expected an error for an unknown caption size")
+	}
+	if _, err := service.Update(ctx, created.ID, Update{SubtitleLanguage: &badLanguage}); err == nil {
+		t.Error("expected an error for a three-letter language code")
+	}
+}
+
+func TestVoiceBoostUpdate(t *testing.T) {
+	ctx := context.Background()
+	service := newTestService(t)
+	created, err := service.Create(ctx, "Frank", "", "", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	boost := true
+	updated, err := service.Update(ctx, created.ID, Update{VoiceBoost: &boost})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !updated.VoiceBoost {
+		t.Fatalf("voice boost should be on: %+v", updated)
+	}
+}

@@ -6,7 +6,11 @@ import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
 import java.util.Locale
 
-class TrackEntry(val label: String, val group: Tracks.Group, val trackIndex: Int, val selected: Boolean)
+class TrackEntry(val label: String, val group: Tracks.Group, val trackIndex: Int, val selected: Boolean) {
+
+    val formatId: String?
+        get() = group.getTrackFormat(trackIndex).id
+}
 
 /** Audio and subtitle tracks of the current stream. */
 class TrackCatalog(val audio: List<TrackEntry>, val subtitles: List<TrackEntry>) {
@@ -30,14 +34,15 @@ class TrackCatalog(val audio: List<TrackEntry>, val subtitles: List<TrackEntry>)
     }
 }
 
-fun readTrackCatalog(tracks: Tracks): TrackCatalog {
+/** [subtitles] name the external caption tracks, which the Chromecast receiver reports without labels. */
+fun readTrackCatalog(tracks: Tracks, subtitles: List<PlayerSubtitle> = emptyList()): TrackCatalog {
     return TrackCatalog(
-        audio = entriesOfType(tracks, C.TRACK_TYPE_AUDIO),
-        subtitles = entriesOfType(tracks, C.TRACK_TYPE_TEXT),
+        audio = entriesOfType(tracks, C.TRACK_TYPE_AUDIO, emptyList()),
+        subtitles = entriesOfType(tracks, C.TRACK_TYPE_TEXT, subtitles),
     )
 }
 
-private fun entriesOfType(tracks: Tracks, trackType: Int): List<TrackEntry> {
+private fun entriesOfType(tracks: Tracks, trackType: Int, subtitles: List<PlayerSubtitle>): List<TrackEntry> {
     val entries = mutableListOf<TrackEntry>()
     for (group in tracks.groups) {
         if (group.type != trackType) {
@@ -45,17 +50,21 @@ private fun entriesOfType(tracks: Tracks, trackType: Int): List<TrackEntry> {
         }
         for (trackIndex in 0 until group.length) {
             if (group.isTrackSupported(trackIndex)) {
-                entries.add(TrackEntry(trackLabel(group, trackIndex, entries.size), group, trackIndex, group.isTrackSelected(trackIndex)))
+                entries.add(TrackEntry(trackLabel(group, trackIndex, entries.size, subtitles), group, trackIndex, group.isTrackSelected(trackIndex)))
             }
         }
     }
     return entries
 }
 
-private fun trackLabel(group: Tracks.Group, trackIndex: Int, position: Int): String {
+private fun trackLabel(group: Tracks.Group, trackIndex: Int, position: Int, subtitles: List<PlayerSubtitle>): String {
     val format = group.getTrackFormat(trackIndex)
     if (!format.label.isNullOrEmpty()) {
         return format.label.orEmpty()
+    }
+    val subtitle = subtitles.firstOrNull { candidate -> candidate.matchesTrackId(format.id) }
+    if (subtitle != null) {
+        return subtitle.label
     }
     val language = format.language
     if (!language.isNullOrEmpty() && language != C.LANGUAGE_UNDETERMINED) {

@@ -31,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.Player
 import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
@@ -96,7 +97,7 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
     )
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {
-        VideoSurface(viewModel.player)
+        VideoSurface(viewModel.player, state.subtitleFraction)
         state.castDeviceName?.let { deviceName -> CastingBackdrop(deviceName) }
         PlayerTapSurface(
             onToggleControls = chrome::toggle,
@@ -160,7 +161,7 @@ private fun HideControlsAfterIdle(state: PlayerUiState, chrome: PlayerChrome, sh
 }
 
 @Composable
-private fun VideoSurface(player: Player) {
+private fun VideoSurface(player: Player, subtitleFraction: Float) {
     AndroidView(
         factory = { context ->
             PlayerView(context).apply {
@@ -168,11 +169,24 @@ private fun VideoSurface(player: Player) {
                 resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                 setShutterBackgroundColor(android.graphics.Color.BLACK)
                 this.player = player
+                subtitleView?.setStyle(captionStyle)
+                subtitleView?.setApplyEmbeddedFontSizes(false)
             }
         },
+        update = { view -> view.subtitleView?.setFractionalTextSize(subtitleFraction) },
         modifier = Modifier.fillMaxSize(),
     )
 }
+
+// White text with a dark outline stays readable on bright scenes.
+private val captionStyle = CaptionStyleCompat(
+    android.graphics.Color.WHITE,
+    android.graphics.Color.TRANSPARENT,
+    android.graphics.Color.TRANSPARENT,
+    CaptionStyleCompat.EDGE_TYPE_OUTLINE,
+    android.graphics.Color.BLACK,
+    null,
+)
 
 // The video runs on the TV; the phone shows where and keeps the controls.
 @Composable
@@ -225,7 +239,7 @@ private fun SheetContent(kind: PlayerSheetKind, state: PlayerUiState, viewModel:
             closeSheet()
             viewModel.chooseSource(sourceId)
         }
-        PlayerSheetKind.TRACKS -> TracksSheetContent(state, viewModel::chooseAudio, viewModel::chooseSubtitle)
+        PlayerSheetKind.TRACKS -> TracksSheetContent(state, viewModel::chooseAudio, viewModel::chooseSubtitle, viewModel::toggleVoiceBoost)
         PlayerSheetKind.EPISODES -> EpisodesSheetContent(state.episodes, state.mediaId) { episodeId ->
             closeSheet()
             viewModel.openEpisode(episodeId)

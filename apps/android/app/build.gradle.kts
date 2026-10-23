@@ -42,6 +42,11 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
 
+    testOptions {
+        // Media3 classes touch android.* statics that the unit test stub jar leaves empty.
+        unitTests.isReturnDefaultValues = true
+    }
+
     // libotter.so is the Go backend executable, not a library: it must be
     // extracted to nativeLibraryDir to be runnable.
     packaging {
@@ -92,4 +97,5 @@ dependencies {
     implementation(libs.haze.blur)
     implementation(libs.haze.glass)
     implementation(libs.phosphor.icons)
+    testImplementation(libs.junit)
 }

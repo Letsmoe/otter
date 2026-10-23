@@ -203,9 +203,12 @@ private fun StreamingGroup(viewModel: SettingsViewModel) {
 
 @Composable
 private fun PlaybackGroup() {
+    val profile by ProfileSession.activeProfile.collectAsStateWithLifecycle()
     var autoSkip by remember { mutableStateOf(PlaybackSettings.autoSkipIntro) }
     val options = AutoSkipIntro.entries.map { option -> option to option.label }
-    SettingsGroup("Playback", footer = "Intro and recap times come from TheIntroDB. The skip button shows either way.") {
+    val footer = "Intro and recap times come from TheIntroDB. The skip button shows either way. " +
+        "Captions and voice boost belong to the profile; voice boost only works on this phone, not while casting."
+    SettingsGroup("Playback", footer = footer) {
         Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("Skip intros automatically", fontSize = 14.sp)
@@ -215,6 +218,10 @@ private fun PlaybackGroup() {
                 autoSkip = choice
                 PlaybackSettings.autoSkipIntro = choice
             }, showLabel = false)
+        }
+        profile?.let { activeProfile ->
+            SettingsDivider()
+            CaptionSettingsRows(activeProfile)
         }
     }
 }

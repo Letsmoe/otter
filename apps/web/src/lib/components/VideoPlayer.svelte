@@ -5,9 +5,29 @@
 	import SpeakerHighIcon from 'phosphor-svelte/lib/SpeakerHighIcon';
 	import SpeakerXIcon from 'phosphor-svelte/lib/SpeakerXIcon';
 	import ArrowsOutIcon from 'phosphor-svelte/lib/ArrowsOutIcon';
+	import SubtitlesIcon from 'phosphor-svelte/lib/SubtitlesIcon';
+	import WaveformIcon from 'phosphor-svelte/lib/WaveformIcon';
+	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
+	import type Hls from 'hls.js';
 	import { get } from 'svelte/store';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile, type Profile } from '@neoworks-dev/otter-app/profile';
 	import { recordProgress } from '@neoworks-dev/otter-app/discovery';
+	import {
+		captionLanguageOf,
+		captionPreferencesOf,
+		defaultCaptionKey,
+		embeddedTrackLabel,
+		twoLetterLanguage,
+		type CaptionTrack
+	} from '@neoworks-dev/otter-app/captions';
+	import {
+		fetchSubtitles,
+		saveCaptionPreferences,
+		subtitleFileUrl,
+		type CaptionPreferenceChange,
+		type Subtitle
+	} from '@neoworks-dev/otter-app/subtitles';
+	import { createVoiceBoost, type VoiceBoost } from '$lib/voiceBoost';
 
 	interface Props {
 		src: string;
@@ -75,9 +95,177 @@
 		controlsVisible = true;
 		clearTimeout(hideTimer);
 		hideTimer = setTimeout(() => {
-			if (playing) controlsVisible = false;
+			if (playing && !captionMenuOpen) controlsVisible = false;
 		}, 3000);
 	}
+
+	// Captions ------------------------------------------------------------------
+
+	let preferences = $derived(captionPreferencesOf($activeProfile));
+	let profileId = $derived(idOf($activeProfile));
+
+	function idOf(profile: Profile | null): string | null {
+		if (!profile) return null;
+		return profile.id;
+	}
+
+	let externalSubtitles = $state<Subtitle[]>([]);
+	let embeddedTracks = $state<CaptionTrack[]>([]);
+	let selectedCaptionKey = $state<string | null>(null);
+	let captionMenuOpen = $state(false);
+	let captionMenuEl = $state<HTMLDivElement | undefined>();
+	// Set once the viewer picks a track or Off; the profile default stops applying.
+	let captionChosenByUser = false;
+	let hlsPlayer: Hls | null = null;
+
+	function externalTrackOf(subtitle: Subtitle): CaptionTrack {
+		return {
+			key: `external:${subtitle.id}`,
+			kind: 'external',
+			language: subtitle.language,
+			label: subtitle.label,
+			detail: subtitle.release
+		};
+	}
+
+	let captionTracks = $derived<CaptionTrack[]>([
+		...externalSubtitles.map(externalTrackOf),
+		...embeddedTracks
+	]);
+
+	function readEmbeddedTracks(player: Hls) {
+		embeddedTracks = player.subtitleTracks.map((track, index) => ({
+			key: `embedded:${index}`,
+			kind: 'embedded',
+			language: twoLetterLanguage(track.lang),
+			label: embeddedTrackLabel(track.name, track.lang, index),
+			detail: 'In the stream'
+		}));
+	}
+
+	function showExternalTrack(element: HTMLVideoElement, key: string | null) {
+		const externalIds = new Set(externalSubtitles.map((subtitle) => subtitle.id));
+		for (const textTrack of Array.from(element.textTracks)) {
+			if (!externalIds.has(textTrack.id)) continue;
+			textTrack.mode = 'disabled';
+			if (key === `external:${textTrack.id}`) textTrack.mode = 'showing';
+		}
+	}
+
+	function showEmbeddedTrack(player: Hls, key: string | null) {
+		if (key === null || !key.startsWith('embedded:')) {
+			player.subtitleDisplay = false;
+			return;
+		}
+		player.subtitleTrack = Number(key.slice('embedded:'.length));
+		player.subtitleDisplay = true;
+	}
+
+	function applyCaptionSelection(element: HTMLVideoElement, key: string | null) {
+		showExternalTrack(element, key);
+		if (hlsPlayer) showEmbeddedTrack(hlsPlayer, key);
+	}
+
+	function saveCaptionChange(change: CaptionPreferenceChange) {
+		if (!profileId) return;
+		saveCaptionPreferences(profileId, change).catch(() => {
+			// The choice still holds for this playback.
+		});
+	}
+
+	function chooseCaption(key: string | null) {
+		captionChosenByUser = true;
+		selectedCaptionKey = key;
+		captionMenuOpen = false;
+		if (key === null) {
+			saveCaptionChange({ subtitlesEnabled: false });
+			return;
+		}
+		const language = captionTracks.find((track) => track.key === key)?.language;
+		if (language) saveCaptionChange({ subtitlesEnabled: true, subtitleLanguage: language });
+		else saveCaptionChange({ subtitlesEnabled: true });
+	}
+
+	// The C key: Off when a track shows, otherwise the track the profile would get by default.
+	function toggleCaptions() {
+		if (selectedCaptionKey !== null) {
+			chooseCaption(null);
+			return;
+		}
+		const wanted = defaultCaptionKey(
+			captionTracks,
+			{ ...preferences, subtitlesEnabled: true },
+			captionLanguageOf($activeProfile)
+		);
+		if (wanted) chooseCaption(wanted);
+		else captionMenuOpen = captionTracks.length > 0;
+	}
+
+	function closeCaptionMenuOnOutsideClick(event: MouseEvent) {
+		if (!captionMenuOpen) return;
+		if (captionMenuEl?.contains(event.target as Node)) return;
+		captionMenuOpen = false;
+	}
+
+	$effect(() => {
+		const id = mediaId;
+		const forProfile = profileId;
+		externalSubtitles = [];
+		if (!id) return;
+		let cancelled = false;
+		fetchSubtitles(id, forProfile)
+			.then((subtitles) => {
+				if (!cancelled) externalSubtitles = subtitles;
+			})
+			.catch(() => {
+				// Playback goes on without external captions.
+			});
+		return () => {
+			cancelled = true;
+		};
+	});
+
+	$effect(() => {
+		if (captionChosenByUser) return;
+		selectedCaptionKey = defaultCaptionKey(
+			captionTracks,
+			preferences,
+			captionLanguageOf($activeProfile)
+		);
+	});
+
+	$effect(() => {
+		const element = videoEl;
+		const key = selectedCaptionKey;
+		// Re-apply when tracks appear: <track> elements render after the list changes.
+		void externalSubtitles;
+		void embeddedTracks;
+		if (element) applyCaptionSelection(element, key);
+	});
+
+	// Voice boost -----------------------------------------------------------------
+
+	let voiceBoostOn = $state(captionPreferencesOf(get(activeProfile)).voiceBoost);
+	let voiceBoost = $state<VoiceBoost | undefined>();
+
+	function toggleVoiceBoost() {
+		voiceBoostOn = !voiceBoostOn;
+		saveCaptionChange({ voiceBoost: voiceBoostOn });
+	}
+
+	$effect(() => {
+		if (!videoEl) return;
+		const boost = createVoiceBoost(videoEl);
+		voiceBoost = boost;
+		return () => {
+			boost.destroy();
+			voiceBoost = undefined;
+		};
+	});
+
+	$effect(() => {
+		voiceBoost?.setEnabled(voiceBoostOn);
+	});
 
 	function fmtTime(s: number): string {
 		if (!isFinite(s)) return '0:00';
@@ -134,7 +322,15 @@
 				e.preventDefault();
 				toggleMute();
 				break;
+			case 'c':
+				e.preventDefault();
+				toggleCaptions();
+				break;
 			case 'Escape':
+				if (captionMenuOpen) {
+					captionMenuOpen = false;
+					return;
+				}
 				close();
 				return;
 			case 'ArrowLeft':
@@ -149,25 +345,32 @@
 		showControls();
 	}
 
+	function attachHls(element: HTMLVideoElement, HlsPlayer: typeof Hls): Hls {
+		const player = new HlsPlayer();
+		player.loadSource(src);
+		player.attachMedia(element);
+		player.on(HlsPlayer.Events.MANIFEST_PARSED, () => {
+			readEmbeddedTracks(player);
+			element.play().catch(() => {});
+		});
+		player.on(HlsPlayer.Events.SUBTITLE_TRACKS_UPDATED, () => readEmbeddedTracks(player));
+		player.on(HlsPlayer.Events.ERROR, (_, data) => {
+			if (data.fatal) error = data.details ?? 'HLS playback error';
+		});
+		return player;
+	}
+
 	$effect(() => {
 		if (!videoEl) return;
 
 		const isHLS = mimeType.includes('mpegURL') || src.includes('.m3u8');
-		let hlsInstance: { destroy(): void } | null = null;
+		let destroyed = false;
 
 		if (isHLS) {
-			import('hls.js').then(({ default: Hls }) => {
-				if (!videoEl) return;
-				if (Hls.isSupported()) {
-					hlsInstance = new Hls();
-					(hlsInstance as InstanceType<typeof Hls>).loadSource(src);
-					(hlsInstance as InstanceType<typeof Hls>).attachMedia(videoEl);
-					(hlsInstance as InstanceType<typeof Hls>).on(Hls.Events.MANIFEST_PARSED, () => {
-						videoEl?.play().catch(() => {});
-					});
-					(hlsInstance as InstanceType<typeof Hls>).on(Hls.Events.ERROR, (_, data) => {
-						if (data.fatal) error = data.details ?? 'HLS playback error';
-					});
+			import('hls.js').then(({ default: HlsPlayer }) => {
+				if (!videoEl || destroyed) return;
+				if (HlsPlayer.isSupported()) {
+					hlsPlayer = attachHls(videoEl, HlsPlayer);
 				} else if (!window.MediaSource && videoEl.canPlayType('application/vnd.apple.mpegurl')) {
 					// Safari / iOS: no MSE, native HLS is the only option
 					videoEl.src = src;
@@ -182,12 +385,35 @@
 		}
 
 		return () => {
-			hlsInstance?.destroy();
+			destroyed = true;
+			hlsPlayer?.destroy();
+			hlsPlayer = null;
+			embeddedTracks = [];
 		};
 	});
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} onclick={closeCaptionMenuOnOutsideClick} />
+
+{#snippet captionOption(key: string | null, label: string, detail: string | null)}
+	<button
+		type="button"
+		role="menuitemradio"
+		aria-checked={selectedCaptionKey === key}
+		class="flex items-center gap-2 rounded-md px-3 py-2 text-left hover:bg-white/10"
+		onclick={() => chooseCaption(key)}
+	>
+		<span class="flex min-w-0 flex-1 flex-col">
+			<span class="truncate">{label}</span>
+			{#if detail}
+				<span class="truncate text-xs text-white/50">{detail}</span>
+			{/if}
+		</span>
+		{#if selectedCaptionKey === key}
+			<CheckIcon size={14} weight="bold" />
+		{/if}
+	</button>
+{/snippet}
 
 <!-- Fullscreen: z-[60] renders above MediaOverlay (z-50). Inline: embeds in-page. -->
 <div
@@ -243,7 +469,17 @@
 		}}
 		playsinline
 		crossorigin="anonymous"
+		data-caption-size={preferences.subtitleSize}
 	>
+		{#each externalSubtitles as subtitle (subtitle.id)}
+			<track
+				kind="subtitles"
+				id={subtitle.id}
+				src={subtitleFileUrl(subtitle.vttUrl)}
+				srclang={subtitle.language}
+				label={subtitle.label}
+			/>
+		{/each}
 	</video>
 
 	<!-- Buffering spinner -->
@@ -300,6 +536,52 @@
 
 			<div class="flex-1"></div>
 
+			<!-- Voice boost -->
+			<button
+				type="button"
+				class="flex h-8 w-8 flex-none items-center justify-center rounded-full transition-colors {voiceBoostOn
+					? 'bg-white text-black'
+					: 'text-white/70 hover:text-white'}"
+				onclick={toggleVoiceBoost}
+				aria-label="Voice boost"
+				aria-pressed={voiceBoostOn}
+				title="Voice boost"
+			>
+				<WaveformIcon size={16} weight="bold" />
+			</button>
+
+			<!-- Captions -->
+			<div class="relative" bind:this={captionMenuEl}>
+				<button
+					type="button"
+					class="flex h-8 w-8 flex-none items-center justify-center rounded-full transition-colors {selectedCaptionKey !==
+					null
+						? 'bg-white text-black'
+						: 'text-white/70 hover:text-white'}"
+					onclick={() => (captionMenuOpen = !captionMenuOpen)}
+					aria-label="Captions"
+					aria-haspopup="menu"
+					aria-expanded={captionMenuOpen}
+					title="Captions (C)"
+				>
+					<SubtitlesIcon size={16} weight="bold" />
+				</button>
+				{#if captionMenuOpen}
+					<div
+						role="menu"
+						class="absolute bottom-full right-0 mb-2 flex max-h-72 w-64 flex-col overflow-y-auto rounded-lg border border-white/10 bg-black/90 p-1 text-sm text-white"
+					>
+						{@render captionOption(null, 'Off', null)}
+						{#each captionTracks as track (track.key)}
+							{@render captionOption(track.key, track.label, track.detail)}
+						{/each}
+						{#if captionTracks.length === 0}
+							<p class="px-3 py-2 text-xs text-white/50">No captions found</p>
+						{/if}
+					</div>
+				{/if}
+			</div>
+
 			<!-- Volume -->
 			<div class="flex items-center gap-2">
 				<button
@@ -338,3 +620,16 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	/* Cue size follows the profile's caption size. */
+	video[data-caption-size='SMALL']::cue {
+		font-size: 75%;
+	}
+	video[data-caption-size='MEDIUM']::cue {
+		font-size: 100%;
+	}
+	video[data-caption-size='LARGE']::cue {
+		font-size: 140%;
+	}
+</style>

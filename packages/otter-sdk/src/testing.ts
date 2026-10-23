@@ -12,6 +12,8 @@ import type {
   SourceRetrieveParams,
   Stream,
   StreamListParams,
+  Subtitle,
+  SubtitleListParams,
   TitleFields,
 } from "./model.ts";
 import { PluginRuntime } from "./runtime.ts";
@@ -27,6 +29,7 @@ export interface TestPlugin {
   ctx: PluginContext;
   streams: { list(params: StreamListParams): Promise<List<Stream>> };
   sources: { retrieve(params: SourceRetrieveParams): Promise<Source> };
+  subtitles: { list(params: SubtitleListParams): Promise<List<Subtitle>> };
 }
 
 /** Calls the plugin's handlers the way the backend would, and returns the completed objects. */
@@ -36,6 +39,7 @@ export function testPlugin(definition: PluginDefinition, options: TestPluginOpti
     ctx: runtime.ctx,
     streams: { list: (params) => runtime.listStreams(params) },
     sources: { retrieve: (params) => runtime.retrieveSource(params) },
+    subtitles: { list: (params) => runtime.listSubtitles(params) },
   };
 }
 

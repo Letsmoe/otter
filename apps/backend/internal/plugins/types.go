@@ -7,11 +7,13 @@ import (
 
 type Capability string
 
-// Otter plugins do exactly two things: find stream links for a title TMDB
-// already identified, and turn a hoster link into a playable media URL.
+// Otter plugins do exactly three things: find stream links for a title TMDB
+// already identified, turn a hoster link into a playable media URL, and find
+// subtitle files for a title.
 const (
-	CapabilityStreams Capability = "streams"
-	CapabilityResolve Capability = "resolve"
+	CapabilityStreams   Capability = "streams"
+	CapabilityResolve   Capability = "resolve"
+	CapabilitySubtitles Capability = "subtitles"
 )
 
 type MediaType string
@@ -175,4 +177,36 @@ type Download struct {
 	Format    string  `json:"format,omitempty"`
 	SizeBytes int64   `json:"size_bytes,omitempty"`
 	SpeedBps  float64 `json:"speed_bps,omitempty"`
+}
+
+// SubtitlesArgs is passed to a plugin's subtitles capability: the title the
+// way StreamsArgs describes it, plus the languages the profile wants.
+type SubtitlesArgs struct {
+	MediaType     MediaType `json:"media_type"`
+	Title         string    `json:"title"`
+	OriginalTitle string    `json:"original_title,omitempty"`
+	Year          int       `json:"year,omitempty"`
+	TMDBID        int       `json:"tmdb_id,omitempty"`
+	IMDBID        string    `json:"imdb_id,omitempty"`
+	SeasonNumber  int       `json:"season_number,omitempty"`
+	EpisodeNumber int       `json:"episode_number,omitempty"`
+	// Languages are the preferred ISO 639-1 codes, most preferred first.
+	Languages []string `json:"languages,omitempty"`
+}
+
+// SubtitlesResult is returned by a plugin's subtitles capability.
+type SubtitlesResult struct {
+	Subtitles []SubtitleFile `json:"subtitles"`
+}
+
+// SubtitleFile is one downloadable caption file.
+type SubtitleFile struct {
+	URL      string `json:"url"`
+	Language string `json:"language"` // ISO 639-1
+	Format   string `json:"format"`   // "srt" | "vtt"
+	Label    string `json:"label,omitempty"`
+	// Release is the release name the file was made for.
+	Release         string            `json:"release,omitempty"`
+	HearingImpaired bool              `json:"hearing_impaired,omitempty"`
+	Headers         map[string]string `json:"headers,omitempty"`
 }

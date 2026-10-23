@@ -13,18 +13,29 @@ import androidx.media3.common.Player
 import androidx.media3.common.Tracks
 import androidx.media3.exoplayer.ExoPlayer
 import dev.neoworks.otter.cast.CastKeepAliveService
+import dev.neoworks.otter.cast.CastCaptionSelector
 import dev.neoworks.otter.cast.CastSetup
 import dev.neoworks.otter.cast.DlnaPlayer
 import dev.neoworks.otter.cast.DlnaRenderer
 import dev.neoworks.otter.cast.LanMediaItemConverter
+import dev.neoworks.otter.cast.TelevisionSubtitleFile
 import dev.neoworks.otter.downloads.DownloadItem
 import dev.neoworks.otter.downloads.DownloadsRepository
+import dev.neoworks.otter.graphql.fragment.ProfileFields
+import dev.neoworks.otter.graphql.type.SubtitleSize
+import dev.neoworks.otter.profiles.captionLanguage
+import dev.neoworks.otter.profiles.PreferenceChange
+import dev.neoworks.otter.profiles.ProfilePreferences
 import dev.neoworks.otter.profiles.ProfileSession
 import dev.neoworks.otter.settings.PlaybackSettings
 import dev.neoworks.otter.together.MediaPayload
 import dev.neoworks.otter.together.PlayerReport
 import dev.neoworks.otter.together.TogetherSession
+import dev.neoworks.otter.ui.player.audio.VoiceBoostAudioProcessor
+import dev.neoworks.otter.ui.player.audio.VoiceBoostRenderersFactory
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,17 +43,22 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 private const val POSITION_POLL_MILLISECONDS = 250L
 // Matches the end screen's countdown.
 private const val NEXT_EPISODE_DELAY_MILLISECONDS = 8000L
+// Playback starts without captions when the backend needs longer than this to find them.
+private const val SUBTITLE_WAIT_MILLISECONDS = 8000L
 
 /** Owns the ExoPlayer so playback survives rotation, and everything around it: sources, resume, progress, Watch Together. */
 class PlayerViewModel(application: Application, private val request: PlayerRequest) :
     AndroidViewModel(application), TogetherPlayerHost {
 
+    private val voiceBoost = VoiceBoostAudioProcessor()
+
     // Plays on the phone, or on a Chromecast once one is picked in the cast menu.
-    val player: Player = buildPlayer(application)
+    val player: Player = buildPlayer(application, voiceBoost)
 
     // Set while a DLNA TV plays; every control then goes to it.
     private var televisionPlayer: DlnaPlayer? = null
@@ -74,6 +90,10 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
     val skipButton: StateFlow<SkipJump?> = mutableSkipButton
 
     private var trackCatalog = TrackCatalog.Empty
+    private var subtitles: List<PlayerSubtitle> = emptyList()
+    private var subtitlesLoad: Deferred<List<PlayerSubtitle>>? = null
+    // The captions on screen (phone, Chromecast) or on the TV; null when off.
+    private var shownSubtitle: PlayerSubtitle? = null
     private var playing: PlayingSource? = null
     private var media: PlayerMedia? = null
     private var attachJob: Job? = null
@@ -125,6 +145,7 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
         viewModelScope.launch { pollPosition() }
         viewModelScope.launch { followHolding() }
         viewModelScope.launch { followRemoteMedia() }
+        viewModelScope.launch { ProfileSession.activeProfile.collect(::onProfileChanged) }
         togetherSync.start()
         openMedia(request.mediaId, initial = true)
     }
@@ -143,6 +164,7 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
         mutableSkipButton.value = null
         clearPlayers()
         trackCatalog = TrackCatalog.Empty
+        startSubtitleLoad(mediaId)
         mutableState.update { fresh(mediaId, it) }
         mutablePosition.value = PlaybackPosition()
         loadMediaInfo(mediaId)
@@ -157,6 +179,8 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
             episodes = previous.episodes,
             castDeviceName = previous.castDeviceName,
             castsToTelevision = previous.castsToTelevision,
+            voiceBoost = previous.voiceBoost,
+            subtitleFraction = previous.subtitleFraction,
         )
     }
 
@@ -292,9 +316,12 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
         attachJob?.cancel()
         attachJob = viewModelScope.launch {
             val resumeSeconds = resumeSecondsFor(currentMediaId)
-            val mediaItem = source.toMediaItem().buildUpon()
+            subtitles = awaitSubtitles()
+            val mediaItem = source.toMediaItem(subtitles).buildUpon()
                 .setMediaMetadata(MediaMetadata.Builder().setTitle(mutableState.value.title).build())
                 .build()
+            shownSubtitle = defaultSubtitle()
+            applyCaptionSelection(player, ProfileSession.activeProfile.value)
             loadIntoPlayers(mediaItem, (resumeSeconds * 1000).toLong())
             mutableState.update { current ->
                 current.copy(hasSource = true, isBuffering = true, hasEnded = false, playbackError = null, wantPlaying = true, previewable = !source.isHls())
@@ -314,7 +341,9 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
             return
         }
         television.setMediaItem(mediaItem, startMilliseconds)
+        television.showSubtitle(televisionSubtitleFile())
         television.prepare()
+        showTelevisionTracks()
     }
 
     private suspend fun resumeSecondsFor(mediaId: String): Double {
@@ -470,6 +499,8 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
             return
         }
         val application = getApplication<Application>()
+        // Each output keeps its own track selection, so the profile's caption choice is handed over.
+        applyCaptionSelection(player, ProfileSession.activeProfile.value)
         if (deviceInfo.playbackType != DeviceInfo.PLAYBACK_TYPE_REMOTE) {
             CastKeepAliveService.stop(application)
             mutableState.update { current -> current.copy(castDeviceName = null) }
@@ -500,7 +531,9 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
         }
         CastKeepAliveService.start(application, renderer.name)
         television.setMediaItem(mediaItem, positionMilliseconds)
+        television.showSubtitle(televisionSubtitleFile())
         television.prepare()
+        showTelevisionTracks()
         applyIntent()
     }
 
@@ -515,6 +548,7 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
         CastKeepAliveService.stop(getApplication())
         mutableState.update { current -> current.copy(castDeviceName = null, castsToTelevision = false, playbackError = null) }
         player.seekTo(positionMilliseconds)
+        applyCaptionSelection(player, ProfileSession.activeProfile.value)
         player.prepare()
         applyIntent()
     }
@@ -548,7 +582,14 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
     // Tracks -----------------------------------------------------------------
 
     private fun onTracksRead(tracks: Tracks) {
-        trackCatalog = readTrackCatalog(tracks)
+        if (televisionPlayer != null) {
+            showTelevisionTracks()
+            return
+        }
+        trackCatalog = readTrackCatalog(tracks, subtitles)
+        if (trackCatalog.subtitles.isNotEmpty()) {
+            shownSubtitle = subtitleOf(trackCatalog.subtitles.getOrNull(trackCatalog.selectedSubtitleIndex))
+        }
         mutableState.update { current ->
             current.copy(
                 audioTracks = trackCatalog.audioOptions,
@@ -566,8 +607,112 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
     }
 
     fun chooseSubtitle(index: Int) {
-        selectSubtitleTrack(activePlayer, trackCatalog.subtitles.getOrNull(index))
+        val television = televisionPlayer
+        if (television != null) {
+            chooseTelevisionSubtitle(television, index)
+            return
+        }
+        val entry = trackCatalog.subtitles.getOrNull(index)
+        selectSubtitleTrack(activePlayer, entry)
         mutableState.update { current -> current.copy(selectedSubtitleIndex = index) }
+        rememberCaptionChoice(subtitleOf(entry))
+    }
+
+    private fun chooseTelevisionSubtitle(television: DlnaPlayer, index: Int) {
+        val subtitle = subtitles.getOrNull(index)
+        television.showSubtitle(subtitleFile(subtitle))
+        mutableState.update { current -> current.copy(selectedSubtitleIndex = index) }
+        rememberCaptionChoice(subtitle)
+    }
+
+    // The TV has no tracks of its own: the caption files are the choices.
+    private fun showTelevisionTracks() {
+        val selectedIndex = subtitles.indexOfFirst { subtitle -> subtitle.id == shownSubtitle?.id }
+        mutableState.update { current ->
+            current.copy(
+                audioTracks = emptyList(),
+                subtitleTracks = subtitles.mapIndexed { index, subtitle -> TrackOption(index, subtitle.label) },
+                selectedAudioIndex = 0,
+                selectedSubtitleIndex = selectedIndex,
+            )
+        }
+    }
+
+    private fun subtitleOf(entry: TrackEntry?): PlayerSubtitle? {
+        if (entry == null) {
+            return null
+        }
+        return subtitles.firstOrNull { subtitle -> subtitle.matchesTrackId(entry.formatId) }
+    }
+
+    // The next titles start the same way: on in this language, or off.
+    private fun rememberCaptionChoice(subtitle: PlayerSubtitle?) {
+        shownSubtitle = subtitle
+        if (subtitle == null) {
+            ProfilePreferences.change(PreferenceChange(subtitlesEnabled = false))
+            return
+        }
+        ProfilePreferences.change(PreferenceChange(subtitlesEnabled = true, subtitleLanguage = subtitle.language))
+    }
+
+    private fun televisionSubtitleFile(): TelevisionSubtitleFile? {
+        return subtitleFile(shownSubtitle)
+    }
+
+    private fun subtitleFile(subtitle: PlayerSubtitle?): TelevisionSubtitleFile? {
+        if (subtitle == null) {
+            return null
+        }
+        return TelevisionSubtitleFile(subtitle.id, subtitle.srtPath)
+    }
+
+    // Subtitles -------------------------------------------------------------------
+
+    private fun startSubtitleLoad(mediaId: String) {
+        subtitlesLoad?.cancel()
+        subtitles = emptyList()
+        shownSubtitle = null
+        subtitlesLoad = viewModelScope.async { loadSubtitlesOfProfile(mediaId) }
+    }
+
+    private suspend fun loadSubtitlesOfProfile(mediaId: String): List<PlayerSubtitle> {
+        val profileId = ProfileSession.activeProfile.value?.id ?: return emptyList()
+        return loadSubtitles(mediaId, profileId)
+    }
+
+    private suspend fun awaitSubtitles(): List<PlayerSubtitle> {
+        val load = subtitlesLoad ?: return emptyList()
+        return withTimeoutOrNull(SUBTITLE_WAIT_MILLISECONDS) { load.await() }.orEmpty()
+    }
+
+    // The captions the profile asks for, before the player has read any track.
+    private fun defaultSubtitle(): PlayerSubtitle? {
+        val profile = ProfileSession.activeProfile.value ?: return null
+        if (!profile.subtitlesEnabled) {
+            return null
+        }
+        return subtitles.firstOrNull { subtitle -> subtitle.language.equals(profile.captionLanguage(), ignoreCase = true) }
+    }
+
+    // Profile ------------------------------------------------------------------------
+
+    private fun onProfileChanged(profile: ProfileFields?) {
+        voiceBoost.enabled = profile?.voiceBoost == true
+        mutableState.update { current ->
+            current.copy(voiceBoost = voiceBoost.enabled, subtitleFraction = subtitleFractionOf(profile))
+        }
+    }
+
+    private fun subtitleFractionOf(profile: ProfileFields?): Float {
+        if (profile == null) {
+            return subtitleTextFraction(SubtitleSize.MEDIUM)
+        }
+        return subtitleTextFraction(profile.subtitleSize)
+    }
+
+    /** Dialogue boost on or off for every title of the profile. */
+    fun toggleVoiceBoost() {
+        ProfilePreferences.change(PreferenceChange(voiceBoost = !voiceBoost.enabled))
     }
 
     // Position, progress and frame preview -------------------------------------
@@ -701,11 +846,12 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
     }
 }
 
-private fun buildPlayer(application: Application): Player {
-    val localPlayer = ExoPlayer.Builder(application).build()
+private fun buildPlayer(application: Application, voiceBoost: VoiceBoostAudioProcessor): Player {
+    val localPlayer = ExoPlayer.Builder(application, VoiceBoostRenderersFactory(application, voiceBoost)).build()
     return try {
         val remotePlayer = RemoteCastPlayer.Builder(application)
             .setMediaItemConverter(LanMediaItemConverter(application))
+            .setTrackSelector(CastCaptionSelector())
             .build()
         CastPlayer.Builder(application).setLocalPlayer(localPlayer).setRemotePlayer(remotePlayer).build()
     } catch (error: Exception) {

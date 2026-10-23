@@ -2,7 +2,7 @@ import { writeSync } from "fs";
 import type { PluginDefinition } from "./definition.ts";
 import { OtterError } from "./errors.ts";
 import { handlersOf, isPluginDefinition, type PluginHandlers } from "./runtime.ts";
-import type { PluginMeta, ResolveResult, StreamsArgs, StreamsResult } from "./types.ts";
+import type { PluginMeta, ResolveResult, StreamsArgs, StreamsResult, SubtitlesArgs, SubtitlesResult } from "./types.ts";
 
 export type { PluginHandlers };
 
@@ -37,6 +37,11 @@ async function dispatch(handlers: PluginHandlers, input: Invocation): Promise<ne
   if (input.capability === "streams") {
     if (!handlers.streams) fail("streams not implemented");
     respond<StreamsResult>(await handlers.streams(input.args as unknown as StreamsArgs));
+  }
+
+  if (input.capability === "subtitles") {
+    if (!handlers.subtitles) fail("subtitles not implemented");
+    respond<SubtitlesResult>(await handlers.subtitles(input.args as unknown as SubtitlesArgs));
   }
 
   if (input.capability === "resolve") {

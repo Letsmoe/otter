@@ -9,6 +9,8 @@ import type {
   SourceRetrieveParams,
   StreamInput,
   StreamListParams,
+  SubtitleInput,
+  SubtitleListParams,
 } from "./model.ts";
 import type { PluginSettingField } from "./types.ts";
 
@@ -38,6 +40,11 @@ export interface StreamsCapability {
   list(params: StreamListParams, ctx: PluginContext): Promise<List<StreamInput>>;
 }
 
+export interface SubtitlesCapability {
+  /** Finds caption files for a movie or episode. Finding none is an empty list, not an error. */
+  list(params: SubtitleListParams, ctx: PluginContext): Promise<List<SubtitleInput>>;
+}
+
 export interface SourcesCapability {
   /** Hostnames of the links this plugin can turn into media URLs. */
   domains: string[];
@@ -65,6 +72,7 @@ export interface PluginDefinition {
   requires_solver?: boolean;
   streams?: StreamsCapability;
   sources?: SourcesCapability;
+  subtitles?: SubtitlesCapability;
 }
 
 /** Declares a plugin. Does nothing else: `runPlugin(plugin)` in the bundle entry runs it. */

@@ -10,6 +10,12 @@ export interface Profile {
 	isChild: boolean;
 	// Missing on profiles stored before languages existed.
 	languages?: string[];
+	// The caption and sound preferences are missing on profiles stored before they existed.
+	subtitlesEnabled?: boolean;
+	// ISO 639-1; null means the first audio language.
+	subtitleLanguage?: string | null;
+	subtitleSize?: 'SMALL' | 'MEDIUM' | 'LARGE';
+	voiceBoost?: boolean;
 }
 
 // Bumped with the profile shape change so stale stored profiles are dropped.
@@ -25,13 +31,22 @@ function readStoredProfile(): Profile | null {
 }
 
 function createProfileStore() {
-	const { subscribe, set } = writable<Profile | null>(readStoredProfile());
+	const { subscribe, set, update } = writable<Profile | null>(readStoredProfile());
 
 	return {
 		subscribe,
 		login(profile: Profile) {
 			if (browser) localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
 			set(profile);
+		},
+		// Applies changes to the signed-in profile, e.g. after the player saved a preference.
+		update(changes: Partial<Profile>) {
+			update((current) => {
+				if (!current) return current;
+				const updated = { ...current, ...changes };
+				if (browser) localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+				return updated;
+			});
 		},
 		logout() {
 			if (browser) localStorage.removeItem(STORAGE_KEY);

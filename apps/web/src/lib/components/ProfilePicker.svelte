@@ -19,7 +19,18 @@
 		loading = true;
 		try {
 			const data = await otter.query({
-				profiles: { id: true, name: true, avatarUrl: true, hasPin: true, isChild: true, languages: true }
+				profiles: {
+					id: true,
+					name: true,
+					avatarUrl: true,
+					hasPin: true,
+					isChild: true,
+					languages: true,
+					subtitlesEnabled: true,
+					subtitleLanguage: true,
+					subtitleSize: true,
+					voiceBoost: true
+				}
 			});
 			profiles = data.profiles;
 		} catch {

@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.Check
+import dev.neoworks.otter.ui.components.OtterSwitch
 
 @Composable
 fun SpeedSheetContent(speed: Float, onChange: (Float) -> Unit) {
@@ -88,11 +89,26 @@ private fun CheckSlot(checked: Boolean) {
 
 /** Audio and subtitle tracks of the current stream, in two columns. Mirrors TracksSheet.svelte. */
 @Composable
-fun TracksSheetContent(state: PlayerUiState, onAudio: (Int) -> Unit, onSubtitle: (Int) -> Unit) {
+fun TracksSheetContent(state: PlayerUiState, onAudio: (Int) -> Unit, onSubtitle: (Int) -> Unit, onVoiceBoost: () -> Unit) {
     Row(Modifier.fillMaxSize().padding(horizontal = 40.dp, vertical = 24.dp), horizontalArrangement = Arrangement.spacedBy(40.dp)) {
-        TrackColumn("Audio", state.audioTracks, state.selectedAudioIndex, "Original", onAudio, Modifier.weight(1f))
+        TrackColumn("Audio", state.audioTracks, state.selectedAudioIndex, "Original", onAudio, Modifier.weight(1f)) {
+            if (state.canBoostVoice) {
+                VoiceBoostRow(state.voiceBoost, onVoiceBoost)
+            }
+        }
         val subtitleOptions = listOf(TrackOption(-1, "Off")) + state.subtitleTracks
         TrackColumn("Subtitles", subtitleOptions, state.selectedSubtitleIndex, null, onSubtitle, Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun VoiceBoostRow(enabled: Boolean, onToggle: () -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("Voice boost", fontWeight = FontWeight.SemiBold)
+            Text("Dialogue over music and effects", color = Color.White.copy(alpha = 0.55f), fontSize = 12.sp)
+        }
+        OtterSwitch(enabled) { onToggle() }
     }
 }
 
@@ -104,9 +120,11 @@ private fun TrackColumn(
     emptyText: String?,
     onChoose: (Int) -> Unit,
     modifier: Modifier,
+    extra: @Composable () -> Unit = {},
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(heading, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        extra()
         if (options.isEmpty() && emptyText != null) {
             Text(emptyText, color = Color.White.copy(alpha = 0.55f), modifier = Modifier.padding(vertical = 10.dp))
         }

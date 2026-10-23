@@ -248,6 +248,52 @@ type Profile {
   Audio languages, most preferred first (ISO 639-1, e.g. de, en). Links in these languages are tried first, dubs before subs.
   """
   languages: [String!]!
+
+  """Show captions by default"""
+  subtitlesEnabled: Boolean!
+
+  """
+  Preferred caption language (ISO 639-1); null = the profile's first language
+  """
+  subtitleLanguage: String
+  subtitleSize: SubtitleSize!
+
+  """Boost dialogue over music and effects"""
+  voiceBoost: Boolean!
+}
+
+"""
+An external subtitle file for a movie or episode, found by a subtitles plugin.
+"""
+type Subtitle {
+  id: ID!
+
+  """ISO 639-1, e.g. de, en"""
+  language: String!
+
+  """Display label, e.g. 'Deutsch' or 'English (SDH)'"""
+  label: String!
+
+  """Release name the file was made for, when the source says"""
+  release: String
+  hearingImpaired: Boolean!
+
+  """Plugin that found it"""
+  source: String!
+
+  """
+  Path on the backend, e.g. /api/subtitles/<id>.vtt; clients prefix their backend origin
+  """
+  vttUrl: String!
+
+  """Same file as SRT (for DLNA TVs), /api/subtitles/<id>.srt"""
+  srtUrl: String!
+}
+
+enum SubtitleSize {
+  SMALL
+  MEDIUM
+  LARGE
 }
 
 type PinCheck {
@@ -521,6 +567,11 @@ type Query {
 
   """The open Watch Together room, if any."""
   togetherRoom: TogetherRoom
+
+  """
+  Subtitle files for a movie or episode (same id as streams/findStreams), best first. Ranked by the profile's caption language, then its other languages; at most 3 per language. Asks subtitles plugins when nothing fresh is stored.
+  """
+  subtitles(mediaId: ID!, profileId: ID): [Subtitle!]!
   profiles: [Profile!]!
   settings: Settings!
 
@@ -582,9 +633,9 @@ type Mutation {
   createProfile(name: String!, avatarUrl: String, pin: String, isChild: Boolean = false, languages: [String!]): Profile!
 
   """
-  Changes the given fields; omitted fields stay. An empty pin removes the PIN.
+  Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it.
   """
-  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!]): Profile!
+  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, voiceBoost: Boolean): Profile!
   deleteProfile(id: ID!): Boolean!
   verifyPin(profileId: ID!, pin: String!): PinCheck!
   updateSettings(input: SettingsInput!): Settings!

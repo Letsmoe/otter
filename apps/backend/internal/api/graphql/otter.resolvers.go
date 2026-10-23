@@ -296,12 +296,16 @@ func (r *mutationResolver) CreateProfile(ctx context.Context, name string, avata
 }
 
 // UpdateProfile is the resolver for the updateProfile field.
-func (r *mutationResolver) UpdateProfile(ctx context.Context, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string) (*model.Profile, error) {
+func (r *mutationResolver) UpdateProfile(ctx context.Context, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, voiceBoost *bool) (*model.Profile, error) {
 	profileID, err := parseProfile(id)
 	if err != nil {
 		return nil, err
 	}
-	update := profiles.Update{Name: name, AvatarURL: avatarURL, IsChild: isChild, Pin: pin}
+	update := captionUpdate(subtitlesEnabled, subtitleLanguage, subtitleSize, voiceBoost)
+	update.Name = name
+	update.AvatarURL = avatarURL
+	update.IsChild = isChild
+	update.Pin = pin
 	// A null list leaves the languages as they are.
 	if languages != nil {
 		update.Languages = &languages
@@ -737,6 +741,27 @@ func (r *queryResolver) DownloadsFolder(ctx context.Context) (*string, error) {
 // TogetherRoom is the resolver for the togetherRoom field.
 func (r *queryResolver) TogetherRoom(ctx context.Context) (*model.TogetherRoom, error) {
 	return togetherRoomModel(r.Services.Together.Current()), nil
+}
+
+// Subtitles is the resolver for the subtitles field.
+func (r *queryResolver) Subtitles(ctx context.Context, mediaID string, profileID *string) ([]*model.Subtitle, error) {
+	ref, err := parseMedia(mediaID, library.MediaTypeMovie, library.MediaTypeEpisode)
+	if err != nil {
+		return nil, err
+	}
+	languages, err := r.captionLanguages(ctx, profileID)
+	if err != nil {
+		return nil, err
+	}
+	files, err := r.Services.Subtitles.Find(ctx, ref, languages)
+	if err != nil {
+		return nil, err
+	}
+	models := make([]*model.Subtitle, 0, len(files))
+	for _, file := range files {
+		models = append(models, subtitleModel(file))
+	}
+	return models, nil
 }
 
 // Profiles is the resolver for the profiles field.

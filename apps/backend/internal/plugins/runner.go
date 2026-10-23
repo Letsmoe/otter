@@ -151,6 +151,19 @@ func (r *Runner) Streams(ctx context.Context, p *Plugin, args StreamsArgs) (*Str
 	return &result, json.Unmarshal(raw, &result)
 }
 
+// Subtitles asks a plugin for the caption files it can find for one title.
+func (r *Runner) Subtitles(ctx context.Context, p *Plugin, args SubtitlesArgs) (*SubtitlesResult, error) {
+	if !p.Meta.Has(CapabilitySubtitles) {
+		return nil, fmt.Errorf("plugin %q does not support subtitles", p.Meta.Name)
+	}
+	raw, err := r.invoke(ctx, p, CapabilitySubtitles, args)
+	if err != nil {
+		return nil, err
+	}
+	var result SubtitlesResult
+	return &result, json.Unmarshal(raw, &result)
+}
+
 // Resolve turns a hoster link into a playable media URL.
 func (r *Runner) Resolve(ctx context.Context, p *Plugin, url string) (*ResolveResult, error) {
 	if !p.Meta.Has(CapabilityResolve) {

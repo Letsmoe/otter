@@ -59,7 +59,7 @@ require (
 	github.com/urfave/cli/v3 v3.8.0 // indirect
 	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
-	golang.org/x/text v0.42.0 // indirect
+	golang.org/x/text v0.42.0
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.49.0 // indirect
 	modernc.org/libc v1.75.7 // indirect

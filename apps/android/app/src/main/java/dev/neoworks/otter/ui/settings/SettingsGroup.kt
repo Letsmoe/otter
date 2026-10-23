@@ -2,6 +2,7 @@ package dev.neoworks.otter.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -9,11 +10,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.neoworks.otter.ui.components.OtterSwitch
 import dev.neoworks.otter.ui.components.frostedGlass
 
 /**
@@ -41,4 +44,16 @@ fun SettingsGroup(title: String, modifier: Modifier = Modifier, footer: String? 
 @Composable
 fun SettingsDivider() {
     HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+}
+
+/** A title with a one-line description and an on/off switch. */
+@Composable
+fun SettingsSwitchRow(title: String, description: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(title, fontSize = 14.sp)
+            Text(description, fontSize = 12.sp, color = Color.White.copy(alpha = 0.45f))
+        }
+        OtterSwitch(checked, onCheckedChange)
+    }
 }

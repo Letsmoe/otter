@@ -39,7 +39,11 @@
 					avatarUrl: true,
 					hasPin: true,
 					isChild: true,
-					languages: true
+					languages: true,
+					subtitlesEnabled: true,
+					subtitleLanguage: true,
+					subtitleSize: true,
+					voiceBoost: true
 				}
 			});
 			oncreated(data.createProfile);

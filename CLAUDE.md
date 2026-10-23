@@ -70,7 +70,8 @@ Hardcoded in `internal/library` — there is no flow engine:
 
 1. **TMDB**: `EnsureTitle` fetches a movie/series once (detail + credits + keywords + videos + TMDB recommendations in one request) and stores it; list results (search, trending, related, filmographies) are stored as stubs.
 2. **Streaming sites**: `FindStreams` asks every `streams` plugin in parallel; each plugin's links are stored and pushed to `Subscription.streams` as they arrive. Links are resolved to playable URLs on play (`resolveStream` → `resolve` plugins → stream proxy).
-3. **Related**: TMDB's recommendations become `related` edges (source `tmdb`); the director's and lead actors' filmographies become `people` edges.
+3. **Subtitles**: on play, the apps ask `subtitles(mediaId, profileId)`; `subtitles` plugins are asked when nothing fresh is stored. Captions go to Chromecast as text tracks and to DLNA TVs via DIDL hints plus Samsung's `CaptionInfo.sec` header (stream URL param `subtitle=<id>`). Voice boost is client-side audio processing (Media3 `AudioProcessor`, Web Audio), so it can't apply while casting.
+4. **Related**: TMDB's recommendations become `related` edges (source `tmdb`); the director's and lead actors' filmographies become `people` edges.
 
 `internal/recommend` ranks everything stored against a per-profile, time-decayed taste profile (ratings, watches, watchlist) and groups results into reason rows ("Because you watched X").
 
@@ -84,6 +85,7 @@ Plugins are TypeScript packages in `apps/backend/plugins/<name>/`. `bun scripts/
 
 - `streams` — receives `StreamsArgs` (TMDB-known title: title, original title, year, tmdb/imdb id, season/episode numbers), locates it on the site and returns `{ downloads: Download[] }`
 - `resolve` — receives a hoster URL (matched by `meta.domains`, `"*"` = fallback) and returns a playable `ResolveResult` (url, mime type, headers)
+- `subtitles` — receives `SubtitlesArgs` (`StreamsArgs` + preferred `languages`) and returns `{ subtitles: SubtitleFile[] }` (url, ISO 639-1 language, format, release, headers). `internal/subtitles` asks all of them in parallel, ranks by the profile's caption language, cleans the files (encoding, broken timestamps, ad cues) and serves them as `/api/subtitles/<id>.vtt|.srt[?offset=ms]` on the API and LAN servers
 
 **Protocol** (stdin/stdout JSON):
 

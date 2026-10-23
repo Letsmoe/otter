@@ -36,6 +36,7 @@ import (
 	"github.com/neoworks/otter/internal/skips"
 	"github.com/neoworks/otter/internal/storage"
 	"github.com/neoworks/otter/internal/stream"
+	"github.com/neoworks/otter/internal/subtitles"
 	"github.com/neoworks/otter/internal/tmdb"
 	"github.com/neoworks/otter/internal/together"
 	"github.com/neoworks/otter/internal/vpn"
@@ -164,6 +165,8 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 		downloadService.SetExporter(downloads.NewExporter(cfg.downloadsDir, store, libraryService.Store))
 	}
 	startCacheEviction(ctx, store, streamCache)
+	subtitleService := subtitles.NewService(subtitles.NewStore(database), registry, runner, libraryService,
+		cacheClient, store, streamsAllowed)
 	notificationStore := notify.NewStore(database)
 	go downloadService.Run(ctx)
 	go notify.NewWatcher(notificationStore, database, libraryService).Run(ctx)
@@ -173,6 +176,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 		Profiles:       profiles.NewService(database, cacheClient, hookRunner),
 		Notifications:  notificationStore,
 		Downloads:      downloadService,
+		Subtitles:      subtitleService,
 		Recommender:    recommend.New(database),
 		Settings:       settingsService,
 		Plugins:        registry,
@@ -193,6 +197,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	mux.Handle("/api/img", imageCache)
 	mux.Handle("/api/stream/", streamProxy)
 	mux.Handle(storage.RoutePrefix, store.Handler())
+	mux.Handle(subtitles.RoutePrefix, subtitleService.Handler())
 	mux.HandleFunc("/health", func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusOK)
 	})
@@ -200,6 +205,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	lanMux := http.NewServeMux()
 	lanMux.Handle("/api/stream/", streamProxy)
 	lanMux.Handle(storage.RoutePrefix, store.Handler())
+	lanMux.Handle(subtitles.RoutePrefix, subtitleService.Handler())
 	return serverHandlers{api: corsMiddleware(mux), lanStreams: privateNetworkOnly(dlnaHeaders(corsMiddleware(lanMux)))}, nil
 }
 
@@ -250,7 +256,7 @@ var errVpnRequired = errors.New("VPN required: connect a VPN before streaming")
 // startCacheEviction keeps the stream and image caches under CACHE_MAX_BYTES,
 // least recently used first.
 func startCacheEviction(ctx context.Context, store *storage.Client, streamCache *stream.CacheService) {
-	evictor := blobcache.New(store, cacheMaxBytes(), streamCache.EvictionSource(), imgapi.EvictionSource())
+	evictor := blobcache.New(store, cacheMaxBytes(), streamCache.EvictionSource(), imgapi.EvictionSource(), subtitles.EvictionSource())
 	store.OnPut(evictor.NoteWrite)
 	go func() {
 		if removed, err := streamCache.Reconcile(ctx); err != nil {

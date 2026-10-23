@@ -49,6 +49,12 @@ export interface StreamListParams {
   media: MediaRef;
 }
 
+export interface SubtitleListParams {
+  media: MediaRef;
+  /** Preferred ISO 639-1 codes, most preferred first. Empty = any language. */
+  languages: string[];
+}
+
 export interface SourceRetrieveParams {
   url: string;
 }
@@ -82,4 +88,23 @@ export interface SourceInput {
 
 export interface Source extends SourceInput {
   object: "source";
+}
+
+/** What `subtitles.list` returns per file. The SDK completes it into a `Subtitle`. */
+export interface SubtitleInput {
+  url: string;
+  /** ISO 639-1, e.g. "de". */
+  language: string;
+  /** Defaults to "srt". */
+  format?: "srt" | "vtt";
+  label?: string;
+  /** Release name the file was made for. */
+  release?: string;
+  hearing_impaired?: boolean;
+  headers?: Record<string, string>;
+}
+
+export interface Subtitle extends SubtitleInput {
+  object: "subtitle";
+  format: "srt" | "vtt";
 }

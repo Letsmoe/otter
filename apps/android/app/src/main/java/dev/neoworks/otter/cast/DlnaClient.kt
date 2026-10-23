@@ -10,8 +10,17 @@ enum class TransportState { PLAYING, PAUSED, STOPPED, TRANSITIONING, NO_MEDIA, U
 
 data class TransportPosition(val positionSeconds: Double, val durationSeconds: Double)
 
+/** A caption file the TV fetches: [url] is the SRT on the phone's LAN stream port. */
+data class TelevisionSubtitle(val id: String, val url: String)
+
 /** What the TV is told it plays: DLNA renderers check the type before fetching. */
-data class TelevisionMedia(val url: String, val title: String, val mimeType: String, val seekableBytes: Boolean)
+data class TelevisionMedia(
+    val url: String,
+    val title: String,
+    val mimeType: String,
+    val seekableBytes: Boolean,
+    val subtitle: TelevisionSubtitle? = null,
+)
 
 class DlnaException(message: String) : IOException(message)
 
@@ -86,11 +95,33 @@ private fun didl(media: TelevisionMedia): String {
         operations = "DLNA.ORG_OP=01"
     }
     val protocolInfo = "http-get:*:${media.mimeType}:$operations;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000"
+    val subtitle = media.subtitle
     return "<DIDL-Lite xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" " +
-        "xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\">" +
+        "xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:sec=\"http://www.sec.co.kr/\" xmlns:pv=\"http://www.pv.com/pvns/\">" +
         "<item id=\"0\" parentID=\"-1\" restricted=\"1\"><dc:title>${escapeXml(media.title)}</dc:title>" +
         "<upnp:class>object.item.videoItem</upnp:class>" +
-        "<res protocolInfo=\"$protocolInfo\">${escapeXml(media.url)}</res></item></DIDL-Lite>"
+        "<res protocolInfo=\"$protocolInfo\"${videoSubtitleAttributes(subtitle)}>${escapeXml(media.url)}</res>" +
+        subtitleElements(subtitle) +
+        "</item></DIDL-Lite>"
+}
+
+// Panasonic and others read the caption file from attributes of the video resource.
+private fun videoSubtitleAttributes(subtitle: TelevisionSubtitle?): String {
+    if (subtitle == null) {
+        return ""
+    }
+    return " pv:subtitleFileUri=\"${escapeXml(subtitle.url)}\" pv:subtitleFileType=\"srt\""
+}
+
+// Samsung reads the CaptionInfo elements; other renderers pick up the extra SRT resource.
+private fun subtitleElements(subtitle: TelevisionSubtitle?): String {
+    if (subtitle == null) {
+        return ""
+    }
+    val url = escapeXml(subtitle.url)
+    return "<res protocolInfo=\"http-get:*:text/srt:*\">$url</res>" +
+        "<sec:CaptionInfoEx sec:type=\"srt\">$url</sec:CaptionInfoEx>" +
+        "<sec:CaptionInfo sec:type=\"srt\">$url</sec:CaptionInfo>"
 }
 
 fun escapeXml(text: String): String {

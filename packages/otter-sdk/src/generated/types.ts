@@ -7,11 +7,12 @@ export default {
         5,
         6,
         25,
-        32,
+        27,
         34,
         36,
-        41,
-        42
+        38,
+        43,
+        44
     ],
     "types": {
         "MediaType": {},
@@ -526,10 +527,52 @@ export default {
             "languages": [
                 4
             ],
+            "subtitlesEnabled": [
+                6
+            ],
+            "subtitleLanguage": [
+                4
+            ],
+            "subtitleSize": [
+                25
+            ],
+            "voiceBoost": [
+                6
+            ],
             "__typename": [
                 4
             ]
         },
+        "Subtitle": {
+            "id": [
+                2
+            ],
+            "language": [
+                4
+            ],
+            "label": [
+                4
+            ],
+            "release": [
+                4
+            ],
+            "hearingImpaired": [
+                6
+            ],
+            "source": [
+                4
+            ],
+            "vttUrl": [
+                4
+            ],
+            "srtUrl": [
+                4
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "SubtitleSize": {},
         "PinCheck": {
             "success": [
                 6
@@ -550,7 +593,7 @@ export default {
                 4
             ],
             "tmdbKeyStatus": [
-                25
+                27
             ],
             "usesDefaultTmdbKey": [
                 6
@@ -648,7 +691,7 @@ export default {
                 6
             ],
             "settings": [
-                28
+                30
             ],
             "__typename": [
                 4
@@ -674,7 +717,7 @@ export default {
                 2
             ],
             "kind": [
-                32
+                34
             ],
             "heading": [
                 4
@@ -704,7 +747,7 @@ export default {
                 2
             ],
             "status": [
-                34
+                36
             ],
             "progress": [
                 5
@@ -757,13 +800,13 @@ export default {
                 6
             ],
             "status": [
-                36
+                38
             ],
             "self": [
-                37
+                39
             ],
             "peers": [
-                37
+                39
             ],
             "__typename": [
                 4
@@ -771,7 +814,7 @@ export default {
         },
         "TogetherMessage": {
             "from": [
-                37
+                39
             ],
             "payload": [
                 4
@@ -782,10 +825,10 @@ export default {
         },
         "TogetherUpdate": {
             "room": [
-                38
+                40
             ],
             "message": [
-                39
+                41
             ],
             "__typename": [
                 4
@@ -925,7 +968,7 @@ export default {
                         "MediaType!"
                     ],
                     "sort": [
-                        41
+                        43
                     ]
                 }
             ],
@@ -937,13 +980,13 @@ export default {
                         "MediaType!"
                     ],
                     "theme": [
-                        42,
+                        44,
                         "CatalogTheme!"
                     ]
                 }
             ],
             "catalogRows": [
-                43,
+                45,
                 {
                     "mediaType": [
                         0,
@@ -1040,7 +1083,7 @@ export default {
                 }
             ],
             "notifications": [
-                33,
+                35,
                 {
                     "profileId": [
                         2,
@@ -1061,7 +1104,7 @@ export default {
                 }
             ],
             "downloads": [
-                35,
+                37,
                 {
                     "profileId": [
                         2,
@@ -1073,13 +1116,25 @@ export default {
                 4
             ],
             "togetherRoom": [
-                38
+                40
+            ],
+            "subtitles": [
+                24,
+                {
+                    "mediaId": [
+                        2,
+                        "ID!"
+                    ],
+                    "profileId": [
+                        2
+                    ]
+                }
             ],
             "profiles": [
                 23
             ],
             "settings": [
-                26
+                28
             ],
             "checkTmdbKey": [
                 6,
@@ -1091,10 +1146,10 @@ export default {
                 }
             ],
             "plugins": [
-                30
+                32
             ],
             "status": [
-                31
+                33
             ],
             "__typename": [
                 4
@@ -1215,7 +1270,7 @@ export default {
                 }
             ],
             "startDownload": [
-                35,
+                37,
                 {
                     "profileId": [
                         2,
@@ -1243,7 +1298,7 @@ export default {
                 6
             ],
             "hostTogether": [
-                38,
+                40,
                 {
                     "profileId": [
                         2,
@@ -1252,7 +1307,7 @@ export default {
                 }
             ],
             "joinTogether": [
-                38,
+                40,
                 {
                     "profileId": [
                         2,
@@ -1340,6 +1395,18 @@ export default {
                     "languages": [
                         4,
                         "[String!]"
+                    ],
+                    "subtitlesEnabled": [
+                        6
+                    ],
+                    "subtitleLanguage": [
+                        4
+                    ],
+                    "subtitleSize": [
+                        25
+                    ],
+                    "voiceBoost": [
+                        6
                     ]
                 }
             ],
@@ -1353,7 +1420,7 @@ export default {
                 }
             ],
             "verifyPin": [
-                24,
+                26,
                 {
                     "profileId": [
                         2,
@@ -1366,16 +1433,16 @@ export default {
                 }
             ],
             "updateSettings": [
-                26,
+                28,
                 {
                     "input": [
-                        27,
+                        29,
                         "SettingsInput!"
                     ]
                 }
             ],
             "setPluginEnabled": [
-                30,
+                32,
                 {
                     "name": [
                         4,
@@ -1388,14 +1455,14 @@ export default {
                 }
             ],
             "setPluginSettings": [
-                30,
+                32,
                 {
                     "name": [
                         4,
                         "String!"
                     ],
                     "values": [
-                        29,
+                        31,
                         "[PluginSettingInput!]!"
                     ]
                 }
@@ -1415,7 +1482,7 @@ export default {
                 }
             ],
             "together": [
-                40
+                42
             ],
             "__typename": [
                 4

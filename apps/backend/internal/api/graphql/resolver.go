@@ -11,6 +11,7 @@ import (
 	"github.com/neoworks/otter/internal/settings"
 	"github.com/neoworks/otter/internal/skips"
 	"github.com/neoworks/otter/internal/stream"
+	"github.com/neoworks/otter/internal/subtitles"
 	"github.com/neoworks/otter/internal/tmdb"
 	"github.com/neoworks/otter/internal/together"
 )
@@ -21,6 +22,7 @@ type Services struct {
 	Profiles       *profiles.Service
 	Notifications  *notify.Store
 	Downloads      *downloads.Service
+	Subtitles      *subtitles.Service
 	Recommender    *recommend.Engine
 	Settings       *settings.Service
 	Plugins        *plugins.Registry

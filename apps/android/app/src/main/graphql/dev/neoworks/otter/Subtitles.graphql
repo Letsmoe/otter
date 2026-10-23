@@ -1,0 +1,14 @@
+fragment SubtitleFields on Subtitle {
+  id
+  language
+  label
+  hearingImpaired
+  vttUrl
+  srtUrl
+}
+
+query PlayerSubtitles($mediaId: ID!, $profileId: ID) {
+  subtitles(mediaId: $mediaId, profileId: $profileId) {
+    ...SubtitleFields
+  }
+}

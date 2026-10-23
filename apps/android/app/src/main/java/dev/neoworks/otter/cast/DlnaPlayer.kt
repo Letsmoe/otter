@@ -52,6 +52,9 @@ private val dlnaCommands = Player.Commands.Builder().addAll(
     Player.COMMAND_RELEASE,
 ).build()
 
+/** The caption file the TV shows: [srtPath] is the backend path of its SRT. */
+data class TelevisionSubtitleFile(val id: String, val srtPath: String)
+
 /** What the backend says about a continuous stream before the TV gets it. */
 private data class ContinuousProbe(val startSeconds: Double, val durationSeconds: Double, val mimeType: String)
 
@@ -70,6 +73,7 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
     private var playWhenReady = false
     private var playbackState = Player.STATE_IDLE
     private var playerError: PlaybackException? = null
+    private var subtitleFile: TelevisionSubtitleFile? = null
 
     private var isContinuous = false
     // Where the TV's 0:00 lies on the title's timeline (continuous streams).
@@ -130,6 +134,18 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
     private fun report(seconds: Double) {
         reportedSeconds = seconds
         reportedAtMilliseconds = SystemClock.elapsedRealtime()
+    }
+
+    /** Shows another caption file (or none) from the current position on; the TV loads the stream again. */
+    fun showSubtitle(file: TelevisionSubtitleFile?) {
+        if (file == subtitleFile) {
+            return
+        }
+        subtitleFile = file
+        if (mediaItem == null || playbackState == Player.STATE_IDLE) {
+            return
+        }
+        startLoad(currentPositionMilliseconds() / 1000.0)
     }
 
     // Commands -----------------------------------------------------------------
@@ -301,7 +317,7 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
             durationSeconds = probe.durationSeconds
             report(probe.startSeconds)
             pendingFileSeekSeconds = null
-            return TelevisionMedia(origin + path, title, probe.mimeType, seekableBytes = false)
+            return TelevisionMedia(origin + pathWithSubtitle(path), title, probe.mimeType, seekableBytes = false, subtitle = televisionSubtitle(origin))
         }
         val path = TelevisionUrls.filePath(playerUrl) ?: throw DlnaException("This source can't be played on a TV.")
         streamOffsetSeconds = 0.0
@@ -311,7 +327,16 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         if (mimeType == null) {
             mimeType = MimeTypes.VIDEO_MP4
         }
-        return TelevisionMedia(origin + path, title, mimeType, seekableBytes = true)
+        return TelevisionMedia(origin + pathWithSubtitle(path), title, mimeType, seekableBytes = true, subtitle = televisionSubtitle(origin))
+    }
+
+    private fun pathWithSubtitle(path: String): String {
+        return TelevisionUrls.withSubtitle(path, subtitleFile?.id)
+    }
+
+    private fun televisionSubtitle(origin: String): TelevisionSubtitle? {
+        val file = subtitleFile ?: return null
+        return TelevisionSubtitle(file.id, origin + file.srtPath)
     }
 
     // Asked over loopback: where the stream really starts and how long the title is.

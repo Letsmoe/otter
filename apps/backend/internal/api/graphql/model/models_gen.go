@@ -164,6 +164,13 @@ type Profile struct {
 	IsChild   bool    `json:"isChild"`
 	// Audio languages, most preferred first (ISO 639-1, e.g. de, en). Links in these languages are tried first, dubs before subs.
 	Languages []string `json:"languages"`
+	// Show captions by default
+	SubtitlesEnabled bool `json:"subtitlesEnabled"`
+	// Preferred caption language (ISO 639-1); null = the profile's first language
+	SubtitleLanguage *string      `json:"subtitleLanguage,omitempty"`
+	SubtitleSize     SubtitleSize `json:"subtitleSize"`
+	// Boost dialogue over music and effects
+	VoiceBoost bool `json:"voiceBoost"`
 }
 
 type Query struct {
@@ -260,6 +267,24 @@ type StreamUpdate struct {
 }
 
 type Subscription struct {
+}
+
+// An external subtitle file for a movie or episode, found by a subtitles plugin.
+type Subtitle struct {
+	ID string `json:"id"`
+	// ISO 639-1, e.g. de, en
+	Language string `json:"language"`
+	// Display label, e.g. 'Deutsch' or 'English (SDH)'
+	Label string `json:"label"`
+	// Release name the file was made for, when the source says
+	Release         *string `json:"release,omitempty"`
+	HearingImpaired bool    `json:"hearingImpaired"`
+	// Plugin that found it
+	Source string `json:"source"`
+	// Path on the backend, e.g. /api/subtitles/<id>.vtt; clients prefix their backend origin
+	VttURL string `json:"vttUrl"`
+	// Same file as SRT (for DLNA TVs), /api/subtitles/<id>.srt
+	SrtURL string `json:"srtUrl"`
 }
 
 // A movie or a series.
@@ -638,6 +663,63 @@ func (e *NotificationKind) UnmarshalJSON(b []byte) error {
 }
 
 func (e NotificationKind) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type SubtitleSize string
+
+const (
+	SubtitleSizeSmall  SubtitleSize = "SMALL"
+	SubtitleSizeMedium SubtitleSize = "MEDIUM"
+	SubtitleSizeLarge  SubtitleSize = "LARGE"
+)
+
+var AllSubtitleSize = []SubtitleSize{
+	SubtitleSizeSmall,
+	SubtitleSizeMedium,
+	SubtitleSizeLarge,
+}
+
+func (e SubtitleSize) IsValid() bool {
+	switch e {
+	case SubtitleSizeSmall, SubtitleSizeMedium, SubtitleSizeLarge:
+		return true
+	}
+	return false
+}
+
+func (e SubtitleSize) String() string {
+	return string(e)
+}
+
+func (e *SubtitleSize) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SubtitleSize(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SubtitleSize", str)
+	}
+	return nil
+}
+
+func (e SubtitleSize) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SubtitleSize) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SubtitleSize) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

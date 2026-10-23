@@ -7,8 +7,9 @@ fun PlayingSource.isHls(): Boolean {
     return mimeType.contains("mpegurl", ignoreCase = true) || url.contains(".m3u8")
 }
 
-fun PlayingSource.toMediaItem(): MediaItem {
+fun PlayingSource.toMediaItem(subtitles: List<PlayerSubtitle> = emptyList()): MediaItem {
     val builder = MediaItem.Builder().setUri(url)
+        .setSubtitleConfigurations(subtitles.map { subtitle -> subtitle.toSubtitleConfiguration() })
     if (isHls()) {
         builder.setMimeType(MimeTypes.APPLICATION_M3U8)
     } else if (mimeType.startsWith("video/")) {

@@ -55,12 +55,23 @@ data class PlayerUiState(
     val castDeviceName: String? = null,
     /** Casting goes to a DLNA TV (picked in the TV sheet), not a Chromecast. */
     val castsToTelevision: Boolean = false,
+    /** Dialogue boost of the profile; it only works on the phone's own speakers. */
+    val voiceBoost: Boolean = false,
+    /** Caption text size as a fraction of the video height. */
+    val subtitleFraction: Float = 0.0533f,
 ) {
     val shownError: String?
         get() = loadError ?: playbackError
 
     val hasTrackChoice: Boolean
         get() = audioTracks.size > 1 || subtitleTracks.isNotEmpty()
+
+    /** The TV plays the stream directly, so the phone can't process its audio. */
+    val canBoostVoice: Boolean
+        get() = !isCasting
+
+    val hasAudioSheet: Boolean
+        get() = hasTrackChoice || canBoostVoice
 
     val isHolding: Boolean
         get() = waitingFor.isNotEmpty()

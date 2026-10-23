@@ -130,7 +130,7 @@ type ComplexityRoot struct {
 		SetPluginSettings     func(childComplexity int, name string, values []*model.PluginSettingInput) int
 		SetRating             func(childComplexity int, profileID string, mediaID string, rating float64) int
 		StartDownload         func(childComplexity int, profileID string, mediaID string, streamID *string) int
-		UpdateProfile         func(childComplexity int, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string) int
+		UpdateProfile         func(childComplexity int, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, voiceBoost *bool) int
 		UpdateSettings        func(childComplexity int, input model.SettingsInput) int
 		VerifyPin             func(childComplexity int, profileID string, pin string) int
 	}
@@ -189,12 +189,16 @@ type ComplexityRoot struct {
 	}
 
 	Profile struct {
-		AvatarURL func(childComplexity int) int
-		HasPin    func(childComplexity int) int
-		ID        func(childComplexity int) int
-		IsChild   func(childComplexity int) int
-		Languages func(childComplexity int) int
-		Name      func(childComplexity int) int
+		AvatarURL        func(childComplexity int) int
+		HasPin           func(childComplexity int) int
+		ID               func(childComplexity int) int
+		IsChild          func(childComplexity int) int
+		Languages        func(childComplexity int) int
+		Name             func(childComplexity int) int
+		SubtitleLanguage func(childComplexity int) int
+		SubtitleSize     func(childComplexity int) int
+		SubtitlesEnabled func(childComplexity int) int
+		VoiceBoost       func(childComplexity int) int
 	}
 
 	Query struct {
@@ -221,6 +225,7 @@ type ComplexityRoot struct {
 		Search                  func(childComplexity int, query string, mediaType *model.MediaType, limit *int, filter *model.TitleFilter) int
 		Settings                func(childComplexity int) int
 		Status                  func(childComplexity int) int
+		Subtitles               func(childComplexity int, mediaID string, profileID *string) int
 		Title                   func(childComplexity int, id string) int
 		TogetherRoom            func(childComplexity int) int
 		Trending                func(childComplexity int, mediaType *model.MediaType) int
@@ -304,6 +309,17 @@ type ComplexityRoot struct {
 	Subscription struct {
 		Streams  func(childComplexity int, id string) int
 		Together func(childComplexity int) int
+	}
+
+	Subtitle struct {
+		HearingImpaired func(childComplexity int) int
+		ID              func(childComplexity int) int
+		Label           func(childComplexity int) int
+		Language        func(childComplexity int) int
+		Release         func(childComplexity int) int
+		Source          func(childComplexity int) int
+		SrtURL          func(childComplexity int) int
+		VttURL          func(childComplexity int) int
 	}
 
 	Title struct {
@@ -398,7 +414,7 @@ type MutationResolver interface {
 	AdoptStream(ctx context.Context, mediaID string, url string, plugin string, label *string) (*model.Stream, error)
 	SendTogether(ctx context.Context, payload string) (bool, error)
 	CreateProfile(ctx context.Context, name string, avatarURL *string, pin *string, isChild *bool, languages []string) (*model.Profile, error)
-	UpdateProfile(ctx context.Context, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string) (*model.Profile, error)
+	UpdateProfile(ctx context.Context, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, voiceBoost *bool) (*model.Profile, error)
 	DeleteProfile(ctx context.Context, id string) (bool, error)
 	VerifyPin(ctx context.Context, profileID string, pin string) (*model.PinCheck, error)
 	UpdateSettings(ctx context.Context, input model.SettingsInput) (*model.Settings, error)
@@ -435,6 +451,7 @@ type QueryResolver interface {
 	Downloads(ctx context.Context, profileID string) ([]*model.Download, error)
 	DownloadsFolder(ctx context.Context) (*string, error)
 	TogetherRoom(ctx context.Context) (*model.TogetherRoom, error)
+	Subtitles(ctx context.Context, mediaID string, profileID *string) ([]*model.Subtitle, error)
 	Profiles(ctx context.Context) ([]*model.Profile, error)
 	Settings(ctx context.Context) (*model.Settings, error)
 	CheckTmdbKey(ctx context.Context, key string) (bool, error)
@@ -975,7 +992,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.UpdateProfile(childComplexity, args["id"].(string), args["name"].(*string), args["avatarUrl"].(*string), args["isChild"].(*bool), args["pin"].(*string), args["languages"].([]string)), true
+		return e.ComplexityRoot.Mutation.UpdateProfile(childComplexity, args["id"].(string), args["name"].(*string), args["avatarUrl"].(*string), args["isChild"].(*bool), args["pin"].(*string), args["languages"].([]string), args["subtitlesEnabled"].(*bool), args["subtitleLanguage"].(*string), args["subtitleSize"].(*model.SubtitleSize), args["voiceBoost"].(*bool)), true
 	case "Mutation.updateSettings":
 		if e.ComplexityRoot.Mutation.UpdateSettings == nil {
 			break
@@ -1283,6 +1300,30 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Profile.Name(childComplexity), true
+	case "Profile.subtitleLanguage":
+		if e.ComplexityRoot.Profile.SubtitleLanguage == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Profile.SubtitleLanguage(childComplexity), true
+	case "Profile.subtitleSize":
+		if e.ComplexityRoot.Profile.SubtitleSize == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Profile.SubtitleSize(childComplexity), true
+	case "Profile.subtitlesEnabled":
+		if e.ComplexityRoot.Profile.SubtitlesEnabled == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Profile.SubtitlesEnabled(childComplexity), true
+	case "Profile.voiceBoost":
+		if e.ComplexityRoot.Profile.VoiceBoost == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Profile.VoiceBoost(childComplexity), true
 
 	case "Query.browse":
 		if e.ComplexityRoot.Query.Browse == nil {
@@ -1508,6 +1549,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.Status(childComplexity), true
+	case "Query.subtitles":
+		if e.ComplexityRoot.Query.Subtitles == nil {
+			break
+		}
+
+		args, err := ec.field_Query_subtitles_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Subtitles(childComplexity, args["mediaId"].(string), args["profileId"].(*string)), true
 	case "Query.title":
 		if e.ComplexityRoot.Query.Title == nil {
 			break
@@ -1866,6 +1918,55 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Subscription.Together(childComplexity), true
+
+	case "Subtitle.hearingImpaired":
+		if e.ComplexityRoot.Subtitle.HearingImpaired == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subtitle.HearingImpaired(childComplexity), true
+	case "Subtitle.id":
+		if e.ComplexityRoot.Subtitle.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subtitle.ID(childComplexity), true
+	case "Subtitle.label":
+		if e.ComplexityRoot.Subtitle.Label == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subtitle.Label(childComplexity), true
+	case "Subtitle.language":
+		if e.ComplexityRoot.Subtitle.Language == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subtitle.Language(childComplexity), true
+	case "Subtitle.release":
+		if e.ComplexityRoot.Subtitle.Release == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subtitle.Release(childComplexity), true
+	case "Subtitle.source":
+		if e.ComplexityRoot.Subtitle.Source == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subtitle.Source(childComplexity), true
+	case "Subtitle.srtUrl":
+		if e.ComplexityRoot.Subtitle.SrtURL == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subtitle.SrtURL(childComplexity), true
+	case "Subtitle.vttUrl":
+		if e.ComplexityRoot.Subtitle.VttURL == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subtitle.VttURL(childComplexity), true
 
 	case "Title.backdropPath":
 		if e.ComplexityRoot.Title.BackdropPath == nil {
@@ -2494,6 +2595,37 @@ type Profile {
   isChild: Boolean!
   "Audio languages, most preferred first (ISO 639-1, e.g. de, en). Links in these languages are tried first, dubs before subs."
   languages: [String!]!
+  "Show captions by default"
+  subtitlesEnabled: Boolean!
+  "Preferred caption language (ISO 639-1); null = the profile's first language"
+  subtitleLanguage: String
+  subtitleSize: SubtitleSize!
+  "Boost dialogue over music and effects"
+  voiceBoost: Boolean!
+}
+
+"An external subtitle file for a movie or episode, found by a subtitles plugin."
+type Subtitle {
+  id: ID!
+  "ISO 639-1, e.g. de, en"
+  language: String!
+  "Display label, e.g. 'Deutsch' or 'English (SDH)'"
+  label: String!
+  "Release name the file was made for, when the source says"
+  release: String
+  hearingImpaired: Boolean!
+  "Plugin that found it"
+  source: String!
+  "Path on the backend, e.g. /api/subtitles/<id>.vtt; clients prefix their backend origin"
+  vttUrl: String!
+  "Same file as SRT (for DLNA TVs), /api/subtitles/<id>.srt"
+  srtUrl: String!
+}
+
+enum SubtitleSize {
+  SMALL
+  MEDIUM
+  LARGE
 }
 
 type PinCheck {
@@ -2713,6 +2845,9 @@ type Query {
   "The open Watch Together room, if any."
   togetherRoom: TogetherRoom
 
+  "Subtitle files for a movie or episode (same id as streams/findStreams), best first. Ranked by the profile's caption language, then its other languages; at most 3 per language. Asks subtitles plugins when nothing fresh is stored."
+  subtitles(mediaId: ID!, profileId: ID): [Subtitle!]!
+
   profiles: [Profile!]!
   settings: Settings!
   "Whether TMDB accepts the key; errors when TMDB can't be reached."
@@ -2752,8 +2887,8 @@ type Mutation {
   sendTogether(payload: String!): Boolean!
 
   createProfile(name: String!, avatarUrl: String, pin: String, isChild: Boolean = false, languages: [String!]): Profile!
-  "Changes the given fields; omitted fields stay. An empty pin removes the PIN."
-  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!]): Profile!
+  "Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it."
+  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, voiceBoost: Boolean): Profile!
   deleteProfile(id: ID!): Boolean!
   verifyPin(profileId: ID!, pin: String!): PinCheck!
 
@@ -3030,6 +3165,14 @@ func (ec *executionContext) childFields_Profile(ctx context.Context, field graph
 		return ec.fieldContext_Profile_isChild(ctx, field)
 	case "languages":
 		return ec.fieldContext_Profile_languages(ctx, field)
+	case "subtitlesEnabled":
+		return ec.fieldContext_Profile_subtitlesEnabled(ctx, field)
+	case "subtitleLanguage":
+		return ec.fieldContext_Profile_subtitleLanguage(ctx, field)
+	case "subtitleSize":
+		return ec.fieldContext_Profile_subtitleSize(ctx, field)
+	case "voiceBoost":
+		return ec.fieldContext_Profile_voiceBoost(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Profile", field.Name)
 }
@@ -3176,6 +3319,28 @@ func (ec *executionContext) childFields_StreamUpdate(ctx context.Context, field 
 		return ec.fieldContext_StreamUpdate_done(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type StreamUpdate", field.Name)
+}
+
+func (ec *executionContext) childFields_Subtitle(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_Subtitle_id(ctx, field)
+	case "language":
+		return ec.fieldContext_Subtitle_language(ctx, field)
+	case "label":
+		return ec.fieldContext_Subtitle_label(ctx, field)
+	case "release":
+		return ec.fieldContext_Subtitle_release(ctx, field)
+	case "hearingImpaired":
+		return ec.fieldContext_Subtitle_hearingImpaired(ctx, field)
+	case "source":
+		return ec.fieldContext_Subtitle_source(ctx, field)
+	case "vttUrl":
+		return ec.fieldContext_Subtitle_vttUrl(ctx, field)
+	case "srtUrl":
+		return ec.fieldContext_Subtitle_srtUrl(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Subtitle", field.Name)
 }
 
 func (ec *executionContext) childFields_Title(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -3915,6 +4080,38 @@ func (ec *executionContext) field_Mutation_updateProfile_args(ctx context.Contex
 		return nil, err
 	}
 	args["languages"] = arg5
+	arg6, err := graphql.ProcessArgField(ctx, rawArgs, "subtitlesEnabled",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["subtitlesEnabled"] = arg6
+	arg7, err := graphql.ProcessArgField(ctx, rawArgs, "subtitleLanguage",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["subtitleLanguage"] = arg7
+	arg8, err := graphql.ProcessArgField(ctx, rawArgs, "subtitleSize",
+		func(ctx context.Context, v any) (*model.SubtitleSize, error) {
+			return ec.unmarshalOSubtitleSize2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["subtitleSize"] = arg8
+	arg9, err := graphql.ProcessArgField(ctx, rawArgs, "voiceBoost",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["voiceBoost"] = arg9
 	return args, nil
 }
 
@@ -4421,6 +4618,28 @@ func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs
 		return nil, err
 	}
 	args["filter"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_subtitles_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mediaId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOID2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg1
 	return args, nil
 }
 
@@ -6576,7 +6795,7 @@ func (ec *executionContext) _Mutation_updateProfile(ctx context.Context, field g
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().UpdateProfile(ctx, fc.Args["id"].(string), fc.Args["name"].(*string), fc.Args["avatarUrl"].(*string), fc.Args["isChild"].(*bool), fc.Args["pin"].(*string), fc.Args["languages"].([]string))
+			return ec.Resolvers.Mutation().UpdateProfile(ctx, fc.Args["id"].(string), fc.Args["name"].(*string), fc.Args["avatarUrl"].(*string), fc.Args["isChild"].(*bool), fc.Args["pin"].(*string), fc.Args["languages"].([]string), fc.Args["subtitlesEnabled"].(*bool), fc.Args["subtitleLanguage"].(*string), fc.Args["subtitleSize"].(*model.SubtitleSize), fc.Args["voiceBoost"].(*bool))
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Profile) graphql.Marshaler {
@@ -7932,6 +8151,98 @@ func (ec *executionContext) fieldContext_Profile_languages(_ context.Context, fi
 	return graphql.NewScalarFieldContext("Profile", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _Profile_subtitlesEnabled(ctx context.Context, field graphql.CollectedField, obj *model.Profile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Profile_subtitlesEnabled(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SubtitlesEnabled, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Profile_subtitlesEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Profile", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _Profile_subtitleLanguage(ctx context.Context, field graphql.CollectedField, obj *model.Profile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Profile_subtitleLanguage(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SubtitleLanguage, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Profile_subtitleLanguage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Profile", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Profile_subtitleSize(ctx context.Context, field graphql.CollectedField, obj *model.Profile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Profile_subtitleSize(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SubtitleSize, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.SubtitleSize) graphql.Marshaler {
+			return ec.marshalNSubtitleSize2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Profile_subtitleSize(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Profile", field, false, false, errors.New("field of type SubtitleSize does not have child fields"))
+}
+
+func (ec *executionContext) _Profile_voiceBoost(ctx context.Context, field graphql.CollectedField, obj *model.Profile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Profile_voiceBoost(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.VoiceBoost, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Profile_voiceBoost(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Profile", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
 func (ec *executionContext) _Query_title(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -8930,6 +9241,50 @@ func (ec *executionContext) fieldContext_Query_togetherRoom(_ context.Context, f
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return ec.childFields_TogetherRoom(ctx, field)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_subtitles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_subtitles(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Subtitles(ctx, fc.Args["mediaId"].(string), fc.Args["profileId"].(*string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Subtitle) graphql.Marshaler {
+			return ec.marshalNSubtitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_subtitles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Subtitle(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_subtitles_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -10327,6 +10682,190 @@ func (ec *executionContext) fieldContext_Subscription_together(_ context.Context
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _Subtitle_id(ctx context.Context, field graphql.CollectedField, obj *model.Subtitle) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subtitle_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subtitle_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subtitle", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _Subtitle_language(ctx context.Context, field graphql.CollectedField, obj *model.Subtitle) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subtitle_language(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Language, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subtitle_language(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subtitle", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Subtitle_label(ctx context.Context, field graphql.CollectedField, obj *model.Subtitle) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subtitle_label(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Label, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subtitle_label(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subtitle", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Subtitle_release(ctx context.Context, field graphql.CollectedField, obj *model.Subtitle) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subtitle_release(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Release, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Subtitle_release(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subtitle", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Subtitle_hearingImpaired(ctx context.Context, field graphql.CollectedField, obj *model.Subtitle) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subtitle_hearingImpaired(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HearingImpaired, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subtitle_hearingImpaired(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subtitle", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _Subtitle_source(ctx context.Context, field graphql.CollectedField, obj *model.Subtitle) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subtitle_source(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Source, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subtitle_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subtitle", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Subtitle_vttUrl(ctx context.Context, field graphql.CollectedField, obj *model.Subtitle) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subtitle_vttUrl(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.VttURL, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subtitle_vttUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subtitle", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Subtitle_srtUrl(ctx context.Context, field graphql.CollectedField, obj *model.Subtitle) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subtitle_srtUrl(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SrtURL, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subtitle_srtUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Subtitle", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Title_id(ctx context.Context, field graphql.CollectedField, obj *model.Title) (ret graphql.Marshaler) {
@@ -14032,6 +14571,23 @@ func (ec *executionContext) _Profile(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "subtitlesEnabled":
+			out.Values[i] = ec._Profile_subtitlesEnabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "subtitleLanguage":
+			out.Values[i] = ec._Profile_subtitleLanguage(ctx, field, obj)
+		case "subtitleSize":
+			out.Values[i] = ec._Profile_subtitleSize(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "voiceBoost":
+			out.Values[i] = ec._Profile_voiceBoost(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -14575,6 +15131,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_togetherRoom(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "subtitles":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_subtitles(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -15265,6 +15843,77 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
+}
+
+var subtitleImplementors = []string{"Subtitle"}
+
+func (ec *executionContext) _Subtitle(ctx context.Context, sel ast.SelectionSet, obj *model.Subtitle) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, subtitleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Subtitle")
+		case "id":
+			out.Values[i] = ec._Subtitle_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "language":
+			out.Values[i] = ec._Subtitle_language(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "label":
+			out.Values[i] = ec._Subtitle_label(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "release":
+			out.Values[i] = ec._Subtitle_release(ctx, field, obj)
+		case "hearingImpaired":
+			out.Values[i] = ec._Subtitle_hearingImpaired(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "source":
+			out.Values[i] = ec._Subtitle_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "vttUrl":
+			out.Values[i] = ec._Subtitle_vttUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "srtUrl":
+			out.Values[i] = ec._Subtitle_srtUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
 }
 
 var titleImplementors = []string{"Title"}
@@ -16971,6 +17620,42 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	return ret
 }
 
+func (ec *executionContext) marshalNSubtitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Subtitle) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNSubtitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitle(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSubtitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitle(ctx context.Context, sel ast.SelectionSet, v *model.Subtitle) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Subtitle(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSubtitleSize2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx context.Context, v any) (model.SubtitleSize, error) {
+	var res model.SubtitleSize
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNSubtitleSize2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx context.Context, sel ast.SelectionSet, v model.SubtitleSize) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNTitle2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx context.Context, sel ast.SelectionSet, v model.Title) graphql.Marshaler {
 	return ec._Title(ctx, sel, &v)
 }
@@ -17418,6 +18103,22 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	_ = ctx
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOSubtitleSize2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx context.Context, v any) (*model.SubtitleSize, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.SubtitleSize)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOSubtitleSize2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx context.Context, sel ast.SelectionSet, v *model.SubtitleSize) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOTitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx context.Context, sel ast.SelectionSet, v *model.Title) graphql.Marshaler {

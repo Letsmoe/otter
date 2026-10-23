@@ -1,11 +1,11 @@
 // Mirrors apps/backend/internal/plugins/types.go — keep in sync.
 // All JSON field names use snake_case.
 //
-// Otter plugins do two things: find stream links for a title TMDB already
-// identified ("streams"), and turn a hoster link into a playable media URL
-// ("resolve").
+// Otter plugins do three things: find stream links for a title TMDB already
+// identified ("streams"), turn a hoster link into a playable media URL
+// ("resolve"), and find subtitle files for a title ("subtitles").
 
-export type Capability = "meta" | "streams" | "resolve";
+export type Capability = "meta" | "streams" | "resolve" | "subtitles";
 
 export type MediaType = "movie" | "series" | "episode";
 
@@ -64,6 +64,30 @@ export interface StreamsArgs {
 
 export interface StreamsResult {
   downloads: Download[];
+}
+
+/** Passed to the subtitles capability: the title as in StreamsArgs, plus the languages wanted. */
+export interface SubtitlesArgs extends StreamsArgs {
+  /** Preferred ISO 639-1 codes, most preferred first. */
+  languages?: string[];
+}
+
+/** One downloadable caption file. */
+export interface SubtitleFile {
+  url: string;
+  /** ISO 639-1, e.g. "de". */
+  language: string;
+  format: "srt" | "vtt";
+  label?: string;
+  /** Release name the file was made for. */
+  release?: string;
+  hearing_impaired?: boolean;
+  /** Request headers the download needs. */
+  headers?: Record<string, string>;
+}
+
+export interface SubtitlesResult {
+  subtitles: SubtitleFile[];
 }
 
 export interface ResolveArgs {

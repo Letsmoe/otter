@@ -228,8 +228,37 @@ export interface Profile {
     isChild: Scalars['Boolean']
     /** Audio languages, most preferred first (ISO 639-1, e.g. de, en). Links in these languages are tried first, dubs before subs. */
     languages: Scalars['String'][]
+    /** Show captions by default */
+    subtitlesEnabled: Scalars['Boolean']
+    /** Preferred caption language (ISO 639-1); null = the profile's first language */
+    subtitleLanguage: (Scalars['String'] | null)
+    subtitleSize: SubtitleSize
+    /** Boost dialogue over music and effects */
+    voiceBoost: Scalars['Boolean']
     __typename: 'Profile'
 }
+
+
+/** An external subtitle file for a movie or episode, found by a subtitles plugin. */
+export interface Subtitle {
+    id: Scalars['ID']
+    /** ISO 639-1, e.g. de, en */
+    language: Scalars['String']
+    /** Display label, e.g. 'Deutsch' or 'English (SDH)' */
+    label: Scalars['String']
+    /** Release name the file was made for, when the source says */
+    release: (Scalars['String'] | null)
+    hearingImpaired: Scalars['Boolean']
+    /** Plugin that found it */
+    source: Scalars['String']
+    /** Path on the backend, e.g. /api/subtitles/<id>.vtt; clients prefix their backend origin */
+    vttUrl: Scalars['String']
+    /** Same file as SRT (for DLNA TVs), /api/subtitles/<id>.srt */
+    srtUrl: Scalars['String']
+    __typename: 'Subtitle'
+}
+
+export type SubtitleSize = 'SMALL' | 'MEDIUM' | 'LARGE'
 
 export interface PinCheck {
     success: Scalars['Boolean']
@@ -416,6 +445,8 @@ export interface Query {
     downloadsFolder: (Scalars['String'] | null)
     /** The open Watch Together room, if any. */
     togetherRoom: (TogetherRoom | null)
+    /** Subtitle files for a movie or episode (same id as streams/findStreams), best first. Ranked by the profile's caption language, then its other languages; at most 3 per language. Asks subtitles plugins when nothing fresh is stored. */
+    subtitles: Subtitle[]
     profiles: Profile[]
     settings: Settings
     /** Whether TMDB accepts the key; errors when TMDB can't be reached. */
@@ -454,7 +485,7 @@ export interface Mutation {
     /** Send a JSON payload to everyone else in the room. */
     sendTogether: Scalars['Boolean']
     createProfile: Profile
-    /** Changes the given fields; omitted fields stay. An empty pin removes the PIN. */
+    /** Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it. */
     updateProfile: Profile
     deleteProfile: Scalars['Boolean']
     verifyPin: PinCheck
@@ -707,6 +738,34 @@ export interface ProfileGenqlSelection{
     isChild?: boolean | number
     /** Audio languages, most preferred first (ISO 639-1, e.g. de, en). Links in these languages are tried first, dubs before subs. */
     languages?: boolean | number
+    /** Show captions by default */
+    subtitlesEnabled?: boolean | number
+    /** Preferred caption language (ISO 639-1); null = the profile's first language */
+    subtitleLanguage?: boolean | number
+    subtitleSize?: boolean | number
+    /** Boost dialogue over music and effects */
+    voiceBoost?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** An external subtitle file for a movie or episode, found by a subtitles plugin. */
+export interface SubtitleGenqlSelection{
+    id?: boolean | number
+    /** ISO 639-1, e.g. de, en */
+    language?: boolean | number
+    /** Display label, e.g. 'Deutsch' or 'English (SDH)' */
+    label?: boolean | number
+    /** Release name the file was made for, when the source says */
+    release?: boolean | number
+    hearingImpaired?: boolean | number
+    /** Plugin that found it */
+    source?: boolean | number
+    /** Path on the backend, e.g. /api/subtitles/<id>.vtt; clients prefix their backend origin */
+    vttUrl?: boolean | number
+    /** Same file as SRT (for DLNA TVs), /api/subtitles/<id>.srt */
+    srtUrl?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -898,6 +957,8 @@ export interface QueryGenqlSelection{
     downloadsFolder?: boolean | number
     /** The open Watch Together room, if any. */
     togetherRoom?: TogetherRoomGenqlSelection
+    /** Subtitle files for a movie or episode (same id as streams/findStreams), best first. Ranked by the profile's caption language, then its other languages; at most 3 per language. Asks subtitles plugins when nothing fresh is stored. */
+    subtitles?: (SubtitleGenqlSelection & { __args: {mediaId: Scalars['ID'], profileId?: (Scalars['ID'] | null)} })
     profiles?: ProfileGenqlSelection
     settings?: SettingsGenqlSelection
     /** Whether TMDB accepts the key; errors when TMDB can't be reached. */
@@ -937,8 +998,8 @@ export interface MutationGenqlSelection{
     /** Send a JSON payload to everyone else in the room. */
     sendTogether?: { __args: {payload: Scalars['String']} }
     createProfile?: (ProfileGenqlSelection & { __args: {name: Scalars['String'], avatarUrl?: (Scalars['String'] | null), pin?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), languages?: (Scalars['String'][] | null)} })
-    /** Changes the given fields; omitted fields stay. An empty pin removes the PIN. */
-    updateProfile?: (ProfileGenqlSelection & { __args: {id: Scalars['ID'], name?: (Scalars['String'] | null), avatarUrl?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), pin?: (Scalars['String'] | null), languages?: (Scalars['String'][] | null)} })
+    /** Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it. */
+    updateProfile?: (ProfileGenqlSelection & { __args: {id: Scalars['ID'], name?: (Scalars['String'] | null), avatarUrl?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), pin?: (Scalars['String'] | null), languages?: (Scalars['String'][] | null), subtitlesEnabled?: (Scalars['Boolean'] | null), subtitleLanguage?: (Scalars['String'] | null), subtitleSize?: (SubtitleSize | null), voiceBoost?: (Scalars['Boolean'] | null)} })
     deleteProfile?: { __args: {id: Scalars['ID']} }
     verifyPin?: (PinCheckGenqlSelection & { __args: {profileId: Scalars['ID'], pin: Scalars['String']} })
     updateSettings?: (SettingsGenqlSelection & { __args: {input: SettingsInput} })
@@ -1094,6 +1155,14 @@ export interface SubscriptionGenqlSelection{
     
 
 
+    const Subtitle_possibleTypes: string[] = ['Subtitle']
+    export const isSubtitle = (obj?: { __typename?: any } | null): obj is Subtitle => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isSubtitle"')
+      return Subtitle_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
     const PinCheck_possibleTypes: string[] = ['PinCheck']
     export const isPinCheck = (obj?: { __typename?: any } | null): obj is PinCheck => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isPinCheck"')
@@ -1217,6 +1286,12 @@ export const enumMediaType = {
    MOVIE: 'MOVIE' as const,
    SERIES: 'SERIES' as const,
    EPISODE: 'EPISODE' as const
+}
+
+export const enumSubtitleSize = {
+   SMALL: 'SMALL' as const,
+   MEDIUM: 'MEDIUM' as const,
+   LARGE: 'LARGE' as const
 }
 
 export const enumTmdbKeyStatus = {

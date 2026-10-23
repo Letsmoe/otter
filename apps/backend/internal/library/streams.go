@@ -260,3 +260,9 @@ func (b *Broker) Publish(ref MediaRef, update StreamUpdate) {
 		}
 	}
 }
+
+// SearchArgs describes a movie or episode the way plugins search for it. It
+// fetches the title from TMDB first when it is not stored yet.
+func (s *Service) SearchArgs(ctx context.Context, ref MediaRef) (plugins.StreamsArgs, error) {
+	return s.streamsArgs(ctx, ref)
+}

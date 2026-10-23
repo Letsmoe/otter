@@ -155,7 +155,7 @@ private fun ActionRow(state: PlayerUiState, actions: PlayerActions, modifier: Mo
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ActionButton(PhosphorIcons.Regular.Gauge, "Speed (${formatSpeed(state.speed)}x)") { actions.openSheet(PlayerSheetKind.SPEED) }
-        if (state.hasTrackChoice) {
+        if (state.hasAudioSheet) {
             ActionButton(PhosphorIcons.Regular.Subtitles, "Audio & Subtitles") { actions.openSheet(PlayerSheetKind.TRACKS) }
         }
         if (state.sources.size > 1) {

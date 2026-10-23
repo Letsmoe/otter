@@ -1,0 +1,67 @@
+[
+ {
+  "SubDownloadLink": "https://dl.opensubtitles.org/en/download/src-api/vrf-19a90c55/filead/1961428058.gz",
+  "SubFormat": "srt",
+  "SubLanguageID": "ger",
+  "ISO639": "de",
+  "SubFileName": "Breaking.Bad.S01E01.Der.Einstieg.German.DL.AC3.5.1.1080p.Bluray.x264-iND.srt",
+  "MovieReleaseName": " Breaking.Bad.S01E01.Der.Einstieg.German.DL.AC3.5.1.1080p.Bluray.x264",
+  "SubHearingImpaired": "0",
+  "SubAutoTranslation": "0",
+  "SubBad": "0",
+  "SubEncoding": "UTF-8",
+  "IDSubtitleFile": "1961428058"
+ },
+ {
+  "SubDownloadLink": "https://dl.opensubtitles.org/en/download/src-api/vrf-19ce0c5e/filead/1951737884.gz",
+  "SubFormat": "srt",
+  "SubLanguageID": "ger",
+  "ISO639": "de",
+  "SubFileName": "breaking.bad.s01e01.dsr.xvid-0tv.ger.subcentral.srt",
+  "MovieReleaseName": "breaking.bad.s01e01.dsr.xvid-0tv",
+  "SubHearingImpaired": "0",
+  "SubAutoTranslation": "0",
+  "SubBad": "0",
+  "SubEncoding": "CP1252",
+  "IDSubtitleFile": "1951737884"
+ },
+ {
+  "SubDownloadLink": "https://dl.opensubtitles.org/en/download/src-api/vrf-19ca0c58/filead/1952549840.gz",
+  "SubFormat": "srt",
+  "SubLanguageID": "ger",
+  "ISO639": "de",
+  "SubFileName": "Breaking Bad Pilot.srt",
+  "MovieReleaseName": " Breaking Bad Pilot",
+  "SubHearingImpaired": "0",
+  "SubAutoTranslation": "0",
+  "SubBad": "0",
+  "SubEncoding": "CP1252",
+  "IDSubtitleFile": "1952549840"
+ },
+ {
+  "SubDownloadLink": "https://dl.opensubtitles.org/en/download/src-api/vrf-19bb0c52/filead/1953754223.gz",
+  "SubFormat": "srt",
+  "SubLanguageID": "ger",
+  "ISO639": "de",
+  "SubFileName": "Breaking Bad S01E01.srt",
+  "MovieReleaseName": " Breaking Bad S01E01",
+  "SubHearingImpaired": "0",
+  "SubAutoTranslation": "0",
+  "SubBad": "0",
+  "SubEncoding": "CP1252",
+  "IDSubtitleFile": "1953754223"
+ },
+ {
+  "SubDownloadLink": "https://dl.opensubtitles.org/en/download/src-api/vrf-19aa0c56/filead/1961428059.gz",
+  "SubFormat": "srt",
+  "SubLanguageID": "ger",
+  "ISO639": "de",
+  "SubFileName": "Breaking.Bad.S01E01.Der.Einstieg.German.DL.AC3.5.1.1080p.Bluray.x264-iND.forced.srt",
+  "MovieReleaseName": " Breaking.Bad.S01E01.Der.Einstieg.German.DL.AC3.5.1.1080p.Bluray.x264-iND.forced",
+  "SubHearingImpaired": "0",
+  "SubAutoTranslation": "0",
+  "SubBad": "0",
+  "SubEncoding": "UTF-8",
+  "IDSubtitleFile": "1961428059"
+ }
+]

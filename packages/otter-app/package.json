@@ -21,7 +21,9 @@
     "./downloads": "./src/downloads.ts",
     "./together": "./src/together.ts",
     "./languages": "./src/languages.ts",
-    "./tmdbKey": "./src/tmdbKey.ts"
+    "./tmdbKey": "./src/tmdbKey.ts",
+    "./captions": "./src/captions.ts",
+    "./subtitles": "./src/subtitles.ts"
   },
   "dependencies": {
     "@neoworks-dev/otter-sdk": "workspace:*",

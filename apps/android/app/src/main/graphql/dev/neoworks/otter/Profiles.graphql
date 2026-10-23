@@ -5,6 +5,10 @@ fragment ProfileFields on Profile {
   hasPin
   isChild
   languages
+  subtitlesEnabled
+  subtitleLanguage
+  subtitleSize
+  voiceBoost
 }
 
 query Profiles {
@@ -26,8 +30,30 @@ mutation CreateProfile($name: String!, $avatarUrl: String, $pin: String, $isChil
   }
 }
 
-mutation UpdateProfile($id: ID!, $name: String, $avatarUrl: String, $isChild: Boolean, $pin: String, $languages: [String!]) {
-  updateProfile(id: $id, name: $name, avatarUrl: $avatarUrl, isChild: $isChild, pin: $pin, languages: $languages) {
+mutation UpdateProfile(
+  $id: ID!
+  $name: String
+  $avatarUrl: String
+  $isChild: Boolean
+  $pin: String
+  $languages: [String!]
+  $subtitlesEnabled: Boolean
+  $subtitleLanguage: String
+  $subtitleSize: SubtitleSize
+  $voiceBoost: Boolean
+) {
+  updateProfile(
+    id: $id
+    name: $name
+    avatarUrl: $avatarUrl
+    isChild: $isChild
+    pin: $pin
+    languages: $languages
+    subtitlesEnabled: $subtitlesEnabled
+    subtitleLanguage: $subtitleLanguage
+    subtitleSize: $subtitleSize
+    voiceBoost: $voiceBoost
+  ) {
     ...ProfileFields
   }
 }

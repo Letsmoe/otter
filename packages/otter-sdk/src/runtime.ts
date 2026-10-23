@@ -15,10 +15,23 @@ import type {
   Stream,
   StreamInput,
   StreamListParams,
+  Subtitle,
+  SubtitleInput,
+  SubtitleListParams,
 } from "./model.ts";
 import { normalize } from "./match.ts";
 import { resolveWithTiming } from "./timing.ts";
-import type { Capability, Download, PluginMeta, ResolveResult, StreamsArgs, StreamsResult } from "./types.ts";
+import type {
+  Capability,
+  Download,
+  PluginMeta,
+  ResolveResult,
+  StreamsArgs,
+  StreamsResult,
+  SubtitleFile,
+  SubtitlesArgs,
+  SubtitlesResult,
+} from "./types.ts";
 
 export interface PluginHandlers {
   meta: PluginMeta;
@@ -26,6 +39,8 @@ export interface PluginHandlers {
   streams?: (args: StreamsArgs) => Promise<StreamsResult>;
   /** Turns a hoster link into a playable media URL. */
   resolve?: (url: string) => Promise<ResolveResult>;
+  /** Lists caption files for a TMDB-known movie or episode. */
+  subtitles?: (args: SubtitlesArgs) => Promise<SubtitlesResult>;
 }
 
 export function isPluginDefinition(plugin: PluginHandlers | PluginDefinition): plugin is PluginDefinition {
@@ -38,6 +53,7 @@ function capabilitiesOf(definition: PluginDefinition): Capability[] {
   const capabilities: Capability[] = [];
   if (definition.streams) capabilities.push("streams");
   if (definition.sources) capabilities.push("resolve");
+  if (definition.subtitles) capabilities.push("subtitles");
   return capabilities;
 }
 
@@ -117,6 +133,10 @@ export function toStreamListParams(args: StreamsArgs): StreamListParams {
   return { media };
 }
 
+export function toSubtitleListParams(args: SubtitlesArgs): SubtitleListParams {
+  return { media: toStreamListParams(args).media, languages: args.languages || [] };
+}
+
 // ---- results ---------------------------------------------------------------
 
 function labelOf(input: StreamInput, ctx: PluginContext): string {
@@ -145,6 +165,22 @@ export function toDownload(stream: Stream): Download {
     language: stream.language,
     format: stream.format,
     size_bytes: stream.size_bytes,
+  };
+}
+
+export function completeSubtitle(input: SubtitleInput): Subtitle {
+  return { ...input, object: "subtitle", format: input.format || "srt" };
+}
+
+export function toSubtitleFile(subtitle: Subtitle): SubtitleFile {
+  return {
+    url: subtitle.url,
+    language: subtitle.language,
+    format: subtitle.format,
+    label: subtitle.label,
+    release: subtitle.release,
+    hearing_impaired: subtitle.hearing_impaired,
+    headers: subtitle.headers,
   };
 }
 
@@ -181,6 +217,13 @@ export class PluginRuntime {
     return this.ctx.list(result.data.map((input) => completeStream(input, this.ctx)));
   }
 
+  async listSubtitles(params: SubtitleListParams): Promise<List<Subtitle>> {
+    const capability = this.definition.subtitles;
+    if (!capability) throw new Error("subtitles not implemented");
+    const result = await capability.list(params, this.ctx);
+    return this.ctx.list(result.data.map(completeSubtitle));
+  }
+
   async retrieveSource(params: SourceRetrieveParams): Promise<Source> {
     const capability = this.definition.sources;
     if (!capability) throw new Error("resolve not implemented");
@@ -196,6 +239,12 @@ export function handlersOf(definition: PluginDefinition, options: ContextOptions
     handlers.streams = async (args) => {
       const list = await runtime.listStreams(toStreamListParams(args));
       return { downloads: list.data.map(toDownload) };
+    };
+  }
+  if (definition.subtitles) {
+    handlers.subtitles = async (args) => {
+      const list = await runtime.listSubtitles(toSubtitleListParams(args));
+      return { subtitles: list.data.map(toSubtitleFile) };
     };
   }
   if (definition.sources) {

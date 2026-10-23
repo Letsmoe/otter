@@ -3,7 +3,10 @@ package main
 import (
 	"net"
 	"net/http"
+	"regexp"
 	"strings"
+
+	"github.com/neoworks/otter/internal/subtitles"
 )
 
 // DLNA flags: streaming transfer mode, background transfer, connection stalling.
@@ -20,8 +23,22 @@ func dlnaHeaders(next http.Handler) http.Handler {
 		} else {
 			writer.Header().Set("contentFeatures.dlna.org", "DLNA.ORG_OP=01;DLNA.ORG_CI=0;"+dlnaFlags)
 		}
+		setCaptionInfo(writer, request)
 		next.ServeHTTP(writer, request)
 	})
+}
+
+var subtitleIDPattern = regexp.MustCompile(`^[0-9a-f]{32}$`)
+
+// setCaptionInfo points Samsung TVs at the SRT file of the subtitle the app
+// asked for with ?subtitle=<id>; the TV loads it next to the video.
+func setCaptionInfo(writer http.ResponseWriter, request *http.Request) {
+	subtitleID := request.URL.Query().Get("subtitle")
+	if !subtitleIDPattern.MatchString(subtitleID) {
+		return
+	}
+	captionURL := "http://" + request.Host + subtitles.RoutePrefix + subtitleID + ".srt"
+	writer.Header().Set("CaptionInfo.sec", captionURL)
 }
 
 // privateNetworkOnly refuses clients outside loopback and private ranges, so

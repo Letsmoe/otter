@@ -49,4 +49,16 @@ object TelevisionUrls {
     private fun encodeUrl(url: String): String {
         return Base64.encodeToString(url.toByteArray(), Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
     }
+
+    /** Asks the stream server to announce the caption file with the stream (Samsung's CaptionInfo.sec header). */
+    fun withSubtitle(path: String, subtitleId: String?): String {
+        if (subtitleId == null) {
+            return path
+        }
+        var separator = "?"
+        if (path.contains("?")) {
+            separator = "&"
+        }
+        return "$path${separator}subtitle=${Uri.encode(subtitleId)}"
+    }
 }
