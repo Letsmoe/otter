@@ -1,0 +1,36 @@
+{
+  "source": "Jupiter",
+  "success": true,
+  "count": 4,
+  "durationMs": 79,
+  "streams": [
+    {
+      "source": "Jupiter",
+      "quality": "1080p",
+      "type": "hls",
+      "url": "https://stream.aurorascreen.org/jpl?url=https%3A%2F%2Fmoon.zenoak.top%2Fvd%2FZVQwNjVpX1NpaU03c19ZRmdlenN0dzpDYmRtcXVwemhTRklWZGNtS1ZuVDhCb2FfbDlWVDdGLVRnaTdYT05STlNB%2Findex-s1080p-v1-a1.m3u8",
+      "upstream": "https://moon.zenoak.top/vd/ZVQwNjVpX1NpaU03c19ZRmdlenN0dzpDYmRtcXVwemhTRklWZGNtS1ZuVDhCb2FfbDlWVDdGLVRnaTdYT05STlNB/index-s1080p-v1-a1.m3u8"
+    },
+    {
+      "source": "Jupiter 2",
+      "quality": "720p",
+      "type": "hls",
+      "url": "https://stream.aurorascreen.org/jpl?url=https%3A%2F%2Fmoon.zenoak.top%2Fvd%2FZVQwNjVpX1NpaU03c19ZRmdlenN0dzpDYmRtcXVwemhTRklWZGNtS1ZuVDhCb2FfbDlWVDdGLVRnaTdYT05STlNB%2Findex-s720p-v1-a1.m3u8",
+      "upstream": "https://moon.zenoak.top/vd/ZVQwNjVpX1NpaU03c19ZRmdlenN0dzpDYmRtcXVwemhTRklWZGNtS1ZuVDhCb2FfbDlWVDdGLVRnaTdYT05STlNB/index-s720p-v1-a1.m3u8"
+    },
+    {
+      "source": "Jupiter 3",
+      "quality": "480p",
+      "type": "hls",
+      "url": "https://stream.aurorascreen.org/jpl?url=https%3A%2F%2Fmoon.zenoak.top%2Fvd%2FZVQwNjVpX1NpaU03c19ZRmdlenN0dzpDYmRtcXVwemhTRklWZGNtS1ZuVDhCb2FfbDlWVDdGLVRnaTdYT05STlNB%2Findex-s480p-v1-a1.m3u8",
+      "upstream": "https://moon.zenoak.top/vd/ZVQwNjVpX1NpaU03c19ZRmdlenN0dzpDYmRtcXVwemhTRklWZGNtS1ZuVDhCb2FfbDlWVDdGLVRnaTdYT05STlNB/index-s480p-v1-a1.m3u8"
+    },
+    {
+      "source": "Jupiter 4",
+      "quality": "2160p",
+      "type": "hls",
+      "url": "https://stream.aurorascreen.org/jpl?url=https%3A%2F%2Fmoon.zenoak.top%2Fvd%2FZVQwNjVpX1NpaU03c19ZRmdlenN0dzpDYmRtcXVwemhTRklWZGNtS1ZuVDhCb2FfbDlWVDdGLVRnaTdYT05STlNB%2Findex-s2160p-v1-a1.m3u8",
+      "upstream": "https://moon.zenoak.top/vd/ZVQwNjVpX1NpaU03c19ZRmdlenN0dzpDYmRtcXVwemhTRklWZGNtS1ZuVDhCb2FfbDlWVDdGLVRnaTdYT05STlNB/index-s2160p-v1-a1.m3u8"
+    }
+  ]
+}

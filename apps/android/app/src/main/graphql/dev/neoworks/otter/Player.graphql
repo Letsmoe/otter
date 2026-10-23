@@ -1,0 +1,95 @@
+fragment SourceStreamFields on Stream {
+  id
+  plugin
+  url
+  label
+  quality
+  language
+  playable
+  speedBps
+}
+
+subscription SourceStreams($id: ID!) {
+  streams(id: $id) {
+    done
+    streams {
+      ...SourceStreamFields
+    }
+  }
+}
+
+fragment PlayerProgressFields on WatchProgress {
+  progressSeconds
+  durationSeconds
+  completed
+}
+
+query PlayerMovie($id: ID!, $profileId: ID!) {
+  title(id: $id) {
+    id
+    title
+    progress(profileId: $profileId) {
+      ...PlayerProgressFields
+    }
+  }
+}
+
+query PlayerEpisode($id: ID!, $profileId: ID!) {
+  episode(id: $id) {
+    id
+    seasonNumber
+    episodeNumber
+    name
+    next {
+      id
+    }
+    series {
+      id
+      title
+    }
+    progress(profileId: $profileId) {
+      ...PlayerProgressFields
+    }
+    skipSegments {
+      kind
+      startSeconds
+      endSeconds
+    }
+  }
+}
+
+query PlayerSeriesEpisodes($id: ID!, $profileId: ID!) {
+  title(id: $id) {
+    id
+    seasons {
+      seasonNumber
+      episodes {
+        id
+        seasonNumber
+        episodeNumber
+        name
+        overview
+        stillPath
+        next {
+          id
+        }
+        progress(profileId: $profileId) {
+          ...PlayerProgressFields
+        }
+      }
+    }
+  }
+}
+
+query PlayerRating($id: ID!, $profileId: ID!) {
+  title(id: $id) {
+    id
+    rating(profileId: $profileId)
+  }
+}
+
+mutation PlayerRecordProgress($profileId: ID!, $mediaId: ID!, $progressSeconds: Float!, $durationSeconds: Float!) {
+  recordProgress(profileId: $profileId, mediaId: $mediaId, progressSeconds: $progressSeconds, durationSeconds: $durationSeconds) {
+    completed
+  }
+}

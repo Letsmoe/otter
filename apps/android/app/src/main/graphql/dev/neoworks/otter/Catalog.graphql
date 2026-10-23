@@ -1,0 +1,14 @@
+query Catalog($mediaType: MediaType!, $sort: CatalogSort!) {
+  catalog(mediaType: $mediaType, sort: $sort) {
+    ...TitleCard
+  }
+}
+
+query CatalogRows($mediaType: MediaType!, $count: Int!, $exclude: [String!]!) {
+  catalogRows(mediaType: $mediaType, count: $count, exclude: $exclude) {
+    genre
+    items {
+      ...TitleCard
+    }
+  }
+}

@@ -1,0 +1,1682 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<title>KinoZ.TO - Suchergebnisse für 'Bosch' - KinoX.to</title>
+	       <meta name="keywords" content=" , serien, filme, movie4k.to, kinox.to, kinos.to, kinoz.to" />
+		<meta name="description" content=" Filme und Serien kostenlos streamen bs.to movie4k kinox.to alternative kinos.to kinoz.to" />
+              <meta property="og:type" content="video.other"/>
+		<meta property="og:title" content="KinoZ.TO - Suchergebnisse für 'Bosch'" />
+		<meta property="og:url" content="https://kinos.to/" />
+		<meta property="og:image" content="/gr/favicon.ico" />
+		<meta property="og:description" content=" Filme und Serien streamkiste s.to bs.to movie4k kinox.to kinos.to kinoz.to" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="robots" content="all" />                           
+		<link rel="shortcut icon" href="/gr/favicon.ico" type="image/x-icon" />
+		<link rel="stylesheet" type="text/css" href="/css/cssreset-min.css">
+		<link rel="stylesheet" type="text/css" href="/css/chosen.min.css" />
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css" integrity="sha384-O8whS3fhG2OnA5Kas0Y9l3cfpmYjapjI0E4theH4iuMD+pLhbf6JI0jIMfYcK3yZ" crossorigin="anonymous">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bxslider/4.2.15/jquery.bxslider.min.css" rel="stylesheet" />
+
+<link rel="stylesheet" type="text/css" href="/cs/kino-default.css" />    <link rel="stylesheet" type="text/css" href="/cs/themes/default/profile.css" />
+		<link rel="stylesheet" type="text/css" href="/css/responsive21.css" />
+  	<script type="text/javascript">var PageStyle = 'default'; var TLD = 'kinos.to/';</script>
+  	<script  data-cfasync="false" type="text/javascript" src="https://code.jquery.com/jquery-1.7.min.js" data-rocketoptimized="false"></script>
+  	<script type="text/javascript" src="/js/jquery-ui-1.10.0.custom.min.js"></script>
+  	<script type="text/javascript" src="/js/jquery.lightbox-0.5.min.js"></script>
+  	<script type="text/javascript" src="/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.tokeninput.js"></script>
+    <script type="text/javascript" src="/js/jquery.tools.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.tipsy.js"></script>
+    <script type="text/javascript" src="/js/jquery.spin.js"></script>
+    <script type="text/javascript" src="/js/chosen.jquery.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.customSelect.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.autocomplete.js"></script>
+     <script data-cfasync="false" type="text/javascript" src="/js/scripts3.js" data-rocketoptimized="false"></script>
+    <script type="text/javascript" src="/js/user.js"></script>
+    <script type="text/javascript" src="/js/responsive11.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bxslider/4.2.15/jquery.bxslider.min.js"></script>
+		<link rel="search" type="application/opensearchdescription+xml" href="/xml/kinoxopensearch.xml" title="KinoX Opensearch">
+	</head>
+	<body>
+
+<style>
+.ac_results{
+  box-sizing: border-box;
+  z-index: 999999 !important;
+}
+</style>
+
+<script>
+$(function () {
+  var $search = $("#search");
+  var $menu = $();
+
+
+  $search.autocomplete("/aGET/Suggestions/", {
+    matchContains: true,
+    minChars: 2,
+    selectFirst: false
+  });
+
+
+  function getScale(el, rect) {
+    var w = el.offsetWidth  || 1;
+    var h = el.offsetHeight || 1;
+    var sx = rect.width  / w;
+    var sy = rect.height / h;
+    if (!isFinite(sx) || sx <= 0) sx = 1;
+    if (!isFinite(sy) || sy <= 0) sy = 1;
+    return { x: sx, y: sy };
+  }
+
+  function ensureMenu() {
+    var $m = $(".ac_results:visible");
+    if ($m.length) $menu = $m.last();
+    return $menu.length;
+  }
+
+  function placeMenu() {
+    if (!ensureMenu()) return;
+
+    var el = $search[0];
+    var rect = el.getBoundingClientRect();
+    var s = getScale(el, rect);
+
+    var left  = (rect.left   + window.pageXOffset) / s.x;
+    var top   = (rect.bottom + window.pageYOffset) / s.y;
+    var width = rect.width / s.x;
+
+    $menu[0].style.setProperty("position", "absolute", "important");
+    $menu[0].style.setProperty("left",  Math.round(left)  + "px", "important");
+    $menu[0].style.setProperty("top",   Math.round(top)   + "px", "important");
+    $menu[0].style.setProperty("width", Math.round(width) + "px", "important");
+    $menu[0].style.setProperty("z-index", "999999", "important");
+  }
+
+
+  var raf = 0;
+  function requestPlace() {
+    if (raf) return;
+    var fn = window.requestAnimationFrame || function(cb){ return setTimeout(cb, 0); };
+    raf = fn(function () {
+      raf = 0;
+      placeMenu();
+    });
+  }
+
+  
+  $search.on("focus input keyup", requestPlace);
+  $(window).on("scroll resize", requestPlace);
+
+
+  $(document).on("mousedown pointerdown touchstart", ".ac_results", function (e) {
+    e.preventDefault();
+  });
+
+
+  if (window.MutationObserver) {
+    var mo = new MutationObserver(function () { requestPlace(); });
+    mo.observe(document.body, { childList: true, subtree: true });
+  }
+
+});
+</script><style>
+  #header{
+    cursor: pointer;
+    user-select: none;
+  }
+  @media (hover: none) and (pointer: coarse) {
+    #header { cursor: default !important; }
+  }
+  @media (max-width: 768px) {
+    #header { cursor: default !important; }
+  }
+
+#preview{
+  position:absolute;
+  z-index:2147483647;
+  display:none;
+  pointer-events:none;  
+}
+#preview img{
+  display:block;
+  height:auto;
+  max-width:260px;       
+}
+html { zoom: 1; 
+}
+
+@media (min-width:1050px) and (max-width:1249.98px) and (hover:hover) and (pointer:fine){
+  html{ zoom:1.05; }
+  .cinemaCoverWrap{ zoom:0.9523810; } /* 1/1.05 */
+}
+
+@media (min-width:1250px) and (max-width:1349.98px) and (hover:hover) and (pointer:fine){
+  html{ zoom:1.2; }
+  .cinemaCoverWrap{ zoom:0.8333333; } /* 1/1.2 */
+}
+
+@media (min-width:1350px) and (max-width:1599.98px) and (hover:hover) and (pointer:fine){
+  html{ zoom:1.3; }
+  .cinemaCoverWrap{ zoom:0.7692308; } /* 1/1.3 */
+}
+
+@media (min-width: 1600px) and (hover: hover) and (pointer: fine) {
+  html { zoom: 1.75; }
+  .cinemaCoverWrap { zoom: 0.5714286; } /* 1/1.75 = full counter-zoom */
+}
+
+html{ overflow-x:hidden; }
+
+.scrollable .items {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+
+@media (min-width: 1600px) and (hover: hover) and (pointer: fine) {
+  .cinemaCoverWrap .browse {
+    position: relative;
+    background-repeat: no-repeat !important;
+  }
+
+  .cinemaCoverWrap .browse::before {
+    content: "";
+    position: absolute;
+    top: -30px;
+    bottom: -30px;
+    z-index: 1;
+  }
+
+  .cinemaCoverWrap .browse.left::before {
+    left: -60px;
+    right: 60px;
+  }
+
+  .cinemaCoverWrap .browse.right::before {
+    left: -60px;
+    right: -60px;
+  }
+
+  .cinemaCoverWrap .browse.left {
+    left: -80px !important;
+  }
+
+  .cinemaCoverWrap .browse.right {
+    right: -80px !important;
+  }
+}
+
+/* Cinema cover carousel styles - only for 1600px+ (highest zoom) */
+@media (min-width: 1600px) and (hover: hover) and (pointer: fine) {
+  .cinemaCoverWrap {
+    width: 1120px !important;
+    height: 250px !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+  }
+
+  .cinemaCoverWrap .scrollable {
+    width: 920px !important;
+    height: 250px !important;
+    overflow: hidden;
+    margin: 0 10px !important;
+    padding: 0 !important;
+  }
+
+  .cinemaCoverWrap .scrollable .items > div {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    width: 920px !important;
+    height: 250px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    justify-content: flex-start;
+  }
+
+  .cinemaCoverWrap .scrollable .image {
+    flex: 0 0 auto;
+    width: 160px;
+    height: 250px;
+    border: none !important;
+    outline: none !important;
+  }
+
+  .cinemaCoverWrap .scrollable .image img {
+    width: 160px;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+}
+
+</style>
+<script>
+$(function () {
+  // 
+  function isDesktopZoomed() {
+    return (window.matchMedia &&
+      window.matchMedia('(min-width: 1600px) and (hover: hover) and (pointer: fine)').matches);
+  }
+
+  // 
+  if (isDesktopZoomed()) {
+    $(".cinemaCoverWrap .scrollable").each(function () {
+      var $sc = $(this);
+      var $wrap = $sc.closest(".cinemaCoverWrap");
+      var $items = $sc.find(".items");
+      var $pages = $items.find("> div");
+      var currentPage = 0;
+      var totalPages = $pages.length;
+      var containerWidth = 920; // 5 covers for desktop zoomed with spacing
+
+      // 
+      if ($sc.data("scrollable")) {
+        try {
+          $sc.data("scrollable").destroy();
+        } catch(e) {}
+        $sc.removeData("scrollable");
+      }
+
+      // 
+      $items.css({
+        "left": "0px",
+        "top": "0px",
+        "position": "absolute",
+        "width": (totalPages * containerWidth) + "px"
+      });
+
+      // 
+      $pages.css({
+        "position": "absolute",
+        "top": "0px",
+        "width": containerWidth + "px"
+      });
+
+      $pages.each(function(index) {
+        $(this).css("left", (index * containerWidth) + "px");
+      });
+
+      // 
+      function goToPage(pageIndex) {
+        if (pageIndex < 0) pageIndex = totalPages - 1;
+        if (pageIndex >= totalPages) pageIndex = 0;
+        
+        currentPage = pageIndex;
+        var newLeft = (-pageIndex * containerWidth) + "px";
+        
+        $items.css({
+          "left": newLeft,
+          "position": "absolute",
+          "top": "0px"
+        });
+        
+        $items.attr("style", $items.attr("style") + "; left: " + newLeft + " !important; position: absolute !important; top: 0px !important;");
+      }
+
+      var $prevArrow = $wrap.find("a.prev");
+      var $nextArrow = $wrap.find("a.next");
+
+      $prevArrow.off().on("click", function (e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        goToPage(currentPage - 1);
+        return false;
+      });
+
+      $nextArrow.off().on("click", function (e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        goToPage(currentPage + 1);
+        return false;
+      });
+
+      // 
+      goToPage(0);
+      
+      // 
+      setTimeout(function() {
+        goToPage(0);
+      }, 100);
+
+      // Setup autoscroll - delay start to ensure we're on page 0
+      setTimeout(function() {
+        setInterval(function() {
+          goToPage(currentPage + 1);
+        }, 18000);
+      }, 500);
+
+      // Setup tooltips for zoomed mode
+      if ($.fn.tipsy) {
+        $sc.find("div.image > a").tipsy({
+          gravity: 's',
+          fade: true,
+          opacity: 0.8,
+          offset: 5
+        });
+      }
+    });
+  }
+  // 
+});
+</script><div id="frmMain">
+  <div id="header" role="link" tabindex="0">
+
+<script>
+  (function () {
+    var el = document.getElementById('header');
+    if (!el) return;
+
+    function isMobile() {
+      return (window.matchMedia &&
+        (window.matchMedia('(hover: none) and (pointer: coarse)').matches ||
+         window.matchMedia('(max-width: 768px)').matches));
+    }
+
+    function goHome() { window.location.href = '/'; }
+
+    el.addEventListener('click', function () {
+      if (isMobile()) return;  
+      goHome();
+    });
+
+    el.addEventListener('keydown', function (e) {
+      if (isMobile()) return;    
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        goHome();
+      }
+    });
+  })();
+</script>
+
+
+  		 <!--<img class="UltraOpt" src="/gr/sys/lng/1.png" alt="PageLang/1" width="16" height="11" title="Seitensprache auf deutsch �ndern" />-->
+       <!--<img class="UltraOpt" src="/gr/sys/lng/2.png" alt="PageLang/2" width="16" height="11" title="Change pagelanguage to english" />-->
+  		 <!--<a href="/RSS-Feeds.html"><img src="/gr/sys/fff/rss.png" alt="RSS Feeds" width="16" height="11" title="RSS Feed" /></a>-->
+       <img class="UltraOpt" src="/gr/sys/btn/ldefault.png" alt="PageLayout/default" width="16" height="11" title="Change Pagelayout to: default" />
+  		 <img class="UltraOpt" src="/gr/sys/btn/lgirl.png" alt="PageLayout/girly" width="16" height="11" title="Change Pagelayout to: girly" />
+  		 <img class="UltraOpt" src="/gr/sys/btn/ldark.png" alt="PageLayout/dark" width="16" height="11" title="Change Pagelayout to: dark" />
+		 </div>
+		 <menu id="navigation">
+  		 <li id="alNews"><a href="/">News</a></li>
+       <li class="DropDown" id="DropDownNews"></li>
+  		 <li class="BL" id="alGenre"><a title="Genre &Uuml;bersicht" href="/Genre.html">Genres</a></li>
+  		 <li class="DropDown" id="DropDownGenre"></li>
+  		 <li class="BL"><a href="/FAQ.html" title="H�ufig gestellte Fragen">FAQ</a></li>
+  		 <li class="BL"><a href="/Playlists.html" title="Playlisten">Playlists</a></li>  	
+       <li class="L"></li>
+  		 <li class="Wizard"><a rel="nofollow" title="Sprach und sonstige Einstellungen!" href="/Wizard.html">&nbsp;</a></li>
+  		 <li class="R"><form method="get" action="/Search.html" name="QuickSearch" id="QuickSearchForm"><input type="submit" value="" class="InputBtn" /><input type="text" name="q" class="InputPattern" id="search" value="" size="33" /></form></li>
+<li class="BL"><a href="/Kino-filme.html" title="Alle Kinofilme">Alle Kinofilme</a></li>
+		  		 	 <li class="BL" id="alTipps"><a rel="nofollow" href="/Tipp.html">Film Tipp</a></li>
+  		 <li class="DropDown" id="DropDownTipps"></li>
+
+ </menu>
+		 <div id="dontbeevil">
+       <menu id="mainmenu">
+  			 <li class="head mHead">
+  			   <div class="Opt leftOpt Dummy"></div>
+  				 <div class="Opt leftOpt Headlne"><h1>Navigation</h1></div>
+  			 </li>
+  			          <li class="sub"><span>Unterseiten</span></li>
+  			 <li class="item"><a title ="Alternative Kinox.to Adressen" href="/Alternative.html">Backup Domains</a></li>
+         <li class="item"><a title="Optionen" href="/Options.html">Optionen</a></li>
+  			 <li class="item"><a title="Schauspieler Index" href="/Actor.html">Schauspieler Index</a></li>
+  			 <li class="item"><a title="Regie Index" href="/Director.html">Regie Index</a></li>
+  			          <li class="item"><a class="loginBox" href="/Login.html">Login / Register</a></li>
+                  <li class="space"></li>
+  			 <li class="sub"><span>Kinofilme</span><span class="Count"></span></li>
+         <li class="item"><a title="Aktuelle Kinofilme" href="/Kinox-filme.html">Alle Kinofilme</a></li>
+  			 <li class="space"></li>
+  			 <li class="sub"><span>Filme</span><span class="Count"></span></li>
+  			 <li class="item"><a title="Alle Filme" href="/All-Filme.html">Alle Filme</a></li>
+  			 <li class="item"><a title="Beliebte Filme" href="/Popular-Filme.html">Beliebte</a></li>
+			 <li class="item"><a title="Neueste Filme" href="/Latest-Filme.html">Neueste</a></li>
+			 <li class="item"><a title="Neuste Updates Filme" href="/Updates-Filme.html">Updates</a></li>
+
+  			 <li class="space"></li>
+
+
+ <li class="sub"><span>Serien</span><span class="Count"></span></li>
+  
+  			 <li class="item"><a title="Alle Serien" href="/Fernseh-TVSerien.html">Alle Serien</a></li>
+  			 <li class="item"><a title="Beliebte Serien" href="/Popular-TVSerien.html">Beliebte</a></li>
+  			 <li class="item"><a title="Neuste Serien" href="/Latest-TVSerien.html">Neuste</a></li>
+  			 <li class="item"><a title="Neuste Updates Serien" href="/Updates-Series.html">Updates</a></li>
+  			 <li class="space"></li>
+
+  
+         <li class="sub"><span>Dokus</span><span class="Count"></span></li>
+  			 <li class="item"><a title="Alle Dokumentationen" href="/Alle-Dokumentationen.html">Alle Dokumentationen</a></li>
+  			 <li class="item"><a title="Beliebte Dokumentationen" href="/Popular-Dokumentationen.html">Beliebte</a></li>
+  			 <li class="item"><a title="Neuste Dokumentationen" href="/Latest-Dokumentationen.html">Neuste</a></li>
+  			 <li class="space"></li>
+
+  			  			 <li class="sub"><span><a title="KinoX.to - Online Filme Streams" href="https://kinos.to/">Partner</a></span></li>
+		 <li class="item"><a title="Kion" href="https://kion.ru">Kion</a></li>
+
+    			 <!--<li style="text-align: center;"><a target="_blank" href=""><img width="120" height="600" src="" /></a></li></li>-->
+
+
+
+
+
+
+
+
+  			 <li class="foot"></li>   
+       </menu>
+       <div id="Vadda">    <div class="ModuleHead mHead">
+	<div class="Opt leftOpt Customize"><img id="extended-search-button" src="/gr/sys/btn/Transam.png" height="30" width="16" alt="Anpassen" title="Anpassen" border="0" /></div>
+	<div class="Opt leftOpt Spacer"></div>
+	<div class="Opt leftOpt Headlne"><h1></h1></div>
+	<div class="Opt rightOpt ListOpt">
+		<div class="floatleft">Ansicht:</div> 
+		<a href="#" onclick="switchList('list'); return false;" class="listIcon "></a> 
+		<a href="#" onclick="switchList('cover'); return false;" class="coverIcon coverIconActive"></a>
+		<div class="clearboth"></div>
+	</div>
+	<div class="Opt rightOpt Spacer"></div>
+</div>
+
+<div id="extended-search" class="ModuleAnnounceMent" style="display: none;">
+	<form id="extended-search-form" action="" method="GET">
+		<div class="search_extended_col">
+			<div class="search_option">
+				<label for="search_title">Filmtitel</label>
+				<input id="search_title" value="Bosch" name="q" placeholder="Titel des Eintrags oder IMDb-ID" type="text" />
+			</div>
+			
+			<div class="search_option">
+				<label for="search_language">Sprache</label>
+				<select data-placeholder="Sprachen ausw&auml;hlen..." id="search_language" class="multiple-select" name="language" multiple>
+										<option value="1">Deutsch</option>
+										<option value="2">Englisch</option>
+										<option value="4">Chinesisch</option>
+										<option value="5">Spanisch</option>
+										<option value="6">Französisch</option>
+										<option value="7">Türkisch</option>
+										<option value="8">Japanisch</option>
+										<option value="11">Italienisch</option>
+										<option value="15">Deutsch / Englisch</option>
+										<option value="16">Niederländisch</option>
+										<option value="9">Arabisch</option>
+										<option value="12">Kroatisch</option>
+										<option value="13">Serbisch</option>
+										<option value="14">Bosnisch</option>
+										<option value="17">Koreanisch</option>
+										<option value="24">Griechisch</option>
+										<option value="25">Russisch</option>
+										<option value="26">Indisch</option>
+									</select>
+			</div>
+			
+			<div class="search_option">
+				<label for="search_subtitle">Untertitel</label>
+				<select data-placeholder="Untertitel ausw&auml;hlen..." id="search_subtitle" class="multiple-select" name="subtitle" multiple>
+										<option value="1">Deutsch</option>
+										<option value="2">Englisch</option>
+										<option value="4">Chinesisch</option>
+										<option value="5">Spanisch</option>
+										<option value="6">Französisch</option>
+										<option value="7">Türkisch</option>
+										<option value="8">Japanisch</option>
+										<option value="11">Italienisch</option>
+										<option value="15">Deutsch / Englisch</option>
+										<option value="16">Niederländisch</option>
+										<option value="9">Arabisch</option>
+										<option value="12">Kroatisch</option>
+										<option value="13">Serbisch</option>
+										<option value="14">Bosnisch</option>
+										<option value="17">Koreanisch</option>
+										<option value="24">Griechisch</option>
+										<option value="25">Russisch</option>
+										<option value="26">Indisch</option>
+									</select>
+			</div>
+		</div>
+		
+		<div class="search_extended_col">
+			<div class="search_option">
+				<label for="search_genre">Genre</label>
+				<select data-placeholder="Genres ausw&auml;hlen..." id="search_genre" class="multiple-select" name="genre" multiple>
+										<option value="1">Action</option>
+										<option value="30">Adult</option>
+										<option value="2">Adventure</option>
+										<option value="3">Animation</option>
+										<option value="4">Anime</option>
+										<option value="23">Biography</option>
+										<option value="24">Bollywood</option>
+										<option value="5">Comedy</option>
+										<option value="6">Crime</option>
+										<option value="7">Documentary</option>
+										<option value="8">Drama</option>
+										<option value="9">Family</option>
+										<option value="10">Fantasy</option>
+										<option value="11">History</option>
+										<option value="12">Horror</option>
+										<option value="14">Music</option>
+										<option value="29">Musical</option>
+										<option value="15">Mystery</option>
+										<option value="32">Reality-TV</option>
+										<option value="16">Romance</option>
+										<option value="31">Sci-Fi</option>
+										<option value="28">Short</option>
+										<option value="18">Sport</option>
+										<option value="20">Thriller</option>
+										<option value="21">War</option>
+										<option value="22">Western</option>
+									</select> 
+			</div>
+			
+			<div class="search_option">
+				<label for="search_country">Land</label>
+				<select data-placeholder="L&auml;nder ausw&auml;hlen..." id="search_country" class="multiple-select" name="country" multiple>
+										<option value="21">Australia</option>
+										<option value="19">Belgium</option>
+										<option value="30">Bulgaria</option>
+										<option value="10">Canada</option>
+										<option value="27">China</option>
+										<option value="29">Denmark</option>
+										<option value="6">France</option>
+										<option value="3">Germany</option>
+										<option value="7">Hong Kong</option>
+										<option value="35">India</option>
+										<option value="8">Italy</option>
+										<option value="9">Japan</option>
+										<option value="32">Russia</option>
+										<option value="37">South Korea</option>
+										<option value="12">Spain</option>
+										<option value="25">Sweden</option>
+										<option value="31">Switzerland</option>
+										<option value="22">Taiwan</option>
+										<option value="2">UK</option>
+										<option value="1">USA</option>
+									</select>
+			</div>
+			
+			<div class="search_option">
+				<label for="search_type">Typ</label>
+				<select class="filter-select" style="width:100%" id="search_type" name="type">
+					<option value="">Alle Typen</option>
+					<option value="movie">🎬 Filme</option>
+					<option value="series">📺 Serien</option>
+					<option value="documentation">🎞️ Dokumentationen</option>
+					<option value="cinema">🎪 Kino</option>
+				</select>
+			</div>
+		</div>
+		
+		<div class="search_extended_col last-col">
+			<div class="search_option">
+				<label>IMDb Bewertung</label>
+				<div class="box_option">
+					<select class="filter-select" name="imdbop">
+						<option selected value=">=">&ge; gr&ouml;&szlig;er gleich</option>
+						<option value="=">= exakt</option>
+						<option value="<=">&le; kleiner gleich</option>
+					</select>
+				</div>
+				<div class="box_option last-col">
+					<select class="filter-select" name="imdbrating">
+						<option value="">W&auml;hlen</option>
+												<option value="10">10.0 ★</option>
+												<option value="9.5">9.5 ★</option>
+												<option value="9">9.0 ★</option>
+												<option value="8.5">8.5 ★</option>
+												<option value="8">8.0 ★</option>
+												<option value="7.5">7.5 ★</option>
+												<option value="7">7.0 ★</option>
+												<option value="6.5">6.5 ★</option>
+												<option value="6">6.0 ★</option>
+												<option value="5.5">5.5 ★</option>
+												<option value="5">5.0 ★</option>
+												<option value="4.5">4.5 ★</option>
+												<option value="4">4.0 ★</option>
+												<option value="3.5">3.5 ★</option>
+												<option value="3">3.0 ★</option>
+												<option value="2.5">2.5 ★</option>
+												<option value="2">2.0 ★</option>
+												<option value="1.5">1.5 ★</option>
+												<option value="1">1.0 ★</option>
+											</select>
+				</div> 
+				<div class="clearboth"></div>
+			</div>
+			
+			<div class="search_option">
+				<label>Jahr (von/bis)</label>
+				<div class="box_option">
+					<select class="filter-select" name="year_from">
+						<option value="">Von Jahr</option>
+												<option value="2027">2027</option>
+												<option value="2026">2026</option>
+												<option value="2025">2025</option>
+												<option value="2024">2024</option>
+												<option value="2023">2023</option>
+												<option value="2022">2022</option>
+												<option value="2021">2021</option>
+												<option value="2020">2020</option>
+												<option value="2019">2019</option>
+												<option value="2018">2018</option>
+												<option value="2017">2017</option>
+												<option value="2016">2016</option>
+												<option value="2015">2015</option>
+												<option value="2014">2014</option>
+												<option value="2013">2013</option>
+												<option value="2012">2012</option>
+												<option value="2011">2011</option>
+												<option value="2010">2010</option>
+												<option value="2009">2009</option>
+												<option value="2008">2008</option>
+												<option value="2007">2007</option>
+												<option value="2006">2006</option>
+												<option value="2005">2005</option>
+												<option value="2004">2004</option>
+												<option value="2003">2003</option>
+												<option value="2002">2002</option>
+												<option value="2001">2001</option>
+												<option value="2000">2000</option>
+												<option value="1999">1999</option>
+												<option value="1998">1998</option>
+												<option value="1997">1997</option>
+												<option value="1996">1996</option>
+												<option value="1995">1995</option>
+												<option value="1994">1994</option>
+												<option value="1993">1993</option>
+												<option value="1992">1992</option>
+												<option value="1991">1991</option>
+												<option value="1990">1990</option>
+												<option value="1989">1989</option>
+												<option value="1988">1988</option>
+												<option value="1987">1987</option>
+												<option value="1986">1986</option>
+												<option value="1985">1985</option>
+												<option value="1984">1984</option>
+												<option value="1983">1983</option>
+												<option value="1982">1982</option>
+												<option value="1981">1981</option>
+												<option value="1980">1980</option>
+												<option value="1979">1979</option>
+												<option value="1978">1978</option>
+												<option value="1977">1977</option>
+												<option value="1976">1976</option>
+												<option value="1975">1975</option>
+												<option value="1974">1974</option>
+												<option value="1973">1973</option>
+												<option value="1972">1972</option>
+												<option value="1971">1971</option>
+												<option value="1970">1970</option>
+												<option value="1969">1969</option>
+												<option value="1968">1968</option>
+												<option value="1967">1967</option>
+												<option value="1966">1966</option>
+												<option value="1965">1965</option>
+												<option value="1964">1964</option>
+												<option value="1963">1963</option>
+												<option value="1962">1962</option>
+												<option value="1961">1961</option>
+												<option value="1960">1960</option>
+												<option value="1959">1959</option>
+												<option value="1958">1958</option>
+												<option value="1957">1957</option>
+												<option value="1956">1956</option>
+												<option value="1955">1955</option>
+												<option value="1954">1954</option>
+												<option value="1953">1953</option>
+												<option value="1952">1952</option>
+												<option value="1951">1951</option>
+												<option value="1950">1950</option>
+												<option value="1949">1949</option>
+												<option value="1948">1948</option>
+												<option value="1947">1947</option>
+												<option value="1946">1946</option>
+												<option value="1945">1945</option>
+												<option value="1944">1944</option>
+												<option value="1943">1943</option>
+												<option value="1942">1942</option>
+												<option value="1941">1941</option>
+												<option value="1940">1940</option>
+												<option value="1939">1939</option>
+												<option value="1938">1938</option>
+												<option value="1937">1937</option>
+												<option value="1936">1936</option>
+												<option value="1935">1935</option>
+												<option value="1934">1934</option>
+												<option value="1933">1933</option>
+												<option value="1932">1932</option>
+												<option value="1931">1931</option>
+												<option value="1930">1930</option>
+												<option value="1929">1929</option>
+												<option value="1928">1928</option>
+												<option value="1927">1927</option>
+												<option value="1926">1926</option>
+												<option value="1925">1925</option>
+												<option value="1924">1924</option>
+												<option value="1923">1923</option>
+												<option value="1922">1922</option>
+												<option value="1921">1921</option>
+												<option value="1920">1920</option>
+												<option value="1919">1919</option>
+												<option value="1918">1918</option>
+												<option value="1917">1917</option>
+												<option value="1916">1916</option>
+												<option value="1915">1915</option>
+												<option value="1914">1914</option>
+												<option value="1913">1913</option>
+												<option value="1912">1912</option>
+												<option value="1911">1911</option>
+												<option value="1910">1910</option>
+												<option value="1909">1909</option>
+												<option value="1908">1908</option>
+												<option value="1907">1907</option>
+												<option value="1906">1906</option>
+												<option value="1905">1905</option>
+												<option value="1904">1904</option>
+												<option value="1903">1903</option>
+												<option value="1902">1902</option>
+												<option value="1901">1901</option>
+												<option value="1900">1900</option>
+											</select>
+				</div>
+				<div class="box_option last-col">
+					<select class="filter-select" name="year_to">
+						<option value="">Bis Jahr</option>
+												<option value="2027">2027</option>
+												<option value="2026">2026</option>
+												<option value="2025">2025</option>
+												<option value="2024">2024</option>
+												<option value="2023">2023</option>
+												<option value="2022">2022</option>
+												<option value="2021">2021</option>
+												<option value="2020">2020</option>
+												<option value="2019">2019</option>
+												<option value="2018">2018</option>
+												<option value="2017">2017</option>
+												<option value="2016">2016</option>
+												<option value="2015">2015</option>
+												<option value="2014">2014</option>
+												<option value="2013">2013</option>
+												<option value="2012">2012</option>
+												<option value="2011">2011</option>
+												<option value="2010">2010</option>
+												<option value="2009">2009</option>
+												<option value="2008">2008</option>
+												<option value="2007">2007</option>
+												<option value="2006">2006</option>
+												<option value="2005">2005</option>
+												<option value="2004">2004</option>
+												<option value="2003">2003</option>
+												<option value="2002">2002</option>
+												<option value="2001">2001</option>
+												<option value="2000">2000</option>
+												<option value="1999">1999</option>
+												<option value="1998">1998</option>
+												<option value="1997">1997</option>
+												<option value="1996">1996</option>
+												<option value="1995">1995</option>
+												<option value="1994">1994</option>
+												<option value="1993">1993</option>
+												<option value="1992">1992</option>
+												<option value="1991">1991</option>
+												<option value="1990">1990</option>
+												<option value="1989">1989</option>
+												<option value="1988">1988</option>
+												<option value="1987">1987</option>
+												<option value="1986">1986</option>
+												<option value="1985">1985</option>
+												<option value="1984">1984</option>
+												<option value="1983">1983</option>
+												<option value="1982">1982</option>
+												<option value="1981">1981</option>
+												<option value="1980">1980</option>
+												<option value="1979">1979</option>
+												<option value="1978">1978</option>
+												<option value="1977">1977</option>
+												<option value="1976">1976</option>
+												<option value="1975">1975</option>
+												<option value="1974">1974</option>
+												<option value="1973">1973</option>
+												<option value="1972">1972</option>
+												<option value="1971">1971</option>
+												<option value="1970">1970</option>
+												<option value="1969">1969</option>
+												<option value="1968">1968</option>
+												<option value="1967">1967</option>
+												<option value="1966">1966</option>
+												<option value="1965">1965</option>
+												<option value="1964">1964</option>
+												<option value="1963">1963</option>
+												<option value="1962">1962</option>
+												<option value="1961">1961</option>
+												<option value="1960">1960</option>
+												<option value="1959">1959</option>
+												<option value="1958">1958</option>
+												<option value="1957">1957</option>
+												<option value="1956">1956</option>
+												<option value="1955">1955</option>
+												<option value="1954">1954</option>
+												<option value="1953">1953</option>
+												<option value="1952">1952</option>
+												<option value="1951">1951</option>
+												<option value="1950">1950</option>
+												<option value="1949">1949</option>
+												<option value="1948">1948</option>
+												<option value="1947">1947</option>
+												<option value="1946">1946</option>
+												<option value="1945">1945</option>
+												<option value="1944">1944</option>
+												<option value="1943">1943</option>
+												<option value="1942">1942</option>
+												<option value="1941">1941</option>
+												<option value="1940">1940</option>
+												<option value="1939">1939</option>
+												<option value="1938">1938</option>
+												<option value="1937">1937</option>
+												<option value="1936">1936</option>
+												<option value="1935">1935</option>
+												<option value="1934">1934</option>
+												<option value="1933">1933</option>
+												<option value="1932">1932</option>
+												<option value="1931">1931</option>
+												<option value="1930">1930</option>
+												<option value="1929">1929</option>
+												<option value="1928">1928</option>
+												<option value="1927">1927</option>
+												<option value="1926">1926</option>
+												<option value="1925">1925</option>
+												<option value="1924">1924</option>
+												<option value="1923">1923</option>
+												<option value="1922">1922</option>
+												<option value="1921">1921</option>
+												<option value="1920">1920</option>
+												<option value="1919">1919</option>
+												<option value="1918">1918</option>
+												<option value="1917">1917</option>
+												<option value="1916">1916</option>
+												<option value="1915">1915</option>
+												<option value="1914">1914</option>
+												<option value="1913">1913</option>
+												<option value="1912">1912</option>
+												<option value="1911">1911</option>
+												<option value="1910">1910</option>
+												<option value="1909">1909</option>
+												<option value="1908">1908</option>
+												<option value="1907">1907</option>
+												<option value="1906">1906</option>
+												<option value="1905">1905</option>
+												<option value="1904">1904</option>
+												<option value="1903">1903</option>
+												<option value="1902">1902</option>
+												<option value="1901">1901</option>
+												<option value="1900">1900</option>
+											</select>
+				</div>
+				<div class="clearboth"></div>
+			</div>
+			
+			<div class="search_option">
+				<label for="search_sort">Sortierung</label>
+				<select class="filter-select" style="width:100%" id="search_sort" name="sort">
+					<option value="">Standard</option>
+					<option value="title_asc">Titel A-Z</option>
+					<option value="title_desc">Titel Z-A</option>
+					<option value="year_desc">Neueste zuerst</option>
+					<option value="year_asc">&Auml;lteste zuerst</option>
+					<option value="imdbrating_desc">Beste Bewertung</option>
+					<option value="imdbrating_asc">Schlechteste Bewertung</option>
+					<option value="popular">Beliebteste</option>
+					<option value="latest">Zuletzt hinzugef&uuml;gt</option>
+				</select>
+			</div>
+		</div>
+		
+		<div class="clearboth"></div>
+		<input type="hidden" name="extended_search" value="1" />
+		<input type="submit" value="Eintr&auml;ge suchen" style="margin: 15px 0 5px 0; padding: 8px 16px; background: #115676; color: white; border: none; border-radius: 4px; cursor: pointer;" />
+		<input type="button" value="Reset" onclick="resetExtendedSearch()" style="margin: 15px 0 5px 10px; padding: 8px 16px; background: #f0f4f6; color: #5C869A; border: 1px solid #b2cadb; border-radius: 4px; cursor: pointer;" />
+	</form>
+</div>
+
+<style>
+/*  Simplified working styles */
+.search_extended_col {
+	width: 31%;
+	margin-right: 3.5%;
+	float: left;
+}
+
+.search_extended_col.last-col {
+	margin-right: 0;
+}
+
+.search_option {
+	margin: 0 0 15px 0;
+}
+
+.search_option label {
+	display: block;
+	font-weight: bold;
+	margin: 0 0 5px 0;
+	color: #5C869A;
+	font-size: 12px;
+}
+
+/* Simple box layout for side-by-side selects */
+.box_option {
+	width: 48%;
+	margin-right: 4%;
+	float: left;
+}
+
+.box_option.last-col {
+	margin-right: 0;
+}
+
+/* Standard filter select styling */
+.filter-select {
+	width: 100%;
+	padding: 6px;
+	border: 1px solid #b2cadb;
+	border-radius: 3px;
+	font-size: 11px;
+	background: #fff;
+	color: #343434;
+}
+
+.filter-select:focus {
+	border-color: #115676;
+	outline: none;
+}
+
+/* Text input styling */
+input[type="text"] {
+	width: 100%;
+	padding: 6px;
+	border: 1px solid #b2cadb;
+	border-radius: 3px;
+	font-size: 11px;
+	background: #fff;
+	color: #343434;
+	box-sizing: border-box;
+}
+
+input[type="text"]:focus {
+	border-color: #115676;
+	outline: none;
+}
+
+/*  Multiple select (for chosen.js) - Enhanced clickability */
+.multiple-select {
+	width: 100%;
+}
+
+/* FIXED: Better chosen.js dropdown clickability */
+.chosen-container {
+	width: 100% !important;
+}
+
+.chosen-container-multi .chosen-choices {
+	border: 1px solid #b2cadb;
+	border-radius: 3px;
+	background: #fff;
+	padding: 4px;
+	min-height: 28px;
+	cursor: pointer;
+}
+
+.chosen-container-multi .chosen-choices:hover {
+	border-color: #8fb3c7;
+}
+
+.chosen-container-active .chosen-choices {
+	border-color: #115676;
+	box-shadow: 0 0 3px rgba(17, 86, 118, 0.3);
+}
+
+.chosen-container-multi .chosen-choices li.search-field input[type="text"] {
+	border: none;
+	background: transparent;
+	outline: none;
+	padding: 2px;
+	margin: 0;
+}
+
+.chosen-drop {
+	border: 1px solid #115676;
+	border-radius: 3px;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+	.search_extended_col {
+		width: 100%;
+		margin-right: 0;
+		margin-bottom: 20px;
+	}
+	
+	.box_option {
+		width: 100%;
+		margin-right: 0;
+		margin-bottom: 10px;
+	}
+}
+</style>
+
+<script>
+//  Complete reset function that also updates Ajax list
+function resetExtendedSearch() {
+	console.log('Reset function called');
+	
+	const form = document.getElementById('extended-search-form');
+	if (form) {
+		form.reset();
+		
+		// Reset chosen.js selects
+		$('.multiple-select').val('').trigger('chosen:updated');
+		
+		// Reset filter selects
+		$('.filter-select').val('');
+		
+		// Clear text inputs
+		$('input[type="text"]').val('');
+		
+		// ✅ CRITICAL: Also reset the Ajax list parameters 
+		if (typeof updateListWithSearch === 'function') {
+			console.log('Resetting Ajax list to default state');
+			// Pass empty search data to clear all filters
+			updateListWithSearch({});
+			
+			// ✅ Also reset letter navigation to "Alle"
+			setTimeout(function() {
+				document.querySelectorAll('.LetterMode').forEach(item => {
+					item.classList.remove('LetterMode_active');
+				});
+				const alleButton = document.querySelector('.LetterAll');
+				if (alleButton) {
+					alleButton.classList.add('LetterMode_active');
+					console.log('✅ Reset letter navigation to "Alle"');
+				}
+			}, 50);
+		} else {
+			console.log('updateListWithSearch not available, trying page reload reset');
+			// Fallback: redirect to clean URL
+			const url = new URL(window.location);
+			// Keep only the base path, remove all parameters
+			window.location.href = url.pathname;
+		}
+	}
+}
+
+// Better chosen.js initialization with error handling
+$(document).ready(function() {
+	// Initialize chosen.js for multiple selects with better settings and error handling
+	$('.multiple-select').each(function() {
+		try {
+			// Check if the select has options before initializing
+			if ($(this).find('option').length > 0) {
+				$(this).chosen({
+					width: '100%',
+					placeholder_text_multiple: 'Auswählen...',
+					no_results_text: 'Keine Ergebnisse für',
+					allow_single_deselect: true,
+					search_contains: true,
+					max_selected_options: 5,
+					disable_search_threshold: 8
+				});
+			} else {
+				console.log('Skipping chosen.js for select without options:', $(this).attr('name'));
+			}
+		} catch (e) {
+			console.error('Error initializing chosen.js for:', $(this).attr('name'), e);
+		}
+	});
+	
+	 // console.log('Extended search initialized');
+		 // console.log('Multiple selects found:', $('.multiple-select').length);
+		 // console.log('Form element found:', $('#extended-search-form').length);
+	
+	// Better click handling
+	$('.chosen-container').on('click', function(e) {
+		e.stopPropagation();
+	});
+	
+	// Ensure dropdowns close when clicking outside
+	$(document).on('click', function() {
+		$('.chosen-container-active .chosen-choices').trigger('click');
+	});
+	
+	// Extended search form handling for AJAX
+	$('#extended-search-form').submit(function(e) {
+		e.preventDefault(); // Always prevent default form submission
+		
+		console.log('Extended search form submitted');
+		
+		var hasValue = false;
+		var searchData = {};
+		
+		// Check text inputs and collect data
+		$(this).find('input[type="text"]').each(function() {
+			console.log('Text input found:', $(this).attr('name'), '=', $(this).val());
+			if ($(this).val().trim() !== '') {
+				hasValue = true;
+				searchData[$(this).attr('name')] = $(this).val().trim();
+			}
+		});
+		
+		// Check selects and collect data
+		$(this).find('select').each(function() {
+			console.log('Select found:', $(this).attr('name'), '=', $(this).val());
+			if ($(this).val() !== '' && $(this).val() !== null) {
+				hasValue = true;
+				if ($(this).attr('multiple')) {
+					// Handle multiple selects
+					var values = $(this).val();
+					if (values && values.length > 0) {
+						searchData[$(this).attr('name')] = values[0]; // Take first value for now
+					}
+				} else {
+					searchData[$(this).attr('name')] = $(this).val();
+				}
+			}
+		});
+		
+		console.log('Collected searchData:', searchData);
+		console.log('hasValue:', hasValue);
+		
+		if (!hasValue) {
+			alert('Bitte füllen Sie mindestens ein Suchfeld aus.');
+			return false;
+		}
+		
+		// Update via URL like list-static
+		performExtendedSearchAJAX(searchData);
+		return false;
+	});
+});
+
+// Extended search function  
+function performExtendedSearchAJAX(searchData) {
+	console.log('performExtendedSearchAJAX called with:', searchData);
+	
+	// If the parent page has the AJAX submit handler, use it (No Reload)
+	if (typeof window.submitExtendedSearchAJAX === 'function') {
+		console.log('Using window.submitExtendedSearchAJAX');
+		window.submitExtendedSearchAJAX(searchData);
+		return;
+	}
+
+	// ✅ AJAX MODE: Try to update via AJAX first
+	if (typeof updateListWithSearch === 'function') {
+		console.log('Using updateListWithSearch function');
+		updateListWithSearch(searchData);
+		return;
+	}
+
+	// Fallback for non-AJAX pages (Reload)
+	const url = new URL(window.location);
+	
+	// Clear existing search params
+	url.searchParams.delete('L');
+	url.searchParams.delete('mode');
+	
+	// Add new search params
+	Object.keys(searchData).forEach(key => {
+		if (searchData[key] && searchData[key] !== '') {
+			url.searchParams.set(key, searchData[key]);
+		} else {
+			url.searchParams.delete(key);
+		}
+	});
+	
+	// Set search mode
+	url.searchParams.set('Extended', '1');
+	
+	window.location.href = url.toString();
+}
+</script>
+
+<div class="LetterExtension" style="display: flex; align-items: center; justify-content: space-between;">
+	<div class="alphabet-section" style="flex: 1;">
+				<a onClick="setLetter(this); return false" class="LetterAll LetterMode LetterMode_active">Alle</a>
+		<a onClick="setLetter(this); return false" class="LetterMode ">#</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">A</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">B</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">C</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">D</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">E</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">F</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">G</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">H</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">I</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">J</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">K</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">L</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">M</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">N</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">O</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">P</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">Q</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">R</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">S</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">T</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">U</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">V</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">W</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">X</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">Y</a>
+				<a onClick="setLetter(this); return false" class="LetterMode ">Z</a>
+			</div>
+	
+	
+	<div class="compact-sort-wrapper" style="position: relative; margin-left: 15px;">
+		<div class="sort-dropdown-btn" id="sort-dropdown-btn" onclick="toggleCompactSortDropdown()">
+			<span class="sort-current-text">
+				Standard			</span>
+			<span class="sort-caret">▼</span>
+		</div>
+		<ul class="sort-dropdown-menu" id="sort-dropdown-menu" style="display: none;">
+			<li><a href="#" data-value="" class="active">Standard</a></li>
+			<li><a href="#" data-value="title_asc" class="">A-Z</a></li>
+			<li><a href="#" data-value="title_desc" class="">Z-A</a></li>
+			<li><a href="#" data-value="year_desc" class="">Neueste</a></li>
+			<li><a href="#" data-value="year_asc" class="">Älteste</a></li>
+			<li><a href="#" data-value="imdbrating_desc" class="">Hohe Wertung</a></li>
+			<li><a href="#" data-value="imdbrating_asc" class="">Niedrig Wertung</a></li>
+			<li><a href="#" data-value="popular" class="">Trending</a></li>
+			<li><a href="#" data-value="latest" class="">Letzte</a></li>
+			<li><a href="#" data-value="updated" class="">Updated</a></li>
+
+		</ul>
+	</div>
+</div>
+
+		
+
+
+
+<div id="beep" class="beep"></div>
+
+<div id="CoverFlow">
+<ul id="content_list" class="groups_list">
+<div onclick="location.href='/Stream/Bosch_Legacy.html';" style="float: left; width: 371px; margin-right: 10px;">
+                          <div class="ModuleHead mHead">
+                            <div class="Opt leftOpt Dummy"></div>
+                            <div class="Opt leftOpt Headlne"><a title="Bosch Legacy" href="/Stream/Bosch_Legacy.html"><h1>Bosch Legacy</h1></a></div>
+                          </div>
+                          <div class="MiniEntry">	
+                            <div class="Thumb"><img style="width: 70px; height: 100px" src="/statics/thumbs/00114000/Bosch_Legacy.jpg" /></div>
+                            <div class="Descriptor">„Bosch: Legacy“ folgt dem früheren LAPD-Ermittler Harry Bosch (Titus Welliver) bei seinem nächsten Lebensabschnitt als Privatdetektiv. Dabei arbeitet er mit seiner früheren Feindin, der Top-Anwältin Honey „Money“ Chandler (Mimi Rogers), zusammen. Sein erster Auftrag führt Bosch zu dem angeschlagenen Milliardär Whitney Vance, für den er dessen einzigen möglichen Erben aufspüren soll. Als sich Bosch den Familienstammbaum genauer ansieht, entdeckt er ein schockierendes Geheimnis, das sich durch mehrere Generationen zieht. Da Bosch nach wie vor eher altmodische Ermittler-Taktiken einsetzt, kommt ihm das junge Technik-Genie Maurice „Mo“ Bassi (Stephen A. Chang) bei seinem neuen Berufsalltag gerade recht. Beide teilen die Vorliebe für Jazz und Gerechtigkeit. Zeitgleich tritt Maddie (Madison Lintz) in die Fußstapfen ihres Vaters und beginnt ihren Dienst beim LAPD als Streifenpolizistin. Dabei wird ihr Reina Vasquez (Denise Sanchez) zugeteilt, die wenig Spaß versteht und sich durchzusetzen weiß. Bei ihren Einsätzen auf Patrouille muss Maddie für sich herausfinden, welche Art Cop sie sein möchte. Dabei wird ihr schnell klar: Entweder versteht man das Polizistendasein als Mission oder als einfachen Job.</div>
+                            <div class="Genre"><div class="floatleft"><img width="16" height="11" src="/gr/sys/lng/1.png" alt="language"></div><div class="floatleft"><b>Genre:</b> <a href="/Genre/Crime" onclick="return true;">Crime</a>, <a href="/Genre/Drama" onclick="return true;">Drama</a></div><div class="floatright"><b>IMDb:</b> 8.5 / 10</div><div class="clearboth"></div></div>
+                            <div style="clear: both"></div>
+                          </div>
+                          <div class="ModuleFooter"></div>
+                        </div><div onclick="location.href='/Stream/Bosch-1.html';" style="float: left; width: 371px;">
+                          <div class="ModuleHead mHead">
+                            <div class="Opt leftOpt Dummy"></div>
+                            <div class="Opt leftOpt Headlne"><a title="Bosch" href="/Stream/Bosch-1.html"><h1>Bosch</h1></a></div>
+                          </div>
+                          <div class="MiniEntry">	
+                            <div class="Thumb"><img style="width: 70px; height: 100px" src="/statics/thumbs/00102000/Bosch-1.jpg" /></div>
+                            <div class="Descriptor">Based on Michael Connelly's best-selling novels, these are the stories of relentless LAPD homicide Detective Harry Bosch who pursues justice at all costs. But behind his tireless momentum is a man who is haunted by his past and struggles to remain loyal to his personal code: “Everybody counts or nobody counts.”</div>
+                            <div class="Genre"><div class="floatleft"><img width="16" height="11" src="/gr/sys/lng/2.png" alt="language"></div><div class="floatleft"><b>Genre:</b> <a href="/Genre/Crime" onclick="return true;">Crime</a>, <a href="/Genre/Drama" onclick="return true;">Drama</a></div><div class="floatright"><b>IMDb:</b> 8.3 / 10</div><div class="clearboth"></div></div>
+                            <div style="clear: both"></div>
+                          </div>
+                          <div class="ModuleFooter"></div>
+                        </div><div onclick="location.href='/Stream/Bosch.html';" style="float: left; width: 371px; margin-right: 10px;">
+                          <div class="ModuleHead mHead">
+                            <div class="Opt leftOpt Dummy"></div>
+                            <div class="Opt leftOpt Headlne"><a title="Bosch" href="/Stream/Bosch.html"><h1>Bosch</h1></a></div>
+                          </div>
+                          <div class="MiniEntry">	
+                            <div class="Thumb"><img style="width: 70px; height: 100px" src="/statics/thumbs/00056000/Bosch.jpg" /></div>
+                            <div class="Descriptor">Harry Bosch (Titus Welliver) muss sich vor Gericht verantworten: Der Kriegsveteran und für Mord- und Raubfälle zuständige Detective der LAPD, wird angeklagt, zwei Jahre zuvor einen unbewaffneten Verdächtigen erschossen zu haben. Boschs Version der Ereignisse hingegen lautet, er habe den potentiellen Serienkiller in Notwehr erschossen und sein Vorgesetzter steht in dieser Angelegenheit hinter ihm. Obwohl er eigentlich suspendiert ist, lässt ihn zudem ein anderer Fall nicht los: Dabei geht es um den Fund der Leiche eines Jungen zwischen zehn und zwölf Jahren in einem abgelegenen Waldstück. Das Kind wurde Opfer körperlicher Misshandlungen und muss vor mehr als fünfzehn Jahren umgekommen sein. Bosch macht sich auf die Suche nach dem Mörder und muss sich dabei überdies mit seiner eigenen Vergangenheit auseinandersetzen. Und schließlich werfen beide Fälle immer mehr Fragen auf…</div>
+                            <div class="Genre"><div class="floatleft"><img width="16" height="11" src="/gr/sys/lng/1.png" alt="language"></div><div class="floatleft"><b>Genre:</b> <a href="/Genre/Crime" onclick="return true;">Crime</a>, <a href="/Genre/Drama" onclick="return true;">Drama</a></div><div class="floatright"><b>IMDb:</b> 8.3 / 10</div><div class="clearboth"></div></div>
+                            <div style="clear: both"></div>
+                          </div>
+                          <div class="ModuleFooter"></div>
+                        </div></ul>
+</div>
+
+<style>
+/* ? LETTER NAVIGATION: Same styling as main application */
+.LetterMode {
+	border: 1px solid #D8E7F0;
+	color: #2E677F;
+	cursor: pointer;
+	float: left;
+	font-size: 12px;
+	font-weight: bold;
+	height: 18px;
+	line-height: 18px;
+	margin: 4px 0px 4px 3px;
+	padding: 0px 4px;
+	color: #40819D;
+	text-decoration: none;
+}
+
+.LetterMode_active {
+	background-color: #2e677f;
+	color: white !important;
+}
+
+a {
+	text-decoration: none;
+	cursor: pointer;
+	color: #115676;
+}
+
+/* ? COMPACT: Smaller, narrower dropdown */
+.compact-sort-wrapper {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px; /* Smaller font */
+	position: relative;
+}
+
+.sort-dropdown-btn {
+	background: #fff;
+	border: 1px solid #ddd;
+	color: #343434;
+	padding: 4px 8px; /* Smaller padding */
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	min-width: 90px; /* Narrower width */
+	max-width: 110px;
+	border-radius: 2px;
+	user-select: none;
+	font-size: 11px; /* Smaller font */
+}
+
+.sort-dropdown-btn:hover {
+	border-color: #c7c7c7;
+	background-color: #f8f8f8;
+}
+
+.sort-dropdown-btn.open {
+	border-color: #115676;
+	background-color: #f8f8f8;
+}
+
+.sort-current-text {
+	color: #343434;
+	font-weight: normal;
+	font-size: 11px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 70px;
+}
+
+.sort-caret {
+	color: #999;
+	font-size: 9px; /* Smaller caret */
+	margin-left: 6px;
+	transition: transform 0.2s ease;
+	flex-shrink: 0;
+}
+
+.sort-dropdown-btn.open .sort-caret {
+	transform: rotate(180deg);
+}
+
+.sort-dropdown-menu {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	right: 0;
+	background: #fff;
+	border: 1px solid #ddd;
+	border-top: none;
+	border-radius: 0 0 2px 2px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	z-index: 1000;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+	min-width: 90px;
+}
+
+.sort-dropdown-menu li {
+	border-bottom: 1px solid #f0f0f0;
+}
+
+.sort-dropdown-menu li:last-child {
+	border-bottom: none;
+}
+
+.sort-dropdown-menu li a {
+	display: block;
+	padding: 6px 8px; /* Smaller padding */
+	color: #343434;
+	text-decoration: none;
+	font-size: 11px; /* Smaller font */
+	border: none;
+	background: none;
+	white-space: nowrap;
+}
+
+.sort-dropdown-menu li a:hover {
+	background-color: #f5f5f5;
+	color: #115676;
+}
+
+.sort-dropdown-menu li a.active {
+	background-color: #115676;
+	color: #fff;
+	font-weight: bold;
+}
+
+.sort-dropdown-menu li a.active:hover {
+	background-color: #0e4a63;
+	color: #fff;
+}
+
+/* ? RESPONSIVE: Better mobile handling */
+@media (max-width: 768px) {
+	.compact-sort-wrapper {
+		margin-left: 8px;
+	}
+	
+	.sort-dropdown-btn {
+		min-width: 75px;
+		max-width: 90px;
+		padding: 3px 6px;
+		font-size: 10px;
+	}
+	
+	.sort-current-text {
+		max-width: 60px;
+		font-size: 10px;
+	}
+	
+	.LetterExtension {
+		flex-direction: column;
+		gap: 8px;
+		align-items: stretch !important;
+	}
+	
+	.alphabet-section {
+		text-align: center;
+	}
+}
+</style>
+
+<script>
+let compactSortDropdownOpen = false;
+
+function toggleCompactSortDropdown() {
+	const btn = document.getElementById('sort-dropdown-btn');
+	const menu = document.getElementById('sort-dropdown-menu');
+	
+	compactSortDropdownOpen = !compactSortDropdownOpen;
+	
+	if (compactSortDropdownOpen) {
+		btn.classList.add('open');
+		menu.style.display = 'block';
+		
+		// Close on outside click
+		setTimeout(() => {
+			document.addEventListener('click', closeCompactSortDropdownOnOutsideClick);
+		}, 10);
+	} else {
+		btn.classList.remove('open');
+		menu.style.display = 'none';
+		document.removeEventListener('click', closeCompactSortDropdownOnOutsideClick);
+	}
+}
+
+function closeCompactSortDropdownOnOutsideClick(e) {
+	const wrapper = document.querySelector('.compact-sort-wrapper');
+	if (!wrapper.contains(e.target)) {
+		const btn = document.getElementById('sort-dropdown-btn');
+		const menu = document.getElementById('sort-dropdown-menu');
+		
+		btn.classList.remove('open');
+		menu.style.display = 'none';
+		compactSortDropdownOpen = false;
+		document.removeEventListener('click', closeCompactSortDropdownOnOutsideClick);
+	}
+}
+
+// Handle dropdown item clicks
+document.addEventListener('DOMContentLoaded', function() {
+	const dropdownItems = document.querySelectorAll('.sort-dropdown-menu a');
+	
+	dropdownItems.forEach(item => {
+		item.addEventListener('click', function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+			const sortValue = this.getAttribute('data-value');
+			applySorting(sortValue);
+		});
+	});
+});
+
+function applySorting(sortValue) {
+	const url = new URL(window.location);
+	
+	if (sortValue === '' || sortValue === null) {
+		url.searchParams.delete('sort');
+	} else {
+		url.searchParams.set('sort', sortValue);
+	}
+	
+	window.location.href = url.toString();
+}
+
+function setLetter(element) {
+	const letter = element.textContent.trim();
+	const url = new URL(window.location);
+	
+	if (letter === 'Alle') {
+		url.searchParams.delete('L');
+	} else if (letter === '#') {
+		url.searchParams.set('L', '1');
+	} else {
+		url.searchParams.set('L', letter);
+	}
+	
+	window.location.href = url.toString();
+}
+</script>
+    		 </div>
+		   <div style="clear: both"></div>
+		 </div>
+		 <ul class="PopupMenu" id="pmNews"><li><a href="/">Heute</a></li><li><a href="/News-2026-10-20.html">Gestern</a></li><li class="Spacer">&nbsp;</li><li><a href="/News-2026-10-19.html">19.10.2026</a></li><li><a href="/News-2026-10-18.html">18.10.2026</a></li><li><a href="/News-2026-10-17.html">17.10.2026</a></li><li><a href="/News-2026-10-16.html">16.10.2026</a></li><li><a href="/News-2026-10-15.html">15.10.2026</a></li><li><a href="/News-2026-10-14.html">14.10.2026</a></li><li><a href="/News-2026-10-13.html">13.10.2026</a></li></ul>
+     <ul class="PopupMenu" id="pmGenre">
+     <li><a href="/Genre/Action">Action<span>3831</span></a></li><li><a href="/Genre/Adult"><span>1</span></a></li><li><a href="/Genre/Adventure">Adventure<span>2357</span></a></li><li><a href="/Genre/Animation">Trickfilm<span>1254</span></a></li><li><a href="/Genre/Anime">Anime<span>1</span></a></li><li><a href="/Genre/Biography">Biografie<span>501</span></a></li><li><a href="/Genre/Bollywood"><span>1</span></a></li><li><a href="/Genre/Comedy">Komödie<span>6308</span></a></li><li><a href="/Genre/Crime">Krimi<span>3251</span></a></li><li><a href="/Genre/Documentary">Dokumentation<span>1023</span></a></li><li><a href="/Genre/Drama">Drama<span>8721</span></a></li><li><a href="/Genre/Family">Family<span>1738</span></a></li><li><a href="/Genre/Fantasy">Fantasy<span>1719</span></a></li><li><a href="/Genre/History">History<span>542</span></a></li><li><a href="/Genre/Horror">Horror<span>2688</span></a></li><li><a href="/Genre/Music">Musik<span>508</span></a></li><li><a href="/Genre/Musical"><span>6</span></a></li><li><a href="/Genre/Mystery">Mystery<span>1990</span></a></li><li><a href="/Genre/Reality-TV"><span>1</span></a></li><li><a href="/Genre/Romance">Romance<span>2889</span></a></li><li><a href="/Genre/Sci-Fi">Science Fiction<span>30</span></a></li><li><a href="/Genre/Short"><span>2</span></a></li><li><a href="/Genre/Sport">Sport<span>481</span></a></li><li><a href="/Genre/Thriller">Thriller<span>5121</span></a></li><li><a href="/Genre/War">Kriegsfilm<span>618</span></a></li><li><a href="/Genre/Western">Western<span>313</span></a></li><li><a href="/Genre.html">Genre-Übersicht anzeigen</a></li>
+     </ul>
+     <ul class="PopupMenu" id="pmTipps"><li><a href="/Tipp-movie.html">Film Tipp</a></li><li><a href="/Tipp-serie.html">Serien Tipp</a></li><li class="Spacer">&nbsp;</li><li><a href="/Genre.html">Nach Genre</a></li></ul>
+	 </div>
+	 <div id="beinende">
+	   <a class="contact" href="/Contact.html" target="_blank">&nbsp;</a>
+		 <a class="faq" href="/FAQ.html">&nbsp;</a>
+	 </div>
+
+<div id="loginBox" class="login_outter_container">
+  <div class="login_box">
+    <ul class="login_tabs">
+      <li><a id="box_login_link" class="active" href="#">Login</a></li>
+      <li><a id="box_register_link" href="#">Registrieren</a></li>
+      <div class="clearboth"></div>
+    </ul>
+    <div class="login_content" id="mode_login">
+      <form id="login_form">
+        <div class="login_label">Email oder User:</div>
+        <input name="Login" placeholder="max.mustermann@gmail.com" type="text" />
+        <div class="login_label">Passwort:</div>
+        <input name="Secret" type="password" />
+        <a href="#" class="login_label_link">Passwort vergessen?</a>
+        <label for="cookie"><input name="UseCookie" value="Y" type="checkbox" id="cookie" />Eingeloggt bleiben?</label>
+        <input type="submit" value="Login" />
+      </form>
+    </div>
+    <div class="login_content" id="mode_register" style="display:none">
+      <form id="register_form">
+        <div id="register_error" class="login_error"></div>
+        <div class="login_label">Email:</div>
+        <input name="Email" type="text" />
+        <div class="login_label_info">E-Mail Adresse muss gültig sein.</div>
+        <div class="login_label">Username:</div>
+        <input name="NewNick" type="text" />
+        <div class="login_label_info">Nur Buchstaben, Zahlen, Binde- und Unterstriche erlaubt.</div>
+        <div class="login_label">Passwort:</div>
+        <input name="SecretA" type="password" />
+        <div class="login_label">Passwort bestätigen:</div>
+        <input name="SecretB" type="password" />
+        <div class="login_label">Captcha:</div>
+        <div id="login_recaptcha_div"></div> 
+        <input type="submit" value="Registrieren" />
+      </form>
+    </div>
+    <a class="login_close"></a>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	 
+<!--
+	 <div style="width: 972px;display: inline;top: 130px;height: 450px;left: -486px;margin-left: 50%;overflow: hidden;position: fixed;background: url(https://kinox.to/gr/adblock_plus.png) no-repeat center center #ffffff;;z-index: 8412"> 
+	<div style="display: block; height: 20px; padding-right: 8px; text-align: right; background-color: white;"> 
+		<span style="display: block; height: 20px; padding-right: 8px; text-align: right;"> 
+			<a style="Color: black; Cursor: pointer;" onclick="closeMeNow(this.parentNode.parentNode.parentNode);">[ c ]</a> 
+		</span> 
+	</div> 
+	<div>
+</div> 
+</div>
+
+
+	</body>
+</html>
+
+

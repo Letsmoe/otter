@@ -1,0 +1,38 @@
+fragment DownloadFields on Download {
+  id
+  status
+  progress
+  sizeBytes
+  error
+  url
+  mimeType
+  title {
+    id
+    title
+    backdropPath
+    posterPath
+  }
+  episode {
+    id
+    seasonNumber
+    episodeNumber
+    name
+    stillPath
+  }
+}
+
+query Downloads($profileId: ID!) {
+  downloads(profileId: $profileId) {
+    ...DownloadFields
+  }
+}
+
+mutation StartDownload($profileId: ID!, $mediaId: ID!, $streamId: ID) {
+  startDownload(profileId: $profileId, mediaId: $mediaId, streamId: $streamId) {
+    ...DownloadFields
+  }
+}
+
+mutation DeleteDownload($id: ID!) {
+  deleteDownload(id: $id)
+}

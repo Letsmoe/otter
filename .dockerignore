@@ -1,0 +1,11 @@
+node_modules
+**/node_modules
+.git
+apps/backend/data
+apps/backend/tmp
+apps/web/.svelte-kit
+apps/web/build
+apps/mobile/android
+infra/data
+graft
+.env

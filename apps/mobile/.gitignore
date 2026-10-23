@@ -1,0 +1,16 @@
+node_modules
+
+# Web build copied in by `bun run build`
+/www
+
+# Backend binary and plugin seed built by `bun run build`
+/android/app/src/main/jniLibs/arm64-v8a/libotter.so
+/android/app/src/main/assets/plugins
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*

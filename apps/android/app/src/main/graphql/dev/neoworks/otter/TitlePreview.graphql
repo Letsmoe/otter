@@ -1,0 +1,22 @@
+query TitlePreview($id: ID!, $profileId: ID!) {
+  title(id: $id) {
+    id
+    title
+    overview
+    year
+    backdropPath
+    trailerKey
+    genres
+    inWatchlist(profileId: $profileId)
+    credits {
+      person {
+        id
+        name
+        profilePath
+      }
+      role
+      character
+      order
+    }
+  }
+}

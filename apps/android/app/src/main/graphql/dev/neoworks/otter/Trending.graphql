@@ -1,0 +1,16 @@
+query Trending($mediaType: MediaType) {
+  trending(mediaType: $mediaType) {
+    ...TitleCard
+  }
+}
+
+fragment TitleCard on Title {
+  id
+  mediaType
+  title
+  year
+  posterPath
+  backdropPath
+  releaseDate
+  voteAverage
+}

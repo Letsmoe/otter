@@ -1,0 +1,67 @@
+query TitleDetail($id: ID!, $profileId: ID!) {
+  title(id: $id) {
+    id
+    mediaType
+    title
+    tagline
+    overview
+    year
+    runtime
+    status
+    voteAverage
+    posterPath
+    backdropPath
+    trailerKey
+    genres
+    inWatchlist(profileId: $profileId)
+    rating(profileId: $profileId)
+    credits {
+      person {
+        id
+        name
+        profilePath
+      }
+      role
+      job
+      character
+      order
+    }
+    seasons {
+      id
+      seasonNumber
+      name
+      episodeCount
+    }
+    related(limit: 20) {
+      ...TitleCard
+    }
+  }
+}
+
+fragment EpisodeRef on Episode {
+  id
+  seasonNumber
+  episodeNumber
+  name
+}
+
+query SeriesEpisodes($id: ID!, $profileId: ID!) {
+  title(id: $id) {
+    seasons {
+      episodes {
+        ...EpisodeRef
+        overview
+        airDate
+        runtime
+        stillPath
+        next {
+          ...EpisodeRef
+        }
+        progress(profileId: $profileId) {
+          progressSeconds
+          durationSeconds
+        }
+      }
+    }
+  }
+}

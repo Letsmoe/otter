@@ -1,0 +1,4 @@
+node_modules/
+
+# Intermediate SDL produced by `bun run codegen` (regenerable; src/generated is committed)
+/schema.graphql

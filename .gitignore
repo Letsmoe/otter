@@ -1,0 +1,50 @@
+# dependencies (bun install)
+node_modules
+
+# output
+out
+dist
+*.tgz
+
+# code coverage
+coverage
+*.lcov
+
+# logs
+logs
+_.log
+report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# IntelliJ based IDEs
+.idea
+
+# Finder (MacOS) folder config
+.DS_Store
+
+# otter
+apps/backend/tmp/
+apps/backend/server
+apps/backend/data/
+data/
+infra/data/
+__pycache__/
+.svelte-kit/
+build/
+!apps/mobile/android/app/build.gradle
+apps/mobile/www/
+s1.json
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/

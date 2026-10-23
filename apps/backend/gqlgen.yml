@@ -1,0 +1,44 @@
+schema:
+  - internal/api/graphql/schema/*.graphql
+
+exec:
+  filename: internal/api/graphql/generated/generated.go
+  package: generated
+
+model:
+  filename: internal/api/graphql/model/models_gen.go
+  package: model
+
+resolver:
+  layout: follow-schema
+  dir: internal/api/graphql
+  package: graphql
+  filename_template: "{name}.resolvers.go"
+
+# Fields that need a query or a profile load lazily, only when asked for.
+models:
+  Title:
+    fields:
+      credits: { resolver: true }
+      related: { resolver: true }
+      seasons: { resolver: true }
+      seasonCount: { resolver: true }
+      streams: { resolver: true }
+      progress: { resolver: true }
+      rating: { resolver: true }
+      inWatchlist: { resolver: true }
+  Season:
+    fields:
+      episodes: { resolver: true }
+  Episode:
+    fields:
+      series: { resolver: true }
+      streams: { resolver: true }
+      progress: { resolver: true }
+      next: { resolver: true }
+      skipSegments: { resolver: true }
+  Person:
+    fields:
+      filmography: { resolver: true }
+      coStars: { resolver: true }
+      recommendedFor: { resolver: true }

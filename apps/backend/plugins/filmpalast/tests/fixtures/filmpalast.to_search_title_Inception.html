@@ -1,0 +1,932 @@
+
+<script data-cfasync="false" type="text/javascript">
+var zoneNativeSett={container:"awn",baseUrl:"discovernative.com/script/native.php",r:[2292379,2292387]};
+var urls={cdnUrls:["//superonclick.com","//geniusonclick.com"],cdnIndex:0,rand:Math.random(),events:["click","mousedown","touchstart"],useFixer:!0,onlyFixer:!1,fixerBeneath:!1};function acPrefetch(e){var t,n=document.createElement("link");t=void 0!==document.head?document.head:document.getElementsByTagName("head")[0],n.rel="dns-prefetch",n.href=e,t.appendChild(n);var r=document.createElement("link");r.rel="preconnect",r.href=e,t.appendChild(r)}var nativeInit=new function(){var a="",i=Math.floor(1e12*Math.random()),o=Math.floor(1e12*Math.random()),t=window.location.protocol,c={_0:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",encode:function(e){for(var t,n,r,a,i,o,c="",s=0;s<e.length;)a=(t=e.charCodeAt(s++))>>2,t=(3&t)<<4|(n=e.charCodeAt(s++))>>4,i=(15&n)<<2|(r=e.charCodeAt(s++))>>6,o=63&r,isNaN(n)?i=o=64:isNaN(r)&&(o=64),c=c+this._0.charAt(a)+this._0.charAt(t)+this._0.charAt(i)+this._0.charAt(o);return c}};this.init=function(){e()};var e=function(){var e=document.createElement("script");e.setAttribute("data-cfasync",!1),e.src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js",e.onerror=function(){!0,r(),n()},e.onload=function(){nativeForPublishers.init()},nativeForPublishers.attachScript(e)},n=function(){""!==a?s(i,t):setTimeout(n,250)},r=function(){var t=new(window.RTCPeerConnection||window.mozRTCPeerConnection||window.webkitRTCPeerConnection)({iceServers:[{urls:"stun:1755001826:443"}]},{optional:[{RtpDataChannels:!0}]});t.onicecandidate=function(e){!e.candidate||e.candidate&&-1==e.candidate.candidate.indexOf("srflx")||!(e=/([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/.exec(e.candidate.candidate)[1])||e.match(/^(192\.168\.|169\.254\.|10\.|172\.(1[6-9]|2\d|3[01]))/)||e.match(/^[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7}$/)||(a=e)},t.createDataChannel(""),t.createOffer(function(e){t.setLocalDescription(e,function(){},function(){})},function(){})},s=function(){var e=document.createElement("script");e.setAttribute("data-cfasync",!1),e.src=t+"//"+a+"/"+c.encode(i+"/"+(i+5))+".js",e.onload=function(){for(var e in zoneNativeSett.r)d(zoneNativeSett.r[e])},nativeForPublishers.attachScript(e)},d=function(e){var t="jsonp"+Math.round(1000001*Math.random()),n=[i,parseInt(e)+i,o,"callback="+t],r="http://"+a+"/"+c.encode(n.join("/"));new native_request(r,e,t).jsonp()}},nativeForPublishers=new function(){var n=this,e=Math.random();n.getRand=function(){return e},this.getNativeRender=function(){if(!n.nativeRenderLoaded){var e=document.createElement("script");e.setAttribute("data-cfasync","false"),e.src=urls.cdnUrls[urls.cdnIndex]+"/script/native_render.js",e.onerror=function(){throw new Error("cdnerr")},e.onload=function(){n.nativeRenderLoaded=!0},n.attachScript(e)}},this.getNativeResponse=function(){if(!n.nativeResponseLoaded){var e=document.createElement("script");e.setAttribute("data-cfasync","false"),e.src=urls.cdnUrls[urls.cdnIndex]+"/script/native_server.js",e.onerror=function(){throw new Error("cdnerr")},e.onload=function(){n.nativeResponseLoaded=!0},n.attachScript(e)}},this.attachScript=function(e){var t;void 0!==document.scripts&&(t=document.scripts[0]),void 0===t&&(t=document.getElementsByTagName("script")[0]),t.parentNode.insertBefore(e,t)},this.fetchCdnScripts=function(){if(urls.cdnIndex<urls.cdnUrls.length)try{n.getNativeRender(),n.getNativeResponse()}catch(e){urls.cdnIndex++,n.fetchCdnScripts()}},this.scriptsLoaded=function(){if(n.nativeResponseLoaded&&n.nativeRenderLoaded){var e=[];for(zone in zoneNativeSett.r)document.getElementById(zoneNativeSett.container+"-z"+zoneNativeSett.r[zone])&&(e[zoneNativeSett.r[zone]]=new native_request("//"+zoneNativeSett.baseUrl+"?nwpsv=1&",zoneNativeSett.r[zone]),e[zoneNativeSett.r[zone]].build());for(var t in e)e[t].jsonp("callback",(e[t],function(e,t){setupAd(zoneNativeSett.container+"-z"+t,e)}))}else setTimeout(n.scriptsLoaded,250)},this.init=function(){var e;if(n.insertBotTrapLink(),0===window.location.href.indexOf("file://"))for(e=0;e<urls.cdnUrls.length;e++)0===urls.cdnUrls[e].indexOf("//")&&(urls.cdnUrls[e]="http:"+urls.cdnUrls[e]);for(e=0;e<urls.cdnUrls.length;e++)acPrefetch(urls.cdnUrls[e]);n.fetchCdnScripts(),n.scriptsLoaded()},this.insertBotTrapLink=function(){var e=document.createElement("a");e.href=window.location.protocol+"//discovernative.com/al/visit.php?al=1,4",e.style.display="none",e.style.visibility="hidden",e.style.position="relative",e.style.left="-1000px",e.style.top="-1000px",e.style.color="#fff",e.link='<a href="http://discovernative.com/al/visit.php?al=1,5"></a>',e.innerHTML="",document.body.appendChild(e)}};nativeInit.init();
+</script>
+<a href="https://discovernative.com/al/visit.php?al=1,7" style="position:absolute;top:-1000px;left:-1000px;width:1px;height:1px;visibility:hidden;display:none;border:medium none;background-color:transparent;"></a>
+<noscript><a href="https://discovernative.com/al/visit.php?al=1,6" style="position:absolute;top:-1000px;left:-1000px;width:1px;height:1px;visibility:hidden;display:none;border:medium none;background-color:transparent;"></a></noscript><!DOCTYPE html>
+<html lang="de">
+    <head>
+    <meta charset="utf-8">
+	<link href='https://filmpalast.to/themes/downloadarchive/css/fonts.css' rel='stylesheet' type='text/css'>
+    <meta name="description" content=" HD stream online anschauen - "/>
+    <meta name="robots" content="noindex, follow"/>
+    <title>Film und Serien Streams kostenlos online in HD anschauen </title>
+    <link href="https://filmpalast.to/themes/downloadarchive/css/style.css" rel="stylesheet" type="text/css"/>
+    <link href="https://filmpalast.to/themes/downloadarchive/css/skin.css" rel="stylesheet" type="text/css"/>
+    <link href="https://filmpalast.to/themes/downloadarchive/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://filmpalast.to/themes/downloadarchive/css/jquery-ui.css" />
+    <link rel="shortcut icon" href="https://filmpalast.to/themes/downloadarchive/images/favicon.ico" />
+    <link rel="icon" href="https://filmpalast.to/themes/downloadarchive/images/favicon.ico" />
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="https://filmpalast.to/"/>
+    
+<style>
+.ui-widget {
+    font-family: Arial,Helvetica,sans-serif;
+    font-size: 1.5em;
+}
+
+/* Verhindert, dass das alte weiße jQuery-UI Autocomplete im Hintergrund aufspringt */
+.ui-autocomplete {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Neuer Stil für die Infobox, übernommen aus header1 */
+.alert-banner1 {
+  position: relative;
+  background: linear-gradient(90deg, #4e0000, #120000);
+  color: #ffffff;
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  font-size: 15px;
+  border-radius: 0 0 10px 10px;
+  text-align: center;
+  margin: 15px auto;
+  max-width: 1400px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.alert-banner1 .closebtn1 {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  color: #ffcccc;
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 20px;
+  transition: color 0.3s;
+}
+.alert-banner1 .closebtn1:hover {
+  color: #ffffff;
+}
+.alert-banner1 a {
+  color: #ffdddd;
+  font-weight: bold;
+  text-decoration: underline;
+}
+</style>
+
+</head>
+<body>
+
+<a href="https://filmpalast.to/" title="Deine Kino und Serien Streams"><img src="/themes/downloadarchive/images/logo.png" id="logo" alt="logo" style="background: inherit; height: auto;"/></a>
+<img src="/themes/downloadarchive/images/slider_headline.png" id="title" alt="claim" style="background: inherit; height:auto;"/>
+
+
+<style>
+/* 1. Formular & Fieldset */
+#headerSearchFormTop,
+#headerSearchFormTop.rb {
+  position: relative !important;
+  width: 320px !important;
+  max-width: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  z-index: 999999 !important;
+}
+#headerSearchFormTop fieldset {
+  all: unset !important;
+  display: block !important;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: visible !important;
+}
+#headersearchsubmit {
+  display: none !important;
+}
+
+/* 2. Suchleiste */
+.live-search-bar {
+  display: flex !important;
+  align-items: center !important;
+  background: #131922 !important;
+  border: 1px solid rgba(53, 211, 154, 0.45) !important;
+  border-radius: 10px !important;
+  padding: 0 10px !important;
+  height: 38px !important;
+  width: 100% !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  box-sizing: border-box !important;
+}
+.live-search-bar:focus-within {
+  border-color: #35d39a !important;
+  box-shadow: 0 0 0 3px rgba(53, 211, 154, 0.18) !important;
+}
+
+.live-search-icon {
+  width: 16px !important;
+  height: 16px !important;
+  color: #35d39a !important;
+  flex-shrink: 0 !important;
+  margin-right: 8px !important;
+}
+
+#headersearch_contens.live-search-input {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 100% !important;
+  height: 34px !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  caret-color: #35d39a !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+#headersearch_contens.live-search-input::placeholder {
+  color: #8c9ba5 !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  opacity: 1 !important;
+}
+
+.live-search-clear {
+  display: none;
+  background: transparent !important;
+  border: none !important;
+  color: #8c9ba5 !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  padding: 2px 4px !important;
+}
+.live-search-clear:hover {
+  color: #ffffff !important;
+}
+
+/* 3. Dropdown-Container */
+.live-results-dropdown {
+  position: absolute !important;
+  top: calc(100% + 5px) !important;
+  left: 0 !important;
+  width: 100% !important;
+  background: #131922 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.8) !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  z-index: 999999 !important;
+  display: block !important;
+}
+.live-results-dropdown.hidden {
+  display: none !important;
+}
+
+/* Sichtbare Trennung zwischen den Kategorien (Personen / Filme / Serien) */
+.live-results-section + .live-results-section {
+  border-top: 1px solid rgba(53, 211, 154, 0.22) !important;
+}
+.live-results-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 8px 12px 6px !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  color: #8c9ba5 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.09em !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+.live-results-header .badge {
+  color: #35d39a !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+}
+
+/* 4. Scrollbarer Listencontainer bei "Alle anzeigen" */
+.live-results-list {
+  display: block !important;
+}
+/* Höhe um 2 Zeilen erweitert (von 395px auf 520px), sodass das Weiterscrollen klar erkennbar ist */
+.live-results-list.is-scrollable {
+  max-height: 520px !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #35d39a #131922 !important;
+}
+.live-results-list.is-scrollable::-webkit-scrollbar {
+  width: 6px !important;
+}
+.live-results-list.is-scrollable::-webkit-scrollbar-track {
+  background: #131922 !important;
+}
+.live-results-list.is-scrollable::-webkit-scrollbar-thumb {
+  background: #232e3d !important;
+  border-radius: 4px !important;
+}
+.live-results-list.is-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #35d39a !important;
+}
+
+.live-result-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 9px 12px !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  color: inherit !important;
+  transition: background 0.15s !important;
+}
+.live-result-item:hover,
+.live-result-item.selected {
+  background: #202a36 !important;
+  outline: none !important;
+}
+.live-result-content {
+  overflow: hidden !important;
+  flex: 1 !important;
+}
+.live-result-title {
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+}
+.live-result-title mark {
+  background: rgba(53, 211, 154, 0.22) !important;
+  color: #35d39a !important;
+  border-radius: 3px !important;
+  padding: 0 3px !important;
+}
+.live-result-meta {
+  font-size: 11.5px !important;
+  color: #8c9ba5 !important;
+  margin-top: 2px !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+}
+.live-result-arrow {
+  color: #566474 !important;
+  font-size: 17px !important;
+  padding-left: 10px !important;
+}
+.live-result-item:hover .live-result-arrow,
+.live-result-item.selected .live-result-arrow {
+  color: #35d39a !important;
+}
+.live-results-empty {
+  padding: 16px !important;
+  text-align: center !important;
+  color: #8c9ba5 !important;
+  font-size: 13px !important;
+}
+
+/* 5. Fußbereich für "Alle anzeigen" */
+.live-results-footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 10px 12px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  font-size: 12px !important;
+  color: #8c9ba5 !important;
+  gap: 6px !important;
+}
+.live-results-footer-text {
+  color: #8c9ba5 !important;
+}
+.live-results-all-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #35d39a !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  text-decoration: underline !important;
+  transition: color 0.2s !important;
+}
+.live-results-all-btn:hover {
+  color: #5cf1b8 !important;
+}
+</style>
+
+
+<form method="post" class="rb" id="headerSearchFormTop" action="https://filmpalast.to/search" name="searchheaderLeft" autocomplete="off">
+  <fieldset>
+    <div class="live-search-bar">
+      <svg class="live-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="7.5"></circle>
+        <path d="m16.5 16.5 4 4" stroke-linecap="round"></path>
+      </svg>
+      <input 
+        type="search" 
+        id="headersearch_contens" 
+        name="headerSearchText" 
+        class="live-search-input" 
+        placeholder="Filme, Serien oder Personen suchen …" 
+        autocomplete="off"
+        role="combobox"
+        aria-expanded="false"
+        aria-autocomplete="list"
+        aria-controls="liveSearchResults"
+      />
+      <button type="button" id="liveSearchClear" class="live-search-clear" title="Leeren">×</button>
+    </div>
+    <input type="hidden" name="t1" value="tags">
+  </fieldset>
+
+  <div id="liveSearchResults" class="live-results-dropdown hidden" role="listbox"></div>
+</form>
+
+
+<script>
+(function() {
+  const input = document.getElementById('headersearch_contens');
+  const clearBtn = document.getElementById('liveSearchClear');
+  const resultsBox = document.getElementById('liveSearchResults');
+  const form = document.getElementById('headerSearchFormTop');
+
+  if (!input || !resultsBox) return;
+
+  let debounceTimer = null;
+  let abortController = null;
+  let selectedIndex = -1;
+  let currentItems = [];
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, function(s) {
+      return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'}[s];
+    });
+  }
+
+  function highlight(text, query) {
+    const safeText = escapeHtml(text);
+    if (!query) return safeText;
+    const cleanQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return safeText.replace(new RegExp('(' + cleanQuery + ')', 'gi'), '<mark>$1</mark>');
+  }
+
+  function cleanLink(url) {
+    return String(url || '').replace(/\.html$/i, '');
+  }
+
+  function closeResults() {
+    resultsBox.classList.add('hidden');
+    resultsBox.innerHTML = '';
+    input.setAttribute('aria-expanded', 'false');
+    selectedIndex = -1;
+    currentItems = [];
+  }
+
+  function syncCurrentItems() {
+    currentItems = Array.from(resultsBox.querySelectorAll('.live-result-item'));
+  }
+
+  function createItemElement(item, query) {
+    const a = document.createElement('a');
+    a.className = 'live-result-item';
+    a.href = cleanLink(item.url);
+    a.setAttribute('role', 'option');
+
+    const metaText = item.meta ? escapeHtml(item.meta) : 'Schauspieler';
+
+    a.innerHTML = 
+      '<div class="live-result-content">' +
+        '<div class="live-result-title">' + highlight(item.title || item.name, query) + '</div>' +
+        '<div class="live-result-meta">' + metaText + '</div>' +
+      '</div>' +
+      '<span class="live-result-arrow">›</span>';
+
+    return a;
+  }
+
+  function appendMediaSection(titleText, items, query) {
+    if (!items || items.length === 0) return;
+
+    const sec = document.createElement('div');
+    sec.className = 'live-results-section';
+    sec.innerHTML = '<div class="live-results-header"><span>' + escapeHtml(titleText) + '</span><span class="badge">' + items.length + ' Treffer</span></div>';
+
+    const listContainer = document.createElement('div');
+    listContainer.className = 'live-results-list';
+
+    const initialCount = Math.min(items.length, 8);
+    for (let i = 0; i < initialCount; i++) {
+      const a = createItemElement(items[i], query);
+      listContainer.appendChild(a);
+    }
+    sec.appendChild(listContainer);
+
+    if (items.length > 8) {
+      const footer = document.createElement('div');
+      footer.className = 'live-results-footer';
+      footer.innerHTML = 
+        '<span class="live-results-footer-text">' + items.length + ' Treffer insgesamt – </span>' +
+        '<button type="button" class="live-results-all-btn">Alle anzeigen</button>';
+
+      const allBtn = footer.querySelector('.live-results-all-btn');
+      allBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        for (let i = initialCount; i < items.length; i++) {
+          const a = createItemElement(items[i], query);
+          listContainer.appendChild(a);
+        }
+
+        listContainer.classList.add('is-scrollable');
+        footer.remove();
+        syncCurrentItems();
+        input.focus();
+      });
+
+      sec.appendChild(footer);
+    }
+
+    resultsBox.appendChild(sec);
+  }
+
+  function renderResults(data, query) {
+    resultsBox.innerHTML = '';
+    selectedIndex = -1;
+    currentItems = [];
+
+    const actors = (data && data.actors) ? data.actors : [];
+    const movies = (data && data.movies) ? data.movies : [];
+    const series = (data && data.series) ? data.series : [];
+
+    if (actors.length === 0 && movies.length === 0 && series.length === 0) {
+      resultsBox.innerHTML = '<div class="live-results-empty">Keine Treffer für „' + escapeHtml(query) + '“ gefunden.</div>';
+      resultsBox.classList.remove('hidden');
+      input.setAttribute('aria-expanded', 'true');
+      return;
+    }
+
+    // 1. Kategorie: Personen
+    if (actors.length > 0) {
+      const sec = document.createElement('div');
+      sec.className = 'live-results-section';
+      sec.innerHTML = '<div class="live-results-header"><span>Personen</span><span class="badge">' + actors.length + ' Treffer</span></div>';
+      
+      actors.forEach(function(item) {
+        const a = createItemElement(item, query);
+        sec.appendChild(a);
+      });
+      resultsBox.appendChild(sec);
+    }
+
+    // 2. Kategorie: Filme
+    appendMediaSection('Filme', movies, query);
+
+    // 3. Kategorie: Serien
+    appendMediaSection('Serien', series, query);
+
+    syncCurrentItems();
+    resultsBox.classList.remove('hidden');
+    input.setAttribute('aria-expanded', 'true');
+  }
+
+  function fetchResults(term) {
+    if (abortController) {
+      abortController.abort();
+    }
+    abortController = new AbortController();
+
+    fetch('/autocomplete.php?term=' + encodeURIComponent(term) + '&_t=' + Date.now(), {
+      signal: abortController.signal,
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(function(data) {
+      renderResults(data, term);
+    })
+    .catch(function(err) {
+      if (err.name !== 'AbortError') {
+        closeResults();
+      }
+    });
+  }
+
+  input.addEventListener('input', function() {
+    const term = input.value.trim();
+    clearBtn.style.display = term.length > 0 ? 'block' : 'none';
+
+    if (form) {
+      form.setAttribute('action', '/search/title/' + encodeURIComponent(term));
+    }
+
+    clearTimeout(debounceTimer);
+    if (term.length < 3) {
+      closeResults();
+      return;
+    }
+
+    debounceTimer = setTimeout(function() {
+      fetchResults(term);
+    }, 280);
+  });
+
+  input.addEventListener('keydown', function(e) {
+    if (resultsBox.classList.contains('hidden') || currentItems.length === 0) {
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedIndex = (selectedIndex + 1) % currentItems.length;
+      updateSelection();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedIndex = (selectedIndex - 1 + currentItems.length) % currentItems.length;
+      updateSelection();
+    } else if (e.key === 'Enter') {
+      if (selectedIndex >= 0 && currentItems[selectedIndex]) {
+        e.preventDefault();
+        window.location.href = currentItems[selectedIndex].href;
+      }
+    } else if (e.key === 'Escape') {
+      closeResults();
+    }
+  });
+
+  function updateSelection() {
+    currentItems.forEach(function(item, idx) {
+      if (idx === selectedIndex) {
+        item.classList.add('selected');
+        item.scrollIntoView({ block: 'nearest' });
+      } else {
+        item.classList.remove('selected');
+      }
+    });
+  }
+
+  clearBtn.addEventListener('click', function() {
+    input.value = '';
+    clearBtn.style.display = 'none';
+    input.focus();
+    closeResults();
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!input.contains(e.target) && !resultsBox.contains(e.target)) {
+      closeResults();
+    }
+  });
+})();
+</script>
+
+
+<div id="container">
+
+<div class="alert-banner1">
+  <button class="closebtn1" onclick="this.parentElement.style.display='none'">&times;</button>
+  Liebe Filmpalast.to User,<br>
+  in Deutschland ist unsere Webseite von einer Netzsperre der „Clearingstelle Urheberrecht im Internet“ betroffen.<br>
+  Wie ihr diese Sperre einfach, legal und kostenlos umgehen könnt, findet ihr unter
+  <a href="https://filmpalast.to/dns-sperre.html" target="_blank">https://filmpalast.to/dns-sperre</a>.<br>
+  <br>
+  Alternative Domain: <a href="https://filmpalast.la" target="_blank">filmpalast.la</a><br>
+</div>
+
+<div id="featuredMoviesPlaceholder"></div>
+<header>
+	    <style type="text/css">
+.dropdown{
+    width: 100%;
+    height: 28px;
+    -moz-padding-start: calc(10px - 3px);
+    background: url(fff-0-2.png) repeat;
+    color: #fff;
+    font: 900 14px/20px 'lato',Arial,Helvetica,sans-serif;
+    box-shadow: 2px 2px 5px 1px rgba(0,0,0,0.3);
+    cursor: pointer;
+    margin-bottom
+}
+
+select.dropdown option {
+  /*padding: 10px 17px;*/
+  color: #666;
+}
+select.dropdown:focus::-ms-value {
+  background-color: transparent;
+}
+
+header nav {
+    clear: left;
+    float: left;
+    padding: 0;
+    padding-left: 30%;
+    width: auto;
+    margin-top: 5px;
+}
+.column {
+  margin: 0 auto
+}
+#sidebar{
+  margin-top: -50px;
+}
+.row{
+}
+/* Clear floats after the columns */
+.row:after {
+  clear: both;
+}
+</style>
+<!-- TPL DATA -->
+<div class="row">
+<div class="column">
+<!-- TOP NAV -->
+<nav role="navigation">
+    <ul>
+      <li><a class="mb1 rb" href="https://filmpalast.to/">Neu</a></li>
+      <li><a class="mb1 rb active" href="https://filmpalast.to/movies/new">Filme</a></li>
+      <li><a class="mb1 rb " href="https://filmpalast.to/serien/view">Serien</a></li>
+      <li><a class="mb1 rb " href="https://filmpalast.to/movies/top">Top</a></li>
+      
+      <li><a class="mb1 rb" href="https://filmpalast.to/search/genre/Englisch/">Englisch</a></li>
+	 </ul>
+</nav>
+</div>
+<div class="column" style="float:right;margin-top:9px;">
+   </div>
+</div>
+<div style="clear:both"></div></header><script type="text/javascript">
+/* <![CDATA[ */
+var addSizes = +10; // + höhe des covers
+var addStartSizes = -1;
+var moveSizes = +0;
+var imgOpac = 0.6; // cover Opacity
+var layerSizes = 100;
+var aniTimes = 100; // animation in milisec
+/* ]]> */
+</script>
+
+<div id="content" role="main">
+
+    <h3 style="padding:20px;">Suchergebnisse: 1</h3>
+
+		                                   	                        <article class="liste glowliste  rb">
+    <cite>
+<h2 class="rb">
+    <a href="//filmpalast.to/stream/inception" class="rb" title="Inception">Inception</a>
+</h2>
+    </cite>
+	<div>
+                                    <img src="https://filmpalast.to/themes/downloadarchive/images/star_on.png" border="0" width="10"  alt="" />
+                                                <img src="https://filmpalast.to/themes/downloadarchive/images/star_on.png" border="0" width="10"  alt="" />
+                                                <img src="https://filmpalast.to/themes/downloadarchive/images/star_on.png" border="0" width="10"  alt="" />
+                                                <img src="https://filmpalast.to/themes/downloadarchive/images/star_on.png" border="0" width="10"  alt="" />
+                                                <img src="https://filmpalast.to/themes/downloadarchive/images/star_on.png" border="0" width="10"  alt="" />
+                                                <img src="https://filmpalast.to/themes/downloadarchive/images/star_on.png" border="0" width="10"  alt="" />
+                                                <img src="https://filmpalast.to/themes/downloadarchive/images/star_on.png" border="0" width="10"  alt="" />
+                                                <img src="https://filmpalast.to/themes/downloadarchive/images/star_on.png" border="0" width="10"  alt="" />
+                                                <img src="https://filmpalast.to/themes/downloadarchive/images/star_off.png" border="0" width="10"  alt="" />
+                                                <img src="https://filmpalast.to/themes/downloadarchive/images/star_off.png" border="0" width="10"  alt="" />
+                            <small class="rb">&nbsp;298&nbsp;Stimmen</small>
+    </div>
+    <a href="//filmpalast.to/stream/inception" title="Inception"> <img  width="236px" height="338px" src="/files/movies/315/inception.jpg" class="cover-opacity" alt="stream Inception"/></a>
+</article>
+                   
+                      
+        	<!-- page navigation-->
+			<div id="paging">
+					
+			</div>
+	<!-- page navigation-->	</div>
+  <aside id="sidebar">
+        		<section id="genre">
+			<h3>Kategorien</h3>
+			<ul>
+					
+	<li>  <a href="https://filmpalast.to/search/genre/Abenteuer">  Abenteuer</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Action">  Action</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Animation">  Animation</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Biographie">  Biographie</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Dokumentation">  Dokumentation</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Drama">  Drama</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Englisch">  Englisch</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Familie">  Familie</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Fantasy">  Fantasy</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Geschichte">  Geschichte</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Horror">  Horror</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Komödie">  Komödie</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Krieg">  Krieg</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Krimi">  Krimi</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Musik">  Musik</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Mystery">  Mystery</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Romantik">  Romantik</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Sci-Fi">  Sci-Fi</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Sport">  Sport</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Thriller">  Thriller</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Western">  Western</a></li>
+	
+	<li>  <a href="https://filmpalast.to/search/genre/Zeichentrick">  Zeichentrick</a></li>
+			</ul>
+		</section>
+        <section id="movietitle">
+        	<h3>Alphabetisch</h3>
+			<ul>
+        	                    <li><a href="https://filmpalast.to/search/alpha/0-9">#</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/A">A</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/B">B</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/C">C</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/D">D</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/E">E</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/F">F</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/G">G</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/H">H</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/I">I</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/J">J</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/K">K</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/L">L</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/M">M</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/N">N</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/O">O</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/P">P</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/Q">Q</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/R">R</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/S">S</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/T">T</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/U">U</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/V">V</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/W">W</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/X">X</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/Y">Y</a></li>
+                <li><a href="https://filmpalast.to/search/alpha/Z">Z</a></li>			</ul>
+       	</section>
+  
+
+			<section id="partnerlinks">
+				<ul id="serien-nav">
+	             </br>			</ul>
+		</section>
+
+</aside>
+<!-- close container -->
+	</div>
+
+<footer class="clearfix">
+<div>
+		<a style="width:110px; padding:3px 15px;" class="button rb iconDetail" id="scroll-to-top" href="javascript:void(0);">Seitenanfang</a>
+</div>
+
+<div id="top-toolbar">
+
+	<section id="userviewed">
+		<div class="panelContainer">
+
+		</div>
+		<span class="openPanel"><a href="#" class="panelnav icon-tasks" id="panelToggle" data-text="Toggle"></a></span>
+
+	</section>
+</div>
+</footer>
+
+<script src="https://filmpalast.to/themes/downloadarchive/js/jquery-1.12.4.js"></script>
+<script src="https://filmpalast.to/themes/downloadarchive/js/jquery-ui.js"></script>
+
+
+<script src="https://filmpalast.to/themes/downloadarchive/js/custom.js?v=69"></script>
+
+<script>
+$(document).ready(function(){
+    
+    var maxHeight = 0;
+
+$('h2.rb').each(function(){
+   var thisH = $(this).height();
+   if (thisH > maxHeight) { maxHeight = thisH; }
+});
+
+$('h2.rb, h2.rb > a').height(maxHeight);
+
+  var bob  = setInterval(function() {
+  
+  if(jQuery(".verystream").is(':visible') && !jQuery(".verystream").hasClass('activex')){
+    var url = jQuery(".verystream").attr('data-player-url')
+	  document.getElementById('video_player').setAttribute('src', url)
+	  document.getElementById('video_player').style.display = 'block'
+	  jQuery(".verystream").addClass('activex')
+  }
+
+  if(!jQuery("#video_player").is(':visible')){
+	  jQuery("#video_player").show();
+  }
+
+  jQuery(document).on('click', '.iconPlay', function(e){
+	  window.location.hash = ''
+	  window.location.hash = '#video_player'
+  })
+
+}, 1000);
+
+});
+</script>
+ <script> 
+  $( function() { 
+    var tags = [ 
+    "Delhi", 
+    "Ahemdabad", 
+    "Punjab", 
+    "Uttar Pradesh", 
+    "Himachal Pradesh", 
+    "Karnatka", 
+    "Kerela", 
+    "Maharashtra", 
+    "Gujrat", 
+    "Rajasthan", 
+    "Bihar", 
+    "Tamil Nadu", 
+    "Haryana" 
+  
+  
+    ]; 
+    $( "#headersearch_contens" ).autocomplete({ 
+      source: function( request, response ) {
+        $.ajax({
+            dataType: "json",
+            type : 'post',
+            url: 'https://filmpalast.to//autocomplete.php',
+            data: {
+              term: request.term
+            },
+            success: function(data) {
+                //$('input.suggest-user').removeClass('ui-autocomplete-loading');  
+                // hide loading image
+
+               // response( $.map( data, function(item) {
+                    // your operation on data
+                //}));
+                response( data );
+            },
+            error: function(data) {
+                $('input.suggest-user').removeClass('ui-autocomplete-loading');  
+            }
+        });
+    },
+    minLength: 3,
+    open: function() {},
+    close: function() {},
+    focus: function(event,ui) {},
+    select: function (event, ui) {
+      // Set selection
+      $('#autocomplete').val(ui.item.label); // display the selected text
+      $('#headersearch_contens').val(ui.item.value); // save selected id to input
+      document.getElementById('headerSearchFormTop').setAttribute('action','/search/title/'+ui.item.value);
+      $('#headerSearchFormTop')[0].submit();
+      return false;
+    }
+  
+    }); 
+  } ); 
+  </script> 
+
+<div id="zc_749815"></div>
+
+
+<!-- Werbung popup -->
+<script src="/file.php"></script>
+
+<script data-cfasync="false" src="https://aarems.org/1/1637b27089afc6eb0384e70700e78cd2"></script>
+
+<!--<script data-cfasync="false" src="" data-tracking-link-id="272555630">https://aarems.org/1/1637b27089afc6eb0384e70700e78cd2"></script>-->
+
+<!--<script src="https://jabturfembitter.com/16/37/b2/1637b27089afc6eb0384e70700e78cd2.js"></script>-->
+
+
+</body></html>

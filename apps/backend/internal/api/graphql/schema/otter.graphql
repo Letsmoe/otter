@@ -1,0 +1,490 @@
+# Otter API. Every id is a string "<type>:<tmdb id>", e.g. "movie:603",
+# "series:1396", "episode:62085", "person:500". Profiles use "profile:<n>".
+
+enum MediaType {
+  MOVIE
+  SERIES
+  EPISODE
+}
+
+"A movie or a series."
+type Title {
+  id: ID!
+  mediaType: MediaType!
+  tmdbId: Int!
+  imdbId: String
+  title: String!
+  originalTitle: String
+  overview: String
+  tagline: String
+  "Release date of a movie, first air date of a series."
+  releaseDate: String
+  year: Int
+  "Minutes; movies only."
+  runtime: Int
+  status: String
+  voteAverage: Float!
+  voteCount: Int!
+  popularity: Float!
+  posterPath: String
+  backdropPath: String
+  logoPath: String
+  "YouTube key of the trailer."
+  trailerKey: String
+  genres: [String!]!
+  keywords: [String!]!
+  "False for titles only seen in lists; reading them through Query.title fetches the rest."
+  detailFetched: Boolean!
+
+  credits: [Credit!]!
+  "TMDB recommendations first, then other work of the director and leads."
+  related(limit: Int = 20): [Title!]!
+  "Series only."
+  seasons: [Season!]!
+  "Series only: regular seasons, without specials. 0 until the detail was fetched."
+  seasonCount: Int!
+  "Movies only. Stored links; Subscription.streams finds new ones."
+  streams: [Stream!]!
+
+  progress(profileId: ID!): WatchProgress
+  rating(profileId: ID!): Float
+  inWatchlist(profileId: ID!): Boolean!
+}
+
+type Season {
+  id: ID!
+  seasonNumber: Int!
+  name: String
+  overview: String
+  airDate: String
+  posterPath: String
+  episodeCount: Int!
+  "Fetched from TMDB on first read."
+  episodes: [Episode!]!
+}
+
+type Episode {
+  id: ID!
+  tmdbId: Int!
+  seasonNumber: Int!
+  episodeNumber: Int!
+  name: String
+  overview: String
+  airDate: String
+  runtime: Int
+  stillPath: String
+  voteAverage: Float!
+  series: Title!
+  streams: [Stream!]!
+  progress(profileId: ID!): WatchProgress
+  "The episode after this one, crossing seasons."
+  next: Episode
+  "Parts viewers skip (intro, recap, credits, preview), from TheIntroDB; empty when nobody timed them."
+  skipSegments: [SkipSegment!]!
+}
+
+"A skippable part of an episode."
+type SkipSegment {
+  "intro, recap, credits or preview"
+  kind: String!
+  startSeconds: Float!
+  "Null when it runs to the end."
+  endSeconds: Float
+}
+
+type Person {
+  id: ID!
+  tmdbId: Int!
+  name: String!
+  profilePath: String
+  biography: String
+  birthday: String
+  deathday: String
+  placeOfBirth: String
+  knownForDepartment: String
+  "Titles the person is credited on, newest first; job (e.g. \"Director\") keeps only those crew credits."
+  filmography(job: String): [Title!]!
+  "Actors who appear most often alongside this person in their best-known roles."
+  coStars(limit: Int = 12): [CoStar!]!
+  "This person's titles that fit the profile's taste best, without disliked or finished ones."
+  recommendedFor(profileId: ID!, limit: Int = 20): [Title!]!
+}
+
+type CoStar {
+  person: Person!
+  "How many of this person's titles they share."
+  sharedTitles: Int!
+}
+
+type Credit {
+  person: Person!
+  "cast or crew"
+  role: String!
+  job: String
+  character: String
+  order: Int!
+}
+
+type Stream {
+  id: ID!
+  plugin: String!
+  url: String!
+  label: String
+  quality: String
+  language: String
+  format: String
+  sizeBytes: Float
+  speedBps: Float
+  "Null until someone tried to play it."
+  playable: Boolean
+  foundAt: String!
+}
+
+type StreamUpdate {
+  streams: [Stream!]!
+  "True on the last update of a lookup."
+  done: Boolean!
+}
+
+type ResolvedStream {
+  "Playable URL, proxied through the backend when the host needs headers."
+  url: String!
+  mimeType: String!
+  quality: String
+  "The stored link this was resolved from."
+  streamId: ID
+}
+
+type WatchProgress {
+  mediaId: ID!
+  progressSeconds: Float!
+  durationSeconds: Float!
+  completed: Boolean!
+  updatedAt: String!
+}
+
+type ContinueItem {
+  title: Title!
+  "For series: the episode to continue or the next one."
+  episode: Episode
+  progress: WatchProgress
+}
+
+type HistoryEntry {
+  title: Title!
+  episode: Episode
+  progress: WatchProgress!
+}
+
+type Recommendation {
+  title: Title!
+  "Why, e.g. \"Because you watched Heat\"."
+  reason: String!
+  source: String!
+  score: Float!
+}
+
+"Narrows search results; omitted fields don't filter. Runtime is in minutes."
+input TitleFilter {
+  minRating: Float
+  minRuntime: Int
+  maxRuntime: Int
+  minSeasons: Int
+  maxSeasons: Int
+}
+
+"Titles featuring the lead actor of a title the profile rated well."
+type MoreWithRow {
+  person: Person!
+  becauseOf: Title!
+  items: [Title!]!
+}
+
+type RecommendationRow {
+  key: String!
+  title: String!
+  items: [Title!]!
+}
+
+type Profile {
+  id: ID!
+  name: String!
+  avatarUrl: String
+  hasPin: Boolean!
+  isChild: Boolean!
+  "Audio languages, most preferred first (ISO 639-1, e.g. de, en). Links in these languages are tried first, dubs before subs."
+  languages: [String!]!
+}
+
+type PinCheck {
+  success: Boolean!
+  "After a failure, seconds until the next attempt is allowed."
+  waitSeconds: Int!
+}
+
+enum TmdbKeyStatus {
+  OK
+  MISSING
+  "TMDB rejected the key in use."
+  INVALID
+}
+
+type Settings {
+  "The user's own key; empty while the built-in one is used."
+  tmdbApiKey: String!
+  tmdbLanguage: String!
+  tmdbKeyStatus: TmdbKeyStatus!
+  usesDefaultTmdbKey: Boolean!
+  "Whether the first-run TMDB key dialog was answered."
+  tmdbKeyPromptSeen: Boolean!
+  requireVpn: Boolean!
+  disabledPlugins: [String!]!
+}
+
+input SettingsInput {
+  tmdbApiKey: String
+  tmdbLanguage: String
+  tmdbKeyPromptSeen: Boolean
+  requireVpn: Boolean
+}
+
+type PluginSettingField {
+  key: String!
+  label: String!
+  description: String
+  type: String!
+  required: Boolean!
+  default: String
+  value: String
+}
+
+input PluginSettingInput {
+  key: String!
+  value: String!
+}
+
+type Plugin {
+  name: String!
+  displayName: String
+  description: String
+  icon: String
+  version: String!
+  capabilities: [String!]!
+  enabled: Boolean!
+  "False when the plugin needs something missing here (e.g. FlareSolverr)."
+  available: Boolean!
+  settings: [PluginSettingField!]!
+}
+
+type Status {
+  tmdbConfigured: Boolean!
+  vpnConnected: Boolean!
+  requireVpn: Boolean!
+}
+
+enum NotificationKind {
+  "A movie on the list got its first stream links."
+  AVAILABLE
+  "A series on the list aired a new episode."
+  NEW_EPISODE
+  "A movie or episode on the list releases soon."
+  COMING_SOON
+}
+
+type Notification {
+  id: ID!
+  kind: NotificationKind!
+  "E.g. \"Now available\", \"Coming 11 February\"."
+  heading: String!
+  body: String
+  createdAt: String!
+  read: Boolean!
+  "The movie or series."
+  title: Title!
+  "Set when the notification is about one episode."
+  episode: Episode
+}
+
+enum DownloadStatus {
+  QUEUED
+  DOWNLOADING
+  DONE
+  FAILED
+}
+
+"A movie or episode saved for offline playback."
+type Download {
+  id: ID!
+  status: DownloadStatus!
+  "0..1"
+  progress: Float!
+  "Bytes received so far (the full size once done)."
+  sizeBytes: Float!
+  error: String
+  createdAt: String!
+  "The movie, or the episode's series."
+  title: Title!
+  episode: Episode
+  "Local playable URL once done."
+  url: String
+  mimeType: String
+}
+
+enum TogetherStatus {
+  "Hosting, nobody joined yet."
+  WAITING
+  "Joined, looking for the host."
+  CONNECTING
+  CONNECTED
+  "The host left."
+  CLOSED
+  "The host could not be reached."
+  FAILED
+}
+
+"Someone in a Watch Together room."
+type TogetherPeer {
+  id: ID!
+  name: String!
+  "The profile's avatar (e.g. otter:classic)."
+  avatar: String
+}
+
+"A Watch Together room: peers meet over Nostr relays, then sync peer-to-peer."
+type TogetherRoom {
+  "Eight characters; share it so others can join."
+  code: String!
+  hosting: Boolean!
+  status: TogetherStatus!
+  self: TogetherPeer!
+  "Everyone connected, including self."
+  peers: [TogetherPeer!]!
+}
+
+"An app payload (JSON) from another participant."
+type TogetherMessage {
+  from: TogetherPeer!
+  payload: String!
+}
+
+type TogetherUpdate {
+  "Null when there is no room."
+  room: TogetherRoom
+  message: TogetherMessage
+}
+
+enum CatalogSort {
+  POPULAR
+  TOP_RATED
+}
+
+"Curated discover rows. Blockbusters are movies only, bingeworthy is series only; the others work for both."
+enum CatalogTheme {
+  HIDDEN_GEMS
+  BLOCKBUSTERS
+  FEEL_GOOD
+  BINGEWORTHY
+}
+
+type CatalogRow {
+  genre: String!
+  items: [Title!]!
+}
+
+type Query {
+  "A movie or series, fetched from TMDB when missing or stale."
+  title(id: ID!): Title
+  episode(id: ID!): Episode
+  "A person with biography and filmography, fetched when missing or stale."
+  person(id: ID!): Person
+  "TMDB search; results are stored as titles."
+  search(query: String!, mediaType: MediaType, limit: Int = 20, filter: TitleFilter): [Title!]!
+  trending(mediaType: MediaType): [Title!]!
+  "Upcoming releases (soonest first), then recent ones (newest first). Series: currently airing."
+  newAndComingSoon(mediaType: MediaType!): [Title!]!
+  "Lead actors of the profile's most recently watched titles of one type, the most frequent first; empty before any history."
+  watchedActors(profileId: ID!, mediaType: MediaType!, limit: Int = 15): [Person!]!
+  "More titles with the lead actor of the profile's latest well-rated title; null before any good rating."
+  moreWith(profileId: ID!, mediaType: MediaType!): MoreWithRow
+  "Stored titles of one type, most popular first."
+  browse(mediaType: MediaType!, genre: String, limit: Int = 40, offset: Int = 0): [Title!]!
+  genres: [String!]!
+  "Popular or top-rated titles straight from TMDB's catalog (stored as titles), to fill Home before the profile has history."
+  catalog(mediaType: MediaType!, sort: CatalogSort = POPULAR): [Title!]!
+  "One themed row of TMDB's catalog (stored as titles); empty when the theme doesn't fit the media type."
+  catalogTheme(mediaType: MediaType!, theme: CatalogTheme!): [Title!]!
+  "Up to count genre rows of popular TMDB titles, skipping the genre names in exclude."
+  catalogRows(mediaType: MediaType!, count: Int = 6, exclude: [String!]): [CatalogRow!]!
+
+  recommendations(profileId: ID!, mediaType: MediaType, limit: Int = 24, offset: Int = 0, refresh: Boolean = false): [Recommendation!]!
+  recommendationRows(profileId: ID!, rows: Int = 8, perRow: Int = 20): [RecommendationRow!]!
+  continueWatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
+  history(profileId: ID!, limit: Int = 50): [HistoryEntry!]!
+  watchlist(profileId: ID!): [Title!]!
+  "Titles the profile rated well (I like this, Love this), latest rating first."
+  likedTitles(profileId: ID!, limit: Int = 30): [Title!]!
+  "Newest first."
+  notifications(profileId: ID!, limit: Int = 30): [Notification!]!
+  unreadNotificationCount(profileId: ID!): Int!
+  "Newest first."
+  downloads(profileId: ID!): [Download!]!
+  "Folder finished downloads are saved to as named video files; null when they are not."
+  downloadsFolder: String
+  "The open Watch Together room, if any."
+  togetherRoom: TogetherRoom
+
+  profiles: [Profile!]!
+  settings: Settings!
+  "Whether TMDB accepts the key; errors when TMDB can't be reached."
+  checkTmdbKey(key: String!): Boolean!
+  plugins: [Plugin!]!
+  status: Status!
+}
+
+type Mutation {
+  "Ask every streams plugin again for a movie or episode, in the background."
+  findStreams(id: ID!): Boolean!
+  "Turn a stored stream into a playable URL; only succeeds when the link really delivers video."
+  resolveStream(streamId: ID!): ResolvedStream!
+  "Resolves several links at once (most preferred first) and returns the fastest that really delivers video. Fails only when none plays."
+  resolveBestStream(streamIds: [ID!]!): ResolvedStream!
+
+  recordProgress(profileId: ID!, mediaId: ID!, progressSeconds: Float!, durationSeconds: Float!): WatchProgress!
+  setRating(profileId: ID!, mediaId: ID!, rating: Float!): Boolean!
+  clearRating(profileId: ID!, mediaId: ID!): Boolean!
+  addToWatchlist(profileId: ID!, mediaId: ID!): Boolean!
+  removeFromWatchlist(profileId: ID!, mediaId: ID!): Boolean!
+  markNotificationsRead(profileId: ID!): Boolean!
+  "Queue a movie or episode for download; a failed one is retried. streamId picks the link, otherwise the best ones are tried."
+  startDownload(profileId: ID!, mediaId: ID!, streamId: ID): Download!
+  "Remove a download (stops it when running)."
+  deleteDownload(id: ID!): Boolean!
+  "Open the downloads folder in the file manager of the machine the backend runs on."
+  openDownloadsFolder: Boolean!
+  "Open a Watch Together room as the profile; replaces any open room."
+  hostTogether(profileId: ID!): TogetherRoom!
+  "Join a room by its code as the profile; replaces any open room."
+  joinTogether(profileId: ID!, code: String!): TogetherRoom!
+  leaveTogether: Boolean!
+  "Store a link another Watch Together participant plays, so it can be resolved here."
+  adoptStream(mediaId: ID!, url: String!, plugin: String!, label: String): Stream!
+  "Send a JSON payload to everyone else in the room."
+  sendTogether(payload: String!): Boolean!
+
+  createProfile(name: String!, avatarUrl: String, pin: String, isChild: Boolean = false, languages: [String!]): Profile!
+  "Changes the given fields; omitted fields stay. An empty pin removes the PIN."
+  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!]): Profile!
+  deleteProfile(id: ID!): Boolean!
+  verifyPin(profileId: ID!, pin: String!): PinCheck!
+
+  updateSettings(input: SettingsInput!): Settings!
+  setPluginEnabled(name: String!, enabled: Boolean!): Plugin!
+  setPluginSettings(name: String!, values: [PluginSettingInput!]!): Plugin!
+}
+
+type Subscription {
+  "Stream list of a movie or episode as plugins answer. Starts a lookup when the stored links are stale."
+  streams(id: ID!): StreamUpdate!
+  "The Watch Together room as it changes, and messages from the others."
+  together: TogetherUpdate!
+}

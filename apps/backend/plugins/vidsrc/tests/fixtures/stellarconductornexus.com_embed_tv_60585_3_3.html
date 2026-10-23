@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="referrer" content="origin">
+<title>Player</title>
+<link rel="stylesheet" href="/embed/iframe_player/assets/player.css?v=1791428529">
+<script src="/embed/iframe_player/assets/vsdec.js?v=1786492668"></script>
+</head>
+<body>
+<div id="player" class="jw landing">
+    <div id="poster" class="jw-poster"></div>
+    <div id="landingLoad" class="jw-gate" style="z-index:9;background:transparent;padding:0">
+        <img style="display:block;margin:0 auto;width:54px;height:54px" src="/embed/iframe_player/rings.svg?v=1786492668" alt="" aria-hidden="true">
+    </div>
+    <div class="jw-center">
+        <button id="bigPlay" class="jw-bigplay" aria-label="Play">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+    </div>
+</div>
+<script>window.CFG = {"metaApi":"https://data.vidsrc.sh/api.php?type=tv\u0026tmdb=60585\u0026season=3\u0026episode=3","playerUrl":"/embed/player/tv/60585/3/3?vs=hhyPYnILmZeXsnoIP8qNsPlZgaE3JCJAkvppFPvC-22g956b3tDFcZaaBfm9vIAzgHdARCO6jqRvl6yn121fEt5Kzi2LPR0BNYazqbtJDNHxrX3abIr34A","epLabel":" \u00b7 S03 E03","isTvIndex":false,"autoStart":false};</script>
+<script>
+(function () {
+    var CFG = window.CFG || {};
+    var wrap = document.getElementById('player');
+    var poster = document.getElementById('poster');
+    var bigPlay = document.getElementById('bigPlay');
+    var frame = null, started = false, loadRings = null;
+
+    function post(p) { try { if (window.parent !== window) window.parent.postMessage(p, '*'); } catch (e) {} }
+
+    // Poster/title from the lightweight metadata call (no stream sources yet).
+    // vsFetchJSON transparently decrypts the encrypted API envelope (vsdec.js).
+    var apiJSON = window.vsFetchJSON || function (u) { return fetch(u, { credentials: 'omit', headers: { accept: 'application/json' } }).then(function (r) { return r.json(); }); };
+    var loadGate = document.getElementById('landingLoad');
+    function hideLoadGate() {
+        if (!loadGate) return;
+        loadGate.parentNode.removeChild(loadGate);   // immediate: no fade
+        loadGate = null;
+    }
+    if (CFG.metaApi) {
+        apiJSON(CFG.metaApi)
+            .then(function (j) {
+                var d = j && j.data;
+                if (!d) return;
+                if (d.backdrop && poster) poster.style.backgroundImage = 'url("' + d.backdrop + '")';
+                if (d.title) { var t = d.title + (CFG.epLabel || ''); try { document.title = t; } catch (e) {} post({ type: 'PLAYER_TITLE', title: t }); }
+                hideLoadGate();
+            })
+            .catch(function () { hideLoadGate(); });
+    } else {
+        hideLoadGate();
+    }
+
+    // Play -> inject the real player in its own nested iframe.
+    function start() {
+        if (started || !CFG.playerUrl) return;
+        started = true;
+        if (bigPlay) bigPlay.style.display = 'none';
+        /* Rings while the player page (and its optional Turnstile gate) loads —
+         * the new iframe covers the landing with its own black background while
+         * it boots, so show the rings loader on top until the player reports
+         * (PLAYER_TITLE / PLAYER_UI / TV_INFO) or the Turnstile overlay takes
+         * over inside the frame. Removed from the DOM afterwards (RAM). */
+        if (!loadRings) {
+            loadRings = document.createElement('img');
+            loadRings.src = '/embed/iframe_player/rings.svg?v=1786492668';
+            loadRings.alt = ''; loadRings.setAttribute('aria-hidden', 'true');
+            loadRings.style.cssText = 'position:absolute;top:50%;left:50%;width:54px;height:54px;margin:-27px 0 0 -27px;z-index:25;pointer-events:none';
+            wrap.appendChild(loadRings);
+        }
+        frame = document.createElement('iframe');
+        frame.id = 'player_frame';
+        frame.src = CFG.playerUrl;
+        frame.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture; encrypted-media');
+        frame.setAttribute('allowfullscreen', '');
+        frame.setAttribute('scrolling', 'no');
+        frame.setAttribute('referrerpolicy', 'origin');
+        frame.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0;display:block;z-index:20;background:#000';
+        wrap.appendChild(frame);
+    }
+    function hideRings() {
+        if (loadRings && loadRings.parentNode) loadRings.parentNode.removeChild(loadRings);   // immediate: no fade
+        loadRings = null;
+    }
+    if (bigPlay) bigPlay.addEventListener('click', start);
+
+    // Custom domains skip the play button: inject the player immediately. The
+    // player (player.php) defaults autoplay=true, so it starts on its own (falling
+    // back to muted autoplay if the browser blocks sound without a gesture).
+    if (CFG.autoStart) { if (bigPlay) bigPlay.style.display = 'none'; start(); }
+
+    // Relay postMessages both ways so player events bubble to the top window.
+    window.addEventListener('message', function (e) {
+        var d = e.data;
+        if (frame && e.source === frame.contentWindow) {
+            if (d && d.type === 'PLAYER_TITLE' && d.title) {
+                // When no season/episode was in the URL the in-player picker handles
+                // episode display — strip the " · S## E##" suffix from the tab title.
+                var t = (CFG.isTvIndex) ? d.title.replace(/\s*[\u00B7\xB7\u2022\-]\s*S\d+\s*E\d+.*$/i, '').trim() : d.title;
+                try { document.title = t; } catch (x) {}
+            }
+            // Any first report from the player page = it booted (Turnstile solved
+            // or not needed): drop the rings loader.
+            if (d && (d.type === 'PLAYER_TITLE' || d.type === 'PLAYER_UI' || d.type === 'TV_INFO')) hideRings();
+            if (window.parent !== window) window.parent.postMessage(d, '*');
+        } else if (window.parent !== window && e.source === window.parent) {
+            if (frame) frame.contentWindow.postMessage(d, '*');
+        }
+    });
+})();
+</script>
+<!-- Anti-tamper: disable browser devtools — https://github.com/theajack/disable-devtool (vendored, toggle in config.php) -->
+<script src="/embed/iframe_player/assets/disable-devtool.js?v=1786492668"></script>
+<script>
+(function () {
+    if (!window.DisableDevtool) return;
+    function kill() {
+        try { var v = document.querySelector('video'); if (v) { v.pause(); v.removeAttribute('src'); v.load(); } } catch (e) {}
+        try { if (window.parent && window.parent !== window) window.parent.postMessage({ type: 'VS_DEVTOOLS' }, '*'); } catch (e) {}
+        try { location.replace('about:blank'); } catch (e) { try { document.documentElement.innerHTML = ''; } catch (x) {} }
+    }
+    DisableDevtool({ disableMenu: true, clearLog: true, disableIframeParents: true, ondevtoolopen: kill });
+    window.addEventListener('message', function (e) { if (e && e.data && e.data.type === 'VS_DEVTOOLS') kill(); });
+})();
+</script>
+</body>
+</html>

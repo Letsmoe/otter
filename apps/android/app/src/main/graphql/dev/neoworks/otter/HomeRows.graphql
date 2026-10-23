@@ -1,0 +1,15 @@
+query CatalogTheme($mediaType: MediaType!, $theme: CatalogTheme!) {
+  catalogTheme(mediaType: $mediaType, theme: $theme) {
+    ...TitleCard
+  }
+}
+
+query RecommendationRows($profileId: ID!, $rows: Int!, $perRow: Int!) {
+  recommendationRows(profileId: $profileId, rows: $rows, perRow: $perRow) {
+    key
+    title
+    items {
+      ...TitleCard
+    }
+  }
+}

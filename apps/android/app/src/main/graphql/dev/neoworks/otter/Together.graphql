@@ -1,0 +1,57 @@
+fragment TogetherPeerFields on TogetherPeer {
+  id
+  name
+  avatar
+}
+
+fragment TogetherRoomFields on TogetherRoom {
+  code
+  hosting
+  status
+  self {
+    ...TogetherPeerFields
+  }
+  peers {
+    ...TogetherPeerFields
+  }
+}
+
+subscription TogetherUpdates {
+  together {
+    room {
+      ...TogetherRoomFields
+    }
+    message {
+      from {
+        ...TogetherPeerFields
+      }
+      payload
+    }
+  }
+}
+
+mutation HostTogether($profileId: ID!) {
+  hostTogether(profileId: $profileId) {
+    ...TogetherRoomFields
+  }
+}
+
+mutation JoinTogether($profileId: ID!, $code: String!) {
+  joinTogether(profileId: $profileId, code: $code) {
+    ...TogetherRoomFields
+  }
+}
+
+mutation LeaveTogether {
+  leaveTogether
+}
+
+mutation SendTogether($payload: String!) {
+  sendTogether(payload: $payload)
+}
+
+mutation AdoptStream($mediaId: ID!, $url: String!, $plugin: String!, $label: String) {
+  adoptStream(mediaId: $mediaId, url: $url, plugin: $plugin, label: $label) {
+    ...SourceStreamFields
+  }
+}

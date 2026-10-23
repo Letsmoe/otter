@@ -1,0 +1,7 @@
+{
+  "source": "Jupiter",
+  "success": false,
+  "error": "failed",
+  "detail": "sources rejected: Error",
+  "durationMs": 883
+}

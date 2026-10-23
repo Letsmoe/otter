@@ -1,0 +1,105 @@
+fragment ProgressFields on WatchProgress {
+  progressSeconds
+  durationSeconds
+  completed
+  updatedAt
+}
+
+query ContinueWatching($profileId: ID!, $limit: Int!) {
+  continueWatching(profileId: $profileId, limit: $limit) {
+    title {
+      ...TitleCard
+    }
+    episode {
+      ...EpisodeRef
+    }
+    progress {
+      ...ProgressFields
+    }
+  }
+}
+
+query History($profileId: ID!, $limit: Int!) {
+  history(profileId: $profileId, limit: $limit) {
+    title {
+      ...TitleCard
+      backdropPath
+    }
+    episode {
+      ...EpisodeRef
+    }
+    progress {
+      ...ProgressFields
+    }
+  }
+}
+
+query Watchlist($profileId: ID!) {
+  watchlist(profileId: $profileId) {
+    ...TitleCard
+  }
+}
+
+query Recommendations($profileId: ID!, $mediaType: MediaType!, $limit: Int!) {
+  recommendations(profileId: $profileId, mediaType: $mediaType, limit: $limit) {
+    title {
+      ...TitleCard
+      genres
+    }
+  }
+}
+
+query FeaturedTrending($mediaType: MediaType!) {
+  trending(mediaType: $mediaType) {
+    ...TitleCard
+    genres
+  }
+}
+
+query NewAndComingSoon($mediaType: MediaType!) {
+  newAndComingSoon(mediaType: $mediaType) {
+    ...TitleCard
+    releaseDate
+  }
+}
+
+query MoreWith($profileId: ID!, $mediaType: MediaType!) {
+  moreWith(profileId: $profileId, mediaType: $mediaType) {
+    person {
+      name
+    }
+    items {
+      ...TitleCard
+    }
+  }
+}
+
+query Browse($mediaType: MediaType!, $genre: String, $limit: Int!, $offset: Int!) {
+  browse(mediaType: $mediaType, genre: $genre, limit: $limit, offset: $offset) {
+    ...TitleCard
+  }
+}
+
+query Genres {
+  genres
+}
+
+query Search($query: String!, $mediaType: MediaType, $limit: Int!, $filter: TitleFilter) {
+  search(query: $query, mediaType: $mediaType, limit: $limit, filter: $filter) {
+    ...TitleCard
+  }
+}
+
+query RelatedTitles($id: ID!, $limit: Int!) {
+  title(id: $id) {
+    related(limit: $limit) {
+      ...TitleCard
+    }
+  }
+}
+
+query InWatchlist($id: ID!, $profileId: ID!) {
+  title(id: $id) {
+    inWatchlist(profileId: $profileId)
+  }
+}

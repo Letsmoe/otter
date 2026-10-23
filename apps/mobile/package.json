@@ -1,0 +1,46 @@
+{
+	"name": "mobile",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev --host 0.0.0.0",
+		"build:web": "vite build",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"assets:android": "capacitor-assets generate --android && cp assets/ic_launcher.xml android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml && cp assets/ic_launcher.xml android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+		"build:backend": "bun ../backend/scripts/build-server.ts --out android/app/src/main/jniLibs/arm64-v8a/libotter.so",
+		"build:plugins": "cd ../backend && bun scripts/bundle-plugins.ts --release --out ../mobile/android/app/src/main/assets/plugins",
+		"build": "bun run build:web && bun run build:backend && bun run build:plugins && cap sync android",
+		"apk": "bun run build && cd android && ./gradlew assembleDebug",
+		"android": "bun run build && cap run android",
+		"open": "cap open android"
+	},
+	"dependencies": {
+		"@capacitor/android": "^8.4.0",
+		"@capacitor/app": "^8.1.1",
+		"@capacitor/core": "^8.4.0",
+		"@capacitor/screen-orientation": "^8.0.1",
+		"@capacitor/share": "^8",
+		"@capacitor/splash-screen": "^8.0.0",
+		"@neoworks-dev/otter-app": "workspace:*",
+		"@neoworks-dev/otter-sdk": "workspace:*",
+		"hls.js": "^1.6.16",
+		"phosphor-svelte": "^3.1.0"
+	},
+	"devDependencies": {
+		"@capacitor/assets": "^3.0.5",
+		"@capacitor/cli": "^8.4.0",
+		"@types/node": "^24",
+		"@sveltejs/adapter-static": "^3.0.10",
+		"@sveltejs/kit": "^2.57.0",
+		"@sveltejs/vite-plugin-svelte": "^7.0.0",
+		"@tailwindcss/typography": "^0.5.19",
+		"@tailwindcss/vite": "^4.2.2",
+		"svelte": "^5.55.2",
+		"svelte-check": "^4.4.6",
+		"tailwindcss": "^4.2.2",
+		"typescript": "^6.0.2",
+		"vite": "^8.0.7"
+	}
+}

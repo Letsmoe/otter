@@ -1,0 +1,47 @@
+fragment ProfileFields on Profile {
+  id
+  name
+  avatarUrl
+  hasPin
+  isChild
+  languages
+}
+
+query Profiles {
+  profiles {
+    ...ProfileFields
+  }
+}
+
+mutation VerifyPin($profileId: ID!, $pin: String!) {
+  verifyPin(profileId: $profileId, pin: $pin) {
+    success
+    waitSeconds
+  }
+}
+
+mutation CreateProfile($name: String!, $avatarUrl: String, $pin: String, $isChild: Boolean, $languages: [String!]) {
+  createProfile(name: $name, avatarUrl: $avatarUrl, pin: $pin, isChild: $isChild, languages: $languages) {
+    ...ProfileFields
+  }
+}
+
+mutation UpdateProfile($id: ID!, $name: String, $avatarUrl: String, $isChild: Boolean, $pin: String, $languages: [String!]) {
+  updateProfile(id: $id, name: $name, avatarUrl: $avatarUrl, isChild: $isChild, pin: $pin, languages: $languages) {
+    ...ProfileFields
+  }
+}
+
+mutation DeleteProfile($id: ID!) {
+  deleteProfile(id: $id)
+}
+
+query SpotlightTitle($id: ID!) {
+  title(id: $id) {
+    id
+    title
+    tagline
+    posterPath
+    logoPath
+  }
+}

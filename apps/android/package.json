@@ -1,0 +1,14 @@
+{
+	"name": "android",
+	"private": true,
+	"version": "0.0.1",
+	"scripts": {
+		"build:backend": "bun ../backend/scripts/build-server.ts --out app/src/main/jniLibs/arm64-v8a/libotter.so",
+		"build:plugins": "cd ../backend && bun scripts/bundle-plugins.ts --release --out ../android/app/src/main/assets/plugins",
+		"build": "bun run build:backend && bun run build:plugins",
+		"apk": "bun run build && ./gradlew assembleDebug",
+		"android": "bun run build && ./gradlew installDebug && adb shell am start -n dev.neoworks.otter.next/dev.neoworks.otter.MainActivity",
+		"android:release": "bun run build && ./gradlew installRelease && adb shell am start -n dev.neoworks.otter.next/dev.neoworks.otter.MainActivity",
+		"logs": "adb logcat -s OtterBackend:* AndroidRuntime:E"
+	}
+}

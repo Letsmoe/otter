@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Otter</string>
+    <string name="title_activity_main">Otter</string>
+    <string name="package_name">dev.neoworks.otter</string>
+    <string name="custom_url_scheme">dev.neoworks.otter</string>
+</resources>

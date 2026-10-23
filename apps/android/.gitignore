@@ -1,0 +1,8 @@
+.gradle/
+.kotlin/
+.idea/
+local.properties
+*.apk
+# Built by `bun run build:backend` / `bun run build:plugins`.
+/app/src/main/jniLibs/
+/app/src/main/assets/plugins/

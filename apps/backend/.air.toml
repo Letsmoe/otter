@@ -1,0 +1,16 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -buildvcs=false -o ./tmp/server ./cmd/server/"
+  bin = "./tmp/server"
+  include_ext = ["go"]
+  exclude_dir = ["tmp", "vendor", "web", "plugins"]
+  delay = 500
+
+[screen]
+  clear_on_rebuild = true
+  keep_scroll = true
+
+[log]
+  time = false

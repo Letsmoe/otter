@@ -1,0 +1,33 @@
+{
+  "name": "@neoworks-dev/otter-sdk",
+  "version": "0.1.0",
+  "private": false,
+  "author": {
+    "name": "Neoworks",
+    "url": "https://neoworks.dev",
+    "email": "info@neoworks.dev"
+  },
+  "type": "module",
+  "scripts": {
+    "codegen": "bun run scripts/codegen.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./http": "./src/http.ts",
+    "./plugin": "./src/plugin.ts",
+    "./hosters": "./src/hosters/index.ts",
+    "./testing": "./src/testing.ts",
+    "./client": "./src/client.ts",
+    "./generated": "./src/generated/index.ts"
+  },
+  "devDependencies": {
+    "@genql/cli": "^6.3.4"
+  },
+  "dependencies": {
+    "@genql/runtime": "^2.10.0",
+    "node-html-parser": "^6.1.13"
+  }
+}

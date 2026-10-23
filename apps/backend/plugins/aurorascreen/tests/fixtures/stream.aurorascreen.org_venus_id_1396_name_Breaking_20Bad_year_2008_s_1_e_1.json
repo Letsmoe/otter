@@ -1,0 +1,56 @@
+{
+  "source": "Venus",
+  "success": true,
+  "count": 1,
+  "durationMs": 171,
+  "streams": [
+    {
+      "source": "Venus",
+      "quality": "HLS",
+      "url": "https://cflul.bw3.workers.dev/vid/d9cNLUm4oR4cXdnLbS3Fkr6DvtIjTPtUrFrJNc6eEigZXkPWMGRGHg",
+      "edge": "cflul.bw3.workers.dev",
+      "subtitles": [
+        {
+          "language": "اَلْعَرَبِيَّةُ",
+          "url": "https://cacdn.hakunaymatata.com/subtitle/ed948e977a2ff933ae45db7c556b9d08.srt?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jYWNkbi5oYWt1bmF5bWF0YXRhLmNvbS9zdWJ0aXRsZS8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzkyMzM2NTUwfX19XX0_&Signature=NLuFmr0hkGo-jh5r4JIjfXQ-JHrVhv1-Pz~BMdlC~4RhCStrIHmOc4SvCVK9ZNYC5KPXHIGNX-uY3yqNbWWgufCHgTucBBJ0wAReDgd7Frm~LdyHK2i7UFLkygolcCqiqTnHqrIKTsn4mUiwE2~FPZ9ALUrVnqVbuwc5cklUc73rxpnjknSXb3GQnXIv-847R9mlchW1n0zjtQiZ75DRRVLa7EpiCvaPutzBeiLrnpy0zCIG4Dhd0JMxUCveH-j72HTKff1TQQaIGIoptWJiDG92Y5dR6XsmFP4-Q-DAX3gOz6g5yz8zxnvHT0hPdayYTu9X~wJh2ggO1o-jJjQFgQ__&Key-Pair-Id=KMHN1LQ1HEUPL",
+          "name": "اَلْعَرَبِيَّةُ"
+        },
+        {
+          "language": "English",
+          "url": "https://cacdn.hakunaymatata.com/subtitle/d181d63334537dde3408c1c47b2bde22.srt?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jYWNkbi5oYWt1bmF5bWF0YXRhLmNvbS9zdWJ0aXRsZS8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzkyMzM2NTUwfX19XX0_&Signature=NLuFmr0hkGo-jh5r4JIjfXQ-JHrVhv1-Pz~BMdlC~4RhCStrIHmOc4SvCVK9ZNYC5KPXHIGNX-uY3yqNbWWgufCHgTucBBJ0wAReDgd7Frm~LdyHK2i7UFLkygolcCqiqTnHqrIKTsn4mUiwE2~FPZ9ALUrVnqVbuwc5cklUc73rxpnjknSXb3GQnXIv-847R9mlchW1n0zjtQiZ75DRRVLa7EpiCvaPutzBeiLrnpy0zCIG4Dhd0JMxUCveH-j72HTKff1TQQaIGIoptWJiDG92Y5dR6XsmFP4-Q-DAX3gOz6g5yz8zxnvHT0hPdayYTu9X~wJh2ggO1o-jJjQFgQ__&Key-Pair-Id=KMHN1LQ1HEUPL",
+          "name": "English"
+        },
+        {
+          "language": "Français",
+          "url": "https://cacdn.hakunaymatata.com/subtitle/dc39b63133fde5fdeb5f4047856dfe8f.srt?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jYWNkbi5oYWt1bmF5bWF0YXRhLmNvbS9zdWJ0aXRsZS8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzkyMzM2NTUwfX19XX0_&Signature=NLuFmr0hkGo-jh5r4JIjfXQ-JHrVhv1-Pz~BMdlC~4RhCStrIHmOc4SvCVK9ZNYC5KPXHIGNX-uY3yqNbWWgufCHgTucBBJ0wAReDgd7Frm~LdyHK2i7UFLkygolcCqiqTnHqrIKTsn4mUiwE2~FPZ9ALUrVnqVbuwc5cklUc73rxpnjknSXb3GQnXIv-847R9mlchW1n0zjtQiZ75DRRVLa7EpiCvaPutzBeiLrnpy0zCIG4Dhd0JMxUCveH-j72HTKff1TQQaIGIoptWJiDG92Y5dR6XsmFP4-Q-DAX3gOz6g5yz8zxnvHT0hPdayYTu9X~wJh2ggO1o-jJjQFgQ__&Key-Pair-Id=KMHN1LQ1HEUPL",
+          "name": "Français"
+        },
+        {
+          "language": "हिन्दी",
+          "url": "https://cacdn.hakunaymatata.com/msubt/44d1421ae00bf178eab1cd8b1ebe72a2.srt?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jYWNkbi5oYWt1bmF5bWF0YXRhLmNvbS9tc3VidC8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzkyMzM2NTUwfX19XX0_&Signature=c5WsgEJVSgsFoNwvpFOC9jd18mTb6IwaJuglqhr0d1cv8wxZp1z8wc7odyW0f~DfqbNinnKQKPgJ8ilL5jiZVSuJXy-UHCxmWARJFa2eB~dcCzQvF8ZFF1QKsBA1aCGouwALY1WjbtSRQteDJxdf8IazBTFVO2Uzjr9B-VHItT9jT5qomjhVYWVWnSKAR285sooZLhNtnWUCPJgF1epXaFHRdlZWoC4~sHWLxXue0sURfj6u-v5EdRfOfuc-4bL6Q-BZpw45IrknG7jh7zhaWlcwk8jNORnHnQfVQohmJUEAzWj5BtgoBeSjIcDgqr05eznn0yCPnxHPIS0V9oTVXQ__&Key-Pair-Id=KMHN1LQ1HEUPL",
+          "name": "हिन्दी"
+        },
+        {
+          "language": "Indonesian",
+          "url": "https://cacdn.hakunaymatata.com/subtitle/89878938a9e8a8c8e8c7285e577a484b.srt?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jYWNkbi5oYWt1bmF5bWF0YXRhLmNvbS9zdWJ0aXRsZS8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzkyMzM2NTUwfX19XX0_&Signature=NLuFmr0hkGo-jh5r4JIjfXQ-JHrVhv1-Pz~BMdlC~4RhCStrIHmOc4SvCVK9ZNYC5KPXHIGNX-uY3yqNbWWgufCHgTucBBJ0wAReDgd7Frm~LdyHK2i7UFLkygolcCqiqTnHqrIKTsn4mUiwE2~FPZ9ALUrVnqVbuwc5cklUc73rxpnjknSXb3GQnXIv-847R9mlchW1n0zjtQiZ75DRRVLa7EpiCvaPutzBeiLrnpy0zCIG4Dhd0JMxUCveH-j72HTKff1TQQaIGIoptWJiDG92Y5dR6XsmFP4-Q-DAX3gOz6g5yz8zxnvHT0hPdayYTu9X~wJh2ggO1o-jJjQFgQ__&Key-Pair-Id=KMHN1LQ1HEUPL",
+          "name": "Indonesian"
+        },
+        {
+          "language": "Malay",
+          "url": "https://cacdn.hakunaymatata.com/msubt/b56df256a569183be19ccc6ee5463547.srt?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jYWNkbi5oYWt1bmF5bWF0YXRhLmNvbS9tc3VidC8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzkyMzM2NTUwfX19XX0_&Signature=c5WsgEJVSgsFoNwvpFOC9jd18mTb6IwaJuglqhr0d1cv8wxZp1z8wc7odyW0f~DfqbNinnKQKPgJ8ilL5jiZVSuJXy-UHCxmWARJFa2eB~dcCzQvF8ZFF1QKsBA1aCGouwALY1WjbtSRQteDJxdf8IazBTFVO2Uzjr9B-VHItT9jT5qomjhVYWVWnSKAR285sooZLhNtnWUCPJgF1epXaFHRdlZWoC4~sHWLxXue0sURfj6u-v5EdRfOfuc-4bL6Q-BZpw45IrknG7jh7zhaWlcwk8jNORnHnQfVQohmJUEAzWj5BtgoBeSjIcDgqr05eznn0yCPnxHPIS0V9oTVXQ__&Key-Pair-Id=KMHN1LQ1HEUPL",
+          "name": "Malay"
+        },
+        {
+          "language": "Português",
+          "url": "https://cacdn.hakunaymatata.com/subtitle/1cd85f7446cda8ca8fe3954bf681ddc6.srt?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jYWNkbi5oYWt1bmF5bWF0YXRhLmNvbS9zdWJ0aXRsZS8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzkyMzM2NTUwfX19XX0_&Signature=NLuFmr0hkGo-jh5r4JIjfXQ-JHrVhv1-Pz~BMdlC~4RhCStrIHmOc4SvCVK9ZNYC5KPXHIGNX-uY3yqNbWWgufCHgTucBBJ0wAReDgd7Frm~LdyHK2i7UFLkygolcCqiqTnHqrIKTsn4mUiwE2~FPZ9ALUrVnqVbuwc5cklUc73rxpnjknSXb3GQnXIv-847R9mlchW1n0zjtQiZ75DRRVLa7EpiCvaPutzBeiLrnpy0zCIG4Dhd0JMxUCveH-j72HTKff1TQQaIGIoptWJiDG92Y5dR6XsmFP4-Q-DAX3gOz6g5yz8zxnvHT0hPdayYTu9X~wJh2ggO1o-jJjQFgQ__&Key-Pair-Id=KMHN1LQ1HEUPL",
+          "name": "Português"
+        },
+        {
+          "language": "中文",
+          "url": "https://cacdn.hakunaymatata.com/subtitle/c91f8b11d1c9de95c1db9a72d74895e1.srt?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jYWNkbi5oYWt1bmF5bWF0YXRhLmNvbS9zdWJ0aXRsZS8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzkyMzM2NTUwfX19XX0_&Signature=NLuFmr0hkGo-jh5r4JIjfXQ-JHrVhv1-Pz~BMdlC~4RhCStrIHmOc4SvCVK9ZNYC5KPXHIGNX-uY3yqNbWWgufCHgTucBBJ0wAReDgd7Frm~LdyHK2i7UFLkygolcCqiqTnHqrIKTsn4mUiwE2~FPZ9ALUrVnqVbuwc5cklUc73rxpnjknSXb3GQnXIv-847R9mlchW1n0zjtQiZ75DRRVLa7EpiCvaPutzBeiLrnpy0zCIG4Dhd0JMxUCveH-j72HTKff1TQQaIGIoptWJiDG92Y5dR6XsmFP4-Q-DAX3gOz6g5yz8zxnvHT0hPdayYTu9X~wJh2ggO1o-jJjQFgQ__&Key-Pair-Id=KMHN1LQ1HEUPL",
+          "name": "中文"
+        }
+      ]
+    }
+  ]
+}

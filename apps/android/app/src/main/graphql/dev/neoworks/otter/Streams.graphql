@@ -1,0 +1,33 @@
+subscription Streams($id: ID!) {
+  streams(id: $id) {
+    done
+    streams {
+      ...StreamLink
+    }
+  }
+}
+
+fragment StreamLink on Stream {
+  id
+  plugin
+  label
+  quality
+  language
+  playable
+  speedBps
+}
+
+mutation ResolveStream($streamId: ID!) {
+  resolveStream(streamId: $streamId) {
+    url
+    mimeType
+  }
+}
+
+mutation ResolveBestStream($streamIds: [ID!]!) {
+  resolveBestStream(streamIds: $streamIds) {
+    url
+    mimeType
+    streamId
+  }
+}

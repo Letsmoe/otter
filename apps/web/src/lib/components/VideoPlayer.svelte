@@ -1,0 +1,340 @@
+<script lang="ts">
+	import XIcon from 'phosphor-svelte/lib/XIcon';
+	import PlayIcon from 'phosphor-svelte/lib/PlayIcon';
+	import PauseIcon from 'phosphor-svelte/lib/PauseIcon';
+	import SpeakerHighIcon from 'phosphor-svelte/lib/SpeakerHighIcon';
+	import SpeakerXIcon from 'phosphor-svelte/lib/SpeakerXIcon';
+	import ArrowsOutIcon from 'phosphor-svelte/lib/ArrowsOutIcon';
+	import { get } from 'svelte/store';
+	import { activeProfile } from '@neoworks-dev/otter-app/profile';
+	import { recordProgress } from '@neoworks-dev/otter-app/discovery';
+
+	interface Props {
+		src: string;
+		mimeType: string;
+		title: string;
+		// Media record id (movie:… / episode:…). When set, playback progress is
+		// recorded for resume + recommendations.
+		mediaId?: string;
+		// Inline players embed in the page (aspect-video box) instead of taking
+		// over the viewport as a fullscreen modal.
+		inline?: boolean;
+		onclose: () => void;
+	}
+
+	let {
+		src,
+		mimeType,
+		title,
+		mediaId,
+		inline = false,
+		onclose
+	}: Props = $props();
+
+	// Progress is saved at most every 15s while playing, plus on pause/close.
+	const SAVE_INTERVAL_SECONDS = 15;
+	let lastSavedAt = 0;
+
+	function saveProgress(force = false) {
+		if (!mediaId || !videoEl) return;
+		const profile = get(activeProfile);
+		if (!profile) return;
+		const position = videoEl.currentTime;
+		const total = videoEl.duration;
+		// Progress needs a known duration (live streams have none).
+		if (!isFinite(total) || total <= 0) return;
+		if (!force && position - lastSavedAt < SAVE_INTERVAL_SECONDS) return;
+		lastSavedAt = position;
+		recordProgress({
+			profileId: profile.id,
+			mediaId,
+			progressSeconds: position,
+			durationSeconds: total
+		});
+	}
+
+	function close() {
+		saveProgress(true);
+		onclose();
+	}
+
+	let videoEl = $state<HTMLVideoElement | undefined>();
+	let containerEl = $state<HTMLDivElement | undefined>();
+
+	let playing = $state(false);
+	let currentTime = $state(0);
+	let duration = $state(0);
+	let volume = $state(1);
+	let muted = $state(false);
+	let buffering = $state(true);
+	let error = $state<string | null>(null);
+	let controlsVisible = $state(true);
+	let hideTimer: ReturnType<typeof setTimeout>;
+
+	function showControls() {
+		controlsVisible = true;
+		clearTimeout(hideTimer);
+		hideTimer = setTimeout(() => {
+			if (playing) controlsVisible = false;
+		}, 3000);
+	}
+
+	function fmtTime(s: number): string {
+		if (!isFinite(s)) return '0:00';
+		const h = Math.floor(s / 3600);
+		const m = Math.floor((s % 3600) / 60);
+		const sec = Math.floor(s % 60);
+		if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+		return `${m}:${sec.toString().padStart(2, '0')}`;
+	}
+
+	function togglePlay() {
+		if (!videoEl) return;
+		if (videoEl.paused) videoEl.play();
+		else videoEl.pause();
+	}
+
+	function seek(e: Event) {
+		if (!videoEl) return;
+		videoEl.currentTime = Number((e.target as HTMLInputElement).value);
+	}
+
+	function setVolume(e: Event) {
+		if (!videoEl) return;
+		const v = Number((e.target as HTMLInputElement).value);
+		videoEl.volume = v;
+		videoEl.muted = false;
+	}
+
+	function toggleMute() {
+		if (!videoEl) return;
+		videoEl.muted = !videoEl.muted;
+	}
+
+	async function toggleFullscreen() {
+		if (!containerEl) return;
+		if (document.fullscreenElement) await document.exitFullscreen();
+		else await containerEl.requestFullscreen();
+	}
+
+	function handleKeydown(e: KeyboardEvent) {
+		// only intercept when no input is focused
+		if (e.target instanceof HTMLInputElement) return;
+		switch (e.key) {
+			case ' ':
+			case 'k':
+				e.preventDefault();
+				togglePlay();
+				break;
+			case 'f':
+				e.preventDefault();
+				toggleFullscreen();
+				break;
+			case 'm':
+				e.preventDefault();
+				toggleMute();
+				break;
+			case 'Escape':
+				close();
+				return;
+			case 'ArrowLeft':
+				e.preventDefault();
+				if (videoEl) videoEl.currentTime = Math.max(0, videoEl.currentTime - 10);
+				break;
+			case 'ArrowRight':
+				e.preventDefault();
+				if (videoEl) videoEl.currentTime = Math.min(duration, videoEl.currentTime + 10);
+				break;
+		}
+		showControls();
+	}
+
+	$effect(() => {
+		if (!videoEl) return;
+
+		const isHLS = mimeType.includes('mpegURL') || src.includes('.m3u8');
+		let hlsInstance: { destroy(): void } | null = null;
+
+		if (isHLS) {
+			import('hls.js').then(({ default: Hls }) => {
+				if (!videoEl) return;
+				if (Hls.isSupported()) {
+					hlsInstance = new Hls();
+					(hlsInstance as InstanceType<typeof Hls>).loadSource(src);
+					(hlsInstance as InstanceType<typeof Hls>).attachMedia(videoEl);
+					(hlsInstance as InstanceType<typeof Hls>).on(Hls.Events.MANIFEST_PARSED, () => {
+						videoEl?.play().catch(() => {});
+					});
+					(hlsInstance as InstanceType<typeof Hls>).on(Hls.Events.ERROR, (_, data) => {
+						if (data.fatal) error = data.details ?? 'HLS playback error';
+					});
+				} else if (!window.MediaSource && videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+					// Safari / iOS: no MSE, native HLS is the only option
+					videoEl.src = src;
+					videoEl.play().catch(() => {});
+				} else {
+					error = 'HLS not supported in this browser (missing H.264 codec?)';
+				}
+			});
+		} else {
+			videoEl.src = src;
+			videoEl.play().catch(() => {});
+		}
+
+		return () => {
+			hlsInstance?.destroy();
+		};
+	});
+</script>
+
+<svelte:window onkeydown={handleKeydown} />
+
+<!-- Fullscreen: z-[60] renders above MediaOverlay (z-50). Inline: embeds in-page. -->
+<div
+	bind:this={containerEl}
+	class="flex flex-col bg-black {inline
+		? 'relative aspect-video w-full overflow-hidden rounded-xl'
+		: 'fixed inset-0 z-[60]'}"
+	onmousemove={showControls}
+	role="presentation"
+	class:cursor-none={!controlsVisible}
+>
+	<!-- Top bar: title + close -->
+	<div
+		class="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between bg-gradient-to-b from-black/70 to-transparent p-4 transition-opacity duration-300"
+		class:opacity-0={!controlsVisible}
+		class:opacity-100={controlsVisible}
+	>
+		<span class="max-w-[70%] truncate text-sm font-medium text-white/80">{title}</span>
+		<button
+			type="button"
+			class="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+			onclick={close}
+			aria-label="Close player"
+		>
+			<XIcon size={18} weight="bold" />
+		</button>
+	</div>
+
+	<!-- Video -->
+	<video
+		bind:this={videoEl}
+		class="h-full w-full"
+		onclick={togglePlay}
+		ondblclick={toggleFullscreen}
+		onplay={() => {
+			playing = true;
+			buffering = false;
+		}}
+		onpause={() => {
+			playing = false;
+			saveProgress(true);
+		}}
+		onwaiting={() => (buffering = true)}
+		onplaying={() => (buffering = false)}
+		ontimeupdate={() => {
+			currentTime = videoEl?.currentTime ?? 0;
+			saveProgress();
+		}}
+		ondurationchange={() => (duration = videoEl?.duration ?? 0)}
+		onvolumechange={() => {
+			volume = videoEl?.volume ?? 1;
+			muted = videoEl?.muted ?? false;
+		}}
+		playsinline
+		crossorigin="anonymous"
+	>
+	</video>
+
+	<!-- Buffering spinner -->
+	{#if buffering && !error}
+		<div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+			<span class="loading loading-spinner loading-lg text-white/40"></span>
+		</div>
+	{/if}
+
+	<!-- Error -->
+	{#if error}
+		<div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+			<p class="rounded-xl bg-black/70 px-6 py-4 text-sm text-error">{error}</p>
+		</div>
+	{/if}
+
+	<!-- Controls bar -->
+	<div
+		class="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col gap-3 bg-gradient-to-t from-black/80 to-transparent px-4 pb-5 pt-12 transition-opacity duration-300"
+		class:opacity-0={!controlsVisible}
+		class:opacity-100={controlsVisible}
+	>
+		<!-- Seek bar -->
+		<input
+			type="range"
+			min="0"
+			max={duration || 0}
+			value={currentTime}
+			step="0.5"
+			class="pointer-events-auto range range-xs w-full accent-white"
+			oninput={seek}
+			aria-label="Seek"
+		/>
+
+		<div class="pointer-events-auto flex items-center gap-3">
+			<!-- Play/Pause -->
+			<button
+				type="button"
+				class="flex h-9 w-9 flex-none items-center justify-center rounded-full text-white hover:bg-white/10"
+				onclick={togglePlay}
+				aria-label={playing ? 'Pause' : 'Play'}
+			>
+				{#if playing}
+					<PauseIcon size={20} weight="fill" />
+				{:else}
+					<PlayIcon size={20} weight="fill" />
+				{/if}
+			</button>
+
+			<!-- Time -->
+			<span class="font-mono text-xs tabular-nums text-white/60">
+				{fmtTime(currentTime)} / {fmtTime(duration)}
+			</span>
+
+			<div class="flex-1"></div>
+
+			<!-- Volume -->
+			<div class="flex items-center gap-2">
+				<button
+					type="button"
+					class="flex h-8 w-8 flex-none items-center justify-center text-white/70 hover:text-white"
+					onclick={toggleMute}
+					aria-label={muted ? 'Unmute' : 'Mute'}
+				>
+					{#if muted || volume === 0}
+						<SpeakerXIcon size={16} weight="fill" />
+					{:else}
+						<SpeakerHighIcon size={16} weight="fill" />
+					{/if}
+				</button>
+				<input
+					type="range"
+					min="0"
+					max="1"
+					step="0.05"
+					value={muted ? 0 : volume}
+					class="range range-xs w-20 accent-white"
+					oninput={setVolume}
+					aria-label="Volume"
+				/>
+			</div>
+
+			<!-- Fullscreen -->
+			<button
+				type="button"
+				class="flex h-8 w-8 flex-none items-center justify-center text-white/70 hover:text-white"
+				onclick={toggleFullscreen}
+				aria-label="Toggle fullscreen"
+			>
+				<ArrowsOutIcon size={16} weight="bold" />
+			</button>
+		</div>
+	</div>
+</div>

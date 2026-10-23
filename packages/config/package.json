@@ -1,0 +1,23 @@
+{
+	"name": "@neoworks-dev/config",
+	"version": "0.1.0",
+	"description": "Shared base configs (tsconfig, eslint) for Neoworks apps and packages",
+	"type": "module",
+	"private": true,
+	"exports": {
+		"./tsconfig.base.json": "./tsconfig.base.json",
+		"./eslint": "./eslint.js"
+	},
+	"files": [
+		"tsconfig.base.json",
+		"eslint.js"
+	],
+	"peerDependencies": {
+		"eslint": "^10",
+		"typescript-eslint": "^8",
+		"eslint-plugin-svelte": "^3",
+		"eslint-config-prettier": "^10",
+		"@eslint/js": "^10",
+		"globals": "^17"
+	}
+}

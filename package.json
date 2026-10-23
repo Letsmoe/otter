@@ -1,0 +1,21 @@
+{
+  "name": "otter",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "PC_PORT_NUM=8088 process-compose up",
+    "dev:attach": "PC_PORT_NUM=8088 process-compose attach",
+    "down": "PC_PORT_NUM=8088 process-compose down"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

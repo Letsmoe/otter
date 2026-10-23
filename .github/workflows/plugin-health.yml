@@ -1,0 +1,79 @@
+# Runs every plugin's live tests against the real sites once a day, so a site
+# that changed its markup or went offline shows up as a failed job.
+#
+# The sites are only ever contacted through a VPN: the job brings up the
+# WireGuard config from the WIREGUARD_CONFIG secret and refuses to run the
+# tests while the runner's own IP is still the public one.
+name: Plugin health
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      plugins: ${{ steps.list.outputs.plugins }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: list
+        name: List plugins with live tests
+        run: |
+          plugins=$(ls apps/backend/plugins/*/tests/*.live.test.ts | cut -d/ -f4 | sort -u | jq -R . | jq -cs .)
+          echo "plugins=$plugins" >> "$GITHUB_OUTPUT"
+
+  live:
+    needs: discover
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin: ${{ fromJson(needs.discover.outputs.plugins) }}
+    name: ${{ matrix.plugin }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require the VPN config
+        env:
+          WIREGUARD_CONFIG: ${{ secrets.WIREGUARD_CONFIG }}
+        run: |
+          if [ -z "$WIREGUARD_CONFIG" ]; then
+            echo "::error::WIREGUARD_CONFIG secret is missing; live tests only run over the VPN."
+            exit 1
+          fi
+
+      - name: Connect the VPN
+        env:
+          WIREGUARD_CONFIG: ${{ secrets.WIREGUARD_CONFIG }}
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -yq wireguard-tools resolvconf
+          echo "$(curl -fsS --max-time 15 https://api.ipify.org)" > /tmp/runner-ip
+          echo "$WIREGUARD_CONFIG" | sudo tee /etc/wireguard/wg0.conf > /dev/null
+          sudo chmod 600 /etc/wireguard/wg0.conf
+          sudo wg-quick up wg0
+
+      - name: Check traffic leaves through the VPN
+        run: |
+          vpn_ip=$(curl -fsS --max-time 15 https://api.ipify.org)
+          if [ -z "$vpn_ip" ] || [ "$vpn_ip" = "$(cat /tmp/runner-ip)" ]; then
+            echo "::error::Traffic does not go through the VPN."
+            exit 1
+          fi
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install the plugin
+        run: |
+          bun install
+          (cd packages/otter-sdk && bun link)
+          cd apps/backend/plugins/${{ matrix.plugin }}
+          bun install --frozen-lockfile
+
+      # Live sites take their time; Bun's 5 s default cuts them off.
+      - name: Live tests
+        working-directory: apps/backend/plugins/${{ matrix.plugin }}
+        run: bun test --timeout 90000 live

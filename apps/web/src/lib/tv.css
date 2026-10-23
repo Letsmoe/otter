@@ -1,0 +1,52 @@
+/*
+ * TV / keyboard-navigation tokens, aligned to the Neoworks design system
+ * (high-contrast dark surfaces, white primary, subtle radii). These feed the
+ * FocusList / Sidebar / Hero / MediaRail components.
+ */
+:root {
+	--tv-focus-ring: 2px solid #fafafa;
+	--tv-radius: 0.75rem;
+	--tv-gap: 1rem;
+
+	/* Neoworks surface + text tokens (dark theme). */
+	--nw-bg: #000000;
+	--nw-surface: #141416;
+	--nw-surface-raised: #1c1c1f;
+	--nw-border: #262626;
+	--nw-text: #fafafa;
+	--nw-text-muted: #a1a1aa;
+	--nw-primary: #fafafa;
+	--nw-dur-base: 180ms;
+}
+
+/* The page itself never scrolls sideways — horizontal scrolling belongs to
+   the rails alone. */
+html,
+body {
+	overflow-x: hidden;
+}
+
+/* Scroll containers that scroll without showing a scrollbar (TV UI). */
+.no-scrollbar {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+	display: none;
+}
+
+/* Give focused cards a clear, TV-legible highlight beyond the outline. */
+.tv-card {
+	position: relative;
+	display: block;
+	overflow: hidden;
+	border-radius: var(--tv-radius);
+	background: var(--nw-surface);
+	transition:
+		transform var(--nw-dur-base) ease,
+		box-shadow var(--nw-dur-base) ease;
+}
+.focus-item.focused .tv-card {
+	transform: scale(1.05);
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+}

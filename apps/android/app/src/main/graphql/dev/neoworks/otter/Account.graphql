@@ -1,0 +1,96 @@
+fragment NotificationFields on Notification {
+  id
+  kind
+  heading
+  body
+  createdAt
+  read
+  title {
+    id
+    title
+    backdropPath
+  }
+  episode {
+    id
+    seasonNumber
+    episodeNumber
+    stillPath
+  }
+}
+
+query Notifications($profileId: ID!, $limit: Int!) {
+  notifications(profileId: $profileId, limit: $limit) {
+    ...NotificationFields
+  }
+}
+
+mutation MarkNotificationsRead($profileId: ID!) {
+  markNotificationsRead(profileId: $profileId)
+}
+
+query ProfileLiked($profileId: ID!) {
+  likedTitles(profileId: $profileId) {
+    ...TitleCard
+  }
+}
+
+query AppSettings {
+  settings {
+    tmdbApiKey
+    tmdbLanguage
+    requireVpn
+  }
+}
+
+mutation UpdateAppSettings($input: SettingsInput!) {
+  updateSettings(input: $input) {
+    tmdbApiKey
+    tmdbLanguage
+    requireVpn
+  }
+}
+
+query VpnStatus {
+  status {
+    vpnConnected
+    requireVpn
+  }
+}
+
+fragment PluginFields on Plugin {
+  name
+  displayName
+  description
+  icon
+  version
+  capabilities
+  enabled
+  available
+  settings {
+    key
+    label
+    description
+    type
+    required
+    default
+    value
+  }
+}
+
+query Plugins {
+  plugins {
+    ...PluginFields
+  }
+}
+
+mutation SetPluginEnabled($name: String!, $enabled: Boolean!) {
+  setPluginEnabled(name: $name, enabled: $enabled) {
+    ...PluginFields
+  }
+}
+
+mutation SetPluginSettings($name: String!, $values: [PluginSettingInput!]!) {
+  setPluginSettings(name: $name, values: $values) {
+    ...PluginFields
+  }
+}

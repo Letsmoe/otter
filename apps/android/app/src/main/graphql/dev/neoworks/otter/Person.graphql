@@ -1,0 +1,44 @@
+query PersonDetail($id: ID!) {
+  person(id: $id) {
+    id
+    name
+    biography
+    birthday
+    deathday
+    placeOfBirth
+    knownForDepartment
+    profilePath
+    filmography {
+      ...TitleCard
+    }
+  }
+}
+
+query PersonFilmography($id: ID!, $job: String) {
+  person(id: $id) {
+    filmography(job: $job) {
+      ...TitleCard
+    }
+  }
+}
+
+query PersonCoStars($id: ID!, $limit: Int!) {
+  person(id: $id) {
+    coStars(limit: $limit) {
+      person {
+        id
+        name
+        profilePath
+      }
+      sharedTitles
+    }
+  }
+}
+
+query PersonRecommended($id: ID!, $profileId: ID!) {
+  person(id: $id) {
+    recommendedFor(profileId: $profileId, limit: 20) {
+      ...TitleCard
+    }
+  }
+}

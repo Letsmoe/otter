@@ -1,0 +1,33 @@
+{
+  "name": "@neoworks-dev/otter-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Data layer and design tokens shared by the desktop (apps/web) and mobile (apps/mobile) clients.",
+  "exports": {
+    "./api": "./src/api.ts",
+    "./discovery": "./src/discovery.ts",
+    "./titleDetail": "./src/titleDetail.ts",
+    "./seriesDetail": "./src/seriesDetail.ts",
+    "./personDetail": "./src/personDetail.ts",
+    "./search": "./src/search.ts",
+    "./streams": "./src/streams.ts",
+    "./plugins": "./src/plugins.ts",
+    "./profile": "./src/profile.ts",
+    "./tmdb": "./src/tmdb.ts",
+    "./theme.css": "./src/theme.css",
+    "./avatars": "./src/avatars.ts",
+    "./notifications": "./src/notifications.ts",
+    "./downloads": "./src/downloads.ts",
+    "./together": "./src/together.ts",
+    "./languages": "./src/languages.ts",
+    "./tmdbKey": "./src/tmdbKey.ts"
+  },
+  "dependencies": {
+    "@neoworks-dev/otter-sdk": "workspace:*",
+    "graphql-ws": "^6.0.8"
+  },
+  "peerDependencies": {
+    "svelte": "^5"
+  }
+}

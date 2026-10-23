@@ -1,0 +1,59 @@
+# Runs the Otter dev stack natively: plugin bundles (rebuilt on change),
+# the Go backend (air reloads it on .go changes) and the web client.
+# Everything the backend stores lives in apps/backend/data.
+#
+#   bun run dev    # PC_PORT_NUM=8088 process-compose up
+#
+# NOTE: process-compose's own API server defaults to :8080, which the backend
+# also uses, so the scripts start it on :8088 (PC_PORT_NUM=8088).
+#
+# process-compose loads .env from the repo root, so TMDB_API_KEY can live
+# there (or set it in Settings).
+
+version: "0.5"
+
+environment:
+  # Provider DNS resolvers block several streaming sites; ask public ones.
+  - "DNS_SERVERS=1.1.1.1,8.8.8.8"
+
+processes:
+  plugins:
+    command: bun scripts/bundle-plugins.ts --watch
+    working_dir: apps/backend
+
+  backend:
+    # air rebuilds + restarts the server on .go changes (config: apps/backend/.air.toml)
+    command: air
+    working_dir: apps/backend
+    environment:
+      - "PORT=8080"
+      - "DATA_DIR=./data"
+    readiness_probe:
+      http_get:
+        host: 127.0.0.1
+        port: 8080
+        path: /health
+      initial_delay_seconds: 3
+      period_seconds: 3
+      failure_threshold: 30
+
+  web:
+    command: bun run dev --host 0.0.0.0 --port 3000
+    working_dir: apps/web
+    environment:
+      - "PUBLIC_API_URL=http://localhost:8080"
+      - "INTERNAL_API_URL=http://localhost:8080"
+    depends_on:
+      backend:
+        condition: process_healthy
+
+  # Mobile UI in a desktop browser (use devtools' device toolbar). Not native,
+  # so it talks to the dev backend instead of the on-phone one.
+  mobile:
+    command: bun run dev --port 3001
+    working_dir: apps/mobile
+    environment:
+      - "PUBLIC_API_URL=http://localhost:8080"
+    depends_on:
+      backend:
+        condition: process_healthy

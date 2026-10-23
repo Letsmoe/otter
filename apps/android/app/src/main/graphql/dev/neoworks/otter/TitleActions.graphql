@@ -1,0 +1,19 @@
+mutation AddToWatchlist($profileId: ID!, $mediaId: ID!) {
+  addToWatchlist(profileId: $profileId, mediaId: $mediaId)
+}
+
+mutation RemoveFromWatchlist($profileId: ID!, $mediaId: ID!) {
+  removeFromWatchlist(profileId: $profileId, mediaId: $mediaId)
+}
+
+mutation SetRating($profileId: ID!, $mediaId: ID!, $rating: Float!) {
+  setRating(profileId: $profileId, mediaId: $mediaId, rating: $rating)
+}
+
+mutation ClearRating($profileId: ID!, $mediaId: ID!) {
+  clearRating(profileId: $profileId, mediaId: $mediaId)
+}
+
+mutation FindStreams($id: ID!) {
+  findStreams(id: $id)
+}
