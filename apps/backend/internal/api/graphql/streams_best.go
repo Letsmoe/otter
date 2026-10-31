@@ -98,7 +98,7 @@ func (r *mutationResolver) resolveBest(ctx context.Context, streamIDs []string) 
 // recordOutcome remembers whether a link played and how fast, for ranking;
 // a dead link is removed. Attempts cut short by a finished race say nothing
 // about the link.
-func (r *mutationResolver) recordOutcome(outcome resolve.Outcome) {
+func (r *Resolver) recordOutcome(outcome resolve.Outcome) {
 	if errors.Is(outcome.Err, context.Canceled) {
 		return
 	}

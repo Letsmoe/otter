@@ -67,9 +67,9 @@ func (r *Resolver) subscribeStreams(ctx context.Context, ref library.MediaRef) (
 	return output, nil
 }
 
-// findStreamsIfStale looks up streams in the background. When no lookup
-// ran, or it failed, it announces the final update itself so subscribers
-// stop waiting.
+// findStreamsIfStale looks up streams in the background, then checks the
+// untested links. When no lookup ran, or it failed, it announces the final
+// update itself so subscribers stop waiting.
 func (r *Resolver) findStreamsIfStale(ref library.MediaRef) {
 	ctx := context.Background()
 	lookedUp, err := r.Library.FindStreamsIfStale(ctx, ref)
@@ -78,6 +78,9 @@ func (r *Resolver) findStreamsIfStale(ref library.MediaRef) {
 	}
 	if !lookedUp || err != nil {
 		r.publishDone(ctx, ref)
+	}
+	if err == nil {
+		r.checkStreams(ref, false)
 	}
 }
 

@@ -28,6 +28,8 @@ import dev.neoworks.otter.profiles.PreferenceChange
 import dev.neoworks.otter.profiles.ProfilePreferences
 import dev.neoworks.otter.profiles.ProfileSession
 import dev.neoworks.otter.settings.PlaybackSettings
+import dev.neoworks.otter.toasts.ToastKind
+import dev.neoworks.otter.toasts.Toasts
 import dev.neoworks.otter.together.MediaPayload
 import dev.neoworks.otter.together.PlayerReport
 import dev.neoworks.otter.together.TogetherSession
@@ -266,10 +268,11 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
     // Sources ----------------------------------------------------------------
 
     private fun onStreamState(streamState: StreamPlaybackState) {
-        val sources = streamState.streams.map { stream -> PlayerSource(stream.id, sourceLabel(stream), sourceDetails(stream), stream.plugin) }
+        val sources = streamState.streams.map { stream -> PlayerSource(stream.id, sourceLabel(stream), sourceDetails(stream), stream.plugin, stream.playable) }
         mutableState.update { current ->
             current.copy(
                 sources = sources,
+                searchingSources = streamState.searching,
                 currentSourceId = streamState.playing?.sourceId,
                 loadError = streamState.error,
                 statusText = statusTextFor(streamState),
@@ -310,6 +313,15 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
         // Continue the new link where the old one was.
         sourceSwitchResumeSeconds = positionSeconds
         streamPlayback.switchSource(sourceId)
+    }
+
+    /** Asks every plugin again; the backend then re-tests every link, failed ones included. */
+    fun searchSourcesAgain() {
+        viewModelScope.launch {
+            if (!streamPlayback.searchAgain()) {
+                Toasts.push("Could not start a source lookup", ToastKind.ERROR)
+            }
+        }
     }
 
     private fun attachSource(source: PlayingSource) {

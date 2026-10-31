@@ -5,8 +5,11 @@ import dev.neoworks.otter.together.TogetherPeer
 /** What opens the player: a movie or episode, optionally on one link, or a finished download. */
 data class PlayerRequest(val mediaId: String, val streamId: String? = null, val downloadId: String? = null)
 
-/** [details] is resolution, language and measured speed, e.g. "1080p · de · ~2.4 MB/s". */
-data class PlayerSource(val id: String, val label: String, val details: String, val plugin: String)
+/**
+ * [details] is resolution, language and measured speed, e.g. "1080p · de · ~2.4 MB/s".
+ * [playable] is the backend's last check: null while untested, false when it didn't deliver video.
+ */
+data class PlayerSource(val id: String, val label: String, val details: String, val plugin: String, val playable: Boolean?)
 
 data class PlayerEpisode(
     val id: String,
@@ -42,6 +45,8 @@ data class PlayerUiState(
     /** -1 = subtitles off. */
     val selectedSubtitleIndex: Int = -1,
     val sources: List<PlayerSource> = emptyList(),
+    /** Plugins are still being asked for links. */
+    val searchingSources: Boolean = true,
     val currentSourceId: String? = null,
     /** Direct files can show a frame preview while scrubbing; HLS can't. */
     val previewable: Boolean = false,

@@ -235,10 +235,16 @@ private fun chooseAnotherSource(state: PlayerUiState, openSheet: (PlayerSheetKin
 private fun SheetContent(kind: PlayerSheetKind, state: PlayerUiState, viewModel: PlayerViewModel, closeSheet: () -> Unit) {
     when (kind) {
         PlayerSheetKind.SPEED -> SpeedSheetContent(state.speed, viewModel::chooseSpeed)
-        PlayerSheetKind.SOURCES -> SourcesSheetContent(state.sources, state.currentSourceId) { sourceId ->
-            closeSheet()
-            viewModel.chooseSource(sourceId)
-        }
+        PlayerSheetKind.SOURCES -> SourcesSheetContent(
+            state.sources,
+            state.currentSourceId,
+            state.searchingSources,
+            onChoose = { sourceId ->
+                closeSheet()
+                viewModel.chooseSource(sourceId)
+            },
+            onSearchAgain = viewModel::searchSourcesAgain,
+        )
         PlayerSheetKind.TRACKS -> TracksSheetContent(state, viewModel::chooseAudio, viewModel::chooseSubtitle, viewModel::toggleVoiceBoost)
         PlayerSheetKind.EPISODES -> EpisodesSheetContent(state.episodes, state.mediaId) { episodeId ->
             closeSheet()

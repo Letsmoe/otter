@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -43,12 +44,19 @@ fun SourceList(
     onSearchAgain: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val (broken, usable) = streams.streams.partition { stream -> stream.playable == false }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (streams.searching) {
             StillSearching(foundSome = streams.streams.isNotEmpty())
         }
-        for (stream in streams.streams) {
+        for (stream in usable) {
             SourceRow(stream, onClick = { onPlay(stream) })
+        }
+        if (broken.isNotEmpty()) {
+            Text("Doesn't work", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = mutedText, modifier = Modifier.padding(top = 12.dp))
+        }
+        for (stream in broken) {
+            SourceRow(stream, onClick = { onPlay(stream) }, modifier = Modifier.alpha(BROKEN_SOURCE_ALPHA))
         }
         if (streams.nothingFound) {
             Text("No sources found.", fontSize = 14.sp, color = mutedText, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp))
@@ -76,10 +84,12 @@ private fun StillSearching(foundSome: Boolean) {
     }
 }
 
+private const val BROKEN_SOURCE_ALPHA = 0.4f
+
 @Composable
-private fun SourceRow(stream: StreamLink, onClick: () -> Unit) {
+private fun SourceRow(stream: StreamLink, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
-        Modifier
+        modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(6.dp))
             .background(Color.White.copy(alpha = 0.08f))

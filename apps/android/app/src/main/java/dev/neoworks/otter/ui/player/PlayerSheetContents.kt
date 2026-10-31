@@ -13,11 +13,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -25,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.ArrowClockwise
 import com.adamglin.phosphoricons.regular.Check
 import dev.neoworks.otter.ui.components.OtterSwitch
 
@@ -36,20 +39,68 @@ fun SpeedSheetContent(speed: Float, onChange: (Float) -> Unit) {
     }
 }
 
+/** Links that work or are untested first; ones the backend saw fail are grayed out below. */
 @Composable
-fun SourcesSheetContent(sources: List<PlayerSource>, currentSourceId: String?, onChoose: (String) -> Unit) {
+fun SourcesSheetContent(
+    sources: List<PlayerSource>,
+    currentSourceId: String?,
+    searching: Boolean,
+    onChoose: (String) -> Unit,
+    onSearchAgain: () -> Unit,
+) {
+    val (broken, usable) = sources.partition { source -> source.playable == false }
     Column(Modifier.fillMaxSize().padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Sources", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         LazyColumn {
-            items(sources, key = { source -> source.id }) { source ->
+            items(usable, key = { source -> source.id }) { source ->
                 SourceRow(source, source.id == currentSourceId) { onChoose(source.id) }
             }
+            if (broken.isNotEmpty()) {
+                item(key = "broken-heading") { BrokenSourcesHeading() }
+            }
+            items(broken, key = { source -> source.id }) { source ->
+                SourceRow(source, source.id == currentSourceId, Modifier.alpha(BROKEN_SOURCE_ALPHA)) { onChoose(source.id) }
+            }
+            item(key = "search-again") { SourceSearchStatus(searching, onSearchAgain) }
         }
     }
 }
 
+private const val BROKEN_SOURCE_ALPHA = 0.4f
+
 @Composable
-private fun SourceRow(source: PlayerSource, current: Boolean, onClick: () -> Unit) {
+private fun BrokenSourcesHeading() {
+    Text(
+        "Doesn't work",
+        color = Color.White.copy(alpha = 0.55f),
+        fontSize = 13.sp,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.padding(top = 16.dp, bottom = 4.dp),
+    )
+}
+
+@Composable
+private fun SourceSearchStatus(searching: Boolean, onSearchAgain: () -> Unit) {
+    val mutedColor = Color.White.copy(alpha = 0.6f)
+    if (searching) {
+        Row(Modifier.padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+            Text("Searching sites for sources…", fontSize = 13.sp, color = mutedColor)
+        }
+        return
+    }
+    Row(
+        Modifier.clickableWithoutRipple(onClick = onSearchAgain).padding(vertical = 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(PhosphorIcons.Regular.ArrowClockwise, contentDescription = null, tint = mutedColor, modifier = Modifier.size(16.dp))
+        Text("Search again", fontSize = 13.sp, color = mutedColor)
+    }
+}
+
+@Composable
+private fun SourceRow(source: PlayerSource, current: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     var color = Color.White.copy(alpha = 0.55f)
     var weight = FontWeight.Normal
     if (current) {
@@ -57,7 +108,7 @@ private fun SourceRow(source: PlayerSource, current: Boolean, onClick: () -> Uni
         weight = FontWeight.Bold
     }
     Row(
-        Modifier.fillMaxWidth().clickableWithoutRipple(onClick = onClick).padding(vertical = 10.dp),
+        modifier.fillMaxWidth().clickableWithoutRipple(onClick = onClick).padding(vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

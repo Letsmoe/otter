@@ -38,8 +38,9 @@ type Services struct {
 // Resolver is the root gqlgen resolver.
 type Resolver struct {
 	Services
+	streamChecks *streamChecks
 }
 
 func NewResolver(services Services) *Resolver {
-	return &Resolver{Services: services}
+	return &Resolver{Services: services, streamChecks: newStreamChecks()}
 }

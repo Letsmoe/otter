@@ -90,7 +90,9 @@ func (r *mutationResolver) FindStreams(ctx context.Context, id string) (bool, er
 	go func() {
 		if err := r.Library.FindStreams(context.Background(), ref); err != nil {
 			r.publishDone(context.Background(), ref)
+			return
 		}
+		r.checkStreams(ref, true)
 	}()
 	return true, nil
 }
