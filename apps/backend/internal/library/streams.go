@@ -248,16 +248,33 @@ func (b *Broker) Subscribe(ctx context.Context, ref MediaRef) <-chan StreamUpdat
 	return updates
 }
 
-// Publish sends an update to every subscriber of ref, skipping subscribers
-// whose buffer is full rather than blocking the lookup.
+// Publish sends an update to every subscriber of ref without blocking the
+// lookup. Every update carries the whole list, so a subscriber that fell
+// behind loses its oldest pending update instead of this one (which may be
+// the final one).
 func (b *Broker) Publish(ref MediaRef, update StreamUpdate) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 	for subscriber := range b.subscribers[ref] {
-		select {
-		case subscriber <- update:
-		default:
-		}
+		sendReplacingOldest(subscriber, update)
+	}
+}
+
+// sendReplacingOldest is only safe while the broker's mutex is held: no
+// other sender can fill the slot it frees.
+func sendReplacingOldest(subscriber chan StreamUpdate, update StreamUpdate) {
+	select {
+	case subscriber <- update:
+		return
+	default:
+	}
+	select {
+	case <-subscriber:
+	default:
+	}
+	select {
+	case subscriber <- update:
+	default:
 	}
 }
 

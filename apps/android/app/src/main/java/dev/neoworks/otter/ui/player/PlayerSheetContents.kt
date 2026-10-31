@@ -61,7 +61,7 @@ fun SourcesSheetContent(
             items(broken, key = { source -> source.id }) { source ->
                 SourceRow(source, source.id == currentSourceId, Modifier.alpha(BROKEN_SOURCE_ALPHA)) { onChoose(source.id) }
             }
-            item(key = "search-again") { SourceSearchStatus(searching, onSearchAgain) }
+            item(key = "search-again") { SourceSearchStatus(searching, foundSome = sources.isNotEmpty(), onSearchAgain) }
         }
     }
 }
@@ -71,7 +71,7 @@ private const val BROKEN_SOURCE_ALPHA = 0.4f
 @Composable
 private fun BrokenSourcesHeading() {
     Text(
-        "Doesn't work",
+        "Not available right now",
         color = Color.White.copy(alpha = 0.55f),
         fontSize = 13.sp,
         fontWeight = FontWeight.SemiBold,
@@ -80,13 +80,10 @@ private fun BrokenSourcesHeading() {
 }
 
 @Composable
-private fun SourceSearchStatus(searching: Boolean, onSearchAgain: () -> Unit) {
+private fun SourceSearchStatus(searching: Boolean, foundSome: Boolean, onSearchAgain: () -> Unit) {
     val mutedColor = Color.White.copy(alpha = 0.6f)
     if (searching) {
-        Row(Modifier.padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
-            Text("Searching sites for sources…", fontSize = 13.sp, color = mutedColor)
-        }
+        StillSearchingRow(foundSome, mutedColor)
         return
     }
     Row(
@@ -96,6 +93,19 @@ private fun SourceSearchStatus(searching: Boolean, onSearchAgain: () -> Unit) {
     ) {
         Icon(PhosphorIcons.Regular.ArrowClockwise, contentDescription = null, tint = mutedColor, modifier = Modifier.size(16.dp))
         Text("Search again", fontSize = 13.sp, color = mutedColor)
+    }
+}
+
+/** Links arrive site by site; slow sites only add a quiet line under the ones already listed. */
+@Composable
+private fun StillSearchingRow(foundSome: Boolean, color: Color) {
+    var label = "Searching sites for sources…"
+    if (foundSome) {
+        label = "Searching more sites…"
+    }
+    Row(Modifier.padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        CircularProgressIndicator(Modifier.size(14.dp), color = color, strokeWidth = 2.dp)
+        Text(label, fontSize = 13.sp, color = color)
     }
 }
 

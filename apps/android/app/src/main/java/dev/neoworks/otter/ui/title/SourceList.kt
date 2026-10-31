@@ -53,7 +53,7 @@ fun SourceList(
             SourceRow(stream, onClick = { onPlay(stream) })
         }
         if (broken.isNotEmpty()) {
-            Text("Doesn't work", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = mutedText, modifier = Modifier.padding(top = 12.dp))
+            Text("Not available right now", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = mutedText, modifier = Modifier.padding(top = 12.dp))
         }
         for (stream in broken) {
             SourceRow(stream, onClick = { onPlay(stream) }, modifier = Modifier.alpha(BROKEN_SOURCE_ALPHA))
