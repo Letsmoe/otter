@@ -72,6 +72,10 @@ type CacheService struct {
 
 	// upstreamAllowed is asked before every CDN request; nil allows all.
 	upstreamAllowed func() error
+
+	// minimumCachedFileBytes is the size below which a cached file is an ad
+	// clip, not the title (see isShortClip).
+	minimumCachedFileBytes int64
 }
 
 // SetUpstreamGate makes every CDN request ask allowed first, so a VPN that
@@ -88,7 +92,7 @@ func (s *CacheService) checkUpstream() error {
 }
 
 func NewCacheService(kv *cache.Client, store *storage.Client) *CacheService {
-	return &CacheService{kv: kv, storage: store}
+	return &CacheService{kv: kv, storage: store, minimumCachedFileBytes: minimumFileBytes}
 }
 
 const (
@@ -150,8 +154,22 @@ func (s *CacheService) lookupID(ctx context.Context, id string) (*plugins.Resolv
 		_ = s.kv.Del(ctx, kvPrefix+id)
 		return nil, false
 	}
+	// A cached ad clip would skip the probe that rejects it and win every time.
+	if s.isShortClip(e.Key) {
+		_ = s.kv.Del(ctx, kvPrefix+id)
+		return nil, false
+	}
 	_ = s.storage.Touch(ctx, e.Key)
 	return &plugins.ResolveResult{URL: s.storage.DirectURL(e.Key), MimeType: e.MimeType}, true
+}
+
+// isShortClip reports whether a cached file (not an HLS manifest) is too
+// small to be a movie or an episode.
+func (s *CacheService) isShortClip(key string) bool {
+	if strings.HasPrefix(key, blobPrefix+"manifest/") {
+		return false
+	}
+	return s.storage.Size(key) < s.minimumCachedFileBytes
 }
 
 // StartCaching begins caching the stream behind sourceURL (the stored link)

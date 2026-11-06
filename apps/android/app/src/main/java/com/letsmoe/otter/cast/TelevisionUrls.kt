@@ -14,8 +14,8 @@ object TelevisionUrls {
     private const val MP4_PATH = "/api/stream/mp4"
     private const val BLOB_PATH = "/api/blob/"
 
-    /** An HLS stream as one continuous file starting near [startSeconds]. */
-    fun continuousPath(playerUrl: String, startSeconds: Double): String? {
+    /** An HLS stream as one continuous file starting near [startSeconds], from a variant below [refusedHeight] when one is. */
+    fun continuousPath(playerUrl: String, startSeconds: Double, refusedHeight: Int?): String? {
         if (!playerUrl.startsWith(EmbeddedBackend.BASE_URL)) {
             return null
         }
@@ -26,7 +26,11 @@ object TelevisionUrls {
             session = uri.getQueryParameter("s").orEmpty()
             encodedUrl = uri.getQueryParameter("u") ?: return null
         }
-        return "/api/stream/continuous?s=$session&u=$encodedUrl&start=${startSeconds.toLong()}"
+        val path = "/api/stream/continuous?s=$session&u=$encodedUrl&start=${startSeconds.toLong()}"
+        if (refusedHeight == null) {
+            return path
+        }
+        return "$path&maxHeight=${refusedHeight - 1}"
     }
 
     /** A progressive file the TV reads with byte ranges, without redirects. */

@@ -141,7 +141,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             if (renewTelevisionLink(error)) {
                 return
             }
-            if (fallBackToAnotherSource()) {
+            if (fallBackToAnotherSource(error)) {
                 return
             }
             mutableState.update { current -> current.copy(playbackError = playbackErrorText(error)) }
@@ -316,10 +316,14 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     /**
      * A link that died in the player is replaced by the next playing one, where it stopped.
-     * The DLNA TV renews its own link; downloaded files have no other links.
+     * The DLNA TV renews its own link, unless it refused the video (e.g. its resolution);
+     * downloaded files have no other links.
      */
-    private fun fallBackToAnotherSource(): Boolean {
-        if (televisionPlayer != null || mutableState.value.currentSourceId == null) {
+    private fun fallBackToAnotherSource(error: PlaybackException): Boolean {
+        if (mutableState.value.currentSourceId == null) {
+            return false
+        }
+        if (televisionPlayer != null && error.errorCode != PlaybackException.ERROR_CODE_DECODING_FORMAT_UNSUPPORTED) {
             return false
         }
         sourceSwitchResumeSeconds = positionSeconds
@@ -374,10 +378,16 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             player.prepare()
             return
         }
+        television.linkHeight = playingStream()?.let(::qualityHeight)
         television.setMediaItem(mediaItem, startMilliseconds)
         television.showSubtitle(televisionSubtitleFile())
         television.prepare()
         showTelevisionTracks()
+    }
+
+    private fun playingStream(): SourceStream? {
+        val sourceId = playing?.sourceId ?: return null
+        return streamPlayback.state.value.streams.firstOrNull { stream -> stream.id == sourceId }
     }
 
     private suspend fun resumeSecondsFor(mediaId: String): Double {
@@ -560,6 +570,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         val television = target.player
         television.addListener(playerListener)
         televisionPlayer = television
+        streamPlayback.fitsScreen = { stream -> television.fits(qualityHeight(stream)) }
         mutableState.update { current -> current.copy(castDeviceName = target.name, castsToTelevision = true) }
     }
 

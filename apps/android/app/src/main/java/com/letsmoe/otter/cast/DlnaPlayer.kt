@@ -32,6 +32,9 @@ private const val START_TIMEOUT_MILLISECONDS = 30_000L
 private const val START_RETRY_MILLISECONDS = 3000L
 // The TV reports the old state for a moment after a play or pause.
 private const val COMMAND_SETTLE_MILLISECONDS = 3000L
+// STOPPED this long with the media's duration known means the TV read the video and refused it
+// (a Philips shows "resolution not supported"); a playable one runs within a second or two.
+private const val REFUSAL_MILLISECONDS = 10_000L
 private const val MAX_POLL_FAILURES = 5
 // A stop this close to the end counts as the end.
 private const val END_TOLERANCE_SECONDS = 15.0
@@ -55,8 +58,8 @@ private val dlnaCommands = Player.Commands.Builder().addAll(
 /** The caption file the TV shows: [srtPath] is the backend path of its SRT. */
 data class TelevisionSubtitleFile(val id: String, val srtPath: String)
 
-/** What the backend says about a continuous stream before the TV gets it. */
-private data class ContinuousProbe(val startSeconds: Double, val durationSeconds: Double, val mimeType: String)
+/** What the backend says about a continuous stream before the TV gets it; [height] is null when unknown. */
+private data class ContinuousProbe(val startSeconds: Double, val durationSeconds: Double, val mimeType: String, val height: Int?)
 
 /**
  * Plays on a DLNA TV (e.g. an older Samsung) as a Media3 player, so the player
@@ -68,6 +71,13 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
 
     private val client = DlnaClient(renderer)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val heights = TelevisionHeights(context)
+
+    /** The height of the link set next (from its quality, e.g. 1080 for "1080p"); null when unknown. */
+    var linkHeight: Int? = null
+    // The height the TV gets now: the continuous stream's variant, else the link's.
+    private var streamHeight: Int? = null
+    private var refusingSinceMilliseconds: Long? = null
 
     private var mediaItem: MediaItem? = null
     private var playWhenReady = false
@@ -146,6 +156,11 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
             return
         }
         startLoad(currentPositionMilliseconds() / 1000.0)
+    }
+
+    /** Whether this TV is expected to play a video [height] pixels tall; unknown heights are. */
+    fun fits(height: Int?): Boolean {
+        return heights.fits(renderer.id, height)
     }
 
     // Volume -------------------------------------------------------------------
@@ -297,6 +312,7 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         televisionPlaying = false
         televisionStopped = false
         hasPlayed = false
+        refusingSinceMilliseconds = null
         invalidateState()
         loadJob = scope.launch {
             try {
@@ -332,8 +348,10 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         val title = item.mediaMetadata.title?.toString().orEmpty()
         isContinuous = item.localConfiguration?.mimeType == MimeTypes.APPLICATION_M3U8
         if (isContinuous) {
-            val path = TelevisionUrls.continuousPath(playerUrl, startSeconds) ?: throw DlnaException("This source can't be played on a TV.")
+            val path = TelevisionUrls.continuousPath(playerUrl, startSeconds, heights.refusedHeight(renderer.id))
+                ?: throw DlnaException("This source can't be played on a TV.")
             val probe = probeContinuous(EmbeddedBackend.BASE_URL + path)
+            streamHeight = probe.height ?: linkHeight
             streamOffsetSeconds = probe.startSeconds
             durationSeconds = probe.durationSeconds
             report(probe.startSeconds)
@@ -341,6 +359,7 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
             return TelevisionMedia(origin + pathWithSubtitle(path), title, probe.mimeType, seekableBytes = false, subtitle = televisionSubtitle(origin))
         }
         val path = TelevisionUrls.filePath(playerUrl) ?: throw DlnaException("This source can't be played on a TV.")
+        streamHeight = linkHeight
         streamOffsetSeconds = 0.0
         report(startSeconds)
         pendingFileSeekSeconds = startSeconds.takeIf { seconds -> seconds >= 1 }
@@ -372,7 +391,8 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
             }
             val start = connection.getHeaderField("X-Otter-Start")?.toDoubleOrNull() ?: 0.0
             val duration = connection.getHeaderField("X-Otter-Duration")?.toDoubleOrNull() ?: 0.0
-            ContinuousProbe(start, duration, connection.contentType ?: "video/mpeg")
+            val height = connection.getHeaderField("X-Otter-Height")?.toIntOrNull()
+            ContinuousProbe(start, duration, connection.contentType ?: "video/mpeg", height)
         } finally {
             connection.disconnect()
         }
@@ -387,6 +407,9 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         var errorCode = PlaybackException.ERROR_CODE_REMOTE_ERROR
         if (error is StreamUnavailableException) {
             errorCode = PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS
+        }
+        if (error is TelevisionRefusedException) {
+            errorCode = PlaybackException.ERROR_CODE_DECODING_FORMAT_UNSUPPORTED
         }
         playerError = PlaybackException(message, error, errorCode)
         playbackState = Player.STATE_IDLE
@@ -428,7 +451,7 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
             TransportState.PLAYING -> onRunning(position, playing = true)
             TransportState.PAUSED -> onRunning(position, playing = false)
             TransportState.TRANSITIONING -> playbackState = Player.STATE_BUFFERING
-            TransportState.STOPPED, TransportState.NO_MEDIA -> onStopped()
+            TransportState.STOPPED, TransportState.NO_MEDIA -> onStopped(position)
             TransportState.UNKNOWN -> Unit
         }
         invalidateState()
@@ -442,8 +465,9 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         if (!isContinuous && position.durationSeconds > 0) {
             durationSeconds = position.durationSeconds
         }
-        if (playing) {
+        if (playing && !hasPlayed) {
             hasPlayed = true
+            streamHeight?.let { height -> heights.recordPlayed(renderer.id, height) }
         }
         // Paused before it ever played is the TV still loading, not its remote.
         if (!hasPlayed) {
@@ -468,12 +492,31 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
     }
 
     // Samsungs report STOPPED for a while before they start.
-    private suspend fun onNotStartedYet() {
+    private suspend fun onNotStartedYet(position: TransportPosition) {
+        if (refusedTheVideo(position)) {
+            streamHeight?.let { height -> heights.recordRefused(renderer.id, height) }
+            fail(TelevisionRefusedException("The TV can't play this video."))
+            return
+        }
         if (SystemClock.elapsedRealtime() - loadedAtMilliseconds > START_TIMEOUT_MILLISECONDS) {
-            fail(DlnaException("The TV didn't start playing."))
+            fail(TelevisionRefusedException("The TV didn't start playing."))
             return
         }
         retryStart()
+    }
+
+    private fun refusedTheVideo(position: TransportPosition): Boolean {
+        if (position.durationSeconds <= 0) {
+            refusingSinceMilliseconds = null
+            return false
+        }
+        val now = SystemClock.elapsedRealtime()
+        val since = refusingSinceMilliseconds
+        if (since == null) {
+            refusingSinceMilliseconds = now
+            return false
+        }
+        return now - since > REFUSAL_MILLISECONDS
     }
 
     private suspend fun retryStart() {
@@ -491,10 +534,10 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         }
     }
 
-    private suspend fun onStopped() {
+    private suspend fun onStopped(position: TransportPosition) {
         televisionPlaying = false
         if (!hasPlayed) {
-            onNotStartedYet()
+            onNotStartedYet(position)
             return
         }
         televisionStopped = true

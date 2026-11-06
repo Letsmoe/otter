@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -22,8 +23,16 @@ import (
 // speed, little enough to finish within a second on a usable link.
 const probeBytes = 512 * 1024
 
+// Hoster pages carry placeholder and ad clips (bigwarp: an 8 s, 1 MB MP4)
+// that a generic page scan takes for the video. Nothing below these is a
+// movie or an episode.
+const (
+	minimumFileBytes       = 20 * 1024 * 1024
+	minimumDurationSeconds = 60.0
+)
+
 // ErrNotVideo means the stream answered, but not with video (an HTML error
-// page, an empty playlist, a dead segment).
+// page, an empty playlist, a dead segment, a clip too short to be the title).
 var ErrNotVideo = errors.New("the stream doesn't deliver video")
 
 // ProbeResult is what a successful probe measured.
@@ -57,12 +66,15 @@ func (p *Proxy) Probe(ctx context.Context, result *plugins.ResolveResult) (Probe
 }
 
 func (p *Proxy) probeHLS(ctx context.Context, manifestURL string, headers map[string]string) (ProbeResult, error) {
-	playlist, err := p.loadMediaPlaylist(ctx, manifestURL, headers)
+	playlist, err := p.loadMediaPlaylist(ctx, manifestURL, headers, noHeightLimit)
 	if err != nil {
 		return ProbeResult{}, err
 	}
 	if len(playlist.segments) == 0 {
 		return ProbeResult{}, fmt.Errorf("%w: the playlist has no segments", ErrNotVideo)
+	}
+	if duration := playlist.totalDuration(); duration < minimumDurationSeconds {
+		return ProbeResult{}, fmt.Errorf("%w: the stream is only %.0f s long", ErrNotVideo, duration)
 	}
 	segment := playlist.segments[0]
 	started := time.Now()
@@ -95,14 +107,44 @@ func (p *Proxy) probeFile(ctx context.Context, fileURL string, headers map[strin
 		return ProbeResult{BytesPerSecond: bytesPerSecond(len(local), 0)}, nil
 	}
 	started := time.Now()
-	body, err := p.readStart(ctx, fileURL, headers)
+	body, totalBytes, err := p.readFileStart(ctx, fileURL, headers)
 	if err != nil {
 		return ProbeResult{}, err
 	}
 	if !looksLikeFile(body) {
 		return ProbeResult{}, fmt.Errorf("%w: the file isn't MP4, WebM or MKV", ErrNotVideo)
 	}
+	if totalBytes > 0 && totalBytes < minimumFileBytes {
+		return ProbeResult{}, fmt.Errorf("%w: the file is only %d KB", ErrNotVideo, totalBytes/1024)
+	}
 	return ProbeResult{BytesPerSecond: bytesPerSecond(len(body), time.Since(started))}, nil
+}
+
+// readFileStart downloads the first probeBytes of a file and reads its
+// total size from the response; the size is 0 when the server doesn't say.
+func (p *Proxy) readFileStart(ctx context.Context, rawURL string, headers map[string]string) ([]byte, int64, error) {
+	rangeHeaders := withRange(headers, &byteRange{offset: 0, length: probeBytes})
+	response, err := p.cache.fetch(ctx, rawURL, rangeHeaders)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer response.Body.Close()
+	body, err := io.ReadAll(io.LimitReader(response.Body, probeBytes))
+	return body, totalSizeOf(response), err
+}
+
+// totalSizeOf reads the full size from "Content-Range: bytes 0-524287/<size>",
+// or from Content-Length when the server ignored the range.
+func totalSizeOf(response *http.Response) int64 {
+	if response.StatusCode != http.StatusPartialContent {
+		return max(response.ContentLength, 0)
+	}
+	_, sizeText, found := strings.Cut(response.Header.Get("Content-Range"), "/")
+	size, err := strconv.ParseInt(sizeText, 10, 64)
+	if !found || err != nil {
+		return 0
+	}
+	return size
 }
 
 func (p *Proxy) probeDASH(ctx context.Context, manifestURL string, headers map[string]string) (ProbeResult, error) {
@@ -119,13 +161,8 @@ func (p *Proxy) probeDASH(ctx context.Context, manifestURL string, headers map[s
 // readStart downloads the first probeBytes of a URL. Servers that ignore the
 // Range header are cut off after probeBytes as well.
 func (p *Proxy) readStart(ctx context.Context, rawURL string, headers map[string]string) ([]byte, error) {
-	rangeHeaders := withRange(headers, &byteRange{offset: 0, length: probeBytes})
-	response, err := p.cache.fetch(ctx, rawURL, rangeHeaders)
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
-	return io.ReadAll(io.LimitReader(response.Body, probeBytes))
+	body, _, err := p.readFileStart(ctx, rawURL, headers)
+	return body, err
 }
 
 // looksLikeSegment recognizes MPEG-TS (sync byte every 188 bytes) and fMP4

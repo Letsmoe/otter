@@ -68,6 +68,18 @@ private fun playableRank(stream: SourceStream): Int {
     }
 }
 
+/** The video height a link's quality names, e.g. 1080 for "1080p" and 2160 for "4K"; null for "HLS" and the like. */
+fun qualityHeight(stream: SourceStream): Int? {
+    val quality = stream.quality?.trim()?.lowercase() ?: return null
+    if (quality == "4k" || quality == "uhd") {
+        return 2160
+    }
+    if (!quality.endsWith("p")) {
+        return null
+    }
+    return quality.removeSuffix("p").toIntOrNull()
+}
+
 fun sourceLabel(stream: SourceStream): String {
     if (stream.label.isNullOrEmpty()) {
         return "Link"
@@ -92,6 +104,9 @@ class StreamPlayback(private val scope: CoroutineScope) {
 
     private val mutableState = MutableStateFlow(StreamPlaybackState())
     val state: StateFlow<StreamPlaybackState> = mutableState
+
+    /** Whether the screen is expected to play a link; autoplay tries the others last. A TV sets it. */
+    var fitsScreen: (SourceStream) -> Boolean = { true }
 
     private var mediaId: String? = null
     private var autoplayAttempted = false
@@ -266,7 +281,7 @@ class StreamPlayback(private val scope: CoroutineScope) {
         playJob?.cancel()
         playJob = scope.launch {
             val candidates = mutableState.value.streams.filter { stream -> stream.id !in failedIds }
-            for (group in raceGroups(candidates)) {
+            for (group in autoplayGroups(candidates)) {
                 if (tryPlayBest(group)) {
                     return@launch
                 }
@@ -274,6 +289,13 @@ class StreamPlayback(private val scope: CoroutineScope) {
             }
             mutableState.update { current -> current.copy(error = "No source could be played.") }
         }
+    }
+
+    // Each race group splits into the links the screen is expected to play, then the rest.
+    private fun autoplayGroups(candidates: List<SourceStream>): List<List<SourceStream>> {
+        return raceGroups(candidates)
+            .flatMap { group -> group.partition(fitsScreen).toList() }
+            .filter { group -> group.isNotEmpty() }
     }
 
     private suspend fun tryPlay(stream: SourceStream): Boolean {

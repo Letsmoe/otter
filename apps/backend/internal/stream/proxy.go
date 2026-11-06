@@ -42,6 +42,8 @@ type Proxy struct {
 	cache   *CacheService
 	kv      *cache.Client
 	baseURL string // public backend URL, e.g. "http://localhost:8080"
+
+	playlists continuousPlaylists
 }
 
 func NewProxy(cs *CacheService, kv *cache.Client, baseURL string) *Proxy {

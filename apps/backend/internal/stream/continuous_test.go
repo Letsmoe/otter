@@ -134,6 +134,73 @@ func TestContinuousHeadSendsNoBody(t *testing.T) {
 	}
 }
 
+// The TV's HEAD follows the phone's probe; Philips TVs drop it after about a
+// second, so it must not load the playlists from the CDN again.
+func TestContinuousReusesLoadedPlaylist(t *testing.T) {
+	cdn := fakeCDN(t)
+	defer cdn.Close()
+	playlistRequests := 0
+	counting := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, ".m3u8") {
+			playlistRequests++
+		}
+		http.Redirect(w, r, cdn.URL+r.URL.Path, http.StatusFound)
+	}))
+	defer counting.Close()
+	proxy := NewProxy(newTestCache(t).service, nil, "http://backend.test")
+	proxy.kv = proxy.cache.kv
+
+	continuousRequest(t, proxy, http.MethodHead, counting.URL+"/master.m3u8", "0")
+	requestsAfterProbe := playlistRequests
+	response := continuousRequest(t, proxy, http.MethodHead, counting.URL+"/master.m3u8", "0")
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("status %d: %s", response.Code, response.Body.String())
+	}
+	if requestsAfterProbe == 0 || playlistRequests != requestsAfterProbe {
+		t.Fatalf("playlist requests: %d after the probe, %d after the second HEAD", requestsAfterProbe, playlistRequests)
+	}
+}
+
+func TestContinuousKeepsBelowMaxHeight(t *testing.T) {
+	files := map[string]string{
+		"/master.m3u8": strings.Join([]string{
+			"#EXTM3U",
+			"#EXT-X-STREAM-INF:BANDWIDTH=9000000,RESOLUTION=3840x2160",
+			"uhd.m3u8",
+			"#EXT-X-STREAM-INF:BANDWIDTH=5000000,RESOLUTION=1920x1080",
+			"full.m3u8",
+			"#EXT-X-STREAM-INF:BANDWIDTH=2000000,RESOLUTION=1280x720",
+			"hd.m3u8",
+		}, "\n"),
+		"/uhd.m3u8":  "#EXTM3U\n#EXTINF:4.0,\nuhd.ts\n#EXT-X-ENDLIST",
+		"/full.m3u8": "#EXTM3U\n#EXTINF:4.0,\nfull.ts\n#EXT-X-ENDLIST",
+		"/uhd.ts":    "uhd-segment",
+		"/full.ts":   "full-segment",
+	}
+	cdn := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, ok := files[r.URL.Path]
+		if !ok {
+			http.NotFound(w, r)
+			return
+		}
+		w.Write([]byte(body))
+	}))
+	defer cdn.Close()
+	proxy := NewProxy(newTestCache(t).service, nil, "http://backend.test")
+	proxy.kv = proxy.cache.kv
+
+	unlimited := continuousRequest(t, proxy, http.MethodGet, cdn.URL+"/master.m3u8", "0")
+	limited := continuousRequest(t, proxy, http.MethodGet, cdn.URL+"/master.m3u8", "0&maxHeight=1080")
+
+	if unlimited.Body.String() != "uhd-segment" || unlimited.Header().Get("X-Otter-Height") != "2160" {
+		t.Errorf("unlimited: body %q, height %q", unlimited.Body.String(), unlimited.Header().Get("X-Otter-Height"))
+	}
+	if limited.Body.String() != "full-segment" || limited.Header().Get("X-Otter-Height") != "1080" {
+		t.Errorf("maxHeight=1080: body %q, height %q", limited.Body.String(), limited.Header().Get("X-Otter-Height"))
+	}
+}
+
 func TestContinuousRefusesSampleAES(t *testing.T) {
 	_, err := parseMediaPlaylist("#EXT-X-KEY:METHOD=SAMPLE-AES,URI=\"k\"\n#EXTINF:4,\na.ts", nil)
 	if err == nil {

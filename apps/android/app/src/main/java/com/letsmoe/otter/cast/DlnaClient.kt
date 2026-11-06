@@ -22,7 +22,15 @@ data class TelevisionMedia(
     val subtitle: TelevisionSubtitle? = null,
 )
 
+private const val COMMAND_TIMEOUT_MILLISECONDS = 4000
+// Philips TVs answer SetAVTransportURI and Play only after reading the start of the stream,
+// which takes a while for a continuous stream fetched over the VPN.
+private const val LOADING_TIMEOUT_MILLISECONDS = 30_000
+
 class DlnaException(message: String) : IOException(message)
+
+/** The TV took the link but never started it, e.g. "resolution not supported": another link may play. */
+class TelevisionRefusedException(message: String) : IOException(message)
 
 /** The backend couldn't open the stream, e.g. because the link's token expired. */
 class StreamUnavailableException(message: String) : IOException(message)
@@ -31,11 +39,12 @@ class StreamUnavailableException(message: String) : IOException(message)
 class DlnaClient(private val renderer: DlnaRenderer) {
 
     suspend fun load(media: TelevisionMedia) {
-        call("SetAVTransportURI", "<CurrentURI>${escapeXml(media.url)}</CurrentURI><CurrentURIMetaData>${escapeXml(didl(media))}</CurrentURIMetaData>")
+        val arguments = "<CurrentURI>${escapeXml(media.url)}</CurrentURI><CurrentURIMetaData>${escapeXml(didl(media))}</CurrentURIMetaData>"
+        call(transportService(), "SetAVTransportURI", arguments, LOADING_TIMEOUT_MILLISECONDS)
     }
 
     suspend fun play() {
-        call("Play", "<Speed>1</Speed>")
+        call(transportService(), "Play", "<Speed>1</Speed>", LOADING_TIMEOUT_MILLISECONDS)
     }
 
     suspend fun pause() {
@@ -79,15 +88,25 @@ class DlnaClient(private val renderer: DlnaRenderer) {
         call(service, "SetVolume", "<Channel>Master</Channel><DesiredVolume>${volume.coerceIn(0, 100)}</DesiredVolume>")
     }
 
-    private suspend fun call(action: String, arguments: String): String {
-        return call(DlnaService(renderer.controlUrl, renderer.serviceType), action, arguments)
+    private fun transportService(): DlnaService {
+        return DlnaService(renderer.controlUrl, renderer.serviceType)
     }
 
-    private suspend fun call(service: DlnaService, action: String, arguments: String): String = withContext(Dispatchers.IO) {
+    private suspend fun call(action: String, arguments: String): String {
+        return call(transportService(), action, arguments)
+    }
+
+    private suspend fun call(
+        service: DlnaService,
+        action: String,
+        arguments: String,
+        readTimeoutMilliseconds: Int = COMMAND_TIMEOUT_MILLISECONDS,
+    ): String = withContext(Dispatchers.IO) {
         val envelope = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
             "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">" +
             "<s:Body><u:$action xmlns:u=\"${service.serviceType}\"><InstanceID>0</InstanceID>$arguments</u:$action></s:Body></s:Envelope>"
         val connection = openHttp(URL(service.controlUrl))
+        connection.readTimeout = readTimeoutMilliseconds
         connection.requestMethod = "POST"
         connection.doOutput = true
         connection.setRequestProperty("Content-Type", "text/xml; charset=\"utf-8\"")

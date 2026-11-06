@@ -25,11 +25,12 @@ import (
 // form one valid transport stream, fMP4 fragments after their init segment
 // one fragmented MP4. Seeking restarts the stream with ?start=<seconds>.
 //
-//	GET|HEAD /api/stream/continuous?s=<session>&u=<encodedURL>&start=<seconds>
+//	GET|HEAD /api/stream/continuous?s=<session>&u=<encodedURL>&start=<seconds>[&maxHeight=<pixels>]
 //
 // Responses carry X-Otter-Start (where the stream really starts, a segment
 // boundary) and X-Otter-Duration, so the phone can show TV positions on the
-// title's own timeline.
+// title's own timeline, and X-Otter-Height (the chosen variant's height,
+// when the master playlist says), so it can learn what a TV refuses.
 
 type byteRange struct {
 	length int64
@@ -55,6 +56,8 @@ type mediaPlaylist struct {
 	segments []mediaSegment
 	// height is the highest variant resolution a master playlist offers; 0 when unknown.
 	height int
+	// variantHeight is the height of the variant the segments come from; 0 when unknown.
+	variantHeight int
 }
 
 func (playlist mediaPlaylist) totalDuration() float64 {
@@ -96,9 +99,11 @@ func (p *Proxy) serveContinuous(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	start, _ := strconv.ParseFloat(query.Get("start"), 64)
-	headers, _ := p.loadSession(r.Context(), query.Get("s"))
+	maxHeight, _ := strconv.Atoi(query.Get("maxHeight"))
+	sessionID := query.Get("s")
+	headers, _ := p.loadSession(r.Context(), sessionID)
 
-	playlist, err := p.loadMediaPlaylist(r.Context(), manifestURL, headers)
+	playlist, err := p.continuousPlaylist(r.Context(), sessionID, manifestURL, headers, maxHeight)
 	if err != nil {
 		http.Error(w, "playlist: "+err.Error(), http.StatusBadGateway)
 		return
@@ -108,6 +113,9 @@ func (p *Proxy) serveContinuous(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", continuousContentType(playlist))
 	w.Header().Set("X-Otter-Start", strconv.FormatFloat(startsAt, 'f', 3, 64))
 	w.Header().Set("X-Otter-Duration", strconv.FormatFloat(playlist.totalDuration(), 'f', 3, 64))
+	if playlist.variantHeight > 0 {
+		w.Header().Set("X-Otter-Height", strconv.Itoa(playlist.variantHeight))
+	}
 	w.Header().Set("Cache-Control", "no-cache")
 	if r.Method == http.MethodHead {
 		return
@@ -349,16 +357,19 @@ func withoutPadding(plain []byte) []byte {
 
 // -- playlists --
 
-// loadMediaPlaylist follows a master playlist to its best variant.
-func (p *Proxy) loadMediaPlaylist(ctx context.Context, manifestURL string, headers map[string]string) (mediaPlaylist, error) {
+// loadMediaPlaylist follows a master playlist to its best variant of at most
+// maxHeight (noHeightLimit: any).
+func (p *Proxy) loadMediaPlaylist(ctx context.Context, manifestURL string, headers map[string]string, maxHeight int) (mediaPlaylist, error) {
 	content, err := p.readPlaylist(ctx, manifestURL, headers)
 	if err != nil {
 		return mediaPlaylist{}, err
 	}
 	base, _ := url.Parse(manifestURL)
 	height := highestResolution(content)
-	variantURL := continuousVariant(content, base)
+	variantURL := continuousVariant(content, base, maxHeight)
+	variantHeight := 0
 	if variantURL != "" {
+		variantHeight = heightOfVariant(content, base, variantURL)
 		base, _ = url.Parse(variantURL)
 		content, err = p.readPlaylist(ctx, variantURL, headers)
 		if err != nil {
@@ -367,6 +378,7 @@ func (p *Proxy) loadMediaPlaylist(ctx context.Context, manifestURL string, heade
 	}
 	playlist, err := parseMediaPlaylist(content, base)
 	playlist.height = height
+	playlist.variantHeight = variantHeight
 	return playlist, err
 }
 
@@ -379,11 +391,7 @@ func highestResolution(manifest string) int {
 		if !strings.HasPrefix(line, "#EXT-X-STREAM-INF") {
 			continue
 		}
-		_, heightText, found := strings.Cut(attributeValue(line, "RESOLUTION"), "x")
-		height, err := strconv.Atoi(heightText)
-		if found && err == nil && height > highest {
-			highest = height
-		}
+		highest = max(highest, variantHeightOf(line))
 	}
 	return highest
 }
@@ -402,26 +410,84 @@ func (p *Proxy) readPlaylist(ctx context.Context, playlistURL string, headers ma
 }
 
 // continuousVariant picks the highest-bandwidth variant that carries its own
-// audio: renditions in a separate audio playlist can't be joined in here.
-// "" for a media playlist.
-func continuousVariant(manifest string, base *url.URL) string {
+// audio (renditions in a separate audio playlist can't be joined in here) and
+// is at most maxHeight tall (noHeightLimit: any). "" for a media playlist.
+func continuousVariant(manifest string, base *url.URL, maxHeight int) string {
 	if !strings.Contains(manifest, "#EXT-X-STREAM-INF") {
 		return ""
 	}
-	best := highestBandwidthVariant(withoutSeparateAudio(manifest), base)
+	fitting := withinHeight(manifest, maxHeight)
+	best := highestBandwidthVariant(withoutSeparateAudio(fitting), base)
 	if best != "" {
 		return best
 	}
+	best = highestBandwidthVariant(fitting, base)
+	if best != "" {
+		return best
+	}
+	// Every variant is too tall: the TV gets the best one and may refuse it.
 	return highestBandwidthVariant(manifest, base)
+}
+
+// noHeightLimit lets continuousVariant pick variants of any height.
+const noHeightLimit = 0
+
+// withinHeight drops the variants taller than maxHeight; variants without a
+// RESOLUTION stay.
+func withinHeight(manifest string, maxHeight int) string {
+	if maxHeight == noHeightLimit {
+		return manifest
+	}
+	return withoutVariants(manifest, func(streamInfo string) bool {
+		return variantHeightOf(streamInfo) > maxHeight
+	})
+}
+
+// variantHeightOf reads the height of RESOLUTION=WxH; 0 when missing.
+func variantHeightOf(streamInfo string) int {
+	_, heightText, found := strings.Cut(attributeValue(streamInfo, "RESOLUTION"), "x")
+	height, err := strconv.Atoi(heightText)
+	if !found || err != nil {
+		return 0
+	}
+	return height
+}
+
+// heightOfVariant reads the RESOLUTION height the master playlist gives the
+// variant at variantURL; 0 when unknown.
+func heightOfVariant(manifest string, base *url.URL, variantURL string) int {
+	pendingHeight := 0
+	for _, rawLine := range strings.Split(manifest, "\n") {
+		line := strings.TrimSpace(rawLine)
+		if strings.HasPrefix(line, "#EXT-X-STREAM-INF") {
+			pendingHeight = variantHeightOf(line)
+			continue
+		}
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		if absURL(base, line) == variantURL {
+			return pendingHeight
+		}
+	}
+	return 0
 }
 
 // withoutSeparateAudio drops the variants that reference an AUDIO group.
 func withoutSeparateAudio(manifest string) string {
+	return withoutVariants(manifest, func(streamInfo string) bool {
+		return strings.Contains(streamInfo, "AUDIO=")
+	})
+}
+
+// withoutVariants drops the variants whose #EXT-X-STREAM-INF line matches drop,
+// together with their URI line.
+func withoutVariants(manifest string, drop func(streamInfo string) bool) string {
 	var kept []string
 	skipNext := false
 	for _, rawLine := range strings.Split(manifest, "\n") {
 		line := strings.TrimSpace(rawLine)
-		if strings.HasPrefix(line, "#EXT-X-STREAM-INF") && strings.Contains(line, "AUDIO=") {
+		if strings.HasPrefix(line, "#EXT-X-STREAM-INF") && drop(line) {
 			skipNext = true
 			continue
 		}

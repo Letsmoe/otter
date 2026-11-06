@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Letsmoe/otter/internal/plugins"
 )
@@ -45,7 +46,7 @@ func testProxy(t *testing.T) *Proxy {
 func hlsFiles(segmentName string, segment []byte) map[string][]byte {
 	return map[string][]byte{
 		"/master.m3u8":    []byte("#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=900000\nlow.m3u8\n#EXT-X-STREAM-INF:BANDWIDTH=3000000\nhigh.m3u8\n"),
-		"/high.m3u8":      []byte("#EXTM3U\n#EXTINF:6.0,\n" + segmentName + "\n#EXT-X-ENDLIST\n"),
+		"/high.m3u8":      []byte("#EXTM3U\n#EXTINF:600.0,\n" + segmentName + "\n#EXT-X-ENDLIST\n"),
 		"/" + segmentName: segment,
 	}
 }
@@ -90,7 +91,7 @@ func TestProbeRejectsAMissingSegment(t *testing.T) {
 func TestProbeChecksFiles(t *testing.T) {
 	server := probeServer(t, map[string][]byte{
 		"/movie.mp4":  mp4Start(),
-		"/movie.webm": append([]byte{0x1a, 0x45, 0xdf, 0xa3}, bytes.Repeat([]byte{1}, 512)...),
+		"/movie.webm": append([]byte{0x1a, 0x45, 0xdf, 0xa3}, bytes.Repeat([]byte{1}, minimumFileBytes)...),
 		"/fake.mp4":   []byte("<!DOCTYPE html><title>File deleted</title>"),
 	})
 	proxy := testProxy(t)
@@ -102,6 +103,29 @@ func TestProbeChecksFiles(t *testing.T) {
 	_, err := proxy.Probe(context.Background(), &plugins.ResolveResult{URL: server.URL + "/fake.mp4", MimeType: "video/mp4"})
 	if !errors.Is(err, ErrNotVideo) {
 		t.Fatalf("fake.mp4: err = %v, want ErrNotVideo", err)
+	}
+}
+
+// Hoster pages carry short ad clips a generic page scan takes for the video.
+func TestProbeRejectsAShortClip(t *testing.T) {
+	clip := append(mp4Start(), bytes.Repeat([]byte{7}, 1024*1024)...)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeContent(w, r, "clip.mp4", time.Time{}, bytes.NewReader(clip))
+	}))
+	defer server.Close()
+	_, err := testProxy(t).Probe(context.Background(), &plugins.ResolveResult{URL: server.URL + "/clip.mp4", MimeType: "video/mp4"})
+	if !errors.Is(err, ErrNotVideo) {
+		t.Fatalf("err = %v, want ErrNotVideo", err)
+	}
+}
+
+func TestProbeRejectsAShortStream(t *testing.T) {
+	files := hlsFiles("seg0.ts", transportStream(50))
+	files["/high.m3u8"] = []byte("#EXTM3U\n#EXTINF:8.0,\nseg0.ts\n#EXT-X-ENDLIST\n")
+	server := probeServer(t, files)
+	_, err := testProxy(t).Probe(context.Background(), &plugins.ResolveResult{URL: server.URL + "/master.m3u8", MimeType: "application/x-mpegURL"})
+	if !errors.Is(err, ErrNotVideo) {
+		t.Fatalf("err = %v, want ErrNotVideo", err)
 	}
 }
 

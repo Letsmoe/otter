@@ -39,7 +39,10 @@ func newTestCache(t *testing.T) *testCache {
 	if err != nil {
 		t.Fatalf("storage: %v", err)
 	}
-	return &testCache{service: NewCacheService(cache.New(ctx, database), store), root: root}
+	service := NewCacheService(cache.New(ctx, database), store)
+	// Test files are a few bytes; TestLookupIgnoresCachedShortClips sets the limit itself.
+	service.minimumCachedFileBytes = 0
+	return &testCache{service: service, root: root}
 }
 
 // ageAll marks every stored blob as last used an hour ago.
@@ -277,6 +280,21 @@ func TestLookupMissesWhenBlobIsGone(t *testing.T) {
 	_ = testCache.service.storage.Delete(ctx, key)
 	if _, ok := testCache.service.Lookup(ctx, "https://cdn.test/v.mp4"); ok {
 		t.Error("lookup hits a deleted file")
+	}
+}
+
+// A cached ad clip would skip the probe and win every resolve.
+func TestLookupIgnoresCachedShortClips(t *testing.T) {
+	ctx := context.Background()
+	testCache := newTestCache(t)
+	testCache.service.minimumCachedFileBytes = 100
+	key := blobPrefix + "mp4/" + urlHash("https://cdn.test/clip.mp4") + ".mp4"
+	_ = testCache.service.storage.Put(ctx, key, strings.NewReader("short clip"), 10, "")
+	if _, err := testCache.service.writeEntry(ctx, "https://cdn.test/clip.mp4", key, "video/mp4", time.Hour); err != nil {
+		t.Fatalf("entry: %v", err)
+	}
+	if _, ok := testCache.service.Lookup(ctx, "https://cdn.test/clip.mp4"); ok {
+		t.Fatal("lookup hits a cached short clip")
 	}
 }
 

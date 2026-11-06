@@ -21,6 +21,8 @@ import javax.xml.parsers.DocumentBuilderFactory
 /** A TV (or any UPnP media renderer) that can play a URL. */
 data class DlnaRenderer(
     val name: String,
+    /** The device's UDN: stays the same when the TV gets another IP address. */
+    val id: String,
     /** Where AVTransport SOAP actions go. */
     val controlUrl: String,
     /** e.g. urn:schemas-upnp-org:service:AVTransport:1 */
@@ -36,6 +38,9 @@ private const val TAG = "OtterDlna"
 private const val SSDP_ADDRESS = "239.255.255.250"
 private const val SSDP_PORT = 1900
 private const val SEARCH_MILLISECONDS = 3000
+private const val SEARCH_RESEND_MILLISECONDS = 1000
+private const val PREFERENCES = "dlna_renderers"
+private const val KNOWN_LOCATIONS = "locations"
 private const val HTTP_TIMEOUT_MILLISECONDS = 4000
 private const val MEDIA_RENDERER = "urn:schemas-upnp-org:device:MediaRenderer:1"
 
@@ -47,8 +52,11 @@ suspend fun discoverRenderers(context: Context): List<DlnaRenderer> = withContex
     val multicastLock = wifi.createMulticastLock("otter:dlna")
     multicastLock.acquire()
     try {
-        val locations = searchLocations(wifiInterface)
-        locations.mapNotNull { location -> describeRenderer(location) }.distinctBy { renderer -> renderer.controlUrl }
+        val found = searchLocations(wifiInterface)
+        rememberLocations(context, found)
+        // TVs found before are asked directly: an SSDP answer gets lost now and then.
+        val locations = found + knownLocations(context)
+        locations.mapNotNull { location -> describeRenderer(location) }.distinctBy { renderer -> renderer.id }
     } catch (error: IOException) {
         Log.w(TAG, "discovery failed", error)
         emptyList()
@@ -86,13 +94,33 @@ private fun searchLocations(wifiInterface: NetworkInterface?): Set<String> {
         }
         socket.soTimeout = 500
         val target = InetAddress.getByName(SSDP_ADDRESS)
-        repeat(2) { socket.send(DatagramPacket(request, request.size, target, SSDP_PORT)) }
-        val deadline = System.currentTimeMillis() + SEARCH_MILLISECONDS
-        while (System.currentTimeMillis() < deadline) {
+        val start = System.currentTimeMillis()
+        var nextSendAt = start
+        while (System.currentTimeMillis() < start + SEARCH_MILLISECONDS) {
+            // Repeated through the search: the first packets after taking the multicast lock often get lost.
+            if (System.currentTimeMillis() >= nextSendAt) {
+                socket.send(DatagramPacket(request, request.size, target, SSDP_PORT))
+                nextSendAt += SEARCH_RESEND_MILLISECONDS
+            }
             receiveLocation(socket)?.let { location -> locations.add(location) }
         }
     }
     return locations
+}
+
+/** The description URLs of the renderers found by earlier searches. */
+private fun knownLocations(context: Context): Set<String> {
+    val preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
+    return preferences.getStringSet(KNOWN_LOCATIONS, emptySet()).orEmpty()
+}
+
+// Only the last search's answers: a TV that got another address answers again under it.
+private fun rememberLocations(context: Context, locations: Set<String>) {
+    if (locations.isEmpty()) {
+        return
+    }
+    val preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
+    preferences.edit().putStringSet(KNOWN_LOCATIONS, locations).apply()
 }
 
 private fun receiveLocation(socket: DatagramSocket): String? {
@@ -118,7 +146,8 @@ private fun describeRenderer(location: String): DlnaRenderer? {
         val root = document.documentElement
         val transport = serviceOf(root, ":AVTransport:", location) ?: return null
         val name = childText(root, "friendlyName") ?: "TV"
-        DlnaRenderer(name, transport.controlUrl, transport.serviceType, serviceOf(root, ":RenderingControl:", location))
+        val id = childText(root, "UDN") ?: transport.controlUrl
+        DlnaRenderer(name, id, transport.controlUrl, transport.serviceType, serviceOf(root, ":RenderingControl:", location))
     } catch (error: Exception) {
         Log.w(TAG, "describing $location failed", error)
         null
