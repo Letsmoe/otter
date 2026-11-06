@@ -143,7 +143,8 @@ func applyUpdate(settings *Settings, update Update) {
 }
 
 func (s *Service) load(ctx context.Context) (Settings, error) {
-	loaded := Settings{TMDBLanguage: defaultLanguage}
+	// Defaults for a fresh install; stored settings always carry every field and override them.
+	loaded := Settings{TMDBLanguage: defaultLanguage, RequireVpn: true}
 	row, err := s.database.QueryRow(ctx, "SELECT value FROM setting WHERE key = $key", db.Vars{"key": settingsKey})
 	if err != nil {
 		return loaded, fmt.Errorf("load settings: %w", err)
