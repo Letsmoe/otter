@@ -1,8 +1,11 @@
 # Builds the native Android app (backend binary + plugin bundles + APK) and
-# keeps the APK as a workflow artifact.
+# keeps the APK as a workflow artifact. Publishing a GitHub release builds the
+# APK from the release's tag and attaches it, which letsmoe.com/projects/otter links to.
 name: Android
 
 on:
+  release:
+    types: [published]
   push:
     branches: [main]
     paths:
@@ -20,6 +23,8 @@ jobs:
   apk:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -55,3 +60,12 @@ jobs:
           name: otter-android-${{ github.sha }}
           path: apps/android/app/build/outputs/apk/debug/*.apk
           retention-days: 30
+
+      - name: Attach APK to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          cp apps/android/app/build/outputs/apk/debug/*.apk "otter-${TAG}.apk"
+          gh release upload "$TAG" "otter-${TAG}.apk" --clobber
