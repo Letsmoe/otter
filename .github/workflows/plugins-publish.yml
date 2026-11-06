@@ -3,6 +3,11 @@
 #
 # A plugin ships when its version changes: bump "version" in
 # apps/backend/plugins/<name>/package.json. Versions already on npm are skipped.
+#
+# Authenticates with npm trusted publishing (OIDC), no token: every package
+# needs this workflow (Letsmoe/otter, plugins-publish.yml) registered as its
+# trusted publisher on npmjs.com. npm only allows that for packages that
+# exist, so a new plugin's first version is published by hand.
 name: Publish plugins
 
 on:
@@ -25,26 +30,21 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-      # npm provenance links each version to this workflow run.
+      # Trusted publishing: npm exchanges this run's OIDC token for a short-lived publish token.
       id-token: write
     steps:
       - uses: actions/checkout@v4
-
-      - name: Require the npm token
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          if [ -z "$NPM_TOKEN" ]; then
-            echo "::error::NPM_TOKEN secret is missing; plugins can't be published to npm."
-            exit 1
-          fi
 
       - uses: oven-sh/setup-bun@v2
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs npm 11.5.1 or newer.
+      - name: Update npm
+        run: npm install -g npm@latest
 
       # Plugins only import the SDK at bundle time, same as the Dockerfile.
       - name: Link the plugin SDK
@@ -56,9 +56,8 @@ jobs:
         working-directory: apps/backend
         run: bun scripts/bundle-plugins.ts --release --out "$RUNNER_TEMP/plugins"
 
+      # Provenance is attached automatically with trusted publishing.
       - name: Publish new versions
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           for folder in "$RUNNER_TEMP"/plugins/*/; do
             name=$(jq -r .name "$folder/package.json")
@@ -68,5 +67,5 @@ jobs:
               continue
             fi
             echo "Publishing $name@$version"
-            (cd "$folder" && npm publish --access public --provenance)
+            (cd "$folder" && npm publish --access public)
           done
