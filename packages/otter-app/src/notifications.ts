@@ -2,7 +2,7 @@
 import { otter } from './api';
 import { backdropUrl } from './tmdb';
 import { detailPath, episodePath, mediaKindOf } from './discovery';
-import type { NotificationKind } from '@neoworks-dev/otter-sdk/client';
+import type { NotificationKind } from '@letsmoe/otter-sdk/client';
 
 export interface NotificationItem {
 	id: string;

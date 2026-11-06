@@ -10,7 +10,7 @@
 	import SpeakerSimpleHighIcon from 'phosphor-svelte/lib/SpeakerSimpleHighIcon';
 	import SpeakerSimpleSlashIcon from 'phosphor-svelte/lib/SpeakerSimpleSlashIcon';
 	import { sidebarFocus } from '$lib/stores/focus';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
 	import { notifications } from '$lib/stores/notifications';
 	import { watchScrollTop } from '$lib/scroll';
 	import {
@@ -21,8 +21,8 @@
 		fetchTrailerKey,
 		type RailItem,
 		type SeasonSummary
-	} from '@neoworks-dev/otter-app/discovery';
-	import { fetchStoredStreams, resolveStream } from '@neoworks-dev/otter-app/streams';
+	} from '@letsmoe/otter-app/discovery';
+	import { fetchStoredStreams, resolveStream } from '@letsmoe/otter-app/streams';
 
 	interface Props {
 		item: RailItem | null;

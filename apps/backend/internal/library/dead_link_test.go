@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/neoworks/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/plugins"
 )
 
 func TestDeadLinkIsRemovedAndStaysOut(t *testing.T) {

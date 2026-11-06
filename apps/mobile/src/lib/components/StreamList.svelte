@@ -4,7 +4,7 @@
 	import SealCheckIcon from 'phosphor-svelte/lib/SealCheckIcon';
 	import FocusList from './FocusList.svelte';
 	import VideoPlayer from './VideoPlayer.svelte';
-	import { formatSpeed } from '@neoworks-dev/otter-app/tmdb';
+	import { formatSpeed } from '@letsmoe/otter-app/tmdb';
 	import { notifications } from '$lib/stores/notifications';
 	import {
 		subscribeStreams,
@@ -12,7 +12,7 @@
 		resolveStream,
 		rankStreams,
 		type Stream
-	} from '@neoworks-dev/otter-app/streams';
+	} from '@letsmoe/otter-app/streams';
 
 	interface Props {
 		// Movie or episode id (movie:… / episode:…); also used for progress tracking.

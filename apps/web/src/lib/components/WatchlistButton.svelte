@@ -1,9 +1,9 @@
 <script lang="ts">
 	import BookmarkSimpleIcon from 'phosphor-svelte/lib/BookmarkSimpleIcon';
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
 	import { notifications } from '$lib/stores/notifications';
-	import { addToWatchlist, removeFromWatchlist, fetchInWatchlist } from '@neoworks-dev/otter-app/discovery';
+	import { addToWatchlist, removeFromWatchlist, fetchInWatchlist } from '@letsmoe/otter-app/discovery';
 
 	interface Props {
 		mediaId: string;

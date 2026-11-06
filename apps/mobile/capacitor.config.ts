@@ -4,7 +4,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // on-phone backend or a NAS, both over plain http, so the app is served from http://localhost (not https) and cleartext is on:
 // otherwise every request to an http backend is blocked as mixed content.
 const config: CapacitorConfig = {
-	appId: 'dev.neoworks.otter.player',
+	appId: 'com.letsmoe.otter.player',
 	appName: 'Otter',
 	webDir: 'www',
 	plugins: {

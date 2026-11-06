@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/neoworks/otter/internal/subtitles"
+	"github.com/Letsmoe/otter/internal/subtitles"
 )
 
 // DLNA flags: streaming transfer mode, background transfer, connection stalling.

@@ -1,8 +1,8 @@
 <script lang="ts">
 	// Netflix-style movie page: trailer banner, title and facts, Play, description,
 	// cast lines, My List / Rate / Share, then More Like This, Trailers and Sources.
-	import { backdropUrl, formatRuntime, posterUrl } from '@neoworks-dev/otter-app/tmdb';
-	import { loadTitleRails, type TitleRail } from '@neoworks-dev/otter-app/titleDetail';
+	import { backdropUrl, formatRuntime, posterUrl } from '@letsmoe/otter-app/tmdb';
+	import { loadTitleRails, type TitleRail } from '@letsmoe/otter-app/titleDetail';
 	import Player from '$lib/components/player/Player.svelte';
 	import TitleBackdrop from '$lib/components/title/TitleBackdrop.svelte';
 	import ActionRow from '$lib/components/title/ActionRow.svelte';

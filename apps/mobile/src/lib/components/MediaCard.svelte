@@ -1,7 +1,7 @@
 <script lang="ts">
 	// A normalized poster card. Pages build CardItem from whatever query shape
 	// they have (movie, series, …) so this component stays source-agnostic.
-	import type { CardItem } from '@neoworks-dev/otter-app/discovery';
+	import type { CardItem } from '@letsmoe/otter-app/discovery';
 	interface Props {
 		item: CardItem;
 		onclick: () => void;

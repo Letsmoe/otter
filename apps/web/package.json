@@ -43,8 +43,8 @@
   },
   "dependencies": {
     "@genql/runtime": "^2.10.0",
-    "@neoworks-dev/otter-app": "workspace:*",
-    "@neoworks-dev/otter-sdk": "workspace:*",
+    "@letsmoe/otter-app": "workspace:*",
+    "@letsmoe/otter-sdk": "workspace:*",
     "graphql-ws": "^6.0.8",
     "hls.js": "^1.6.16",
     "phosphor-svelte": "^3.1.0"

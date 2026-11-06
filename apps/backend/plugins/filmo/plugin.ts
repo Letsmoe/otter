@@ -1,4 +1,4 @@
-import { definePlugin } from "@neoworks-dev/otter-sdk";
+import { definePlugin } from "@letsmoe/otter-sdk";
 import { listStreams } from "./src/streams.ts";
 import { retrieveSource } from "./src/retrieve.ts";
 

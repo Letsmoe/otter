@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/neoworks/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/library"
 )
 
 // Candidate source names. Every recommended item carries the one it was

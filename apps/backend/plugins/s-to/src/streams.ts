@@ -5,7 +5,7 @@ import {
   type PluginContext,
   type StreamInput,
   type StreamListParams,
-} from "@neoworks-dev/otter-sdk";
+} from "@letsmoe/otter-sdk";
 import { episodePath, languageOf, parseSeriesList, type SeriesCandidate } from "./site.ts";
 
 export async function listStreams({ media }: StreamListParams, ctx: PluginContext) {

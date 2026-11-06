@@ -1,5 +1,5 @@
 import type { HTMLElement } from "node-html-parser";
-import type { StreamInput } from "@neoworks-dev/otter-sdk";
+import type { StreamInput } from "@letsmoe/otter-sdk";
 
 /** The player links of a stream page, de-duplicated by URL. */
 export function linksOf(root: HTMLElement): StreamInput[] {

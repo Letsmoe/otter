@@ -23,8 +23,8 @@
 		"@capacitor/screen-orientation": "^8.0.1",
 		"@capacitor/share": "^8",
 		"@capacitor/splash-screen": "^8.0.0",
-		"@neoworks-dev/otter-app": "workspace:*",
-		"@neoworks-dev/otter-sdk": "workspace:*",
+		"@letsmoe/otter-app": "workspace:*",
+		"@letsmoe/otter-sdk": "workspace:*",
 		"hls.js": "^1.6.16",
 		"phosphor-svelte": "^3.1.0"
 	},

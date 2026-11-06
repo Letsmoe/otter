@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/neoworks/otter/internal/plugins"
-	"github.com/neoworks/otter/internal/stream"
+	"github.com/Letsmoe/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/stream"
 )
 
 // Service resolves a provider URL (e.g. https://voe.sx/abc) to a direct stream URL.

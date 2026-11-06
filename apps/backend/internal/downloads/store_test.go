@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/neoworks/otter/internal/db"
-	"github.com/neoworks/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/library"
 )
 
 func newTestStore(t *testing.T) *Store {

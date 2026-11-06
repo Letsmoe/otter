@@ -16,7 +16,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// Public relays used until neoworks hosts its own (neoworks-dev/otter#1).
+// Public relays used until Otter hosts its own.
 var DefaultRelays = []string{
 	"wss://relay.damus.io",
 	"wss://nos.lol",

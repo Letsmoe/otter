@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/neoworks/otter/internal/db"
-	"github.com/neoworks/otter/internal/library"
-	"github.com/neoworks/otter/internal/storage"
+	"github.com/Letsmoe/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/storage"
 )
 
 type exportFixture struct {

@@ -5,7 +5,7 @@
 	import { page } from '$app/state';
 	import { activeTabIndex, isTabActive, tabs, type Tab } from '$lib/tabs';
 	import { vpnStatus } from '$lib/stores/vpn';
-	import { activeProfile, avatarFor } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile, avatarFor } from '@letsmoe/otter-app/profile';
 	import { profileFlight } from '$lib/stores/profileFlight.svelte';
 
 	const PROFILE_HREF = '/profile';

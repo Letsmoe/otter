@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { fixtures, movie, episode, testPlugin } from "@neoworks-dev/otter-sdk/testing";
+import { fixtures, movie, episode, testPlugin } from "@letsmoe/otter-sdk/testing";
 import plugin from "../plugin.ts";
 
 const subject = testPlugin(plugin, { fetch: fixtures(`${import.meta.dir}/fixtures`) });

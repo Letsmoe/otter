@@ -5,7 +5,7 @@
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
 	import BookmarkSimpleIcon from 'phosphor-svelte/lib/BookmarkSimpleIcon';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
 	import {
 		detailPath,
 		fetchWatchlist,
@@ -15,7 +15,7 @@
 		type ListOrder,
 		type MediaKind,
 		type RailItem
-	} from '@neoworks-dev/otter-app/discovery';
+	} from '@letsmoe/otter-app/discovery';
 	import SegmentedBar from '$lib/components/SegmentedBar.svelte';
 	import FilterSelect from '$lib/components/FilterSelect.svelte';
 

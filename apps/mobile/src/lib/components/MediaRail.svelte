@@ -3,7 +3,7 @@
 	import ArrowRightIcon from 'phosphor-svelte/lib/ArrowRightIcon';
 	import FocusList from './FocusList.svelte';
 	import { sidebarFocus } from '$lib/stores/focus';
-	import type { RailItem } from '@neoworks-dev/otter-app/discovery';
+	import type { RailItem } from '@letsmoe/otter-app/discovery';
 
 	// A leading "see all" link card that navigates to the full browse grid.
 	type SeeAllEntry = { seeAllHref: string; seeAllLabel: string };

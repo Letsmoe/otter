@@ -13,7 +13,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/neoworks/otter/internal/api/graphql/model"
+	"github.com/Letsmoe/otter/internal/api/graphql/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -3971,7 +3971,7 @@ func (ec *executionContext) field_Mutation_setPluginSettings_args(ctx context.Co
 	args["name"] = arg0
 	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "values",
 		func(ctx context.Context, v any) ([]*model.PluginSettingInput, error) {
-			return ec.unmarshalNPluginSettingInput2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingInputᚄ(ctx, v)
+			return ec.unmarshalNPluginSettingInput2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingInputᚄ(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4109,7 +4109,7 @@ func (ec *executionContext) field_Mutation_updateProfile_args(ctx context.Contex
 	args["subtitleLanguage"] = arg7
 	arg8, err := graphql.ProcessArgField(ctx, rawArgs, "subtitleSize",
 		func(ctx context.Context, v any) (*model.SubtitleSize, error) {
-			return ec.unmarshalOSubtitleSize2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx, v)
+			return ec.unmarshalOSubtitleSize2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4131,7 +4131,7 @@ func (ec *executionContext) field_Mutation_updateSettings_args(ctx context.Conte
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.SettingsInput, error) {
-			return ec.unmarshalNSettingsInput2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSettingsInput(ctx, v)
+			return ec.unmarshalNSettingsInput2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSettingsInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4231,7 +4231,7 @@ func (ec *executionContext) field_Query_browse_args(ctx context.Context, rawArgs
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaType",
 		func(ctx context.Context, v any) (model.MediaType, error) {
-			return ec.unmarshalNMediaType2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
+			return ec.unmarshalNMediaType2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4269,7 +4269,7 @@ func (ec *executionContext) field_Query_catalogRows_args(ctx context.Context, ra
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaType",
 		func(ctx context.Context, v any) (model.MediaType, error) {
-			return ec.unmarshalNMediaType2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
+			return ec.unmarshalNMediaType2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4299,7 +4299,7 @@ func (ec *executionContext) field_Query_catalogTheme_args(ctx context.Context, r
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaType",
 		func(ctx context.Context, v any) (model.MediaType, error) {
-			return ec.unmarshalNMediaType2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
+			return ec.unmarshalNMediaType2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4307,7 +4307,7 @@ func (ec *executionContext) field_Query_catalogTheme_args(ctx context.Context, r
 	args["mediaType"] = arg0
 	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "theme",
 		func(ctx context.Context, v any) (model.CatalogTheme, error) {
-			return ec.unmarshalNCatalogTheme2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogTheme(ctx, v)
+			return ec.unmarshalNCatalogTheme2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogTheme(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4321,7 +4321,7 @@ func (ec *executionContext) field_Query_catalog_args(ctx context.Context, rawArg
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaType",
 		func(ctx context.Context, v any) (model.MediaType, error) {
-			return ec.unmarshalNMediaType2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
+			return ec.unmarshalNMediaType2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4329,7 +4329,7 @@ func (ec *executionContext) field_Query_catalog_args(ctx context.Context, rawArg
 	args["mediaType"] = arg0
 	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "sort",
 		func(ctx context.Context, v any) (*model.CatalogSort, error) {
-			return ec.unmarshalOCatalogSort2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogSort(ctx, v)
+			return ec.unmarshalOCatalogSort2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogSort(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4459,7 +4459,7 @@ func (ec *executionContext) field_Query_moreWith_args(ctx context.Context, rawAr
 	args["profileId"] = arg0
 	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "mediaType",
 		func(ctx context.Context, v any) (model.MediaType, error) {
-			return ec.unmarshalNMediaType2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
+			return ec.unmarshalNMediaType2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4473,7 +4473,7 @@ func (ec *executionContext) field_Query_newAndComingSoon_args(ctx context.Contex
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaType",
 		func(ctx context.Context, v any) (model.MediaType, error) {
-			return ec.unmarshalNMediaType2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
+			return ec.unmarshalNMediaType2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4561,7 +4561,7 @@ func (ec *executionContext) field_Query_recommendations_args(ctx context.Context
 	args["profileId"] = arg0
 	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "mediaType",
 		func(ctx context.Context, v any) (*model.MediaType, error) {
-			return ec.unmarshalOMediaType2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
+			return ec.unmarshalOMediaType2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4607,7 +4607,7 @@ func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs
 	args["query"] = arg0
 	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "mediaType",
 		func(ctx context.Context, v any) (*model.MediaType, error) {
-			return ec.unmarshalOMediaType2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
+			return ec.unmarshalOMediaType2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4623,7 +4623,7 @@ func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs
 	args["limit"] = arg2
 	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "filter",
 		func(ctx context.Context, v any) (*model.TitleFilter, error) {
-			return ec.unmarshalOTitleFilter2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleFilter(ctx, v)
+			return ec.unmarshalOTitleFilter2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleFilter(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4673,7 +4673,7 @@ func (ec *executionContext) field_Query_trending_args(ctx context.Context, rawAr
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaType",
 		func(ctx context.Context, v any) (*model.MediaType, error) {
-			return ec.unmarshalOMediaType2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
+			return ec.unmarshalOMediaType2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4709,7 +4709,7 @@ func (ec *executionContext) field_Query_watchedActors_args(ctx context.Context, 
 	args["profileId"] = arg0
 	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "mediaType",
 		func(ctx context.Context, v any) (model.MediaType, error) {
-			return ec.unmarshalNMediaType2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
+			return ec.unmarshalNMediaType2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -4910,7 +4910,7 @@ func (ec *executionContext) _CatalogRow_items(ctx context.Context, field graphql
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -4942,7 +4942,7 @@ func (ec *executionContext) _CoStar_person(ctx context.Context, field graphql.Co
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Person) graphql.Marshaler {
-			return ec.marshalNPerson2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPerson(ctx, selections, v)
+			return ec.marshalNPerson2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPerson(ctx, selections, v)
 		},
 		true,
 		true,
@@ -4997,7 +4997,7 @@ func (ec *executionContext) _ContinueItem_title(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
+			return ec.marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
 		},
 		true,
 		true,
@@ -5029,7 +5029,7 @@ func (ec *executionContext) _ContinueItem_episode(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Episode) graphql.Marshaler {
-			return ec.marshalOEpisode2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, selections, v)
+			return ec.marshalOEpisode2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, selections, v)
 		},
 		true,
 		false,
@@ -5061,7 +5061,7 @@ func (ec *executionContext) _ContinueItem_progress(ctx context.Context, field gr
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.WatchProgress) graphql.Marshaler {
-			return ec.marshalOWatchProgress2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx, selections, v)
+			return ec.marshalOWatchProgress2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx, selections, v)
 		},
 		true,
 		false,
@@ -5093,7 +5093,7 @@ func (ec *executionContext) _Credit_person(ctx context.Context, field graphql.Co
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Person) graphql.Marshaler {
-			return ec.marshalNPerson2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPerson(ctx, selections, v)
+			return ec.marshalNPerson2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPerson(ctx, selections, v)
 		},
 		true,
 		true,
@@ -5240,7 +5240,7 @@ func (ec *executionContext) _Download_status(ctx context.Context, field graphql.
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v model.DownloadStatus) graphql.Marshaler {
-			return ec.marshalNDownloadStatus2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownloadStatus(ctx, selections, v)
+			return ec.marshalNDownloadStatus2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownloadStatus(ctx, selections, v)
 		},
 		true,
 		true,
@@ -5355,7 +5355,7 @@ func (ec *executionContext) _Download_title(ctx context.Context, field graphql.C
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
+			return ec.marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
 		},
 		true,
 		true,
@@ -5387,7 +5387,7 @@ func (ec *executionContext) _Download_episode(ctx context.Context, field graphql
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Episode) graphql.Marshaler {
-			return ec.marshalOEpisode2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, selections, v)
+			return ec.marshalOEpisode2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, selections, v)
 		},
 		true,
 		false,
@@ -5695,7 +5695,7 @@ func (ec *executionContext) _Episode_series(ctx context.Context, field graphql.C
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
+			return ec.marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
 		},
 		true,
 		true,
@@ -5727,7 +5727,7 @@ func (ec *executionContext) _Episode_streams(ctx context.Context, field graphql.
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Stream) graphql.Marshaler {
-			return ec.marshalNStream2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStreamᚄ(ctx, selections, v)
+			return ec.marshalNStream2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStreamᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -5760,7 +5760,7 @@ func (ec *executionContext) _Episode_progress(ctx context.Context, field graphql
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.WatchProgress) graphql.Marshaler {
-			return ec.marshalOWatchProgress2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx, selections, v)
+			return ec.marshalOWatchProgress2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx, selections, v)
 		},
 		true,
 		false,
@@ -5803,7 +5803,7 @@ func (ec *executionContext) _Episode_next(ctx context.Context, field graphql.Col
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Episode) graphql.Marshaler {
-			return ec.marshalOEpisode2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, selections, v)
+			return ec.marshalOEpisode2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, selections, v)
 		},
 		true,
 		false,
@@ -5835,7 +5835,7 @@ func (ec *executionContext) _Episode_skipSegments(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.SkipSegment) graphql.Marshaler {
-			return ec.marshalNSkipSegment2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSkipSegmentᚄ(ctx, selections, v)
+			return ec.marshalNSkipSegment2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSkipSegmentᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -5867,7 +5867,7 @@ func (ec *executionContext) _HistoryEntry_title(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
+			return ec.marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
 		},
 		true,
 		true,
@@ -5899,7 +5899,7 @@ func (ec *executionContext) _HistoryEntry_episode(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Episode) graphql.Marshaler {
-			return ec.marshalOEpisode2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, selections, v)
+			return ec.marshalOEpisode2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, selections, v)
 		},
 		true,
 		false,
@@ -5931,7 +5931,7 @@ func (ec *executionContext) _HistoryEntry_progress(ctx context.Context, field gr
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.WatchProgress) graphql.Marshaler {
-			return ec.marshalNWatchProgress2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx, selections, v)
+			return ec.marshalNWatchProgress2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx, selections, v)
 		},
 		true,
 		true,
@@ -5963,7 +5963,7 @@ func (ec *executionContext) _MoreWithRow_person(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Person) graphql.Marshaler {
-			return ec.marshalNPerson2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPerson(ctx, selections, v)
+			return ec.marshalNPerson2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPerson(ctx, selections, v)
 		},
 		true,
 		true,
@@ -5995,7 +5995,7 @@ func (ec *executionContext) _MoreWithRow_becauseOf(ctx context.Context, field gr
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
+			return ec.marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
 		},
 		true,
 		true,
@@ -6027,7 +6027,7 @@ func (ec *executionContext) _MoreWithRow_items(ctx context.Context, field graphq
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -6104,7 +6104,7 @@ func (ec *executionContext) _Mutation_resolveStream(ctx context.Context, field g
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.ResolvedStream) graphql.Marshaler {
-			return ec.marshalNResolvedStream2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐResolvedStream(ctx, selections, v)
+			return ec.marshalNResolvedStream2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐResolvedStream(ctx, selections, v)
 		},
 		true,
 		true,
@@ -6148,7 +6148,7 @@ func (ec *executionContext) _Mutation_resolveBestStream(ctx context.Context, fie
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.ResolvedStream) graphql.Marshaler {
-			return ec.marshalNResolvedStream2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐResolvedStream(ctx, selections, v)
+			return ec.marshalNResolvedStream2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐResolvedStream(ctx, selections, v)
 		},
 		true,
 		true,
@@ -6192,7 +6192,7 @@ func (ec *executionContext) _Mutation_recordProgress(ctx context.Context, field 
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.WatchProgress) graphql.Marshaler {
-			return ec.marshalNWatchProgress2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx, selections, v)
+			return ec.marshalNWatchProgress2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx, selections, v)
 		},
 		true,
 		true,
@@ -6456,7 +6456,7 @@ func (ec *executionContext) _Mutation_startDownload(ctx context.Context, field g
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Download) graphql.Marshaler {
-			return ec.marshalNDownload2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownload(ctx, selections, v)
+			return ec.marshalNDownload2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownload(ctx, selections, v)
 		},
 		true,
 		true,
@@ -6567,7 +6567,7 @@ func (ec *executionContext) _Mutation_hostTogether(ctx context.Context, field gr
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.TogetherRoom) graphql.Marshaler {
-			return ec.marshalNTogetherRoom2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherRoom(ctx, selections, v)
+			return ec.marshalNTogetherRoom2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherRoom(ctx, selections, v)
 		},
 		true,
 		true,
@@ -6611,7 +6611,7 @@ func (ec *executionContext) _Mutation_joinTogether(ctx context.Context, field gr
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.TogetherRoom) graphql.Marshaler {
-			return ec.marshalNTogetherRoom2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherRoom(ctx, selections, v)
+			return ec.marshalNTogetherRoom2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherRoom(ctx, selections, v)
 		},
 		true,
 		true,
@@ -6678,7 +6678,7 @@ func (ec *executionContext) _Mutation_adoptStream(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Stream) graphql.Marshaler {
-			return ec.marshalNStream2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStream(ctx, selections, v)
+			return ec.marshalNStream2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStream(ctx, selections, v)
 		},
 		true,
 		true,
@@ -6766,7 +6766,7 @@ func (ec *executionContext) _Mutation_createProfile(ctx context.Context, field g
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Profile) graphql.Marshaler {
-			return ec.marshalNProfile2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐProfile(ctx, selections, v)
+			return ec.marshalNProfile2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐProfile(ctx, selections, v)
 		},
 		true,
 		true,
@@ -6810,7 +6810,7 @@ func (ec *executionContext) _Mutation_updateProfile(ctx context.Context, field g
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Profile) graphql.Marshaler {
-			return ec.marshalNProfile2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐProfile(ctx, selections, v)
+			return ec.marshalNProfile2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐProfile(ctx, selections, v)
 		},
 		true,
 		true,
@@ -6898,7 +6898,7 @@ func (ec *executionContext) _Mutation_verifyPin(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.PinCheck) graphql.Marshaler {
-			return ec.marshalNPinCheck2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPinCheck(ctx, selections, v)
+			return ec.marshalNPinCheck2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPinCheck(ctx, selections, v)
 		},
 		true,
 		true,
@@ -6942,7 +6942,7 @@ func (ec *executionContext) _Mutation_updateSettings(ctx context.Context, field 
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Settings) graphql.Marshaler {
-			return ec.marshalNSettings2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSettings(ctx, selections, v)
+			return ec.marshalNSettings2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSettings(ctx, selections, v)
 		},
 		true,
 		true,
@@ -6986,7 +6986,7 @@ func (ec *executionContext) _Mutation_setPluginEnabled(ctx context.Context, fiel
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Plugin) graphql.Marshaler {
-			return ec.marshalNPlugin2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPlugin(ctx, selections, v)
+			return ec.marshalNPlugin2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPlugin(ctx, selections, v)
 		},
 		true,
 		true,
@@ -7030,7 +7030,7 @@ func (ec *executionContext) _Mutation_setPluginSettings(ctx context.Context, fie
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Plugin) graphql.Marshaler {
-			return ec.marshalNPlugin2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPlugin(ctx, selections, v)
+			return ec.marshalNPlugin2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPlugin(ctx, selections, v)
 		},
 		true,
 		true,
@@ -7096,7 +7096,7 @@ func (ec *executionContext) _Notification_kind(ctx context.Context, field graphq
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v model.NotificationKind) graphql.Marshaler {
-			return ec.marshalNNotificationKind2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNotificationKind(ctx, selections, v)
+			return ec.marshalNNotificationKind2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNotificationKind(ctx, selections, v)
 		},
 		true,
 		true,
@@ -7211,7 +7211,7 @@ func (ec *executionContext) _Notification_title(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
+			return ec.marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
 		},
 		true,
 		true,
@@ -7243,7 +7243,7 @@ func (ec *executionContext) _Notification_episode(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Episode) graphql.Marshaler {
-			return ec.marshalOEpisode2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, selections, v)
+			return ec.marshalOEpisode2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, selections, v)
 		},
 		true,
 		false,
@@ -7483,7 +7483,7 @@ func (ec *executionContext) _Person_filmography(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -7527,7 +7527,7 @@ func (ec *executionContext) _Person_coStars(ctx context.Context, field graphql.C
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.CoStar) graphql.Marshaler {
-			return ec.marshalNCoStar2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCoStarᚄ(ctx, selections, v)
+			return ec.marshalNCoStar2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCoStarᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -7571,7 +7571,7 @@ func (ec *executionContext) _Person_recommendedFor(ctx context.Context, field gr
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -7844,7 +7844,7 @@ func (ec *executionContext) _Plugin_settings(ctx context.Context, field graphql.
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.PluginSettingField) graphql.Marshaler {
-			return ec.marshalNPluginSettingField2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingFieldᚄ(ctx, selections, v)
+			return ec.marshalNPluginSettingField2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingFieldᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -8221,7 +8221,7 @@ func (ec *executionContext) _Profile_subtitleSize(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v model.SubtitleSize) graphql.Marshaler {
-			return ec.marshalNSubtitleSize2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx, selections, v)
+			return ec.marshalNSubtitleSize2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx, selections, v)
 		},
 		true,
 		true,
@@ -8268,7 +8268,7 @@ func (ec *executionContext) _Query_title(ctx context.Context, field graphql.Coll
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Title) graphql.Marshaler {
-			return ec.marshalOTitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
+			return ec.marshalOTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
 		},
 		true,
 		false,
@@ -8312,7 +8312,7 @@ func (ec *executionContext) _Query_episode(ctx context.Context, field graphql.Co
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Episode) graphql.Marshaler {
-			return ec.marshalOEpisode2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, selections, v)
+			return ec.marshalOEpisode2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, selections, v)
 		},
 		true,
 		false,
@@ -8356,7 +8356,7 @@ func (ec *executionContext) _Query_person(ctx context.Context, field graphql.Col
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Person) graphql.Marshaler {
-			return ec.marshalOPerson2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPerson(ctx, selections, v)
+			return ec.marshalOPerson2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPerson(ctx, selections, v)
 		},
 		true,
 		false,
@@ -8400,7 +8400,7 @@ func (ec *executionContext) _Query_search(ctx context.Context, field graphql.Col
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -8444,7 +8444,7 @@ func (ec *executionContext) _Query_trending(ctx context.Context, field graphql.C
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -8488,7 +8488,7 @@ func (ec *executionContext) _Query_newAndComingSoon(ctx context.Context, field g
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -8532,7 +8532,7 @@ func (ec *executionContext) _Query_watchedActors(ctx context.Context, field grap
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Person) graphql.Marshaler {
-			return ec.marshalNPerson2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPersonᚄ(ctx, selections, v)
+			return ec.marshalNPerson2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPersonᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -8576,7 +8576,7 @@ func (ec *executionContext) _Query_moreWith(ctx context.Context, field graphql.C
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.MoreWithRow) graphql.Marshaler {
-			return ec.marshalOMoreWithRow2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMoreWithRow(ctx, selections, v)
+			return ec.marshalOMoreWithRow2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMoreWithRow(ctx, selections, v)
 		},
 		true,
 		false,
@@ -8620,7 +8620,7 @@ func (ec *executionContext) _Query_browse(ctx context.Context, field graphql.Col
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -8687,7 +8687,7 @@ func (ec *executionContext) _Query_catalog(ctx context.Context, field graphql.Co
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -8731,7 +8731,7 @@ func (ec *executionContext) _Query_catalogTheme(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -8775,7 +8775,7 @@ func (ec *executionContext) _Query_catalogRows(ctx context.Context, field graphq
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.CatalogRow) graphql.Marshaler {
-			return ec.marshalNCatalogRow2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogRowᚄ(ctx, selections, v)
+			return ec.marshalNCatalogRow2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogRowᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -8819,7 +8819,7 @@ func (ec *executionContext) _Query_recommendations(ctx context.Context, field gr
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Recommendation) graphql.Marshaler {
-			return ec.marshalNRecommendation2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendationᚄ(ctx, selections, v)
+			return ec.marshalNRecommendation2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendationᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -8863,7 +8863,7 @@ func (ec *executionContext) _Query_recommendationRows(ctx context.Context, field
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.RecommendationRow) graphql.Marshaler {
-			return ec.marshalNRecommendationRow2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendationRowᚄ(ctx, selections, v)
+			return ec.marshalNRecommendationRow2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendationRowᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -8907,7 +8907,7 @@ func (ec *executionContext) _Query_continueWatching(ctx context.Context, field g
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.ContinueItem) graphql.Marshaler {
-			return ec.marshalNContinueItem2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐContinueItemᚄ(ctx, selections, v)
+			return ec.marshalNContinueItem2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐContinueItemᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -8951,7 +8951,7 @@ func (ec *executionContext) _Query_history(ctx context.Context, field graphql.Co
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.HistoryEntry) graphql.Marshaler {
-			return ec.marshalNHistoryEntry2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐHistoryEntryᚄ(ctx, selections, v)
+			return ec.marshalNHistoryEntry2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐHistoryEntryᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -8995,7 +8995,7 @@ func (ec *executionContext) _Query_watchlist(ctx context.Context, field graphql.
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -9039,7 +9039,7 @@ func (ec *executionContext) _Query_likedTitles(ctx context.Context, field graphq
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -9083,7 +9083,7 @@ func (ec *executionContext) _Query_notifications(ctx context.Context, field grap
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Notification) graphql.Marshaler {
-			return ec.marshalNNotification2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNotificationᚄ(ctx, selections, v)
+			return ec.marshalNNotification2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNotificationᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -9171,7 +9171,7 @@ func (ec *executionContext) _Query_downloads(ctx context.Context, field graphql.
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Download) graphql.Marshaler {
-			return ec.marshalNDownload2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownloadᚄ(ctx, selections, v)
+			return ec.marshalNDownload2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownloadᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -9237,7 +9237,7 @@ func (ec *executionContext) _Query_togetherRoom(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.TogetherRoom) graphql.Marshaler {
-			return ec.marshalOTogetherRoom2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherRoom(ctx, selections, v)
+			return ec.marshalOTogetherRoom2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherRoom(ctx, selections, v)
 		},
 		true,
 		false,
@@ -9270,7 +9270,7 @@ func (ec *executionContext) _Query_subtitles(ctx context.Context, field graphql.
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Subtitle) graphql.Marshaler {
-			return ec.marshalNSubtitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleᚄ(ctx, selections, v)
+			return ec.marshalNSubtitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -9313,7 +9313,7 @@ func (ec *executionContext) _Query_profiles(ctx context.Context, field graphql.C
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Profile) graphql.Marshaler {
-			return ec.marshalNProfile2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐProfileᚄ(ctx, selections, v)
+			return ec.marshalNProfile2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐProfileᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -9345,7 +9345,7 @@ func (ec *executionContext) _Query_settings(ctx context.Context, field graphql.C
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Settings) graphql.Marshaler {
-			return ec.marshalNSettings2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSettings(ctx, selections, v)
+			return ec.marshalNSettings2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSettings(ctx, selections, v)
 		},
 		true,
 		true,
@@ -9421,7 +9421,7 @@ func (ec *executionContext) _Query_plugins(ctx context.Context, field graphql.Co
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Plugin) graphql.Marshaler {
-			return ec.marshalNPlugin2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginᚄ(ctx, selections, v)
+			return ec.marshalNPlugin2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -9453,7 +9453,7 @@ func (ec *executionContext) _Query_status(ctx context.Context, field graphql.Col
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Status) graphql.Marshaler {
-			return ec.marshalNStatus2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStatus(ctx, selections, v)
+			return ec.marshalNStatus2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStatus(ctx, selections, v)
 		},
 		true,
 		true,
@@ -9561,7 +9561,7 @@ func (ec *executionContext) _Recommendation_title(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
+			return ec.marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
 		},
 		true,
 		true,
@@ -9708,7 +9708,7 @@ func (ec *executionContext) _RecommendationRow_items(ctx context.Context, field 
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -9993,7 +9993,7 @@ func (ec *executionContext) _Season_episodes(ctx context.Context, field graphql.
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Episode) graphql.Marshaler {
-			return ec.marshalNEpisode2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisodeᚄ(ctx, selections, v)
+			return ec.marshalNEpisode2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisodeᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -10071,7 +10071,7 @@ func (ec *executionContext) _Settings_tmdbKeyStatus(ctx context.Context, field g
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v model.TmdbKeyStatus) graphql.Marshaler {
-			return ec.marshalNTmdbKeyStatus2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTmdbKeyStatus(ctx, selections, v)
+			return ec.marshalNTmdbKeyStatus2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTmdbKeyStatus(ctx, selections, v)
 		},
 		true,
 		true,
@@ -10600,7 +10600,7 @@ func (ec *executionContext) _StreamUpdate_streams(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Stream) graphql.Marshaler {
-			return ec.marshalNStream2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStreamᚄ(ctx, selections, v)
+			return ec.marshalNStream2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStreamᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -10656,7 +10656,7 @@ func (ec *executionContext) _Subscription_streams(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.StreamUpdate) graphql.Marshaler {
-			return ec.marshalNStreamUpdate2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStreamUpdate(ctx, selections, v)
+			return ec.marshalNStreamUpdate2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStreamUpdate(ctx, selections, v)
 		},
 		true,
 		true,
@@ -10699,7 +10699,7 @@ func (ec *executionContext) _Subscription_together(ctx context.Context, field gr
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.TogetherUpdate) graphql.Marshaler {
-			return ec.marshalNTogetherUpdate2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherUpdate(ctx, selections, v)
+			return ec.marshalNTogetherUpdate2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherUpdate(ctx, selections, v)
 		},
 		true,
 		true,
@@ -10938,7 +10938,7 @@ func (ec *executionContext) _Title_mediaType(ctx context.Context, field graphql.
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v model.MediaType) graphql.Marshaler {
-			return ec.marshalNMediaType2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, selections, v)
+			return ec.marshalNMediaType2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, selections, v)
 		},
 		true,
 		true,
@@ -11421,7 +11421,7 @@ func (ec *executionContext) _Title_credits(ctx context.Context, field graphql.Co
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Credit) graphql.Marshaler {
-			return ec.marshalNCredit2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCreditᚄ(ctx, selections, v)
+			return ec.marshalNCredit2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCreditᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -11454,7 +11454,7 @@ func (ec *executionContext) _Title_related(ctx context.Context, field graphql.Co
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
-			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -11497,7 +11497,7 @@ func (ec *executionContext) _Title_seasons(ctx context.Context, field graphql.Co
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Season) graphql.Marshaler {
-			return ec.marshalNSeason2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSeasonᚄ(ctx, selections, v)
+			return ec.marshalNSeason2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSeasonᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -11552,7 +11552,7 @@ func (ec *executionContext) _Title_streams(ctx context.Context, field graphql.Co
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Stream) graphql.Marshaler {
-			return ec.marshalNStream2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStreamᚄ(ctx, selections, v)
+			return ec.marshalNStream2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStreamᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -11585,7 +11585,7 @@ func (ec *executionContext) _Title_progress(ctx context.Context, field graphql.C
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.WatchProgress) graphql.Marshaler {
-			return ec.marshalOWatchProgress2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx, selections, v)
+			return ec.marshalOWatchProgress2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx, selections, v)
 		},
 		true,
 		false,
@@ -11716,7 +11716,7 @@ func (ec *executionContext) _TogetherMessage_from(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.TogetherPeer) graphql.Marshaler {
-			return ec.marshalNTogetherPeer2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherPeer(ctx, selections, v)
+			return ec.marshalNTogetherPeer2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherPeer(ctx, selections, v)
 		},
 		true,
 		true,
@@ -11886,7 +11886,7 @@ func (ec *executionContext) _TogetherRoom_status(ctx context.Context, field grap
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v model.TogetherStatus) graphql.Marshaler {
-			return ec.marshalNTogetherStatus2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherStatus(ctx, selections, v)
+			return ec.marshalNTogetherStatus2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherStatus(ctx, selections, v)
 		},
 		true,
 		true,
@@ -11909,7 +11909,7 @@ func (ec *executionContext) _TogetherRoom_self(ctx context.Context, field graphq
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.TogetherPeer) graphql.Marshaler {
-			return ec.marshalNTogetherPeer2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherPeer(ctx, selections, v)
+			return ec.marshalNTogetherPeer2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherPeer(ctx, selections, v)
 		},
 		true,
 		true,
@@ -11941,7 +11941,7 @@ func (ec *executionContext) _TogetherRoom_peers(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.TogetherPeer) graphql.Marshaler {
-			return ec.marshalNTogetherPeer2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherPeerᚄ(ctx, selections, v)
+			return ec.marshalNTogetherPeer2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherPeerᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -11973,7 +11973,7 @@ func (ec *executionContext) _TogetherUpdate_room(ctx context.Context, field grap
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.TogetherRoom) graphql.Marshaler {
-			return ec.marshalOTogetherRoom2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherRoom(ctx, selections, v)
+			return ec.marshalOTogetherRoom2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherRoom(ctx, selections, v)
 		},
 		true,
 		false,
@@ -12005,7 +12005,7 @@ func (ec *executionContext) _TogetherUpdate_message(ctx context.Context, field g
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.TogetherMessage) graphql.Marshaler {
-			return ec.marshalOTogetherMessage2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherMessage(ctx, selections, v)
+			return ec.marshalOTogetherMessage2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherMessage(ctx, selections, v)
 		},
 		true,
 		false,
@@ -16942,11 +16942,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCatalogRow2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogRowᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CatalogRow) graphql.Marshaler {
+func (ec *executionContext) marshalNCatalogRow2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogRowᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CatalogRow) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNCatalogRow2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogRow(ctx, sel, v[i])
+		return ec.marshalNCatalogRow2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogRow(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -16958,7 +16958,7 @@ func (ec *executionContext) marshalNCatalogRow2ᚕᚖgithubᚗcomᚋneoworksᚋo
 	return ret
 }
 
-func (ec *executionContext) marshalNCatalogRow2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogRow(ctx context.Context, sel ast.SelectionSet, v *model.CatalogRow) graphql.Marshaler {
+func (ec *executionContext) marshalNCatalogRow2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogRow(ctx context.Context, sel ast.SelectionSet, v *model.CatalogRow) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -16968,21 +16968,21 @@ func (ec *executionContext) marshalNCatalogRow2ᚖgithubᚗcomᚋneoworksᚋotte
 	return ec._CatalogRow(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNCatalogTheme2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogTheme(ctx context.Context, v any) (model.CatalogTheme, error) {
+func (ec *executionContext) unmarshalNCatalogTheme2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogTheme(ctx context.Context, v any) (model.CatalogTheme, error) {
 	var res model.CatalogTheme
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNCatalogTheme2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogTheme(ctx context.Context, sel ast.SelectionSet, v model.CatalogTheme) graphql.Marshaler {
+func (ec *executionContext) marshalNCatalogTheme2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogTheme(ctx context.Context, sel ast.SelectionSet, v model.CatalogTheme) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNCoStar2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCoStarᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CoStar) graphql.Marshaler {
+func (ec *executionContext) marshalNCoStar2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCoStarᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CoStar) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNCoStar2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCoStar(ctx, sel, v[i])
+		return ec.marshalNCoStar2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCoStar(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -16994,7 +16994,7 @@ func (ec *executionContext) marshalNCoStar2ᚕᚖgithubᚗcomᚋneoworksᚋotter
 	return ret
 }
 
-func (ec *executionContext) marshalNCoStar2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCoStar(ctx context.Context, sel ast.SelectionSet, v *model.CoStar) graphql.Marshaler {
+func (ec *executionContext) marshalNCoStar2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCoStar(ctx context.Context, sel ast.SelectionSet, v *model.CoStar) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17004,11 +17004,11 @@ func (ec *executionContext) marshalNCoStar2ᚖgithubᚗcomᚋneoworksᚋotterᚋ
 	return ec._CoStar(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNContinueItem2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐContinueItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ContinueItem) graphql.Marshaler {
+func (ec *executionContext) marshalNContinueItem2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐContinueItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ContinueItem) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNContinueItem2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐContinueItem(ctx, sel, v[i])
+		return ec.marshalNContinueItem2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐContinueItem(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17020,7 +17020,7 @@ func (ec *executionContext) marshalNContinueItem2ᚕᚖgithubᚗcomᚋneoworks�
 	return ret
 }
 
-func (ec *executionContext) marshalNContinueItem2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐContinueItem(ctx context.Context, sel ast.SelectionSet, v *model.ContinueItem) graphql.Marshaler {
+func (ec *executionContext) marshalNContinueItem2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐContinueItem(ctx context.Context, sel ast.SelectionSet, v *model.ContinueItem) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17030,11 +17030,11 @@ func (ec *executionContext) marshalNContinueItem2ᚖgithubᚗcomᚋneoworksᚋot
 	return ec._ContinueItem(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNCredit2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCreditᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Credit) graphql.Marshaler {
+func (ec *executionContext) marshalNCredit2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCreditᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Credit) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNCredit2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCredit(ctx, sel, v[i])
+		return ec.marshalNCredit2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCredit(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17046,7 +17046,7 @@ func (ec *executionContext) marshalNCredit2ᚕᚖgithubᚗcomᚋneoworksᚋotter
 	return ret
 }
 
-func (ec *executionContext) marshalNCredit2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCredit(ctx context.Context, sel ast.SelectionSet, v *model.Credit) graphql.Marshaler {
+func (ec *executionContext) marshalNCredit2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCredit(ctx context.Context, sel ast.SelectionSet, v *model.Credit) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17056,15 +17056,15 @@ func (ec *executionContext) marshalNCredit2ᚖgithubᚗcomᚋneoworksᚋotterᚋ
 	return ec._Credit(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDownload2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownload(ctx context.Context, sel ast.SelectionSet, v model.Download) graphql.Marshaler {
+func (ec *executionContext) marshalNDownload2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownload(ctx context.Context, sel ast.SelectionSet, v model.Download) graphql.Marshaler {
 	return ec._Download(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNDownload2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownloadᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Download) graphql.Marshaler {
+func (ec *executionContext) marshalNDownload2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownloadᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Download) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNDownload2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownload(ctx, sel, v[i])
+		return ec.marshalNDownload2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownload(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17076,7 +17076,7 @@ func (ec *executionContext) marshalNDownload2ᚕᚖgithubᚗcomᚋneoworksᚋott
 	return ret
 }
 
-func (ec *executionContext) marshalNDownload2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownload(ctx context.Context, sel ast.SelectionSet, v *model.Download) graphql.Marshaler {
+func (ec *executionContext) marshalNDownload2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownload(ctx context.Context, sel ast.SelectionSet, v *model.Download) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17086,21 +17086,21 @@ func (ec *executionContext) marshalNDownload2ᚖgithubᚗcomᚋneoworksᚋotter�
 	return ec._Download(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNDownloadStatus2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownloadStatus(ctx context.Context, v any) (model.DownloadStatus, error) {
+func (ec *executionContext) unmarshalNDownloadStatus2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownloadStatus(ctx context.Context, v any) (model.DownloadStatus, error) {
 	var res model.DownloadStatus
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNDownloadStatus2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownloadStatus(ctx context.Context, sel ast.SelectionSet, v model.DownloadStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNDownloadStatus2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDownloadStatus(ctx context.Context, sel ast.SelectionSet, v model.DownloadStatus) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNEpisode2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisodeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Episode) graphql.Marshaler {
+func (ec *executionContext) marshalNEpisode2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisodeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Episode) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNEpisode2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, sel, v[i])
+		return ec.marshalNEpisode2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17112,7 +17112,7 @@ func (ec *executionContext) marshalNEpisode2ᚕᚖgithubᚗcomᚋneoworksᚋotte
 	return ret
 }
 
-func (ec *executionContext) marshalNEpisode2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx context.Context, sel ast.SelectionSet, v *model.Episode) graphql.Marshaler {
+func (ec *executionContext) marshalNEpisode2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx context.Context, sel ast.SelectionSet, v *model.Episode) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17138,11 +17138,11 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
-func (ec *executionContext) marshalNHistoryEntry2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐHistoryEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.HistoryEntry) graphql.Marshaler {
+func (ec *executionContext) marshalNHistoryEntry2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐHistoryEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.HistoryEntry) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNHistoryEntry2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐHistoryEntry(ctx, sel, v[i])
+		return ec.marshalNHistoryEntry2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐHistoryEntry(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17154,7 +17154,7 @@ func (ec *executionContext) marshalNHistoryEntry2ᚕᚖgithubᚗcomᚋneoworks�
 	return ret
 }
 
-func (ec *executionContext) marshalNHistoryEntry2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐHistoryEntry(ctx context.Context, sel ast.SelectionSet, v *model.HistoryEntry) graphql.Marshaler {
+func (ec *executionContext) marshalNHistoryEntry2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐHistoryEntry(ctx context.Context, sel ast.SelectionSet, v *model.HistoryEntry) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17226,21 +17226,21 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) unmarshalNMediaType2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx context.Context, v any) (model.MediaType, error) {
+func (ec *executionContext) unmarshalNMediaType2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx context.Context, v any) (model.MediaType, error) {
 	var res model.MediaType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNMediaType2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx context.Context, sel ast.SelectionSet, v model.MediaType) graphql.Marshaler {
+func (ec *executionContext) marshalNMediaType2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx context.Context, sel ast.SelectionSet, v model.MediaType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNNotification2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNotificationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Notification) graphql.Marshaler {
+func (ec *executionContext) marshalNNotification2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNotificationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Notification) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNNotification2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNotification(ctx, sel, v[i])
+		return ec.marshalNNotification2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNotification(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17252,7 +17252,7 @@ func (ec *executionContext) marshalNNotification2ᚕᚖgithubᚗcomᚋneoworks�
 	return ret
 }
 
-func (ec *executionContext) marshalNNotification2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNotification(ctx context.Context, sel ast.SelectionSet, v *model.Notification) graphql.Marshaler {
+func (ec *executionContext) marshalNNotification2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNotification(ctx context.Context, sel ast.SelectionSet, v *model.Notification) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17262,21 +17262,21 @@ func (ec *executionContext) marshalNNotification2ᚖgithubᚗcomᚋneoworksᚋot
 	return ec._Notification(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNNotificationKind2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNotificationKind(ctx context.Context, v any) (model.NotificationKind, error) {
+func (ec *executionContext) unmarshalNNotificationKind2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNotificationKind(ctx context.Context, v any) (model.NotificationKind, error) {
 	var res model.NotificationKind
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNNotificationKind2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNotificationKind(ctx context.Context, sel ast.SelectionSet, v model.NotificationKind) graphql.Marshaler {
+func (ec *executionContext) marshalNNotificationKind2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNotificationKind(ctx context.Context, sel ast.SelectionSet, v model.NotificationKind) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNPerson2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPersonᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Person) graphql.Marshaler {
+func (ec *executionContext) marshalNPerson2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPersonᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Person) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNPerson2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPerson(ctx, sel, v[i])
+		return ec.marshalNPerson2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPerson(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17288,7 +17288,7 @@ func (ec *executionContext) marshalNPerson2ᚕᚖgithubᚗcomᚋneoworksᚋotter
 	return ret
 }
 
-func (ec *executionContext) marshalNPerson2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPerson(ctx context.Context, sel ast.SelectionSet, v *model.Person) graphql.Marshaler {
+func (ec *executionContext) marshalNPerson2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPerson(ctx context.Context, sel ast.SelectionSet, v *model.Person) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17298,11 +17298,11 @@ func (ec *executionContext) marshalNPerson2ᚖgithubᚗcomᚋneoworksᚋotterᚋ
 	return ec._Person(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPinCheck2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPinCheck(ctx context.Context, sel ast.SelectionSet, v model.PinCheck) graphql.Marshaler {
+func (ec *executionContext) marshalNPinCheck2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPinCheck(ctx context.Context, sel ast.SelectionSet, v model.PinCheck) graphql.Marshaler {
 	return ec._PinCheck(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPinCheck2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPinCheck(ctx context.Context, sel ast.SelectionSet, v *model.PinCheck) graphql.Marshaler {
+func (ec *executionContext) marshalNPinCheck2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPinCheck(ctx context.Context, sel ast.SelectionSet, v *model.PinCheck) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17312,15 +17312,15 @@ func (ec *executionContext) marshalNPinCheck2ᚖgithubᚗcomᚋneoworksᚋotter�
 	return ec._PinCheck(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPlugin2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPlugin(ctx context.Context, sel ast.SelectionSet, v model.Plugin) graphql.Marshaler {
+func (ec *executionContext) marshalNPlugin2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPlugin(ctx context.Context, sel ast.SelectionSet, v model.Plugin) graphql.Marshaler {
 	return ec._Plugin(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPlugin2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Plugin) graphql.Marshaler {
+func (ec *executionContext) marshalNPlugin2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Plugin) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNPlugin2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPlugin(ctx, sel, v[i])
+		return ec.marshalNPlugin2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPlugin(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17332,7 +17332,7 @@ func (ec *executionContext) marshalNPlugin2ᚕᚖgithubᚗcomᚋneoworksᚋotter
 	return ret
 }
 
-func (ec *executionContext) marshalNPlugin2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPlugin(ctx context.Context, sel ast.SelectionSet, v *model.Plugin) graphql.Marshaler {
+func (ec *executionContext) marshalNPlugin2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPlugin(ctx context.Context, sel ast.SelectionSet, v *model.Plugin) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17342,11 +17342,11 @@ func (ec *executionContext) marshalNPlugin2ᚖgithubᚗcomᚋneoworksᚋotterᚋ
 	return ec._Plugin(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPluginSettingField2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingFieldᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PluginSettingField) graphql.Marshaler {
+func (ec *executionContext) marshalNPluginSettingField2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingFieldᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PluginSettingField) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNPluginSettingField2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingField(ctx, sel, v[i])
+		return ec.marshalNPluginSettingField2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingField(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17358,7 +17358,7 @@ func (ec *executionContext) marshalNPluginSettingField2ᚕᚖgithubᚗcomᚋneow
 	return ret
 }
 
-func (ec *executionContext) marshalNPluginSettingField2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingField(ctx context.Context, sel ast.SelectionSet, v *model.PluginSettingField) graphql.Marshaler {
+func (ec *executionContext) marshalNPluginSettingField2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingField(ctx context.Context, sel ast.SelectionSet, v *model.PluginSettingField) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17368,14 +17368,14 @@ func (ec *executionContext) marshalNPluginSettingField2ᚖgithubᚗcomᚋneowork
 	return ec._PluginSettingField(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNPluginSettingInput2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingInputᚄ(ctx context.Context, v any) ([]*model.PluginSettingInput, error) {
+func (ec *executionContext) unmarshalNPluginSettingInput2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingInputᚄ(ctx context.Context, v any) ([]*model.PluginSettingInput, error) {
 	var vSlice []any
 	vSlice = graphql.CoerceList(v)
 	var err error
 	res := make([]*model.PluginSettingInput, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNPluginSettingInput2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingInput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNPluginSettingInput2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -17383,20 +17383,20 @@ func (ec *executionContext) unmarshalNPluginSettingInput2ᚕᚖgithubᚗcomᚋne
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalNPluginSettingInput2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingInput(ctx context.Context, v any) (*model.PluginSettingInput, error) {
+func (ec *executionContext) unmarshalNPluginSettingInput2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginSettingInput(ctx context.Context, v any) (*model.PluginSettingInput, error) {
 	res, err := ec.unmarshalInputPluginSettingInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNProfile2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐProfile(ctx context.Context, sel ast.SelectionSet, v model.Profile) graphql.Marshaler {
+func (ec *executionContext) marshalNProfile2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐProfile(ctx context.Context, sel ast.SelectionSet, v model.Profile) graphql.Marshaler {
 	return ec._Profile(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNProfile2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐProfileᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Profile) graphql.Marshaler {
+func (ec *executionContext) marshalNProfile2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐProfileᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Profile) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNProfile2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐProfile(ctx, sel, v[i])
+		return ec.marshalNProfile2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐProfile(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17408,7 +17408,7 @@ func (ec *executionContext) marshalNProfile2ᚕᚖgithubᚗcomᚋneoworksᚋotte
 	return ret
 }
 
-func (ec *executionContext) marshalNProfile2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐProfile(ctx context.Context, sel ast.SelectionSet, v *model.Profile) graphql.Marshaler {
+func (ec *executionContext) marshalNProfile2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐProfile(ctx context.Context, sel ast.SelectionSet, v *model.Profile) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17418,11 +17418,11 @@ func (ec *executionContext) marshalNProfile2ᚖgithubᚗcomᚋneoworksᚋotter�
 	return ec._Profile(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNRecommendation2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Recommendation) graphql.Marshaler {
+func (ec *executionContext) marshalNRecommendation2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Recommendation) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNRecommendation2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendation(ctx, sel, v[i])
+		return ec.marshalNRecommendation2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendation(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17434,7 +17434,7 @@ func (ec *executionContext) marshalNRecommendation2ᚕᚖgithubᚗcomᚋneoworks
 	return ret
 }
 
-func (ec *executionContext) marshalNRecommendation2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendation(ctx context.Context, sel ast.SelectionSet, v *model.Recommendation) graphql.Marshaler {
+func (ec *executionContext) marshalNRecommendation2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendation(ctx context.Context, sel ast.SelectionSet, v *model.Recommendation) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17444,11 +17444,11 @@ func (ec *executionContext) marshalNRecommendation2ᚖgithubᚗcomᚋneoworksᚋ
 	return ec._Recommendation(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNRecommendationRow2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendationRowᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RecommendationRow) graphql.Marshaler {
+func (ec *executionContext) marshalNRecommendationRow2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendationRowᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RecommendationRow) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNRecommendationRow2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendationRow(ctx, sel, v[i])
+		return ec.marshalNRecommendationRow2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendationRow(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17460,7 +17460,7 @@ func (ec *executionContext) marshalNRecommendationRow2ᚕᚖgithubᚗcomᚋneowo
 	return ret
 }
 
-func (ec *executionContext) marshalNRecommendationRow2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendationRow(ctx context.Context, sel ast.SelectionSet, v *model.RecommendationRow) graphql.Marshaler {
+func (ec *executionContext) marshalNRecommendationRow2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRecommendationRow(ctx context.Context, sel ast.SelectionSet, v *model.RecommendationRow) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17470,11 +17470,11 @@ func (ec *executionContext) marshalNRecommendationRow2ᚖgithubᚗcomᚋneoworks
 	return ec._RecommendationRow(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNResolvedStream2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐResolvedStream(ctx context.Context, sel ast.SelectionSet, v model.ResolvedStream) graphql.Marshaler {
+func (ec *executionContext) marshalNResolvedStream2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐResolvedStream(ctx context.Context, sel ast.SelectionSet, v model.ResolvedStream) graphql.Marshaler {
 	return ec._ResolvedStream(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNResolvedStream2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐResolvedStream(ctx context.Context, sel ast.SelectionSet, v *model.ResolvedStream) graphql.Marshaler {
+func (ec *executionContext) marshalNResolvedStream2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐResolvedStream(ctx context.Context, sel ast.SelectionSet, v *model.ResolvedStream) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17484,11 +17484,11 @@ func (ec *executionContext) marshalNResolvedStream2ᚖgithubᚗcomᚋneoworksᚋ
 	return ec._ResolvedStream(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSeason2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSeasonᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Season) graphql.Marshaler {
+func (ec *executionContext) marshalNSeason2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSeasonᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Season) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNSeason2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSeason(ctx, sel, v[i])
+		return ec.marshalNSeason2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSeason(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17500,7 +17500,7 @@ func (ec *executionContext) marshalNSeason2ᚕᚖgithubᚗcomᚋneoworksᚋotter
 	return ret
 }
 
-func (ec *executionContext) marshalNSeason2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSeason(ctx context.Context, sel ast.SelectionSet, v *model.Season) graphql.Marshaler {
+func (ec *executionContext) marshalNSeason2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSeason(ctx context.Context, sel ast.SelectionSet, v *model.Season) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17510,11 +17510,11 @@ func (ec *executionContext) marshalNSeason2ᚖgithubᚗcomᚋneoworksᚋotterᚋ
 	return ec._Season(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSettings2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSettings(ctx context.Context, sel ast.SelectionSet, v model.Settings) graphql.Marshaler {
+func (ec *executionContext) marshalNSettings2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSettings(ctx context.Context, sel ast.SelectionSet, v model.Settings) graphql.Marshaler {
 	return ec._Settings(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSettings2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSettings(ctx context.Context, sel ast.SelectionSet, v *model.Settings) graphql.Marshaler {
+func (ec *executionContext) marshalNSettings2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSettings(ctx context.Context, sel ast.SelectionSet, v *model.Settings) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17524,16 +17524,16 @@ func (ec *executionContext) marshalNSettings2ᚖgithubᚗcomᚋneoworksᚋotter�
 	return ec._Settings(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSettingsInput2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSettingsInput(ctx context.Context, v any) (model.SettingsInput, error) {
+func (ec *executionContext) unmarshalNSettingsInput2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSettingsInput(ctx context.Context, v any) (model.SettingsInput, error) {
 	res, err := ec.unmarshalInputSettingsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSkipSegment2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSkipSegmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SkipSegment) graphql.Marshaler {
+func (ec *executionContext) marshalNSkipSegment2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSkipSegmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SkipSegment) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNSkipSegment2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSkipSegment(ctx, sel, v[i])
+		return ec.marshalNSkipSegment2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSkipSegment(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17545,7 +17545,7 @@ func (ec *executionContext) marshalNSkipSegment2ᚕᚖgithubᚗcomᚋneoworksᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNSkipSegment2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSkipSegment(ctx context.Context, sel ast.SelectionSet, v *model.SkipSegment) graphql.Marshaler {
+func (ec *executionContext) marshalNSkipSegment2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSkipSegment(ctx context.Context, sel ast.SelectionSet, v *model.SkipSegment) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17555,11 +17555,11 @@ func (ec *executionContext) marshalNSkipSegment2ᚖgithubᚗcomᚋneoworksᚋott
 	return ec._SkipSegment(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNStatus2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStatus(ctx context.Context, sel ast.SelectionSet, v model.Status) graphql.Marshaler {
+func (ec *executionContext) marshalNStatus2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStatus(ctx context.Context, sel ast.SelectionSet, v model.Status) graphql.Marshaler {
 	return ec._Status(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNStatus2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStatus(ctx context.Context, sel ast.SelectionSet, v *model.Status) graphql.Marshaler {
+func (ec *executionContext) marshalNStatus2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStatus(ctx context.Context, sel ast.SelectionSet, v *model.Status) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17569,15 +17569,15 @@ func (ec *executionContext) marshalNStatus2ᚖgithubᚗcomᚋneoworksᚋotterᚋ
 	return ec._Status(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNStream2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStream(ctx context.Context, sel ast.SelectionSet, v model.Stream) graphql.Marshaler {
+func (ec *executionContext) marshalNStream2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStream(ctx context.Context, sel ast.SelectionSet, v model.Stream) graphql.Marshaler {
 	return ec._Stream(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNStream2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStreamᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Stream) graphql.Marshaler {
+func (ec *executionContext) marshalNStream2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStreamᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Stream) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNStream2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStream(ctx, sel, v[i])
+		return ec.marshalNStream2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStream(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17589,7 +17589,7 @@ func (ec *executionContext) marshalNStream2ᚕᚖgithubᚗcomᚋneoworksᚋotter
 	return ret
 }
 
-func (ec *executionContext) marshalNStream2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStream(ctx context.Context, sel ast.SelectionSet, v *model.Stream) graphql.Marshaler {
+func (ec *executionContext) marshalNStream2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStream(ctx context.Context, sel ast.SelectionSet, v *model.Stream) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17599,11 +17599,11 @@ func (ec *executionContext) marshalNStream2ᚖgithubᚗcomᚋneoworksᚋotterᚋ
 	return ec._Stream(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNStreamUpdate2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStreamUpdate(ctx context.Context, sel ast.SelectionSet, v model.StreamUpdate) graphql.Marshaler {
+func (ec *executionContext) marshalNStreamUpdate2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStreamUpdate(ctx context.Context, sel ast.SelectionSet, v model.StreamUpdate) graphql.Marshaler {
 	return ec._StreamUpdate(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNStreamUpdate2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStreamUpdate(ctx context.Context, sel ast.SelectionSet, v *model.StreamUpdate) graphql.Marshaler {
+func (ec *executionContext) marshalNStreamUpdate2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐStreamUpdate(ctx context.Context, sel ast.SelectionSet, v *model.StreamUpdate) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17659,11 +17659,11 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	return ret
 }
 
-func (ec *executionContext) marshalNSubtitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Subtitle) graphql.Marshaler {
+func (ec *executionContext) marshalNSubtitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Subtitle) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNSubtitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitle(ctx, sel, v[i])
+		return ec.marshalNSubtitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitle(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17675,7 +17675,7 @@ func (ec *executionContext) marshalNSubtitle2ᚕᚖgithubᚗcomᚋneoworksᚋott
 	return ret
 }
 
-func (ec *executionContext) marshalNSubtitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitle(ctx context.Context, sel ast.SelectionSet, v *model.Subtitle) graphql.Marshaler {
+func (ec *executionContext) marshalNSubtitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitle(ctx context.Context, sel ast.SelectionSet, v *model.Subtitle) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17685,25 +17685,25 @@ func (ec *executionContext) marshalNSubtitle2ᚖgithubᚗcomᚋneoworksᚋotter�
 	return ec._Subtitle(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSubtitleSize2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx context.Context, v any) (model.SubtitleSize, error) {
+func (ec *executionContext) unmarshalNSubtitleSize2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx context.Context, v any) (model.SubtitleSize, error) {
 	var res model.SubtitleSize
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSubtitleSize2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx context.Context, sel ast.SelectionSet, v model.SubtitleSize) graphql.Marshaler {
+func (ec *executionContext) marshalNSubtitleSize2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx context.Context, sel ast.SelectionSet, v model.SubtitleSize) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNTitle2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx context.Context, sel ast.SelectionSet, v model.Title) graphql.Marshaler {
+func (ec *executionContext) marshalNTitle2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx context.Context, sel ast.SelectionSet, v model.Title) graphql.Marshaler {
 	return ec._Title(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Title) graphql.Marshaler {
+func (ec *executionContext) marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Title) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNTitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, sel, v[i])
+		return ec.marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17715,7 +17715,7 @@ func (ec *executionContext) marshalNTitle2ᚕᚖgithubᚗcomᚋneoworksᚋotter�
 	return ret
 }
 
-func (ec *executionContext) marshalNTitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx context.Context, sel ast.SelectionSet, v *model.Title) graphql.Marshaler {
+func (ec *executionContext) marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx context.Context, sel ast.SelectionSet, v *model.Title) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17725,21 +17725,21 @@ func (ec *executionContext) marshalNTitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋi
 	return ec._Title(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNTmdbKeyStatus2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTmdbKeyStatus(ctx context.Context, v any) (model.TmdbKeyStatus, error) {
+func (ec *executionContext) unmarshalNTmdbKeyStatus2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTmdbKeyStatus(ctx context.Context, v any) (model.TmdbKeyStatus, error) {
 	var res model.TmdbKeyStatus
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNTmdbKeyStatus2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTmdbKeyStatus(ctx context.Context, sel ast.SelectionSet, v model.TmdbKeyStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNTmdbKeyStatus2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTmdbKeyStatus(ctx context.Context, sel ast.SelectionSet, v model.TmdbKeyStatus) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNTogetherPeer2ᚕᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherPeerᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TogetherPeer) graphql.Marshaler {
+func (ec *executionContext) marshalNTogetherPeer2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherPeerᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TogetherPeer) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNTogetherPeer2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherPeer(ctx, sel, v[i])
+		return ec.marshalNTogetherPeer2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherPeer(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -17751,7 +17751,7 @@ func (ec *executionContext) marshalNTogetherPeer2ᚕᚖgithubᚗcomᚋneoworks�
 	return ret
 }
 
-func (ec *executionContext) marshalNTogetherPeer2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherPeer(ctx context.Context, sel ast.SelectionSet, v *model.TogetherPeer) graphql.Marshaler {
+func (ec *executionContext) marshalNTogetherPeer2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherPeer(ctx context.Context, sel ast.SelectionSet, v *model.TogetherPeer) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17761,11 +17761,11 @@ func (ec *executionContext) marshalNTogetherPeer2ᚖgithubᚗcomᚋneoworksᚋot
 	return ec._TogetherPeer(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNTogetherRoom2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherRoom(ctx context.Context, sel ast.SelectionSet, v model.TogetherRoom) graphql.Marshaler {
+func (ec *executionContext) marshalNTogetherRoom2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherRoom(ctx context.Context, sel ast.SelectionSet, v model.TogetherRoom) graphql.Marshaler {
 	return ec._TogetherRoom(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTogetherRoom2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherRoom(ctx context.Context, sel ast.SelectionSet, v *model.TogetherRoom) graphql.Marshaler {
+func (ec *executionContext) marshalNTogetherRoom2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherRoom(ctx context.Context, sel ast.SelectionSet, v *model.TogetherRoom) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17775,21 +17775,21 @@ func (ec *executionContext) marshalNTogetherRoom2ᚖgithubᚗcomᚋneoworksᚋot
 	return ec._TogetherRoom(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNTogetherStatus2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherStatus(ctx context.Context, v any) (model.TogetherStatus, error) {
+func (ec *executionContext) unmarshalNTogetherStatus2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherStatus(ctx context.Context, v any) (model.TogetherStatus, error) {
 	var res model.TogetherStatus
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNTogetherStatus2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherStatus(ctx context.Context, sel ast.SelectionSet, v model.TogetherStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNTogetherStatus2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherStatus(ctx context.Context, sel ast.SelectionSet, v model.TogetherStatus) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNTogetherUpdate2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherUpdate(ctx context.Context, sel ast.SelectionSet, v model.TogetherUpdate) graphql.Marshaler {
+func (ec *executionContext) marshalNTogetherUpdate2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherUpdate(ctx context.Context, sel ast.SelectionSet, v model.TogetherUpdate) graphql.Marshaler {
 	return ec._TogetherUpdate(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTogetherUpdate2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherUpdate(ctx context.Context, sel ast.SelectionSet, v *model.TogetherUpdate) graphql.Marshaler {
+func (ec *executionContext) marshalNTogetherUpdate2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherUpdate(ctx context.Context, sel ast.SelectionSet, v *model.TogetherUpdate) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17799,11 +17799,11 @@ func (ec *executionContext) marshalNTogetherUpdate2ᚖgithubᚗcomᚋneoworksᚋ
 	return ec._TogetherUpdate(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNWatchProgress2githubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx context.Context, sel ast.SelectionSet, v model.WatchProgress) graphql.Marshaler {
+func (ec *executionContext) marshalNWatchProgress2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx context.Context, sel ast.SelectionSet, v model.WatchProgress) graphql.Marshaler {
 	return ec._WatchProgress(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNWatchProgress2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx context.Context, sel ast.SelectionSet, v *model.WatchProgress) graphql.Marshaler {
+func (ec *executionContext) marshalNWatchProgress2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx context.Context, sel ast.SelectionSet, v *model.WatchProgress) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -17984,7 +17984,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) unmarshalOCatalogSort2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogSort(ctx context.Context, v any) (*model.CatalogSort, error) {
+func (ec *executionContext) unmarshalOCatalogSort2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogSort(ctx context.Context, v any) (*model.CatalogSort, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -17993,14 +17993,14 @@ func (ec *executionContext) unmarshalOCatalogSort2ᚖgithubᚗcomᚋneoworksᚋo
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOCatalogSort2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogSort(ctx context.Context, sel ast.SelectionSet, v *model.CatalogSort) graphql.Marshaler {
+func (ec *executionContext) marshalOCatalogSort2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogSort(ctx context.Context, sel ast.SelectionSet, v *model.CatalogSort) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalOEpisode2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx context.Context, sel ast.SelectionSet, v *model.Episode) graphql.Marshaler {
+func (ec *executionContext) marshalOEpisode2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx context.Context, sel ast.SelectionSet, v *model.Episode) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -18060,7 +18060,7 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
-func (ec *executionContext) unmarshalOMediaType2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx context.Context, v any) (*model.MediaType, error) {
+func (ec *executionContext) unmarshalOMediaType2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx context.Context, v any) (*model.MediaType, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18069,21 +18069,21 @@ func (ec *executionContext) unmarshalOMediaType2ᚖgithubᚗcomᚋneoworksᚋott
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOMediaType2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx context.Context, sel ast.SelectionSet, v *model.MediaType) graphql.Marshaler {
+func (ec *executionContext) marshalOMediaType2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx context.Context, sel ast.SelectionSet, v *model.MediaType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalOMoreWithRow2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMoreWithRow(ctx context.Context, sel ast.SelectionSet, v *model.MoreWithRow) graphql.Marshaler {
+func (ec *executionContext) marshalOMoreWithRow2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMoreWithRow(ctx context.Context, sel ast.SelectionSet, v *model.MoreWithRow) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._MoreWithRow(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPerson2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPerson(ctx context.Context, sel ast.SelectionSet, v *model.Person) graphql.Marshaler {
+func (ec *executionContext) marshalOPerson2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPerson(ctx context.Context, sel ast.SelectionSet, v *model.Person) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -18144,7 +18144,7 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) unmarshalOSubtitleSize2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx context.Context, v any) (*model.SubtitleSize, error) {
+func (ec *executionContext) unmarshalOSubtitleSize2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx context.Context, v any) (*model.SubtitleSize, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18153,21 +18153,21 @@ func (ec *executionContext) unmarshalOSubtitleSize2ᚖgithubᚗcomᚋneoworksᚋ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOSubtitleSize2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx context.Context, sel ast.SelectionSet, v *model.SubtitleSize) graphql.Marshaler {
+func (ec *executionContext) marshalOSubtitleSize2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx context.Context, sel ast.SelectionSet, v *model.SubtitleSize) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalOTitle2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx context.Context, sel ast.SelectionSet, v *model.Title) graphql.Marshaler {
+func (ec *executionContext) marshalOTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx context.Context, sel ast.SelectionSet, v *model.Title) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Title(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOTitleFilter2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleFilter(ctx context.Context, v any) (*model.TitleFilter, error) {
+func (ec *executionContext) unmarshalOTitleFilter2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleFilter(ctx context.Context, v any) (*model.TitleFilter, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -18175,21 +18175,21 @@ func (ec *executionContext) unmarshalOTitleFilter2ᚖgithubᚗcomᚋneoworksᚋo
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOTogetherMessage2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherMessage(ctx context.Context, sel ast.SelectionSet, v *model.TogetherMessage) graphql.Marshaler {
+func (ec *executionContext) marshalOTogetherMessage2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherMessage(ctx context.Context, sel ast.SelectionSet, v *model.TogetherMessage) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._TogetherMessage(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOTogetherRoom2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherRoom(ctx context.Context, sel ast.SelectionSet, v *model.TogetherRoom) graphql.Marshaler {
+func (ec *executionContext) marshalOTogetherRoom2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTogetherRoom(ctx context.Context, sel ast.SelectionSet, v *model.TogetherRoom) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._TogetherRoom(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOWatchProgress2ᚖgithubᚗcomᚋneoworksᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx context.Context, sel ast.SelectionSet, v *model.WatchProgress) graphql.Marshaler {
+func (ec *executionContext) marshalOWatchProgress2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx context.Context, sel ast.SelectionSet, v *model.WatchProgress) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

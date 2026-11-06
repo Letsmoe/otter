@@ -18,7 +18,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/neoworks/otter/internal/storage"
+	"github.com/Letsmoe/otter/internal/storage"
 )
 
 // DefaultMaxBytes is the cache size limit when CACHE_MAX_BYTES is unset.

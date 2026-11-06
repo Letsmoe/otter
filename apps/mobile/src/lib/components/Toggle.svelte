@@ -1,5 +1,5 @@
 <script lang="ts">
-	// Neoworks-style switch. DaisyUI's `toggle` doesn't render in this app, so
+	// Otter-style switch. DaisyUI's `toggle` doesn't render in this app, so
 	// this is a self-contained Tailwind switch used across settings/plugins.
 	interface Props {
 		checked: boolean;

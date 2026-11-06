@@ -21,7 +21,7 @@ import {
 	type TogetherPeer,
 	type TogetherRoom,
 	type TogetherUpdate
-} from '@neoworks-dev/otter-app/together';
+} from '@letsmoe/otter-app/together';
 import { notifications } from './notifications';
 
 const CHAT_LIMIT = 50;

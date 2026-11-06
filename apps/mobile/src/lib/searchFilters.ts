@@ -1,6 +1,6 @@
 // Filter choices on the search page. Each option maps to the backend filter
 // fields it sets; the first option of each group is "Any" and sets nothing.
-import type { SearchFilter } from '@neoworks-dev/otter-app/search';
+import type { SearchFilter } from '@letsmoe/otter-app/search';
 
 export interface FilterOption {
 	value: string;

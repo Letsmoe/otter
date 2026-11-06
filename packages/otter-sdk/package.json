@@ -1,11 +1,10 @@
 {
-  "name": "@neoworks-dev/otter-sdk",
+  "name": "@letsmoe/otter-sdk",
   "version": "0.1.0",
   "private": false,
   "author": {
-    "name": "Neoworks",
-    "url": "https://neoworks.dev",
-    "email": "info@neoworks.dev"
+    "name": "Letsmoe",
+    "url": "https://letsmoe.com"
   },
   "type": "module",
   "scripts": {

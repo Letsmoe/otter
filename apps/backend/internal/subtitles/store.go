@@ -5,8 +5,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 
-	"github.com/neoworks/otter/internal/db"
-	"github.com/neoworks/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/plugins"
 )
 
 // Subtitle is one caption file a plugin found for a movie or episode. After

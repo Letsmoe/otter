@@ -1,5 +1,5 @@
 /*
- * TV / keyboard-navigation tokens, aligned to the Neoworks design system
+ * TV / keyboard-navigation tokens, aligned to the Otter design system
  * (high-contrast dark surfaces, white primary, subtle radii). These feed the
  * FocusList / Sidebar / Hero / MediaRail components.
  */
@@ -8,7 +8,7 @@
 	--tv-radius: 0.75rem;
 	--tv-gap: 1rem;
 
-	/* Neoworks surface + text tokens (dark theme). */
+	/* Otter surface + text tokens (dark theme). */
 	--nw-bg: #000000;
 	--nw-surface: #141416;
 	--nw-surface-raised: #1c1c1f;

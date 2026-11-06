@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/neoworks/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/db"
 )
 
 // The host behind a link (voe.sx, dood.to, ...) mostly decides whether it

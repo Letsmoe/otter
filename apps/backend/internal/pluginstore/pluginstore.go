@@ -28,7 +28,7 @@ const (
 )
 
 // FolderName is the installed-plugin folder of a package:
-// "@neoworks-dev/otter-plugin-eporner" → "eporner".
+// "@letsmoe/otter-plugin-eporner" → "eporner".
 func FolderName(packageName string) string {
 	unscoped := packageName[strings.LastIndex(packageName, "/")+1:]
 	return strings.TrimPrefix(unscoped, packagePrefix)

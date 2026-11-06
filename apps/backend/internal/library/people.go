@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/neoworks/otter/internal/tmdb"
+	"github.com/Letsmoe/otter/internal/tmdb"
 )
 
 const (

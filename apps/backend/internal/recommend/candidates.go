@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/neoworks/otter/internal/db"
-	"github.com/neoworks/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/library"
 )
 
 // candidate is a title some source proposes, before scoring.

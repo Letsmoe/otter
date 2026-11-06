@@ -6,7 +6,7 @@ import type {
   PluginContext,
   StreamInput,
   StreamListParams,
-} from "@neoworks-dev/otter-sdk";
+} from "@letsmoe/otter-sdk";
 import { fetchStreamEntries, lookupUrl, SERVER_LABELS, type LookupTarget } from "./api.ts";
 import { advertisedQuality, bestHlsEntry } from "./quality.ts";
 

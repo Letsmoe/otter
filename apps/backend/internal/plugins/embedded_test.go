@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neoworks/otter/internal/netdns"
+	"github.com/Letsmoe/otter/internal/netdns"
 )
 
 // testBundle mimics what the SDK's runPlugin does in a bundle: read the

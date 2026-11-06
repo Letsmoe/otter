@@ -3,7 +3,7 @@
 	// the next box, Backspace on an empty box goes back, and pasting a code or
 	// an invite text fills every box.
 	import { onMount, untrack } from 'svelte';
-	import { roomCodeFromText } from '@neoworks-dev/otter-app/together';
+	import { roomCodeFromText } from '@letsmoe/otter-app/together';
 
 	const CODE_LENGTH = 8;
 	// Room-code alphabet: no I, O, 0 or 1.

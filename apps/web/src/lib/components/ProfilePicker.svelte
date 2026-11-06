@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { otter } from '@neoworks-dev/otter-app/api';
-	import { activeProfile, avatarFor, type Profile } from '@neoworks-dev/otter-app/profile';
+	import { otter } from '@letsmoe/otter-app/api';
+	import { activeProfile, avatarFor, type Profile } from '@letsmoe/otter-app/profile';
 	import ProfileCreate from './ProfileCreate.svelte';
 	import PlusIcon from 'phosphor-svelte/lib/PlusIcon';
 

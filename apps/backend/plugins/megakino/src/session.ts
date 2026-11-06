@@ -1,4 +1,4 @@
-import type { PluginContext } from "@neoworks-dev/otter-sdk";
+import type { PluginContext } from "@letsmoe/otter-sdk";
 
 const HANDSHAKE_PATH = "/index.php?yg=token";
 const SESSION_COOKIE = /yg_token=([^;,\s]+)/;

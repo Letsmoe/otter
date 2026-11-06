@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import { otter } from '@neoworks-dev/otter-app/api';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
-	import { LANGUAGE_CHOICES } from '@neoworks-dev/otter-app/languages';
+	import { otter } from '@letsmoe/otter-app/api';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
+	import { LANGUAGE_CHOICES } from '@letsmoe/otter-app/languages';
 	import {
 		SUBTITLE_SIZE_CHOICES,
 		captionLanguageOf,
 		captionPreferencesOf
-	} from '@neoworks-dev/otter-app/captions';
+	} from '@letsmoe/otter-app/captions';
 	import {
 		saveCaptionPreferences,
 		type CaptionPreferenceChange
-	} from '@neoworks-dev/otter-app/subtitles';
+	} from '@letsmoe/otter-app/subtitles';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import GearSixIcon from 'phosphor-svelte/lib/GearSixIcon';
 

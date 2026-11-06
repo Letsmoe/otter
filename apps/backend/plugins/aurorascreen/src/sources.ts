@@ -1,4 +1,4 @@
-import { PluginSourceError, type PluginContext, type SourceInput, type SourceRetrieveParams } from "@neoworks-dev/otter-sdk";
+import { PluginSourceError, type PluginContext, type SourceInput, type SourceRetrieveParams } from "@letsmoe/otter-sdk";
 import { fetchStreamEntries, REFERER } from "./api.ts";
 import { advertisedQuality, bestHlsEntry } from "./quality.ts";
 

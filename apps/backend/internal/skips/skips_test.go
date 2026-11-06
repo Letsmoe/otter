@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/neoworks/otter/internal/cache"
-	"github.com/neoworks/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/cache"
+	"github.com/Letsmoe/otter/internal/db"
 )
 
 func newTestClient(t *testing.T, handler http.HandlerFunc) *Client {

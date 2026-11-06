@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neoworks/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/plugins"
 )
 
 type fakeLink struct {

@@ -6,7 +6,7 @@
 	import { slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
-	import { AVATAR_SETS, avatarImage, type AvatarSet } from '@neoworks-dev/otter-app/avatars';
+	import { AVATAR_SETS, avatarImage, type AvatarSet } from '@letsmoe/otter-app/avatars';
 	import ScreenHeader from '../ScreenHeader.svelte';
 
 	const COLUMNS = 4;

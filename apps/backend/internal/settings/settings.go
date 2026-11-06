@@ -10,7 +10,7 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/neoworks/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/db"
 )
 
 const settingsKey = "app"
@@ -19,7 +19,7 @@ const defaultLanguage = "en-US"
 
 // DefaultTMDBApiKey is the built-in TMDB key, used while no own key is saved.
 // Builds can replace it with
-// -ldflags "-X github.com/neoworks/otter/internal/settings.DefaultTMDBApiKey=…".
+// -ldflags "-X github.com/Letsmoe/otter/internal/settings.DefaultTMDBApiKey=…".
 var DefaultTMDBApiKey = ""
 
 type Settings struct {

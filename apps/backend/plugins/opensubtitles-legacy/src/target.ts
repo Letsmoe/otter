@@ -1,4 +1,4 @@
-import type { MediaRef } from "@neoworks-dev/otter-sdk";
+import type { MediaRef } from "@letsmoe/otter-sdk";
 import { API_BASE } from "./constants.ts";
 
 /** "tt0133093" to "0133093": the API wants the number padded to seven digits. */

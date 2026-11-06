@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/neoworks/otter/internal/blobcache"
-	"github.com/neoworks/otter/internal/storage"
+	"github.com/Letsmoe/otter/internal/blobcache"
+	"github.com/Letsmoe/otter/internal/storage"
 )
 
 // busyMargin widens a running cache operation's window backwards: blobs used

@@ -3,7 +3,7 @@ package library
 import (
 	"context"
 
-	"github.com/neoworks/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/db"
 )
 
 // How many recently watched titles feed the actor row, and how far down the

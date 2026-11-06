@@ -12,7 +12,7 @@
 	import SignOutIcon from 'phosphor-svelte/lib/SignOutIcon';
 	import type { Component } from 'svelte';
 	import VpnGuard from './VpnGuard.svelte';
-	import { activeProfile, avatarFor } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile, avatarFor } from '@letsmoe/otter-app/profile';
 
 	type NavEntry = {
 		key: string;

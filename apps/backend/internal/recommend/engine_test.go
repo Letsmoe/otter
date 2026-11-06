@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neoworks/otter/internal/db"
-	"github.com/neoworks/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/library"
 )
 
 const testProfile = 1

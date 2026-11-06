@@ -2,7 +2,7 @@
 import { apiBase, otter } from './api';
 import type { SubtitleSize } from './captions';
 import { activeProfile } from './profile';
-import type { Subtitle as GeneratedSubtitle } from '@neoworks-dev/otter-sdk/client';
+import type { Subtitle as GeneratedSubtitle } from '@letsmoe/otter-sdk/client';
 
 export type Subtitle = Omit<GeneratedSubtitle, '__typename'>;
 

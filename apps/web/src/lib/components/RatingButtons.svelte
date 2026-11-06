@@ -5,8 +5,8 @@
 	import SmileyMehIcon from 'phosphor-svelte/lib/SmileyMehIcon';
 	import SmileyIcon from 'phosphor-svelte/lib/SmileyIcon';
 	import SmileyWinkIcon from 'phosphor-svelte/lib/SmileyWinkIcon';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
-	import { fetchUserRating, setUserRating, clearUserRating } from '@neoworks-dev/otter-app/discovery';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
+	import { fetchUserRating, setUserRating, clearUserRating } from '@letsmoe/otter-app/discovery';
 
 	interface Props {
 		mediaId: string;

@@ -1,4 +1,4 @@
-import { loadTitleDetail } from '@neoworks-dev/otter-app/titleDetail';
+import { loadTitleDetail } from '@letsmoe/otter-app/titleDetail';
 
 export async function load({ params }) {
 	const title = await loadTitleDetail(params.id);

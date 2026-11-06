@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/neoworks/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/db"
 )
 
 // Store is the SQL side of the library: catalog rows, credits, related edges

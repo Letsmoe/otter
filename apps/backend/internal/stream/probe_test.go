@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/neoworks/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/plugins"
 )
 
 func transportStream(packets int) []byte {

@@ -9,9 +9,9 @@
 	import DownloadButton from '$lib/components/downloads/DownloadButton.svelte';
 	import { sidebarFocus } from '$lib/stores/focus';
 	import { watchScrollTop } from '$lib/scroll';
-	import { posterUrl, backdropUrl, formatRuntime } from '@neoworks-dev/otter-app/tmdb';
-	import { detailPath, type RailItem } from '@neoworks-dev/otter-app/discovery';
-	import type { CastMember } from '@neoworks-dev/otter-app/titleDetail';
+	import { posterUrl, backdropUrl, formatRuntime } from '@letsmoe/otter-app/tmdb';
+	import { detailPath, type RailItem } from '@letsmoe/otter-app/discovery';
+	import type { CastMember } from '@letsmoe/otter-app/titleDetail';
 
 	let { data } = $props();
 	let m = $derived(data.title);

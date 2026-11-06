@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { otter } from '@neoworks-dev/otter-app/api';
-	import type { Profile } from '@neoworks-dev/otter-app/profile';
-	import { PRESET_AVATARS, avatarImage } from '@neoworks-dev/otter-app/avatars';
-	import { DEFAULT_LANGUAGES, LANGUAGE_CHOICES } from '@neoworks-dev/otter-app/languages';
+	import { otter } from '@letsmoe/otter-app/api';
+	import type { Profile } from '@letsmoe/otter-app/profile';
+	import { PRESET_AVATARS, avatarImage } from '@letsmoe/otter-app/avatars';
+	import { DEFAULT_LANGUAGES, LANGUAGE_CHOICES } from '@letsmoe/otter-app/languages';
 
 	interface Props {
 		oncreated: (profile: Profile) => void;

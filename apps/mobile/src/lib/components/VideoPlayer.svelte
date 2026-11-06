@@ -6,8 +6,8 @@
 	import SpeakerXIcon from 'phosphor-svelte/lib/SpeakerXIcon';
 	import ArrowsOutIcon from 'phosphor-svelte/lib/ArrowsOutIcon';
 	import { get } from 'svelte/store';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
-	import { recordProgress } from '@neoworks-dev/otter-app/discovery';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
+	import { recordProgress } from '@letsmoe/otter-app/discovery';
 
 	interface Props {
 		src: string;

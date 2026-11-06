@@ -6,7 +6,7 @@ import {
 	isFinished,
 	startDownload,
 	type DownloadItem
-} from '@neoworks-dev/otter-app/downloads';
+} from '@letsmoe/otter-app/downloads';
 
 const POLL_INTERVAL_MS = 2000;
 

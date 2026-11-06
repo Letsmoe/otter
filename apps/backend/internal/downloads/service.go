@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/neoworks/otter/internal/library"
-	"github.com/neoworks/otter/internal/plugins"
-	"github.com/neoworks/otter/internal/stream"
+	"github.com/Letsmoe/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/stream"
 )
 
 const (

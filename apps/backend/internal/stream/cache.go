@@ -26,9 +26,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/neoworks/otter/internal/cache"
-	"github.com/neoworks/otter/internal/plugins"
-	"github.com/neoworks/otter/internal/storage"
+	"github.com/Letsmoe/otter/internal/cache"
+	"github.com/Letsmoe/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/storage"
 )
 
 const (

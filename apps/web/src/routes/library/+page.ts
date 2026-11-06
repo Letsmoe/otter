@@ -1,4 +1,4 @@
-import { fetchLibraryPage } from '@neoworks-dev/otter-app/discovery';
+import { fetchLibraryPage } from '@letsmoe/otter-app/discovery';
 
 const RAIL_SIZE = 25;
 

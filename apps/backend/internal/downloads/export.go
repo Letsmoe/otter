@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/neoworks/otter/internal/library"
-	"github.com/neoworks/otter/internal/storage"
+	"github.com/Letsmoe/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/storage"
 )
 
 // ErrNotExportable marks HLS downloads whose segments only play with

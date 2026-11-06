@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/neoworks/otter/internal/cache"
-	"github.com/neoworks/otter/internal/db"
-	"github.com/neoworks/otter/internal/hooks"
+	"github.com/Letsmoe/otter/internal/cache"
+	"github.com/Letsmoe/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/hooks"
 )
 
 func newTestService(t *testing.T) *Service {

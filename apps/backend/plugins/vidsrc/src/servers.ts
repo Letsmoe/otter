@@ -1,4 +1,4 @@
-import { PluginSourceError, type PluginContext } from "@neoworks-dev/otter-sdk";
+import { PluginSourceError, type PluginContext } from "@letsmoe/otter-sdk";
 import { TOKEN_PLACEHOLDER } from "./constants.ts";
 import { isRecord, parseJson, stringField } from "./json.ts";
 import { appendQueryParameter } from "./url.ts";

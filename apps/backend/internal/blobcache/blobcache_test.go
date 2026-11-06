@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neoworks/otter/internal/storage"
+	"github.com/Letsmoe/otter/internal/storage"
 )
 
 // testStore is a blob store in a temporary directory.

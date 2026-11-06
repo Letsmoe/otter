@@ -6,7 +6,7 @@
 	import ProfilePicker from '$lib/components/ProfilePicker.svelte';
 	import TmdbKeyDialog from '$lib/components/TmdbKeyDialog.svelte';
 	import { goto } from '$app/navigation';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
 	import { downloads } from '$lib/stores/downloads.svelte';
 
 	let { children } = $props();

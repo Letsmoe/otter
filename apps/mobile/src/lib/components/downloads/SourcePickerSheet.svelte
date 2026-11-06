@@ -3,8 +3,8 @@
 	// the top links) or one specific link. Links arrive live as plugins answer.
 	import SparkleIcon from 'phosphor-svelte/lib/SparkleIcon';
 	import SealCheckIcon from 'phosphor-svelte/lib/SealCheckIcon';
-	import { formatSpeed } from '@neoworks-dev/otter-app/tmdb';
-	import { rankStreams, subscribeStreams, type Stream } from '@neoworks-dev/otter-app/streams';
+	import { formatSpeed } from '@letsmoe/otter-app/tmdb';
+	import { rankStreams, subscribeStreams, type Stream } from '@letsmoe/otter-app/streams';
 	import BottomSheet from '$lib/components/BottomSheet.svelte';
 
 	interface Props {

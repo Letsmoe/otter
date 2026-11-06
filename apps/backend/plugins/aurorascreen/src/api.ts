@@ -1,4 +1,4 @@
-import type { PluginContext } from "@neoworks-dev/otter-sdk";
+import type { PluginContext } from "@letsmoe/otter-sdk";
 
 export const STREAM_HOST = "stream.aurorascreen.org";
 const STREAM_API_BASE = `https://${STREAM_HOST}`;

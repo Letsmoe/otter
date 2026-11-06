@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neoworks/otter/internal/plugins"
-	"github.com/neoworks/otter/internal/storage"
+	"github.com/Letsmoe/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/storage"
 )
 
 func TestDownloadMP4ResumesFromPartialFile(t *testing.T) {

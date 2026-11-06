@@ -3,9 +3,9 @@ package graphql
 import (
 	"context"
 
-	"github.com/neoworks/otter/internal/api/graphql/model"
-	"github.com/neoworks/otter/internal/library"
-	"github.com/neoworks/otter/internal/profiles"
+	"github.com/Letsmoe/otter/internal/api/graphql/model"
+	"github.com/Letsmoe/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/profiles"
 )
 
 // minimumResumeSeconds hides playbacks that barely started from "continue".

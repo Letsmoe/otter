@@ -1,13 +1,13 @@
 package graphql
 
 import (
-	"github.com/neoworks/otter/internal/api/graphql/model"
-	"github.com/neoworks/otter/internal/library"
-	"github.com/neoworks/otter/internal/plugins"
-	"github.com/neoworks/otter/internal/profiles"
-	"github.com/neoworks/otter/internal/settings"
-	"github.com/neoworks/otter/internal/skips"
-	"github.com/neoworks/otter/internal/tmdb"
+	"github.com/Letsmoe/otter/internal/api/graphql/model"
+	"github.com/Letsmoe/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/profiles"
+	"github.com/Letsmoe/otter/internal/settings"
+	"github.com/Letsmoe/otter/internal/skips"
+	"github.com/Letsmoe/otter/internal/tmdb"
 )
 
 // optional turns a zero value into nil for nullable fields.

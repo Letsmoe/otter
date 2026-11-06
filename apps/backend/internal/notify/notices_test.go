@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neoworks/otter/internal/db"
-	"github.com/neoworks/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/library"
 )
 
 var today = time.Date(2026, 10, 3, 0, 0, 0, 0, time.UTC)

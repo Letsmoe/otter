@@ -1,7 +1,7 @@
 // Movies and episodes saved for offline playback by the backend.
 import { otter } from './api';
 import { backdropUrl, posterUrl } from './tmdb';
-import type { DownloadStatus } from '@neoworks-dev/otter-sdk/client';
+import type { DownloadStatus } from '@letsmoe/otter-sdk/client';
 
 export interface DownloadItem {
 	id: string;

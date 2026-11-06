@@ -10,10 +10,10 @@ import (
 
 	"golang.org/x/sync/singleflight"
 
-	"github.com/neoworks/otter/internal/db"
-	"github.com/neoworks/otter/internal/hooks"
-	"github.com/neoworks/otter/internal/plugins"
-	"github.com/neoworks/otter/internal/tmdb"
+	"github.com/Letsmoe/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/hooks"
+	"github.com/Letsmoe/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/tmdb"
 )
 
 // How long fetched data counts as fresh before it is fetched again.

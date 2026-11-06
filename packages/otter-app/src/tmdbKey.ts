@@ -1,7 +1,7 @@
 // The TMDB key prompt: shown once on a fresh install (keep the built-in key or
 // enter an own one) and whenever TMDB rejects the key in use.
 import { otter } from './api';
-import type { TmdbKeyStatus } from '@neoworks-dev/otter-sdk/client';
+import type { TmdbKeyStatus } from '@letsmoe/otter-sdk/client';
 
 export const TMDB_SIGNUP_URL = 'https://www.themoviedb.org/signup';
 export const TMDB_API_SETTINGS_URL = 'https://www.themoviedb.org/settings/api';

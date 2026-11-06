@@ -2,15 +2,15 @@
 	// Netflix-style show page: trailer banner, title and facts, Play or Resume of
 	// the up-next episode, description and cast lines, My List / Rate / Share,
 	// then Episodes (with a season switch), More Like This and Trailers.
-	import { backdropUrl, posterUrl } from '@neoworks-dev/otter-app/tmdb';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
-	import { loadTitleRails, type TitleRail } from '@neoworks-dev/otter-app/titleDetail';
+	import { backdropUrl, posterUrl } from '@letsmoe/otter-app/tmdb';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
+	import { loadTitleRails, type TitleRail } from '@letsmoe/otter-app/titleDetail';
 	import {
 		episodeCode,
 		loadEpisodes,
 		upNextEpisode,
 		type SeasonEpisode
-	} from '@neoworks-dev/otter-app/seriesDetail';
+	} from '@letsmoe/otter-app/seriesDetail';
 	import Player from '$lib/components/player/Player.svelte';
 	import type { PlayerEpisode } from '$lib/components/player/EpisodesSheet.svelte';
 	import TitleBackdrop from '$lib/components/title/TitleBackdrop.svelte';

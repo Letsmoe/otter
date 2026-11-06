@@ -50,7 +50,7 @@ export async function sourcePackage(name: string): Promise<SourcePackage> {
 	return Bun.file(join(PLUGINS_DIR, name, 'package.json')).json();
 }
 
-/** Installed-plugin folder of a package: "@neoworks-dev/otter-plugin-eporner" → "eporner". */
+/** Installed-plugin folder of a package: "@letsmoe/otter-plugin-eporner" → "eporner". */
 export function folderName(packageName: string): string {
 	const unscoped = packageName.slice(packageName.lastIndexOf('/') + 1);
 	if (unscoped.startsWith(PACKAGE_PREFIX)) return unscoped.slice(PACKAGE_PREFIX.length);

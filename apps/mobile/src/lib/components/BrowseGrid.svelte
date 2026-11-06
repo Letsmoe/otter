@@ -12,7 +12,7 @@
 		LIBRARY_PAGE_SIZE,
 		type RailItem,
 		type MediaKind
-	} from '@neoworks-dev/otter-app/discovery';
+	} from '@letsmoe/otter-app/discovery';
 
 	interface Props {
 		kind: MediaKind;

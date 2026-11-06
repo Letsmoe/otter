@@ -1,11 +1,11 @@
 <script lang="ts">
 	// Every notification of the profile; opening the page marks them read.
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
 	import {
 		fetchNotifications,
 		markNotificationsRead,
 		type NotificationItem
-	} from '@neoworks-dev/otter-app/notifications';
+	} from '@letsmoe/otter-app/notifications';
 	import ScreenHeader from '$lib/components/ScreenHeader.svelte';
 	import NotificationRow from '$lib/components/profile-page/NotificationRow.svelte';
 

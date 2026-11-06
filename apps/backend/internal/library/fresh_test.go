@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/neoworks/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/db"
 )
 
 func TestSortByReleasePutsUpcomingFirst(t *testing.T) {

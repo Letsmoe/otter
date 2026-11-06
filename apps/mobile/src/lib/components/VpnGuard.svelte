@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import ShieldCheckIcon from 'phosphor-svelte/lib/ShieldCheckIcon';
 	import ShieldWarningIcon from 'phosphor-svelte/lib/ShieldWarningIcon';
-	import { otter } from '@neoworks-dev/otter-app/api';
+	import { otter } from '@letsmoe/otter-app/api';
 
 	const POLL_INTERVAL_MS = 10000;
 

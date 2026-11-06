@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/neoworks/otter/internal/api/graphql/model"
-	"github.com/neoworks/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/api/graphql/model"
+	"github.com/Letsmoe/otter/internal/library"
 )
 
 // Ids are "<kind>:<number>" strings: "movie:603", "episode:62085",

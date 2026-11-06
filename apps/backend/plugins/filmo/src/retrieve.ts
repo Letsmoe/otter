@@ -3,7 +3,7 @@ import {
   type PluginContext,
   type SourceInput,
   type SourceRetrieveParams,
-} from "@neoworks-dev/otter-sdk";
+} from "@letsmoe/otter-sdk";
 import { cookieHeaderOf, cookiesFromSetCookie, type CookieJar } from "./cookies.ts";
 import { chipIndexOf, csrfTokenOf, pageUrlOf, providerChipsOf, type ProviderChip } from "./site.ts";
 

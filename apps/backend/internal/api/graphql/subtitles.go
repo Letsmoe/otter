@@ -4,9 +4,9 @@ import (
 	"context"
 	"strings"
 
-	"github.com/neoworks/otter/internal/api/graphql/model"
-	"github.com/neoworks/otter/internal/profiles"
-	"github.com/neoworks/otter/internal/subtitles"
+	"github.com/Letsmoe/otter/internal/api/graphql/model"
+	"github.com/Letsmoe/otter/internal/profiles"
+	"github.com/Letsmoe/otter/internal/subtitles"
 )
 
 // defaultCaptionLanguages are asked for when no profile says otherwise; they

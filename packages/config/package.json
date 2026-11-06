@@ -1,7 +1,7 @@
 {
-	"name": "@neoworks-dev/config",
+	"name": "@letsmoe/config",
 	"version": "0.1.0",
-	"description": "Shared base configs (tsconfig, eslint) for Neoworks apps and packages",
+	"description": "Shared base configs (tsconfig, eslint) for Otter apps and packages",
 	"type": "module",
 	"private": true,
 	"exports": {

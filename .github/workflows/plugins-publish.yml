@@ -49,8 +49,8 @@ jobs:
       # Plugins only import the SDK at bundle time, same as the Dockerfile.
       - name: Link the plugin SDK
         run: |
-          mkdir -p node_modules/@neoworks-dev
-          ln -s ../../packages/otter-sdk node_modules/@neoworks-dev/otter-sdk
+          mkdir -p node_modules/@letsmoe
+          ln -s ../../packages/otter-sdk node_modules/@letsmoe/otter-sdk
 
       - name: Bundle plugins
         working-directory: apps/backend

@@ -20,9 +20,9 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/Letsmoe/otter/internal/blobcache"
+	"github.com/Letsmoe/otter/internal/storage"
 	"github.com/disintegration/imaging"
-	"github.com/neoworks/otter/internal/blobcache"
-	"github.com/neoworks/otter/internal/storage"
 
 	// Register image decoders so downscaleThumbnail can decode common formats.
 	_ "image/gif"

@@ -4,7 +4,7 @@ import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
 import ts from 'typescript-eslint';
 
-// Shared flat-config blocks for all Neoworks Svelte apps and packages.
+// Shared flat-config blocks for all Otter Svelte apps and packages.
 // Apps spread this array and prepend their own `includeIgnoreFile(gitignorePath)`,
 // since the .gitignore path is app-local.
 export default [

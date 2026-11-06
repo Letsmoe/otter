@@ -1,4 +1,4 @@
-import { HttpError, type PluginContext } from "@neoworks-dev/otter-sdk";
+import { HttpError, type PluginContext } from "@letsmoe/otter-sdk";
 
 export interface WatchInfo {
   /** Scene-style release name, e.g. "The.Matrix.1999.GERMAN.iNTERNAL.AC3.DVDRip.x264-UPRiSiNG". */

@@ -12,11 +12,11 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/neoworks/otter/internal/api/graphql/generated"
-	"github.com/neoworks/otter/internal/api/graphql/model"
-	"github.com/neoworks/otter/internal/library"
-	"github.com/neoworks/otter/internal/profiles"
-	"github.com/neoworks/otter/internal/settings"
+	"github.com/Letsmoe/otter/internal/api/graphql/generated"
+	"github.com/Letsmoe/otter/internal/api/graphql/model"
+	"github.com/Letsmoe/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/profiles"
+	"github.com/Letsmoe/otter/internal/settings"
 )
 
 // Series is the resolver for the series field.

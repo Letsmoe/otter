@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/neoworks/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/library"
 )
 
 func TestRankTitlesPutsTasteFirstAndDropsDislikedAndSeen(t *testing.T) {

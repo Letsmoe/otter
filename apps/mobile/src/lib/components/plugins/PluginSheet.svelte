@@ -1,7 +1,7 @@
 <script lang="ts">
 	// A plugin's details in a bottom sheet: description, what it does, the
 	// on/off switch and its settings.
-	import { savePluginSettings, type PluginInfo } from '@neoworks-dev/otter-app/plugins';
+	import { savePluginSettings, type PluginInfo } from '@letsmoe/otter-app/plugins';
 	import BottomSheet from '$lib/components/BottomSheet.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import { notifications } from '$lib/stores/notifications';

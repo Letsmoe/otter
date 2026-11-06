@@ -12,12 +12,12 @@
 	import { page } from '$app/state';
 	import TabPager from '$lib/components/TabPager.svelte';
 	import { swipeTabs } from '$lib/tabs';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
 	import { downloads } from '$lib/stores/downloads.svelte';
 	import { together } from '$lib/stores/together.svelte';
 	import TogetherSheet from '$lib/components/together/TogetherSheet.svelte';
 	import { App } from '@capacitor/app';
-	import { INVITE_LINK_PREFIX, roomCodeFromText } from '@neoworks-dev/otter-app/together';
+	import { INVITE_LINK_PREFIX, roomCodeFromText } from '@letsmoe/otter-app/together';
 
 	let { children } = $props();
 

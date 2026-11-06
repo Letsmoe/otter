@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/neoworks/otter/internal/storage"
+	"github.com/Letsmoe/otter/internal/storage"
 )
 
 // TestRewriteManifestRootRelative checks that proxied segment and variant URIs

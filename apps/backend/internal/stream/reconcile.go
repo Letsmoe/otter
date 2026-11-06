@@ -6,7 +6,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/neoworks/otter/internal/storage"
+	"github.com/Letsmoe/otter/internal/storage"
 )
 
 // maxManifestDepth bounds how far blobComplete follows manifests: a master

@@ -1,5 +1,5 @@
 {
-  "name": "@neoworks-dev/otter-app",
+  "name": "@letsmoe/otter-app",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -26,7 +26,7 @@
     "./subtitles": "./src/subtitles.ts"
   },
   "dependencies": {
-    "@neoworks-dev/otter-sdk": "workspace:*",
+    "@letsmoe/otter-sdk": "workspace:*",
     "graphql-ws": "^6.0.8"
   },
   "peerDependencies": {

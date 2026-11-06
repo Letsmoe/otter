@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { fixtures, testPlugin } from "@neoworks-dev/otter-sdk/testing";
+import { fixtures, testPlugin } from "@letsmoe/otter-sdk/testing";
 import plugin from "../plugin.ts";
 
 const FIXTURE_DIRECTORY = `${import.meta.dir}/fixtures`;

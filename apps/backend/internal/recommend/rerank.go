@@ -3,7 +3,7 @@ package recommend
 import (
 	"slices"
 
-	"github.com/neoworks/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/library"
 )
 
 // rerankState tracks the page being filled: per-person counters and the

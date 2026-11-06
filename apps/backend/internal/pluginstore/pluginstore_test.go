@@ -15,7 +15,7 @@ import (
 	"testing"
 )
 
-const testPackage = "@neoworks-dev/otter-plugin-kinoking"
+const testPackage = "@letsmoe/otter-plugin-kinoking"
 
 // fakeRegistry serves one package's latest release and its tarball.
 type fakeRegistry struct {
@@ -42,7 +42,7 @@ func newFakeRegistry(t *testing.T, version string) *fakeRegistry {
 }
 
 func (r *fakeRegistry) serve(writer http.ResponseWriter, request *http.Request) {
-	if request.URL.EscapedPath() == "/@neoworks-dev%2Fotter-plugin-kinoking/latest" {
+	if request.URL.EscapedPath() == "/@letsmoe%2Fotter-plugin-kinoking/latest" {
 		answer := map[string]any{
 			"name":    testPackage,
 			"version": r.version,
@@ -176,7 +176,7 @@ func TestCompareVersions(t *testing.T) {
 }
 
 func TestFolderName(t *testing.T) {
-	if got := FolderName("@neoworks-dev/otter-plugin-eporner"); got != "eporner" {
+	if got := FolderName("@letsmoe/otter-plugin-eporner"); got != "eporner" {
 		t.Fatalf("FolderName = %q", got)
 	}
 	if got := FolderName("custom-plugin"); got != "custom-plugin" {

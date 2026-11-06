@@ -3,8 +3,8 @@
 	// runtime and a download button, the description underneath.
 	import PlayIcon from 'phosphor-svelte/lib/PlayIcon';
 	import DownloadButton from '$lib/components/downloads/DownloadButton.svelte';
-	import { backdropUrl, formatRuntime } from '@neoworks-dev/otter-app/tmdb';
-	import type { SeasonEpisode } from '@neoworks-dev/otter-app/seriesDetail';
+	import { backdropUrl, formatRuntime } from '@letsmoe/otter-app/tmdb';
+	import type { SeasonEpisode } from '@letsmoe/otter-app/seriesDetail';
 
 	interface Props {
 		episodes: SeasonEpisode[];

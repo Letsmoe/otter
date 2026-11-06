@@ -3,9 +3,9 @@ package profiles
 import (
 	"context"
 
-	"github.com/neoworks/otter/internal/db"
-	"github.com/neoworks/otter/internal/hooks"
-	"github.com/neoworks/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/hooks"
+	"github.com/Letsmoe/otter/internal/library"
 )
 
 // completedFraction is how much of a title must be watched to count as seen;

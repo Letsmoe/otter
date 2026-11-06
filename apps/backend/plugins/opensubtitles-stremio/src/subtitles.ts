@@ -1,5 +1,5 @@
-import { toIso6391 } from "@neoworks-dev/otter-sdk";
-import type { List, PluginContext, SubtitleInput, SubtitleListParams } from "@neoworks-dev/otter-sdk";
+import { toIso6391 } from "@letsmoe/otter-sdk";
+import type { List, PluginContext, SubtitleInput, SubtitleListParams } from "@letsmoe/otter-sdk";
 import { MAX_PER_LANGUAGE } from "./constants.ts";
 import { lookupUrlOf } from "./target.ts";
 

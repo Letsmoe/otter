@@ -4,7 +4,7 @@
 	import CaretRightIcon from 'phosphor-svelte/lib/CaretRightIcon';
 	import PlugsIcon from 'phosphor-svelte/lib/PlugsIcon';
 	import WarningIcon from 'phosphor-svelte/lib/WarningIcon';
-	import { setPluginEnabled, type PluginInfo } from '@neoworks-dev/otter-app/plugins';
+	import { setPluginEnabled, type PluginInfo } from '@letsmoe/otter-app/plugins';
 	import ScreenHeader from '$lib/components/ScreenHeader.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import PluginIcon from '$lib/components/plugins/PluginIcon.svelte';

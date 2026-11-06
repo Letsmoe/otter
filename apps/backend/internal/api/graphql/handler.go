@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/vektah/gqlparser/v2/ast"
 
-	"github.com/neoworks/otter/internal/api/graphql/generated"
+	"github.com/Letsmoe/otter/internal/api/graphql/generated"
 )
 
 // SchemaSDL is built from all embedded schema files at startup.

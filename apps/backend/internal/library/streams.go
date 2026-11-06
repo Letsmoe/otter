@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/neoworks/otter/internal/cache"
-	"github.com/neoworks/otter/internal/hooks"
-	"github.com/neoworks/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/cache"
+	"github.com/Letsmoe/otter/internal/hooks"
+	"github.com/Letsmoe/otter/internal/plugins"
 )
 
 // pluginTimeout bounds one plugin's streams lookup; slow sites must not hold

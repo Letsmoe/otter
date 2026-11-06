@@ -5,7 +5,7 @@ import (
 	"context"
 	"slices"
 
-	"github.com/neoworks/otter/internal/tmdb"
+	"github.com/Letsmoe/otter/internal/tmdb"
 )
 
 // Search asks TMDB for titles matching query, stores the hits as stubs and

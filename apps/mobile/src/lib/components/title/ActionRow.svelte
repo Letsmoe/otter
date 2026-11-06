@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { shareContent } from '$lib/share';
 	// Netflix's icon row under the description: My List, Rate, Share and Download.
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
 	import {
 		addToWatchlist,
 		clearUserRating,
@@ -9,7 +9,7 @@
 		fetchUserRating,
 		removeFromWatchlist,
 		setUserRating
-	} from '@neoworks-dev/otter-app/discovery';
+	} from '@letsmoe/otter-app/discovery';
 	import PlusIcon from 'phosphor-svelte/lib/PlusIcon';
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
 	import ThumbsUpIcon from 'phosphor-svelte/lib/ThumbsUpIcon';

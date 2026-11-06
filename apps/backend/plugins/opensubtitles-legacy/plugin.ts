@@ -1,4 +1,4 @@
-import { definePlugin } from "@neoworks-dev/otter-sdk";
+import { definePlugin } from "@letsmoe/otter-sdk";
 import { listSubtitles } from "./src/subtitles.ts";
 
 export default definePlugin({

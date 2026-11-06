@@ -6,7 +6,7 @@
       "name": "web",
       "dependencies": {
         "@genql/runtime": "^2.10.0",
-        "@neoworks-dev/otter-sdk": "link:@neoworks-dev/otter-sdk",
+        "@letsmoe/otter-sdk": "link:@letsmoe/otter-sdk",
         "hls.js": "^1.6.16",
         "phosphor-svelte": "^3.1.0",
       },
@@ -247,7 +247,7 @@
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.1.4", "", { "dependencies": { "@tybys/wasm-util": "^0.10.1" }, "peerDependencies": { "@emnapi/core": "^1.7.1", "@emnapi/runtime": "^1.7.1" } }, "sha512-3NQNNgA1YSlJb/kMH1ildASP9HW7/7kYnRI2szWJaofaS1hWmbGI4H+d3+22aGzXXN9IJ+n+GiFVcGipJP18ow=="],
 
-    "@neoworks-dev/otter-sdk": ["@neoworks-dev/otter-sdk@link:@neoworks-dev/otter-sdk", {}],
+    "@letsmoe/otter-sdk": ["@letsmoe/otter-sdk@link:@letsmoe/otter-sdk", {}],
 
     "@nodelib/fs.scandir": ["@nodelib/fs.scandir@2.1.5", "", { "dependencies": { "@nodelib/fs.stat": "2.0.5", "run-parallel": "^1.1.9" } }, "sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g=="],
 

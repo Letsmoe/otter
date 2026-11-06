@@ -1,6 +1,6 @@
 // VPN state from the backend, polled while the app is open.
 import { readable } from 'svelte/store';
-import { otter } from '@neoworks-dev/otter-app/api';
+import { otter } from '@letsmoe/otter-app/api';
 
 const POLL_INTERVAL_MS = 30_000;
 

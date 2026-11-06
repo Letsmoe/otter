@@ -12,13 +12,13 @@
 	import PlusIcon from 'phosphor-svelte/lib/PlusIcon';
 	import ArrowRightIcon from 'phosphor-svelte/lib/ArrowRightIcon';
 	import SignOutIcon from 'phosphor-svelte/lib/SignOutIcon';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
 	import {
 		inviteText,
 		roomCodeFromText,
 		type TogetherPeer,
 		type TogetherStatus
-	} from '@neoworks-dev/otter-app/together';
+	} from '@letsmoe/otter-app/together';
 	import { together } from '$lib/stores/together.svelte';
 	import { shareContent } from '$lib/share';
 	import PeerAvatar from './PeerAvatar.svelte';

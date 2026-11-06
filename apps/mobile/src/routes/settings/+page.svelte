@@ -2,8 +2,8 @@
 	// App settings as glass groups: server address (per device), TMDB, streaming
 	// and profiles. Every change saves on its own; no Save button.
 	import { onMount } from 'svelte';
-	import { otter, checkServer, normalizeServerUrl } from '@neoworks-dev/otter-app/api';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
+	import { otter, checkServer, normalizeServerUrl } from '@letsmoe/otter-app/api';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
 	import CaretRightIcon from 'phosphor-svelte/lib/CaretRightIcon';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import FilterSelect from '$lib/components/FilterSelect.svelte';

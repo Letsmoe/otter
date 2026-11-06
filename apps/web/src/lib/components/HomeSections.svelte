@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import Hero from './Hero.svelte';
 	import MediaRail from './MediaRail.svelte';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
 	import { sidebarFocus } from '$lib/stores/focus';
 	import {
 		fetchContinueWatching,
@@ -11,7 +11,7 @@
 		detailPath,
 		type RailItem,
 		type RecommendationRail
-	} from '@neoworks-dev/otter-app/discovery';
+	} from '@letsmoe/otter-app/discovery';
 
 	const RAIL_SIZE = 25;
 

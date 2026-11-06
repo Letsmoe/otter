@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Large poster card at the top of a home page: title art, genres, Play and My List.
 	import { goto } from '$app/navigation';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
 	import {
 		addToWatchlist,
 		detailPath,
@@ -10,7 +10,7 @@
 		removeFromWatchlist,
 		type FeaturedItem,
 		type MediaKind
-	} from '@neoworks-dev/otter-app/discovery';
+	} from '@letsmoe/otter-app/discovery';
 	import PlayIcon from 'phosphor-svelte/lib/PlayIcon';
 	import PlusIcon from 'phosphor-svelte/lib/PlusIcon';
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';

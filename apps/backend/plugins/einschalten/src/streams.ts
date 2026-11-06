@@ -1,4 +1,4 @@
-import type { List, PluginContext, StreamInput, StreamListParams } from "@neoworks-dev/otter-sdk";
+import type { List, PluginContext, StreamInput, StreamListParams } from "@letsmoe/otter-sdk";
 import { findMovieWatch } from "./api.ts";
 import { qualityOf } from "./release.ts";
 

@@ -1,4 +1,4 @@
-import type { PluginContext } from "@neoworks-dev/otter-sdk";
+import type { PluginContext } from "@letsmoe/otter-sdk";
 import type { HTMLElement } from "node-html-parser";
 
 const MAX_SEARCH_RESULTS = 20;

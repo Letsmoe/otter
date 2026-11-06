@@ -4,8 +4,8 @@
 	import SparkleIcon from 'phosphor-svelte/lib/SparkleIcon';
 	import SealCheckIcon from 'phosphor-svelte/lib/SealCheckIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
-	import { formatSpeed } from '@neoworks-dev/otter-app/tmdb';
-	import { rankStreams, subscribeStreams, type Stream } from '@neoworks-dev/otter-app/streams';
+	import { formatSpeed } from '@letsmoe/otter-app/tmdb';
+	import { rankStreams, subscribeStreams, type Stream } from '@letsmoe/otter-app/streams';
 
 	interface Props {
 		mediaId: string;

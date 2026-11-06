@@ -1,6 +1,6 @@
-import { PluginSourceError, type PluginContext, type SourceInput, type SourceRetrieveParams } from "@neoworks-dev/otter-sdk";
-import type { ExtractedMedia } from "@neoworks-dev/otter-sdk";
-import { voe } from "@neoworks-dev/otter-sdk/hosters";
+import { PluginSourceError, type PluginContext, type SourceInput, type SourceRetrieveParams } from "@letsmoe/otter-sdk";
+import type { ExtractedMedia } from "@letsmoe/otter-sdk";
+import { voe } from "@letsmoe/otter-sdk/hosters";
 
 const KINOGER_BASE_REFERER = "https://kinoger.com/";
 const KINOGER_BE_REFERER = "https://kinoger.be/";

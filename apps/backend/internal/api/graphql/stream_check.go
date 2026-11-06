@@ -5,8 +5,8 @@ import (
 	"log"
 	"sync"
 
-	"github.com/neoworks/otter/internal/library"
-	"github.com/neoworks/otter/internal/resolve"
+	"github.com/Letsmoe/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/resolve"
 )
 
 // streamChecks remembers which titles' links are being checked, so opening a

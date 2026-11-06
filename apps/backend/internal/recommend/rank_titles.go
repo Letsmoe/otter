@@ -3,7 +3,7 @@ package recommend
 import (
 	"context"
 
-	"github.com/neoworks/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/library"
 )
 
 // Titles handed in from outside (e.g. one person's filmography) all get the

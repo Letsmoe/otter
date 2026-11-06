@@ -1,6 +1,6 @@
 <script lang="ts">
 	// One Home category (movies or TV shows): featured preview, then rails.
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
 	import {
 		fetchContinueWatching,
 		fetchGenreRails,
@@ -16,7 +16,7 @@
 		type MediaKind,
 		type MoreWithRail,
 		type RailItem
-	} from '@neoworks-dev/otter-app/discovery';
+	} from '@letsmoe/otter-app/discovery';
 	import FeaturedPreview from './FeaturedPreview.svelte';
 	import PosterRail from './PosterRail.svelte';
 

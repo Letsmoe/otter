@@ -3,8 +3,8 @@
 	import MagnifyingGlassIcon from 'phosphor-svelte/lib/MagnifyingGlassIcon';
 	import SpinnerGapIcon from 'phosphor-svelte/lib/SpinnerGapIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
-	import { searchTitles } from '@neoworks-dev/otter-app/search';
-	import { detailPath, type RailItem } from '@neoworks-dev/otter-app/discovery';
+	import { searchTitles } from '@letsmoe/otter-app/search';
+	import { detailPath, type RailItem } from '@letsmoe/otter-app/discovery';
 
 	let query = $state('');
 	let results = $state<RailItem[]>([]);

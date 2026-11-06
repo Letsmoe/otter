@@ -31,14 +31,14 @@
 		needsSeek,
 		catchUpRate,
 		type SharedSource
-	} from '@neoworks-dev/otter-app/together';
+	} from '@letsmoe/otter-app/together';
 	import { together, type RemotePlayback } from '$lib/stores/together.svelte';
 	import PeerAvatar from '$lib/components/together/PeerAvatar.svelte';
 	import TogetherPanel from '$lib/components/together/TogetherPanel.svelte';
 	import TogetherChat from '$lib/components/together/TogetherChat.svelte';
 	import TogetherOverlay from '$lib/components/together/TogetherOverlay.svelte';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
-	import { fetchResumePosition, recordProgress } from '@neoworks-dev/otter-app/discovery';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
+	import { fetchResumePosition, recordProgress } from '@letsmoe/otter-app/discovery';
 	import { isNativeApp } from '$lib/server';
 	import Scrubber from './Scrubber.svelte';
 	import RatingTrio from './RatingTrio.svelte';

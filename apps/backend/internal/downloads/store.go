@@ -6,8 +6,8 @@ package downloads
 import (
 	"context"
 
-	"github.com/neoworks/otter/internal/db"
-	"github.com/neoworks/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/library"
 )
 
 type Status string

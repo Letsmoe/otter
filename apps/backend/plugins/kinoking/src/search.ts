@@ -1,4 +1,4 @@
-import type { MovieRef, PluginContext } from "@neoworks-dev/otter-sdk";
+import type { MovieRef, PluginContext } from "@letsmoe/otter-sdk";
 import { SLOW_REQUEST_TIMEOUT_MS } from "./site.ts";
 
 export interface SearchCard {

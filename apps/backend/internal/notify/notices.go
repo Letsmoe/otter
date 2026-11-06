@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/neoworks/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/library"
 )
 
 const (

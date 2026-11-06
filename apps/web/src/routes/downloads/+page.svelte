@@ -9,7 +9,7 @@
 		groupDownloads,
 		openDownloadsFolder,
 		type DownloadItem
-	} from '@neoworks-dev/otter-app/downloads';
+	} from '@letsmoe/otter-app/downloads';
 
 	let groups = $derived(groupDownloads(downloads.items));
 	let playing = $state<DownloadItem | null>(null);

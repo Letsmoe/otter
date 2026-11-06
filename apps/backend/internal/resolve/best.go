@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/neoworks/otter/internal/plugins"
-	"github.com/neoworks/otter/internal/stream"
+	"github.com/Letsmoe/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/stream"
 )
 
 // Picking a link to play: several links are resolved and probed at once, and

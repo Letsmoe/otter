@@ -4,10 +4,10 @@ import (
 	"context"
 	"sort"
 
-	"github.com/neoworks/otter/internal/api/graphql/model"
-	"github.com/neoworks/otter/internal/library"
-	"github.com/neoworks/otter/internal/profiles"
-	"github.com/neoworks/otter/internal/recommend"
+	"github.com/Letsmoe/otter/internal/api/graphql/model"
+	"github.com/Letsmoe/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/profiles"
+	"github.com/Letsmoe/otter/internal/recommend"
 )
 
 // valueOr dereferences an optional argument, falling back when it is nil.

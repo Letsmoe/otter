@@ -4,7 +4,7 @@
 	import WarningIcon from 'phosphor-svelte/lib/WarningIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
 	import Toggle from '$lib/components/Toggle.svelte';
-	import { setPluginEnabled, savePluginSettings, type PluginInfo } from '@neoworks-dev/otter-app/plugins';
+	import { setPluginEnabled, savePluginSettings, type PluginInfo } from '@letsmoe/otter-app/plugins';
 
 	let { data } = $props();
 

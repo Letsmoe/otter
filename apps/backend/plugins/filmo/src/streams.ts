@@ -3,7 +3,7 @@ import {
   type PluginContext,
   type StreamInput,
   type StreamListParams,
-} from "@neoworks-dev/otter-sdk";
+} from "@letsmoe/otter-sdk";
 import { chipStreamUrl, providerChipsOf, suggestedTitlesOf, yearOf, type ProviderChip, type SuggestedTitle } from "./site.ts";
 
 // Suggestions per term whose movie pages are read for their year.

@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neoworks/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/plugins"
 )
 
 const testSourceURL = "https://hoster.example/e/abc"

@@ -1,4 +1,4 @@
-import { configureApi } from '@neoworks-dev/otter-app/api';
+import { configureApi } from '@letsmoe/otter-app/api';
 
 const DEFAULT_API_URL = 'http://localhost:8080';
 

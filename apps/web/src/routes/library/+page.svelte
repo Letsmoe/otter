@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import MediaRail from '$lib/components/MediaRail.svelte';
-	import { detailPath, type RailItem } from '@neoworks-dev/otter-app/discovery';
+	import { detailPath, type RailItem } from '@letsmoe/otter-app/discovery';
 
 	let { data } = $props();
 

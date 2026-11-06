@@ -7,7 +7,7 @@ import type {
   StreamInput,
   StreamListParams,
   TitleFields,
-} from "@neoworks-dev/otter-sdk";
+} from "@letsmoe/otter-sdk";
 import { episodeMirrorPath, mirrorPath, mirrorsByEpisodePath } from "./paths.ts";
 import { searchCandidates, type SearchCandidate } from "./search.ts";
 import { episodeListed, seasonSelectionOf } from "./seasons.ts";

@@ -5,7 +5,7 @@
 	import ArrowLeftIcon from 'phosphor-svelte/lib/ArrowLeftIcon';
 	import MagnifyingGlassIcon from 'phosphor-svelte/lib/MagnifyingGlassIcon';
 	import XCircleIcon from 'phosphor-svelte/lib/XCircleIcon';
-	import { searchTitles } from '@neoworks-dev/otter-app/search';
+	import { searchTitles } from '@letsmoe/otter-app/search';
 	import {
 		detailPath,
 		fetchRelated,
@@ -14,7 +14,7 @@
 		withoutRepeats,
 		type MediaKind,
 		type RailItem
-	} from '@neoworks-dev/otter-app/discovery';
+	} from '@letsmoe/otter-app/discovery';
 	import PosterRail from '$lib/components/home/PosterRail.svelte';
 	import SegmentedBar from '$lib/components/SegmentedBar.svelte';
 	import FilterSelect from '$lib/components/FilterSelect.svelte';

@@ -15,9 +15,9 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/neoworks/otter/internal/cache"
-	"github.com/neoworks/otter/internal/db"
-	"github.com/neoworks/otter/internal/hooks"
+	"github.com/Letsmoe/otter/internal/cache"
+	"github.com/Letsmoe/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/hooks"
 )
 
 const (

@@ -3,7 +3,7 @@ package library
 import (
 	"context"
 
-	"github.com/neoworks/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/db"
 )
 
 // SaveSeasons upserts a series' season list (without episodes).

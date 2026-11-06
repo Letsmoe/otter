@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { movie, testPlugin } from "@neoworks-dev/otter-sdk/testing";
+import { movie, testPlugin } from "@letsmoe/otter-sdk/testing";
 import plugin from "../plugin.ts";
 
 // Hits the real site and player; expected to fail where the ISP DNS blocks them.

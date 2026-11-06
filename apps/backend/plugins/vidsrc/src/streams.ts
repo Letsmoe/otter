@@ -1,4 +1,4 @@
-import type { List, PluginContext, StreamInput, StreamListParams } from "@neoworks-dev/otter-sdk";
+import type { List, PluginContext, StreamInput, StreamListParams } from "@letsmoe/otter-sdk";
 import { LABEL, LANGUAGE } from "./constants.ts";
 import { lookupUrlOf, targetOf } from "./target.ts";
 

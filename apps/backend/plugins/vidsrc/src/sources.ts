@@ -1,4 +1,4 @@
-import type { PluginContext, SourceInput, SourceRetrieveParams } from "@neoworks-dev/otter-sdk";
+import type { PluginContext, SourceInput, SourceRetrieveParams } from "@letsmoe/otter-sdk";
 import { HLS_MIME_TYPE } from "./constants.ts";
 import { streamUrlsOf } from "./decrypt.ts";
 import { fetchStreamEnvelope, openPlayerSession } from "./lookup.ts";

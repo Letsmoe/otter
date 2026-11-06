@@ -11,10 +11,10 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/neoworks/otter/internal/cache"
-	"github.com/neoworks/otter/internal/db"
-	"github.com/neoworks/otter/internal/plugins"
-	"github.com/neoworks/otter/internal/storage"
+	"github.com/Letsmoe/otter/internal/cache"
+	"github.com/Letsmoe/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/storage"
 )
 
 // windows1252Subtitle holds ü as the single byte 0xFC and an ad cue.

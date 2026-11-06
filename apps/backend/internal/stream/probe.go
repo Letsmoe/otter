@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/neoworks/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/plugins"
 )
 
 // Probing checks that a resolved stream really delivers video before anyone

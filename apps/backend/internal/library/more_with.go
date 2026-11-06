@@ -4,7 +4,7 @@ import (
 	"context"
 	"slices"
 
-	"github.com/neoworks/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/db"
 )
 
 // WellRatedMinimum is the lowest 1-10 rating that counts as liking a title

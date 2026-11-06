@@ -2,9 +2,9 @@
 	// Add or edit a profile: avatar, name, kids flag and an optional PIN lock.
 	// Avatar picking and PIN setup open as their own full-screen steps.
 	import { untrack } from 'svelte';
-	import { otter } from '@neoworks-dev/otter-app/api';
-	import { PRESET_AVATARS, avatarImage } from '@neoworks-dev/otter-app/avatars';
-	import type { Profile } from '@neoworks-dev/otter-app/profile';
+	import { otter } from '@letsmoe/otter-app/api';
+	import { PRESET_AVATARS, avatarImage } from '@letsmoe/otter-app/avatars';
+	import type { Profile } from '@letsmoe/otter-app/profile';
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import LockSimpleIcon from 'phosphor-svelte/lib/LockSimpleIcon';
 	import SmileyIcon from 'phosphor-svelte/lib/SmileyIcon';

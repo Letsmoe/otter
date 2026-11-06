@@ -6,7 +6,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/neoworks/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/library"
 )
 
 // Profile is a profile's time-decayed taste: an affinity in [-1, 1] per

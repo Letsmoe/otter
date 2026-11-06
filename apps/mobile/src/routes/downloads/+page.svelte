@@ -4,12 +4,12 @@
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import CaretRightIcon from 'phosphor-svelte/lib/CaretRightIcon';
 	import DownloadSimpleIcon from 'phosphor-svelte/lib/DownloadSimpleIcon';
-	import { activeProfile, avatarFor } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile, avatarFor } from '@letsmoe/otter-app/profile';
 	import {
 		groupDownloads,
 		type DownloadGroup,
 		type DownloadItem
-	} from '@neoworks-dev/otter-app/downloads';
+	} from '@letsmoe/otter-app/downloads';
 	import { downloads } from '$lib/stores/downloads.svelte';
 	import DownloadRow from '$lib/components/downloads/DownloadRow.svelte';
 	import DownloadPlayer from '$lib/components/downloads/DownloadPlayer.svelte';

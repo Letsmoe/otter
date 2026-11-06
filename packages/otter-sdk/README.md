@@ -1,4 +1,4 @@
-# @neoworks-dev/otter-sdk
+# @letsmoe/otter-sdk
 
 TypeScript SDK for Otter plugins, and the typed GraphQL client for the backend.
 
@@ -15,8 +15,8 @@ A plugin is two files. `plugin.ts` only defines it, so tests can import it; `ind
 
 ```ts
 // plugin.ts
-import { definePlugin, type PluginContext } from "@neoworks-dev/otter-sdk/plugin";
-import type { StreamListParams } from "@neoworks-dev/otter-sdk";
+import { definePlugin, type PluginContext } from "@letsmoe/otter-sdk/plugin";
+import type { StreamListParams } from "@letsmoe/otter-sdk";
 
 async function listStreams({ media }: StreamListParams, ctx: PluginContext) {
   if (media.object !== "episode") return ctx.list([]);
@@ -52,7 +52,7 @@ export default definePlugin({
 
 ```ts
 // index.ts
-import { runPlugin } from "@neoworks-dev/otter-sdk/plugin";
+import { runPlugin } from "@letsmoe/otter-sdk/plugin";
 import plugin from "./plugin.ts";
 
 runPlugin(plugin);
@@ -97,7 +97,7 @@ The SDK adds `object: "stream"` / `"source"` and converts to the backend's wire 
 
 ### Hosters
 
-`@neoworks-dev/otter-sdk/hosters` holds the extractors for file hosters: VOE, Vidara, Doodstream, Filemoon, Streamtape, Vinovo, and a generic page scanner for everything else.
+`@letsmoe/otter-sdk/hosters` holds the extractors for file hosters: VOE, Vidara, Doodstream, Filemoon, Streamtape, Vinovo, and a generic page scanner for everything else.
 
 ```ts
 hosters.retrieve(url, ctx)   // the hoster serving the link, else the generic scanner
@@ -124,7 +124,7 @@ A resolver plugin is `sources: { domains: hosters.domains(), fallback: true, ret
 ### Testing
 
 ```ts
-import { testPlugin, movie, episode, fixtures } from "@neoworks-dev/otter-sdk/testing";
+import { testPlugin, movie, episode, fixtures } from "@letsmoe/otter-sdk/testing";
 import plugin from "../plugin.ts";
 
 const subject = testPlugin(plugin, { fetch: fixtures(`${import.meta.dir}/fixtures`) });
@@ -143,7 +143,7 @@ expect(streams.data[0].url).toBe("https://voe.sx/e/abc");
 A fully-typed client over the backend GraphQL API, for both plugins and the frontend. Built on a [genql](https://genql.dev)-generated client (`src/generated`, regenerate with `bun run codegen`) wrapped in an ergonomic per-resource facade.
 
 ```ts
-import { createOtterClient } from "@neoworks-dev/otter-sdk/client";
+import { createOtterClient } from "@letsmoe/otter-sdk/client";
 
 const otter = createOtterClient({ url: "http://localhost:8080/graphql" });
 

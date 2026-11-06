@@ -1,4 +1,4 @@
-module github.com/neoworks/otter
+module github.com/Letsmoe/otter
 
 go 1.26.0
 

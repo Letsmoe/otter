@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { fixtures, movie, testPlugin } from "@neoworks-dev/otter-sdk/testing";
+import { fixtures, movie, testPlugin } from "@letsmoe/otter-sdk/testing";
 import plugin from "../plugin.ts";
 
 const CSRF_TOKEN = "R1pLZVmslMuZR1WNU6cfbc0UwNeqPpiUM7Vrb27M";

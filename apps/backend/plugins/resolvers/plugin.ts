@@ -1,4 +1,4 @@
-import { definePlugin, hosters } from "@neoworks-dev/otter-sdk";
+import { definePlugin, hosters } from "@letsmoe/otter-sdk";
 
 // Every link the SDK hosters serve, plus any other domain through the generic page scanner.
 export default definePlugin({

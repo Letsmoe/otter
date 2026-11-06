@@ -2,7 +2,7 @@
 // and playback progress.
 import { otter } from './api';
 import { posterUrl, backdropUrl } from './tmdb';
-import type { MediaType } from '@neoworks-dev/otter-sdk/client';
+import type { MediaType } from '@letsmoe/otter-sdk/client';
 
 export type MediaKind = 'movie' | 'series';
 

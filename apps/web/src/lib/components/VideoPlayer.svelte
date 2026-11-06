@@ -10,8 +10,8 @@
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
 	import type Hls from 'hls.js';
 	import { get } from 'svelte/store';
-	import { activeProfile, type Profile } from '@neoworks-dev/otter-app/profile';
-	import { recordProgress } from '@neoworks-dev/otter-app/discovery';
+	import { activeProfile, type Profile } from '@letsmoe/otter-app/profile';
+	import { recordProgress } from '@letsmoe/otter-app/discovery';
 	import {
 		captionLanguageOf,
 		captionPreferencesOf,
@@ -19,14 +19,14 @@
 		embeddedTrackLabel,
 		twoLetterLanguage,
 		type CaptionTrack
-	} from '@neoworks-dev/otter-app/captions';
+	} from '@letsmoe/otter-app/captions';
 	import {
 		fetchSubtitles,
 		saveCaptionPreferences,
 		subtitleFileUrl,
 		type CaptionPreferenceChange,
 		type Subtitle
-	} from '@neoworks-dev/otter-app/subtitles';
+	} from '@letsmoe/otter-app/subtitles';
 	import { createVoiceBoost, type VoiceBoost } from '$lib/voiceBoost';
 
 	interface Props {

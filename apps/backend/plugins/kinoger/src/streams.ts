@@ -3,7 +3,7 @@ import type {
   PluginContext,
   StreamListParams,
   TitleFields,
-} from "@neoworks-dev/otter-sdk";
+} from "@letsmoe/otter-sdk";
 import { searchKinoger, type KinogerSearchEntry } from "./search.ts";
 
 export interface PlayerData {

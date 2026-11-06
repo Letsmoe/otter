@@ -3,8 +3,8 @@
 	import PlayIcon from 'phosphor-svelte/lib/PlayIcon';
 	import SealCheckIcon from 'phosphor-svelte/lib/SealCheckIcon';
 	import ArrowClockwiseIcon from 'phosphor-svelte/lib/ArrowClockwiseIcon';
-	import { formatSpeed } from '@neoworks-dev/otter-app/tmdb';
-	import type { Stream } from '@neoworks-dev/otter-app/streams';
+	import { formatSpeed } from '@letsmoe/otter-app/tmdb';
+	import type { Stream } from '@letsmoe/otter-app/streams';
 
 	interface Props {
 		streams: Stream[];

@@ -1,4 +1,4 @@
-import { loadTitleDetail } from '@neoworks-dev/otter-app/titleDetail';
+import { loadTitleDetail } from '@letsmoe/otter-app/titleDetail';
 
 function parseSeasonNumber(value: string | null): number | null {
 	if (value === null) return null;

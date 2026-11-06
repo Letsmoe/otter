@@ -14,8 +14,8 @@ COPY apps/backend/scripts apps/backend/scripts
 COPY apps/backend/plugins apps/backend/plugins
 # Plugins only import the SDK at bundle time; node-html-parser is provided
 # natively by the backend's runtime.
-RUN mkdir -p node_modules/@neoworks-dev \
- && ln -s ../../packages/otter-sdk node_modules/@neoworks-dev/otter-sdk \
+RUN mkdir -p node_modules/@letsmoe \
+ && ln -s ../../packages/otter-sdk node_modules/@letsmoe/otter-sdk \
  && cd apps/backend && bun scripts/bundle-plugins.ts --release --out /plugins
 
 FROM golang:1.26-alpine AS server
@@ -27,7 +27,7 @@ COPY apps/backend/internal internal
 RUN --mount=type=secret,id=tmdb_api_key \
     key="$(cat /run/secrets/tmdb_api_key 2>/dev/null || true)" \
  && CGO_ENABLED=0 go build -trimpath \
-    -ldflags="-s -w -X github.com/neoworks/otter/internal/settings.DefaultTMDBApiKey=${key}" \
+    -ldflags="-s -w -X github.com/Letsmoe/otter/internal/settings.DefaultTMDBApiKey=${key}" \
     -o /otter ./cmd/server
 
 FROM alpine:3

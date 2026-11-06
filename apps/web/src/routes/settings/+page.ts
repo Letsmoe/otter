@@ -1,4 +1,4 @@
-import { otter } from '@neoworks-dev/otter-app/api';
+import { otter } from '@letsmoe/otter-app/api';
 
 const FALLBACK = {
 	tmdbApiKey: '',

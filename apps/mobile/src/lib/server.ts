@@ -1,6 +1,6 @@
 import { env } from '$env/dynamic/public';
 import { Capacitor } from '@capacitor/core';
-import { checkServer, normalizeServerUrl } from '@neoworks-dev/otter-app/api';
+import { checkServer, normalizeServerUrl } from '@letsmoe/otter-app/api';
 
 /** Backend address in a desktop browser during development. */
 const DEFAULT_API_URL = 'http://localhost:8080';

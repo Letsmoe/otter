@@ -3,7 +3,7 @@ package library
 import (
 	"slices"
 
-	"github.com/neoworks/otter/internal/tmdb"
+	"github.com/Letsmoe/otter/internal/tmdb"
 )
 
 // maxCastStored caps the stored cast; recommendations only weigh top billing.

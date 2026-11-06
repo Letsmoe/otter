@@ -5,7 +5,7 @@
 	import DeviceMobileIcon from 'phosphor-svelte/lib/DeviceMobileIcon';
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
 	import WarningCircleIcon from 'phosphor-svelte/lib/WarningCircleIcon';
-	import type { DownloadItem } from '@neoworks-dev/otter-app/downloads';
+	import type { DownloadItem } from '@letsmoe/otter-app/downloads';
 
 	const RING_RADIUS = 10;
 	const RING_LENGTH = 2 * Math.PI * RING_RADIUS;

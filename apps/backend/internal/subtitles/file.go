@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/neoworks/otter/internal/blobcache"
+	"github.com/Letsmoe/otter/internal/blobcache"
 )
 
 const (

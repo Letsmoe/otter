@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/neoworks/otter/internal/cache"
+	"github.com/Letsmoe/otter/internal/cache"
 )
 
 const (

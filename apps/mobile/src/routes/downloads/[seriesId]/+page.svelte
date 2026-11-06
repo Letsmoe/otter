@@ -1,7 +1,7 @@
 <script lang="ts">
 	// One series' downloaded episodes, grouped by season.
 	import { page } from '$app/state';
-	import type { DownloadItem } from '@neoworks-dev/otter-app/downloads';
+	import type { DownloadItem } from '@letsmoe/otter-app/downloads';
 	import { downloads } from '$lib/stores/downloads.svelte';
 	import ScreenHeader from '$lib/components/ScreenHeader.svelte';
 	import DownloadRow from '$lib/components/downloads/DownloadRow.svelte';

@@ -5,12 +5,12 @@ plugins {
 }
 
 android {
-    namespace = "dev.neoworks.otter"
+    namespace = "com.letsmoe.otter"
     compileSdk = 37
 
     defaultConfig {
-        // Separate from the Capacitor app (dev.neoworks.otter.player) so both install side by side.
-        applicationId = "dev.neoworks.otter.next"
+        // Separate from the Capacitor app (com.letsmoe.otter.player) so both install side by side.
+        applicationId = "com.letsmoe.otter"
         minSdk = 26
         targetSdk = 36
         // CI sets both from the release tag; the updater compares versionName with the latest release.
@@ -89,7 +89,7 @@ androidComponents {
 
 apollo {
     service("otter") {
-        packageName.set("dev.neoworks.otter.graphql")
+        packageName.set("com.letsmoe.otter.graphql")
         schemaFiles.from(file("../../backend/internal/api/graphql/schema/otter.graphql"))
     }
 }

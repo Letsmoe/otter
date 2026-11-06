@@ -1,6 +1,6 @@
 <script lang="ts">
 	// One notification: still or backdrop, a red dot while unread, heading, body and age.
-	import { notificationAge, type NotificationItem } from '@neoworks-dev/otter-app/notifications';
+	import { notificationAge, type NotificationItem } from '@letsmoe/otter-app/notifications';
 
 	interface Props {
 		notification: NotificationItem;

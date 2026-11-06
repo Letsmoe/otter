@@ -12,7 +12,7 @@ When returning results from a fetch never return the full RecordId structure ({ 
 
 ## Style
 
-Neoworks uses a shared design system defined in the ui package. This package also contains some predefined components that can be reused throughout the applications. When creating new components, try to reuse existing ones as much as possible, and if you need to create new ones, follow the design system guidelines.
+Otter uses a shared design system defined in the ui package. This package also contains some predefined components that can be reused throughout the applications. When creating new components, try to reuse existing ones as much as possible, and if you need to create new ones, follow the design system guidelines.
 
 ## Interruptions
 
@@ -55,10 +55,10 @@ After having written all your changes, think about if any of these changes requi
 
 ## Stack
 
-- **Backend**: Go (`github.com/neoworks/otter`) in `apps/backend`, GraphQL API (gqlgen)
+- **Backend**: Go (`github.com/Letsmoe/otter`) in `apps/backend`, GraphQL API (gqlgen)
 - **Frontend**: SvelteKit in `apps/web`, talks to the backend via GraphQL only (genql client from `packages/otter-sdk`)
 - **Mobile**: Capacitor Android shell in `apps/mobile`; runs the backend binary as `libotter.so` on `127.0.0.1:47832`
-- **Native Android** (in progress, replaces `apps/mobile`): Kotlin + Jetpack Compose in `apps/android` (Apollo Kotlin against the backend schema, Media3 player); app id `dev.neoworks.otter.next`, backend on `127.0.0.1:47833`
+- **Native Android** (in progress, replaces `apps/mobile`): Kotlin + Jetpack Compose in `apps/android` (Apollo Kotlin against the backend schema, Media3 player); app id `com.letsmoe.otter`, backend on `127.0.0.1:47833`
 - **DB**: SQLite (`modernc.org/sqlite`, pure Go, no cgo) at `$DATA_DIR/otter.db`
 - **Files**: plain files under `$DATA_DIR/blobs` (stream + image cache, LRU-evicted)
 - **Cache**: `kv` table in SQLite (no Redis)
@@ -81,7 +81,7 @@ Hardcoded in `internal/library` — there is no flow engine:
 
 Plugins are TypeScript packages in `apps/backend/plugins/<name>/`. `bun scripts/bundle-plugins.ts [--watch] [--out dir]` bundles each into `<out>/<folder>/plugin.js` + `package.json` (default out: `$DATA_DIR/plugins`); the backend hot-reloads bundles from `PLUGIN_DIR` via `fsnotify`.
 
-**Auto-updates:** `.github/workflows/plugins-publish.yml` publishes release bundles to npm (`@neoworks-dev/otter-plugin-<name>`) whenever a plugin's `version` isn't on npm yet, so bump `version` in its `package.json` to ship a change. `internal/pluginstore` checks npm 30 s after start and every 6 h and swaps newer bundles into `PLUGIN_DIR` (sha512-verified, never a downgrade); local builds (`localBuild: true`) are never replaced. `PLUGIN_AUTO_UPDATE=false` turns it off.
+**Auto-updates:** `.github/workflows/plugins-publish.yml` publishes release bundles to npm (`@letsmoe/otter-plugin-<name>`) whenever a plugin's `version` isn't on npm yet, so bump `version` in its `package.json` to ship a change. `internal/pluginstore` checks npm 30 s after start and every 6 h and swaps newer bundles into `PLUGIN_DIR` (sha512-verified, never a downgrade); local builds (`localBuild: true`) are never replaced. `PLUGIN_AUTO_UPDATE=false` turns it off.
 
 **Capabilities** (`meta.capabilities`):
 

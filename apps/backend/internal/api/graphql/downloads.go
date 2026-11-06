@@ -3,9 +3,9 @@ package graphql
 import (
 	"context"
 
-	"github.com/neoworks/otter/internal/api/graphql/model"
-	"github.com/neoworks/otter/internal/downloads"
-	"github.com/neoworks/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/api/graphql/model"
+	"github.com/Letsmoe/otter/internal/downloads"
+	"github.com/Letsmoe/otter/internal/library"
 )
 
 var downloadStatuses = map[downloads.Status]model.DownloadStatus{

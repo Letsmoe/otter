@@ -1,5 +1,5 @@
 import type { HTMLElement } from "node-html-parser";
-import type { PluginContext } from "@neoworks-dev/otter-sdk";
+import type { PluginContext } from "@letsmoe/otter-sdk";
 import { isEpisodeSlug, seriesSlugOf, slugFromHref } from "./paths.ts";
 
 export interface SearchCandidate {

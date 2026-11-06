@@ -5,7 +5,7 @@ import {
   type PluginContext,
   type StreamListParams,
   type TitleFields,
-} from "@neoworks-dev/otter-sdk";
+} from "@letsmoe/otter-sdk";
 import {
   imdbIdOf,
   mirrorUrlsOf,

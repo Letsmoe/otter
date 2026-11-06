@@ -1,8 +1,8 @@
 <script lang="ts">
 	// Three glass rating buttons (Not for me, I like this, Love this) for the player.
 	import type { Component } from 'svelte';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
-	import { clearUserRating, fetchUserRating, setUserRating } from '@neoworks-dev/otter-app/discovery';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
+	import { clearUserRating, fetchUserRating, setUserRating } from '@letsmoe/otter-app/discovery';
 	import ThumbsDownIcon from 'phosphor-svelte/lib/ThumbsDownIcon';
 	import ThumbsUpIcon from 'phosphor-svelte/lib/ThumbsUpIcon';
 	import HeartIcon from 'phosphor-svelte/lib/HeartIcon';

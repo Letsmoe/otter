@@ -1,4 +1,4 @@
-import type { MediaRef, PluginContext, StreamListParams, TitleFields } from "@neoworks-dev/otter-sdk";
+import type { MediaRef, PluginContext, StreamListParams, TitleFields } from "@letsmoe/otter-sdk";
 import { linksOf } from "./detail.ts";
 import { episodeStreamPath } from "./paths.ts";
 import { searchCandidates, type SearchCandidate } from "./search.ts";

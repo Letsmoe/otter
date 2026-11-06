@@ -3,8 +3,8 @@ package library
 import (
 	"context"
 
-	"github.com/neoworks/otter/internal/db"
-	"github.com/neoworks/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/plugins"
 )
 
 // ReplacePluginStreams swaps the streams one plugin found for a title, so

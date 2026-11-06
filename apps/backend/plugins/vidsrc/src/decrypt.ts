@@ -1,4 +1,4 @@
-import { PluginSourceError, type PluginContext } from "@neoworks-dev/otter-sdk";
+import { PluginSourceError, type PluginContext } from "@letsmoe/otter-sdk";
 import type { DecryptorSource, StreamEnvelope } from "./lookup.ts";
 
 /** The decryptor's ChaCha20 nonce sits in front of the plaintext in its memory. */

@@ -2,8 +2,8 @@
 	// A Watch Together participant's profile icon; dims with a spinner on top
 	// while their player is loading.
 	import { fade } from 'svelte/transition';
-	import { avatarImage } from '@neoworks-dev/otter-app/avatars';
-	import type { TogetherPeer } from '@neoworks-dev/otter-app/together';
+	import { avatarImage } from '@letsmoe/otter-app/avatars';
+	import type { TogetherPeer } from '@letsmoe/otter-app/together';
 
 	interface Props {
 		peer: TogetherPeer;

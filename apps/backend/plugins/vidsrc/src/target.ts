@@ -1,5 +1,5 @@
-import type { EpisodeRef, MediaRef, PluginContext } from "@neoworks-dev/otter-sdk";
-import { PluginSourceError } from "@neoworks-dev/otter-sdk";
+import type { EpisodeRef, MediaRef, PluginContext } from "@letsmoe/otter-sdk";
+import { PluginSourceError } from "@letsmoe/otter-sdk";
 
 export type LookupTarget =
   | { kind: "movie"; tmdbId: number }

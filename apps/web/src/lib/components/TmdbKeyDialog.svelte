@@ -13,7 +13,7 @@
 		promptFor,
 		saveTmdbKey,
 		type TmdbKeyPrompt
-	} from '@neoworks-dev/otter-app/tmdbKey';
+	} from '@letsmoe/otter-app/tmdbKey';
 
 	let prompt = $state<TmdbKeyPrompt>(null);
 	let key = $state('');

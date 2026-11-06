@@ -2,8 +2,8 @@
 	import { get } from 'svelte/store';
 	import { goto } from '$app/navigation';
 	import MediaCard from '$lib/components/MediaCard.svelte';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
-	import { fetchWatchlist, removeFromWatchlist, detailPath, type RailItem } from '@neoworks-dev/otter-app/discovery';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
+	import { fetchWatchlist, removeFromWatchlist, detailPath, type RailItem } from '@letsmoe/otter-app/discovery';
 
 	let items = $state<RailItem[]>([]);
 	let loaded = $state(false);

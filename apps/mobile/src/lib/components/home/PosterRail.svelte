@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Titled row of posters that scrolls sideways. Contains its own overscroll so
 	// reaching the end doesn't swipe the home pager to the next category.
-	import { detailPath, type RailItem } from '@neoworks-dev/otter-app/discovery';
+	import { detailPath, type RailItem } from '@letsmoe/otter-app/discovery';
 
 	const POSTER_WIDTHS = {
 		regular: 'w-28',

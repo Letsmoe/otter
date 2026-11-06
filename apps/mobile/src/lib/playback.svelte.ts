@@ -7,8 +7,8 @@ import {
 	resolveStream,
 	subscribeStreams,
 	type Stream
-} from '@neoworks-dev/otter-app/streams';
-import { adoptSharedSource, type SharedSource } from '@neoworks-dev/otter-app/together';
+} from '@letsmoe/otter-app/streams';
+import { adoptSharedSource, type SharedSource } from '@letsmoe/otter-app/together';
 
 // How many sources Play tries before giving up.
 const PLAY_ATTEMPTS = 3;

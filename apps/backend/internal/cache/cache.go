@@ -9,7 +9,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/neoworks/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/db"
 )
 
 // ErrMiss is returned by Get when the key is absent or expired.

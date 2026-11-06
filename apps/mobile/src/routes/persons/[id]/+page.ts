@@ -1,4 +1,4 @@
-import { loadPersonDetail } from '@neoworks-dev/otter-app/personDetail';
+import { loadPersonDetail } from '@letsmoe/otter-app/personDetail';
 
 export async function load({ params }) {
 	const person = await loadPersonDetail(params.id);

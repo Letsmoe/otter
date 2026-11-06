@@ -2,8 +2,8 @@
 	import { goto } from '$app/navigation';
 	import FocusList from '$lib/components/FocusList.svelte';
 	import { sidebarFocus } from '$lib/stores/focus';
-	import { posterUrl } from '@neoworks-dev/otter-app/tmdb';
-	import { detailPath, type RailItem } from '@neoworks-dev/otter-app/discovery';
+	import { posterUrl } from '@letsmoe/otter-app/tmdb';
+	import { detailPath, type RailItem } from '@letsmoe/otter-app/discovery';
 
 	let { data } = $props();
 	let person = $derived(data.person);

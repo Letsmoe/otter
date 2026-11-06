@@ -1,9 +1,9 @@
 <script lang="ts">
 	// Watch History: what the profile watched, newest first, grouped by day,
 	// with each title's progress.
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
-	import { detailPath, fetchHistory, type RailItem } from '@neoworks-dev/otter-app/discovery';
-	import { notificationAge } from '@neoworks-dev/otter-app/notifications';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
+	import { detailPath, fetchHistory, type RailItem } from '@letsmoe/otter-app/discovery';
+	import { notificationAge } from '@letsmoe/otter-app/notifications';
 	import ClockCounterClockwiseIcon from 'phosphor-svelte/lib/ClockCounterClockwiseIcon';
 	import ScreenHeader from '$lib/components/ScreenHeader.svelte';
 

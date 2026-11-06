@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/neoworks/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/plugins"
 )
 
 // Downloaded is a stream saved for offline playback.

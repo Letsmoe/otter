@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { episode, testPlugin } from "@neoworks-dev/otter-sdk/testing";
+import { episode, testPlugin } from "@letsmoe/otter-sdk/testing";
 import plugin from "../plugin.ts";
 
 const subject = testPlugin(plugin);

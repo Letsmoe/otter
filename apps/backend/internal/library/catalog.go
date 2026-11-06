@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/neoworks/otter/internal/tmdb"
+	"github.com/Letsmoe/otter/internal/tmdb"
 )
 
 // CatalogRow is one genre's popular titles, straight from TMDB.

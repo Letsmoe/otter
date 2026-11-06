@@ -1,4 +1,4 @@
-import { PluginSourceError, type HttpResponse, type PluginContext } from "@neoworks-dev/otter-sdk";
+import { PluginSourceError, type HttpResponse, type PluginContext } from "@letsmoe/otter-sdk";
 import { isRecord, parseJson, stringField } from "./json.ts";
 import { appendQueryParameter } from "./url.ts";
 import { embedPathOf, lookupUrlOf, type LookupTarget } from "./target.ts";

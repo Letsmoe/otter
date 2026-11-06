@@ -4,11 +4,11 @@
 	// into the bottom bar (ProfileFlight).
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
-	import { fetchSpotlight, type Spotlight } from '@neoworks-dev/otter-app/discovery';
+	import { fetchSpotlight, type Spotlight } from '@letsmoe/otter-app/discovery';
 	import { profileFlight } from '$lib/stores/profileFlight.svelte';
 	import CheckIcon from 'phosphor-svelte/lib/CheckIcon';
-	import { otter } from '@neoworks-dev/otter-app/api';
-	import { activeProfile, avatarFor, type Profile } from '@neoworks-dev/otter-app/profile';
+	import { otter } from '@letsmoe/otter-app/api';
+	import { activeProfile, avatarFor, type Profile } from '@letsmoe/otter-app/profile';
 	import PencilSimpleIcon from 'phosphor-svelte/lib/PencilSimpleIcon';
 	import PlusIcon from 'phosphor-svelte/lib/PlusIcon';
 	import LockSimpleIcon from 'phosphor-svelte/lib/LockSimpleIcon';

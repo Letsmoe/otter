@@ -1,4 +1,4 @@
-import type { StreamInput } from "@neoworks-dev/otter-sdk";
+import type { StreamInput } from "@letsmoe/otter-sdk";
 
 /** A hoster group as the site lists it: a server name (with its language) and the links it offers. */
 export interface HosterGroup {

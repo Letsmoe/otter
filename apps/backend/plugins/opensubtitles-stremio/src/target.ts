@@ -1,4 +1,4 @@
-import type { MediaRef } from "@neoworks-dev/otter-sdk";
+import type { MediaRef } from "@letsmoe/otter-sdk";
 import { API_BASE } from "./constants.ts";
 
 /** The addon's lookup URL for a movie or episode; undefined when IMDb does not know it. */

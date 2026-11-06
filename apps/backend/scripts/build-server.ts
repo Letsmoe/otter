@@ -11,7 +11,7 @@ import { resolve } from 'node:path';
 
 const BACKEND_DIR = resolve(import.meta.dir, '..');
 const ENV_FILE = resolve(BACKEND_DIR, '../../.env');
-const KEY_VARIABLE = 'github.com/neoworks/otter/internal/settings.DefaultTMDBApiKey';
+const KEY_VARIABLE = 'github.com/Letsmoe/otter/internal/settings.DefaultTMDBApiKey';
 
 function outputPath(): string {
 	const index = process.argv.indexOf('--out');

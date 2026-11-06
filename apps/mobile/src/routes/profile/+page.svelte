@@ -1,14 +1,14 @@
 <script lang="ts">
 	// Netflix's "My Netflix": avatar and name (tap to switch), Notifications and
 	// Downloads cards, then My List, Watch History and liked titles.
-	import { activeProfile, avatarFor } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile, avatarFor } from '@letsmoe/otter-app/profile';
 	import {
 		fetchHistory,
 		fetchLikedTitles,
 		fetchWatchlist,
 		type RailItem
-	} from '@neoworks-dev/otter-app/discovery';
-	import { fetchNotifications, type NotificationItem } from '@neoworks-dev/otter-app/notifications';
+	} from '@letsmoe/otter-app/discovery';
+	import { fetchNotifications, type NotificationItem } from '@letsmoe/otter-app/notifications';
 	import MagnifyingGlassIcon from 'phosphor-svelte/lib/MagnifyingGlassIcon';
 	import TogetherButton from '$lib/components/together/TogetherButton.svelte';
 	import CaretDownIcon from 'phosphor-svelte/lib/CaretDownIcon';
@@ -18,7 +18,7 @@
 	import SectionCard from '$lib/components/profile-page/SectionCard.svelte';
 	import NotificationRow from '$lib/components/profile-page/NotificationRow.svelte';
 	import ProfileMenu from '$lib/components/profile-page/ProfileMenu.svelte';
-	import { groupDownloads } from '@neoworks-dev/otter-app/downloads';
+	import { groupDownloads } from '@letsmoe/otter-app/downloads';
 	import { downloads } from '$lib/stores/downloads.svelte';
 
 	const NOTIFICATION_PREVIEW_COUNT = 3;

@@ -2,7 +2,7 @@
 // re-lookup, and resolving a stored link into a playable URL.
 import { otter, getWsClient } from './api';
 import { languageRank, preferredLanguages } from './languages';
-import type { Stream as GeneratedStream } from '@neoworks-dev/otter-sdk/client';
+import type { Stream as GeneratedStream } from '@letsmoe/otter-sdk/client';
 
 export type Stream = Omit<GeneratedStream, '__typename'>;
 

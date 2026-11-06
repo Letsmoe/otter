@@ -1,6 +1,6 @@
 <script lang="ts">
 	// Plays a finished download from its local file.
-	import type { DownloadItem } from '@neoworks-dev/otter-app/downloads';
+	import type { DownloadItem } from '@letsmoe/otter-app/downloads';
 	import Player from '$lib/components/player/Player.svelte';
 
 	interface Props {

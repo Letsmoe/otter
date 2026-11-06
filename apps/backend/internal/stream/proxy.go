@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Letsmoe/otter/internal/cache"
+	"github.com/Letsmoe/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/storage"
 	"github.com/google/uuid"
-	"github.com/neoworks/otter/internal/cache"
-	"github.com/neoworks/otter/internal/plugins"
-	"github.com/neoworks/otter/internal/storage"
 )
 
 const (

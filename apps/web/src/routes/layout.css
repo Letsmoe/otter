@@ -1,6 +1,6 @@
 /*
  * ═══════════════════════════════════════════════════════════════
- * NEOWORKS DESIGN SYSTEM — Tailwind v5 Spec
+ * OTTER DESIGN SYSTEM — Tailwind v5 Spec
  * ═══════════════════════════════════════════════════════════════
  *
  * Tailwind v5 is CSS-first. All tokens live in @theme.
@@ -8,7 +8,7 @@
  *
  * Usage:
  *   @import "tailwindcss";
- *   @import "./neoworks.css";
+ *   @import "./otter.css";
  *
  * Grid rule: base unit --spacing-g = 28px.
  * Every spacing, size, and radius value is a multiple of 7px (g/4).
@@ -17,4 +17,4 @@
 
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
-@import '@neoworks-dev/otter-app/theme.css';
+@import '@letsmoe/otter-app/theme.css';

@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/neoworks/otter/internal/api/graphql/model"
-	"github.com/neoworks/otter/internal/library"
-	"github.com/neoworks/otter/internal/plugins"
-	"github.com/neoworks/otter/internal/resolve"
+	"github.com/Letsmoe/otter/internal/api/graphql/model"
+	"github.com/Letsmoe/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/resolve"
 )
 
 // candidateLinks are the stored links of the given stream ids, best host first.

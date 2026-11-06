@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neoworks/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/db"
 )
 
 func openTestCache(t *testing.T) *Client {

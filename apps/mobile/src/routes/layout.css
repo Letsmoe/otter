@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
-@import '@neoworks-dev/otter-app/theme.css';
+@import '@letsmoe/otter-app/theme.css';
 
 /* Phone safe areas (notch, gesture bar) under viewport-fit=cover. */
 :root {

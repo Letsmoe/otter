@@ -7,12 +7,12 @@
 	import MediaRail from '$lib/components/MediaRail.svelte';
 	import WatchlistButton from '$lib/components/WatchlistButton.svelte';
 	import DownloadButton from '$lib/components/downloads/DownloadButton.svelte';
-	import { activeProfile } from '@neoworks-dev/otter-app/profile';
+	import { activeProfile } from '@letsmoe/otter-app/profile';
 	import { sidebarFocus } from '$lib/stores/focus';
 	import { watchScrollTop } from '$lib/scroll';
-	import { posterUrl, backdropUrl, formatRuntime } from '@neoworks-dev/otter-app/tmdb';
-	import { detailPath, episodeLabel, type EpisodeRef, type RailItem } from '@neoworks-dev/otter-app/discovery';
-	import { loadEpisodes, type SeasonEpisode } from '@neoworks-dev/otter-app/seriesDetail';
+	import { posterUrl, backdropUrl, formatRuntime } from '@letsmoe/otter-app/tmdb';
+	import { detailPath, episodeLabel, type EpisodeRef, type RailItem } from '@letsmoe/otter-app/discovery';
+	import { loadEpisodes, type SeasonEpisode } from '@letsmoe/otter-app/seriesDetail';
 
 	let { data } = $props();
 	let s = $derived(data.title);

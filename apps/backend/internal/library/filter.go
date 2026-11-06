@@ -5,7 +5,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/neoworks/otter/internal/db"
+	"github.com/Letsmoe/otter/internal/db"
 )
 
 // detailFetchConcurrency bounds parallel TMDB detail requests while filtering.

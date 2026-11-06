@@ -1,19 +1,19 @@
 package graphql
 
 import (
-	"github.com/neoworks/otter/internal/downloads"
-	"github.com/neoworks/otter/internal/library"
-	"github.com/neoworks/otter/internal/notify"
-	"github.com/neoworks/otter/internal/plugins"
-	"github.com/neoworks/otter/internal/profiles"
-	"github.com/neoworks/otter/internal/recommend"
-	"github.com/neoworks/otter/internal/resolve"
-	"github.com/neoworks/otter/internal/settings"
-	"github.com/neoworks/otter/internal/skips"
-	"github.com/neoworks/otter/internal/stream"
-	"github.com/neoworks/otter/internal/subtitles"
-	"github.com/neoworks/otter/internal/tmdb"
-	"github.com/neoworks/otter/internal/together"
+	"github.com/Letsmoe/otter/internal/downloads"
+	"github.com/Letsmoe/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/notify"
+	"github.com/Letsmoe/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/profiles"
+	"github.com/Letsmoe/otter/internal/recommend"
+	"github.com/Letsmoe/otter/internal/resolve"
+	"github.com/Letsmoe/otter/internal/settings"
+	"github.com/Letsmoe/otter/internal/skips"
+	"github.com/Letsmoe/otter/internal/stream"
+	"github.com/Letsmoe/otter/internal/subtitles"
+	"github.com/Letsmoe/otter/internal/tmdb"
+	"github.com/Letsmoe/otter/internal/together"
 )
 
 // Services is everything the API reads from or acts on.

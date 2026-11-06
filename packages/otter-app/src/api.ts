@@ -1,7 +1,7 @@
 import { createClient as createWsClient, type Client as WsClient } from 'graphql-ws/client';
 // Import from the client subpath (not the barrel) so the SDK's Bun-specific
 // plugin runtime never enters the browser build graph.
-import { createOtterClient } from '@neoworks-dev/otter-sdk/client';
+import { createOtterClient } from '@letsmoe/otter-sdk/client';
 
 const DEFAULT_API_URL = 'http://localhost:8080';
 

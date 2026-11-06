@@ -1,11 +1,11 @@
 {
-  "name": "@neoworks-dev/otter-plugin-movie2k",
+  "name": "@letsmoe/otter-plugin-movie2k",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "main": "index.ts",
   "dependencies": {
-    "@neoworks-dev/otter-sdk": "link:@neoworks-dev/otter-sdk",
+    "@letsmoe/otter-sdk": "link:@letsmoe/otter-sdk",
     "node-html-parser": "^6.1.13"
   }
 }

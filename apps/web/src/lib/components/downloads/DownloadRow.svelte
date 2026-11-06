@@ -4,7 +4,7 @@
 	import PlayIcon from 'phosphor-svelte/lib/PlayIcon';
 	import TrashIcon from 'phosphor-svelte/lib/TrashIcon';
 	import ArrowClockwiseIcon from 'phosphor-svelte/lib/ArrowClockwiseIcon';
-	import { formatSize, type DownloadItem } from '@neoworks-dev/otter-app/downloads';
+	import { formatSize, type DownloadItem } from '@letsmoe/otter-app/downloads';
 	import DownloadState from './DownloadState.svelte';
 
 	interface Props {

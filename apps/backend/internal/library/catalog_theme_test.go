@@ -3,7 +3,7 @@ package library
 import (
 	"testing"
 
-	"github.com/neoworks/otter/internal/tmdb"
+	"github.com/Letsmoe/otter/internal/tmdb"
 )
 
 func TestThemeOptionsRestrictThemesToTheirMediaType(t *testing.T) {

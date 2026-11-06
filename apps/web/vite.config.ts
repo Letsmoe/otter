@@ -7,7 +7,7 @@ export default defineConfig({
 	// otter-sdk is a bun-linked package shipping raw .ts; Vite must transpile it
 	// (don't externalize for SSR) and be allowed to read outside the project root.
 	ssr: {
-		noExternal: ['@neoworks-dev/otter-sdk', '@neoworks-dev/otter-app']
+		noExternal: ['@letsmoe/otter-sdk', '@letsmoe/otter-app']
 	},
 	server: {
 		fs: {

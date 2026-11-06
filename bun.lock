@@ -25,8 +25,8 @@
         "@capacitor/screen-orientation": "^8.0.1",
         "@capacitor/share": "^8",
         "@capacitor/splash-screen": "^8.0.0",
-        "@neoworks-dev/otter-app": "workspace:*",
-        "@neoworks-dev/otter-sdk": "workspace:*",
+        "@letsmoe/otter-app": "workspace:*",
+        "@letsmoe/otter-sdk": "workspace:*",
         "hls.js": "^1.6.16",
         "phosphor-svelte": "^3.1.0",
       },
@@ -51,8 +51,8 @@
       "version": "0.0.1",
       "dependencies": {
         "@genql/runtime": "^2.10.0",
-        "@neoworks-dev/otter-app": "workspace:*",
-        "@neoworks-dev/otter-sdk": "workspace:*",
+        "@letsmoe/otter-app": "workspace:*",
+        "@letsmoe/otter-sdk": "workspace:*",
         "graphql-ws": "^6.0.8",
         "hls.js": "^1.6.16",
         "phosphor-svelte": "^3.1.0",
@@ -87,7 +87,7 @@
       },
     },
     "packages/config": {
-      "name": "@neoworks-dev/config",
+      "name": "@letsmoe/config",
       "version": "0.1.0",
       "peerDependencies": {
         "@eslint/js": "^10",
@@ -99,10 +99,10 @@
       },
     },
     "packages/otter-app": {
-      "name": "@neoworks-dev/otter-app",
+      "name": "@letsmoe/otter-app",
       "version": "0.1.0",
       "dependencies": {
-        "@neoworks-dev/otter-sdk": "workspace:*",
+        "@letsmoe/otter-sdk": "workspace:*",
         "graphql-ws": "^6.0.8",
       },
       "peerDependencies": {
@@ -110,7 +110,7 @@
       },
     },
     "packages/otter-sdk": {
-      "name": "@neoworks-dev/otter-sdk",
+      "name": "@letsmoe/otter-sdk",
       "version": "0.1.0",
       "dependencies": {
         "@genql/runtime": "^2.10.0",
@@ -220,13 +220,13 @@
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
+    "@letsmoe/config": ["@letsmoe/config@workspace:packages/config"],
+
+    "@letsmoe/otter-app": ["@letsmoe/otter-app@workspace:packages/otter-app"],
+
+    "@letsmoe/otter-sdk": ["@letsmoe/otter-sdk@workspace:packages/otter-sdk"],
+
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.1.5", "", { "dependencies": { "@tybys/wasm-util": "^0.10.2" }, "peerDependencies": { "@emnapi/core": "^1.7.1", "@emnapi/runtime": "^1.7.1" } }, "sha512-AWPoBRJ9tsnVhor4sjO7rkni+7p+2IAEFj6cx06UgP10jkQHqay/36uRV/bFkgrh18D9vb4cr8Q0Pthskgzy+Q=="],
-
-    "@neoworks-dev/config": ["@neoworks-dev/config@workspace:packages/config"],
-
-    "@neoworks-dev/otter-app": ["@neoworks-dev/otter-app@workspace:packages/otter-app"],
-
-    "@neoworks-dev/otter-sdk": ["@neoworks-dev/otter-sdk@workspace:packages/otter-sdk"],
 
     "@nodelib/fs.scandir": ["@nodelib/fs.scandir@2.1.5", "", { "dependencies": { "@nodelib/fs.stat": "2.0.5", "run-parallel": "^1.1.9" } }, "sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g=="],
 

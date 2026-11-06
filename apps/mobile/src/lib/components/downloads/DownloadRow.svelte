@@ -3,7 +3,7 @@
 	// size or status, and the state icon — or a delete button while editing.
 	import PlayIcon from 'phosphor-svelte/lib/PlayIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
-	import { formatSize, type DownloadItem } from '@neoworks-dev/otter-app/downloads';
+	import { formatSize, type DownloadItem } from '@letsmoe/otter-app/downloads';
 	import DownloadState from './DownloadState.svelte';
 
 	interface Props {

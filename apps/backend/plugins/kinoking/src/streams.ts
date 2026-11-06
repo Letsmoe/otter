@@ -5,7 +5,7 @@ import type {
   PluginContext,
   StreamInput,
   StreamListParams,
-} from "@neoworks-dev/otter-sdk";
+} from "@letsmoe/otter-sdk";
 import { findMovieInternalId } from "./search.ts";
 import { parseEpisodeGroups, parseMovieGroups, streamsOf, type EpisodeGroupEntry } from "./servers.ts";
 import { SLOW_REQUEST_TIMEOUT_MS } from "./site.ts";
