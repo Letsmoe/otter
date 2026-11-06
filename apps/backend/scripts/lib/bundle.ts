@@ -15,6 +15,7 @@ const BUNDLE_FILE = 'plugin.js';
 const PLUGIN_KEYWORD = 'otter-plugin';
 /** Stripped from package names to name their folder (pluginstore.FolderName). */
 const PACKAGE_PREFIX = 'otter-plugin-';
+const REPOSITORY_URL = 'git+https://github.com/Letsmoe/otter.git';
 
 /** The package.json of a plugin's source. */
 interface SourcePackage {
@@ -66,6 +67,8 @@ function manifest(pkg: SourcePackage, kind: BuildKind): Record<string, unknown> 
 		keywords: [PLUGIN_KEYWORD]
 	};
 	if (kind === 'local') content.localBuild = true;
+	// npm provenance checks the package against the repository it was published from.
+	if (kind === 'release') content.repository = { type: 'git', url: REPOSITORY_URL };
 	return content;
 }
 

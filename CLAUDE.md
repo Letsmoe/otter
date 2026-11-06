@@ -81,6 +81,8 @@ Hardcoded in `internal/library` — there is no flow engine:
 
 Plugins are TypeScript packages in `apps/backend/plugins/<name>/`. `bun scripts/bundle-plugins.ts [--watch] [--out dir]` bundles each into `<out>/<folder>/plugin.js` + `package.json` (default out: `$DATA_DIR/plugins`); the backend hot-reloads bundles from `PLUGIN_DIR` via `fsnotify`.
 
+**Auto-updates:** `.github/workflows/plugins-publish.yml` publishes release bundles to npm (`@neoworks-dev/otter-plugin-<name>`) whenever a plugin's `version` isn't on npm yet, so bump `version` in its `package.json` to ship a change. `internal/pluginstore` checks npm 30 s after start and every 6 h and swaps newer bundles into `PLUGIN_DIR` (sha512-verified, never a downgrade); local builds (`localBuild: true`) are never replaced. `PLUGIN_AUTO_UPDATE=false` turns it off.
+
 **Capabilities** (`meta.capabilities`):
 
 - `streams` — receives `StreamsArgs` (TMDB-known title: title, original title, year, tmdb/imdb id, season/episode numbers), locates it on the site and returns `{ downloads: Download[] }`
@@ -104,16 +106,16 @@ stdout → { "result": ... }  |  { "error": "...", "code"?: "blocked" | "source_
 
 ## Key paths
 
-| Path                                                | Purpose                                           |
-| --------------------------------------------------- | ------------------------------------------------- |
-| `apps/backend/cmd/server/main.go`                   | Entry point, wires all services                   |
-| `apps/backend/internal/api/graphql/schema/*.graphql` | GraphQL schema (`bun run codegen` in the SDK)    |
-| `apps/backend/internal/db/migrations/`              | SQLite schema (append-only `NNN_name.sql`)        |
-| `apps/backend/internal/library/`                    | The loop: TMDB → streams → related                |
-| `apps/backend/internal/recommend/`                  | Recommendation engine (all weights in `weights.go`) |
-| `apps/backend/internal/hooks/`                      | Event hooks (bash tool)                           |
-| `apps/backend/internal/plugins/`                    | Plugin types, embedded runtime, registry          |
-| `apps/mobile/android/.../EmbeddedBackend.java`      | Starts the backend on the phone                   |
+| Path                                                 | Purpose                                             |
+| ---------------------------------------------------- | --------------------------------------------------- |
+| `apps/backend/cmd/server/main.go`                    | Entry point, wires all services                     |
+| `apps/backend/internal/api/graphql/schema/*.graphql` | GraphQL schema (`bun run codegen` in the SDK)       |
+| `apps/backend/internal/db/migrations/`               | SQLite schema (append-only `NNN_name.sql`)          |
+| `apps/backend/internal/library/`                     | The loop: TMDB → streams → related                  |
+| `apps/backend/internal/recommend/`                   | Recommendation engine (all weights in `weights.go`) |
+| `apps/backend/internal/hooks/`                       | Event hooks (bash tool)                             |
+| `apps/backend/internal/plugins/`                     | Plugin types, embedded runtime, registry            |
+| `apps/mobile/android/.../EmbeddedBackend.java`       | Starts the backend on the phone                     |
 
 ## Running
 
@@ -175,3 +177,5 @@ Rules:
 ## Tests
 
 After having written all your changes, think about if any of these changes require writing a test, if so, create a test in the tests/ directory and run the `bun test` command to see if any of the tests are failing, if they do, investigate further, otherwise everything is fine and you're done.
+
+Use Read/Write/Edit instead of sed/awk/python

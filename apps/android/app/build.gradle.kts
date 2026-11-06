@@ -13,12 +13,28 @@ android {
         applicationId = "dev.neoworks.otter.next"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        // CI sets both from the release tag; the updater compares versionName with the latest release.
+        versionCode = providers.environmentVariable("OTTER_VERSION_CODE").orElse("1").get().toInt()
+        versionName = providers.environmentVariable("OTTER_VERSION_NAME").orElse("0.1.0").get()
         // Not 47832 (Capacitor app): both may run at once.
         buildConfigField("int", "BACKEND_PORT", "47833")
         // Stream-only port on the Wi-Fi interface, read by Chromecasts.
         buildConfigField("int", "BACKEND_LAN_PORT", "47834")
+        // GitHub repository whose releases the in-app updater installs.
+        buildConfigField("String", "UPDATE_REPOSITORY", "\"Letsmoe/otter\"")
+    }
+
+    // CI signs with one fixed key so released APKs install over each other; local builds keep the debug key.
+    val releaseKeystore = providers.environmentVariable("OTTER_KEYSTORE_FILE").orNull
+    if (releaseKeystore != null) {
+        signingConfigs {
+            create("otter") {
+                storeFile = file(releaseKeystore)
+                storePassword = providers.environmentVariable("OTTER_KEYSTORE_PASSWORD").get()
+                keyAlias = "otter"
+                keyPassword = providers.environmentVariable("OTTER_KEYSTORE_PASSWORD").get()
+            }
+        }
     }
 
     buildFeatures {
@@ -27,12 +43,20 @@ android {
     }
 
     buildTypes {
+        if (releaseKeystore != null) {
+            debug {
+                signingConfig = signingConfigs.getByName("otter")
+            }
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Sideloaded personal builds: the debug key lets them install over debug builds.
             signingConfig = signingConfigs.getByName("debug")
+            if (releaseKeystore != null) {
+                signingConfig = signingConfigs.getByName("otter")
+            }
         }
     }
 

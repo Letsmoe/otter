@@ -1,0 +1,72 @@
+# Publishes the plugin bundles to npm, where every backend (NAS and phone)
+# picks them up within six hours (internal/pluginstore).
+#
+# A plugin ships when its version changes: bump "version" in
+# apps/backend/plugins/<name>/package.json. Versions already on npm are skipped.
+name: Publish plugins
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - apps/backend/plugins/**
+      - apps/backend/scripts/**
+      - packages/otter-sdk/**
+      - .github/workflows/plugins-publish.yml
+  workflow_dispatch:
+
+concurrency:
+  group: plugins-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      # npm provenance links each version to this workflow run.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require the npm token
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NPM_TOKEN" ]; then
+            echo "::error::NPM_TOKEN secret is missing; plugins can't be published to npm."
+            exit 1
+          fi
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      # Plugins only import the SDK at bundle time, same as the Dockerfile.
+      - name: Link the plugin SDK
+        run: |
+          mkdir -p node_modules/@neoworks-dev
+          ln -s ../../packages/otter-sdk node_modules/@neoworks-dev/otter-sdk
+
+      - name: Bundle plugins
+        working-directory: apps/backend
+        run: bun scripts/bundle-plugins.ts --release --out "$RUNNER_TEMP/plugins"
+
+      - name: Publish new versions
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          for folder in "$RUNNER_TEMP"/plugins/*/; do
+            name=$(jq -r .name "$folder/package.json")
+            version=$(jq -r .version "$folder/package.json")
+            if npm view "$name@$version" version > /dev/null 2>&1; then
+              echo "$name@$version is already published"
+              continue
+            fi
+            echo "Publishing $name@$version"
+            (cd "$folder" && npm publish --access public --provenance)
+          done

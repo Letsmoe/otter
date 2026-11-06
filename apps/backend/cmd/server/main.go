@@ -29,6 +29,7 @@ import (
 	"github.com/neoworks/otter/internal/netdns"
 	"github.com/neoworks/otter/internal/notify"
 	"github.com/neoworks/otter/internal/plugins"
+	"github.com/neoworks/otter/internal/pluginstore"
 	"github.com/neoworks/otter/internal/profiles"
 	"github.com/neoworks/otter/internal/recommend"
 	"github.com/neoworks/otter/internal/resolve"
@@ -138,7 +139,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 		return serverHandlers{}, err
 	}
 
-	registry, runner, err := loadPlugins(cfg, settingsService)
+	registry, runner, err := loadPlugins(ctx, cfg, settingsService)
 	if err != nil {
 		return serverHandlers{}, err
 	}
@@ -211,7 +212,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 
 // loadPlugins loads the plugin bundles (scripts/bundle-plugins.ts) into the
 // embedded JS runtime, hot-reloading them on change.
-func loadPlugins(cfg config, settingsService *settings.Service) (*plugins.Registry, *plugins.Runner, error) {
+func loadPlugins(ctx context.Context, cfg config, settingsService *settings.Service) (*plugins.Registry, *plugins.Runner, error) {
 	if err := os.MkdirAll(cfg.pluginDir, 0o755); err != nil {
 		return nil, nil, err
 	}
@@ -222,6 +223,10 @@ func loadPlugins(cfg config, settingsService *settings.Service) (*plugins.Regist
 		return nil, nil, err
 	}
 	registry.RestoreDisabled(settingsService.Cached().DisabledPlugins)
+	// Newer npm releases replace the installed bundles; the registry hot-reloads them.
+	if pluginstore.Enabled() {
+		go pluginstore.New(cfg.pluginDir).Run(ctx)
+	}
 	return registry, runner, nil
 }
 

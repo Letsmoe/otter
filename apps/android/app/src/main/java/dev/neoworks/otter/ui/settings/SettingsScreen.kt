@@ -2,7 +2,6 @@ package dev.neoworks.otter.ui.settings
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -47,7 +46,10 @@ import dev.neoworks.otter.toasts.ToastKind
 import dev.neoworks.otter.toasts.Toasts
 import dev.neoworks.otter.ui.components.FilterSelect
 import dev.neoworks.otter.ui.components.OtterSwitch
+import dev.neoworks.otter.ui.components.PillButton
 import dev.neoworks.otter.ui.components.PlainTextField
+import dev.neoworks.otter.ui.components.TMDB_API_KEY_PAGE
+import dev.neoworks.otter.ui.components.openWebPage
 import dev.neoworks.otter.ui.components.ScreenHeader
 import dev.neoworks.otter.ui.navigation.bottomBarClearance
 import dev.neoworks.otter.vpn.VpnStatusStore
@@ -116,28 +118,6 @@ private fun connectLabel(checking: Boolean): String {
     return "Connect"
 }
 
-@Composable
-private fun PillButton(label: String, modifier: Modifier, enabled: Boolean, filled: Boolean, onClick: () -> Unit) {
-    var fill = Color.Transparent
-    var labelColor = Color.White.copy(alpha = 0.7f)
-    var fontWeight = FontWeight.Normal
-    if (filled) {
-        fill = Color.White.copy(alpha = 0.1f)
-        labelColor = Color.White
-        fontWeight = FontWeight.SemiBold
-    }
-    var alpha = 1f
-    if (!enabled) {
-        alpha = 0.5f
-    }
-    Row(
-        modifier.alpha(alpha).background(fill, CircleShape).clickable(enabled = enabled, onClick = onClick).padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        Text(label, fontSize = 14.sp, fontWeight = fontWeight, color = labelColor)
-    }
-}
-
 // The embedded backend and every client connection start over with the new address.
 private fun restartApp(context: Context) {
     val launch = context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return
@@ -152,7 +132,7 @@ private fun MetadataGroup(viewModel: SettingsViewModel) {
         Column(Modifier.padding(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("TMDB API key", fontSize = 14.sp)
-                Text("Get key", fontSize = 12.sp, color = Color.White.copy(alpha = 0.4f), modifier = Modifier.clickable { openApiKeyPage(context) })
+                Text("Get key", fontSize = 12.sp, color = Color.White.copy(alpha = 0.4f), modifier = Modifier.clickable { openWebPage(context, TMDB_API_KEY_PAGE) })
             }
             var hadFocus by remember { mutableStateOf(false) }
             PlainTextField(
@@ -175,11 +155,6 @@ private fun MetadataGroup(viewModel: SettingsViewModel) {
             FilterSelect("Language", viewModel.languageOptions(), viewModel.tmdbLanguage, viewModel::chooseLanguage, showLabel = false)
         }
     }
-}
-
-private fun openApiKeyPage(context: Context) {
-    val page = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.themoviedb.org/settings/api"))
-    context.startActivity(page.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 }
 
 @Composable

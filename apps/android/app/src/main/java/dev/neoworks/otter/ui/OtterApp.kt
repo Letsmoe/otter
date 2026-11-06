@@ -54,7 +54,9 @@ import dev.neoworks.otter.ui.navigation.tabForRoute
 import dev.neoworks.otter.ui.profiles.ProfileGateScreen
 import dev.neoworks.otter.ui.components.ToastHost
 import dev.neoworks.otter.ui.theme.OtterTheme
+import dev.neoworks.otter.ui.setup.TmdbSetupOverlay
 import dev.neoworks.otter.ui.title.TitleScreen
+import dev.neoworks.otter.ui.updates.UpdateBanner
 
 @Composable
 fun OtterApp() {
@@ -68,6 +70,8 @@ fun OtterApp() {
             } else {
                 AppShell()
             }
+            UpdateBanner()
+            TmdbSetupOverlay()
         }
     }
 }

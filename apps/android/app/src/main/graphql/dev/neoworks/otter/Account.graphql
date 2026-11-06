@@ -50,6 +50,24 @@ mutation UpdateAppSettings($input: SettingsInput!) {
   }
 }
 
+fragment TmdbSetupFields on Settings {
+  tmdbKeyStatus
+  usesDefaultTmdbKey
+  tmdbKeyPromptSeen
+}
+
+query TmdbSetup {
+  settings {
+    ...TmdbSetupFields
+  }
+}
+
+mutation SaveTmdbSetup($input: SettingsInput!) {
+  updateSettings(input: $input) {
+    ...TmdbSetupFields
+  }
+}
+
 query VpnStatus {
   status {
     vpnConnected

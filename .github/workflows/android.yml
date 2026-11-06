@@ -48,11 +48,34 @@ jobs:
           mkdir -p node_modules/@neoworks-dev
           ln -s ../../packages/otter-sdk node_modules/@neoworks-dev/otter-sdk
 
+      # One fixed signing key, so the in-app updater can install each release over the last.
+      - name: Restore the signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "::warning::ANDROID_KEYSTORE_BASE64 is not set; the APK is signed with a throwaway debug key."
+            exit 0
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/otter-release.jks"
+          echo "OTTER_KEYSTORE_FILE=$RUNNER_TEMP/otter-release.jks" >> "$GITHUB_ENV"
+
+      # Releases are versioned by their tag (v1.2.0 → 1.2.0); the updater compares against it.
+      - name: Set the version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          echo "OTTER_VERSION_CODE=${{ github.run_number }}" >> "$GITHUB_ENV"
+          if [ -n "$TAG" ]; then
+            echo "OTTER_VERSION_NAME=${TAG#v}" >> "$GITHUB_ENV"
+          fi
+
       - name: Build APK
         working-directory: apps/android
         env:
           # Optional: bakes in the built-in TMDB key; without it the app asks on first start.
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          OTTER_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: bun run apk
 
       - uses: actions/upload-artifact@v4
