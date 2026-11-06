@@ -46,7 +46,10 @@ fun SourceList(
 ) {
     val (broken, usable) = streams.streams.partition { stream -> stream.playable == false }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (streams.searching) {
+        if (streams.vpnBlocked) {
+            VpnRequiredNotice()
+        }
+        if (streams.searching && !streams.vpnBlocked) {
             StillSearching(foundSome = streams.streams.isNotEmpty())
         }
         for (stream in usable) {
@@ -61,10 +64,22 @@ fun SourceList(
         if (streams.nothingFound) {
             Text("No sources found.", fontSize = 14.sp, color = mutedText, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp))
         }
-        if (!streams.searching) {
+        if (!streams.searching && !streams.vpnBlocked) {
             SearchAgainButton(onSearchAgain)
         }
     }
+}
+
+/** The search starts by itself once the VPN is up (StreamFollower). */
+@Composable
+private fun VpnRequiredNotice() {
+    Text(
+        "Connect to a VPN to search for sources. The search starts as soon as it's connected.",
+        fontSize = 14.sp,
+        color = Color.White.copy(alpha = 0.7f),
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+    )
 }
 
 /** Sites answer one by one, some take half a minute: an empty or short list isn't final yet. */

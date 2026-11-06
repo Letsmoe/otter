@@ -41,8 +41,8 @@ fun MoviePage(
         playButton = PlayButtonState(
             label = playLabel,
             busy = streams.isBusy,
-            ready = !streams.isBusy && streams.streams.isNotEmpty(),
-            disabled = streams.nothingFound,
+            ready = !streams.isBusy && !streams.vpnBlocked && streams.streams.isNotEmpty(),
+            disabled = streams.nothingFound || streams.vpnBlocked,
             onClick = { onPlay(PlayRequest(detail.id)) },
         ),
         creditLines = movieCreditLines(detail),
@@ -65,6 +65,9 @@ fun MoviePage(
 }
 
 private fun moviePlayLabel(streams: StreamList): String {
+    if (streams.vpnBlocked) {
+        return "Connect to a VPN to watch"
+    }
     if (streams.isBusy) {
         return "Searching sources…"
     }

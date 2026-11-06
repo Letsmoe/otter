@@ -15,13 +15,18 @@ data class VpnStatus(
     val required: Boolean,
     /** False until the first answer, and while the backend is unreachable. */
     val known: Boolean,
-)
+) {
+    /** The backend refuses to search and play: a VPN is required and none is up. */
+    val blocksStreaming: Boolean
+        get() = known && required && !connected
+}
 
 /** VPN state from the backend, polled while something shows it; mirrors stores/vpn.ts. */
 object VpnStatusStore {
 
     private const val POLL_INTERVAL_MILLISECONDS = 30_000L
     private const val RETRY_INTERVAL_MILLISECONDS = 2_000L
+    private const val BLOCKED_POLL_INTERVAL_MILLISECONDS = 3_000L
     private const val STOP_TIMEOUT_MILLISECONDS = 5_000L
 
     private val unknown = VpnStatus(connected = false, required = false, known = false)
@@ -34,11 +39,15 @@ object VpnStatusStore {
         }
     }.stateIn(AppScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLISECONDS), unknown)
 
+    // Fast while unknown or blocked, so a VPN switched on unblocks the app within seconds.
     private fun nextDelay(current: VpnStatus): Long {
-        if (current.known) {
-            return POLL_INTERVAL_MILLISECONDS
+        if (!current.known) {
+            return RETRY_INTERVAL_MILLISECONDS
         }
-        return RETRY_INTERVAL_MILLISECONDS
+        if (current.blocksStreaming) {
+            return BLOCKED_POLL_INTERVAL_MILLISECONDS
+        }
+        return POLL_INTERVAL_MILLISECONDS
     }
 
     private suspend fun fetchStatus(): VpnStatus {

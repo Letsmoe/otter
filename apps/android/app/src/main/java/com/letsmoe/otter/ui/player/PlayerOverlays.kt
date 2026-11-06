@@ -1,6 +1,10 @@
 package com.letsmoe.otter.ui.player
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.letsmoe.otter.vpn.VpnStatus
+import com.letsmoe.otter.vpn.VpnStatusStore
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -138,12 +142,21 @@ private fun waitingText(state: PlayerUiState): String {
 
 @Composable
 fun BufferingIndicator(state: PlayerUiState, modifier: Modifier = Modifier) {
+    val vpn by VpnStatusStore.status.collectAsStateWithLifecycle()
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         CircularProgressIndicator(color = Color.White.copy(alpha = 0.6f), modifier = Modifier.size(48.dp))
         if (!state.hasSource) {
-            Text(state.statusText, fontSize = 14.sp, color = Color.White.copy(alpha = 0.7f))
+            Text(sourceStatusText(state, vpn), fontSize = 14.sp, color = Color.White.copy(alpha = 0.7f))
         }
     }
+}
+
+/** What the search for a link is doing; without the required VPN the backend doesn't search at all. */
+fun sourceStatusText(state: PlayerUiState, vpn: VpnStatus): String {
+    if (vpn.blocksStreaming) {
+        return "Connect to a VPN to watch"
+    }
+    return state.statusText
 }
 
 @Composable

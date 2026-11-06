@@ -54,6 +54,9 @@ import com.letsmoe.otter.ui.player.SourcesSheetContent
 import com.letsmoe.otter.ui.player.SpeedSheetContent
 import com.letsmoe.otter.ui.player.TelevisionPlayback
 import com.letsmoe.otter.ui.player.TracksSheetContent
+import com.letsmoe.otter.ui.player.sourceStatusText
+import com.letsmoe.otter.vpn.VpnStatus
+import com.letsmoe.otter.vpn.VpnStatusStore
 import kotlinx.coroutines.delay
 
 private const val SKIP_SECONDS = 10
@@ -149,20 +152,21 @@ private fun ConnectionHeader(target: TelevisionTarget) {
 
 @Composable
 private fun NowPlaying(state: PlayerUiState) {
+    val vpn by VpnStatusStore.status.collectAsStateWithLifecycle()
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(state.title, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-        val status = statusLine(state) ?: return
+        val status = statusLine(state, vpn) ?: return
         Text(status, fontSize = 13.sp, color = Color.White.copy(alpha = 0.6f))
     }
 }
 
-private fun statusLine(state: PlayerUiState): String? {
+private fun statusLine(state: PlayerUiState, vpn: VpnStatus): String? {
     val error = state.shownError
     if (error != null) {
         return error
     }
     if (!state.hasSource) {
-        return state.statusText
+        return sourceStatusText(state, vpn)
     }
     if (state.isBuffering) {
         return "Loading on the TV…"
