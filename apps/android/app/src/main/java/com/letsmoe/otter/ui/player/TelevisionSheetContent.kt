@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -56,15 +54,14 @@ fun TelevisionSheetContent(onChoose: (DlnaRenderer) -> Unit) {
         renderers = discoverRenderers(context)
         searching = false
     }
-    Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    // Wraps its rows instead of filling the height: the glass sheet scrolls its content, where a weighted list gets no height.
+    Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Play on TV", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         if (chromecastAvailable) {
             TelevisionRow("Chromecast…", current = connected is TelevisionTarget.Chromecast) { TelevisionConnection.connectChromecast(context) }
         }
-        LazyColumn(Modifier.weight(1f)) {
-            items(renderers, key = { renderer -> renderer.controlUrl }) { renderer ->
-                TelevisionRow(renderer.name, current = isConnectedTo(connected, renderer)) { onChoose(renderer) }
-            }
+        for (renderer in renderers) {
+            TelevisionRow(renderer.name, current = isConnectedTo(connected, renderer)) { onChoose(renderer) }
         }
         SearchStatus(searching, renderers.isEmpty()) { searchRound += 1 }
     }
