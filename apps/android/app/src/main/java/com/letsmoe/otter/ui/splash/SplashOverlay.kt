@@ -43,8 +43,8 @@ private const val LETTER_O_WIDTH = 334f
 private const val FIRST_LETTER_GAP_END = 336f
 private const val PEN_WIDTH = 7f
 
-// The system splash draws the icon without background at 288dp; the "O" fills 56.8 of its 108 units.
-private val systemSplashLetterWidth = 151.dp
+// The system splash draws the icon without background at 288dp; the "O" fills 50.1 of its 108 units.
+private val systemSplashLetterWidth = 134.dp
 private val finalWordmarkMaxWidth = 280.dp
 private const val FINAL_WORDMARK_SCREEN_SHARE = 0.62f
 
