@@ -6,6 +6,16 @@
     "name": "Letsmoe",
     "url": "https://letsmoe.com"
   },
+  "description": "SDK for writing Otter plugins",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Letsmoe/otter.git",
+    "directory": "packages/otter-sdk"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
   "type": "module",
   "scripts": {
     "codegen": "bun run scripts/codegen.ts",

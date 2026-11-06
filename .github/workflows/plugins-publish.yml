@@ -3,6 +3,7 @@
 #
 # A plugin ships when its version changes: bump "version" in
 # apps/backend/plugins/<name>/package.json. Versions already on npm are skipped.
+# The SDK (@letsmoe/otter-sdk, packages/otter-sdk) is published the same way.
 #
 # Authenticates with npm trusted publishing (OIDC), no token: every package
 # needs this workflow (Letsmoe/otter, plugins-publish.yml) registered as its
@@ -59,7 +60,7 @@ jobs:
       # Provenance is attached automatically with trusted publishing.
       - name: Publish new versions
         run: |
-          for folder in "$RUNNER_TEMP"/plugins/*/; do
+          for folder in "$GITHUB_WORKSPACE/packages/otter-sdk/" "$RUNNER_TEMP"/plugins/*/; do
             name=$(jq -r .name "$folder/package.json")
             version=$(jq -r .version "$folder/package.json")
             if npm view "$name@$version" version > /dev/null 2>&1; then
