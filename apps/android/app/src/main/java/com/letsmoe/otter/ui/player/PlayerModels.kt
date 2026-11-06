@@ -3,7 +3,8 @@ package com.letsmoe.otter.ui.player
 import com.letsmoe.otter.together.TogetherPeer
 
 /** What opens the player: a movie or episode, optionally on one link, or a finished download. */
-data class PlayerRequest(val mediaId: String, val streamId: String? = null, val downloadId: String? = null)
+/** [startSeconds] overrides the saved resume position, e.g. when playback moves from the phone to a TV. */
+data class PlayerRequest(val mediaId: String, val streamId: String? = null, val downloadId: String? = null, val startSeconds: Double? = null)
 
 /**
  * [details] is resolution, language and measured speed, e.g. "1080p · de · ~2.4 MB/s".

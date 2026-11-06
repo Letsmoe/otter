@@ -25,7 +25,12 @@ data class DlnaRenderer(
     val controlUrl: String,
     /** e.g. urn:schemas-upnp-org:service:AVTransport:1 */
     val serviceType: String,
+    /** RenderingControl (volume); null when the TV doesn't offer it. */
+    val volumeControl: DlnaService? = null,
 )
+
+/** One UPnP service of a renderer: where its SOAP actions go and its type. */
+data class DlnaService(val controlUrl: String, val serviceType: String)
 
 private const val TAG = "OtterDlna"
 private const val SSDP_ADDRESS = "239.255.255.250"
@@ -111,23 +116,26 @@ private fun describeRenderer(location: String): DlnaRenderer? {
             DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(input)
         }
         val root = document.documentElement
-        val service = avTransportService(root) ?: return null
-        val controlPath = childText(service, "controlURL") ?: return null
+        val transport = serviceOf(root, ":AVTransport:", location) ?: return null
         val name = childText(root, "friendlyName") ?: "TV"
-        DlnaRenderer(name, URL(URL(location), controlPath).toString(), childText(service, "serviceType").orEmpty())
+        DlnaRenderer(name, transport.controlUrl, transport.serviceType, serviceOf(root, ":RenderingControl:", location))
     } catch (error: Exception) {
         Log.w(TAG, "describing $location failed", error)
         null
     }
 }
 
-private fun avTransportService(root: Element): Element? {
+/** The first service whose type contains [typeMarker], e.g. ":AVTransport:". */
+private fun serviceOf(root: Element, typeMarker: String, location: String): DlnaService? {
     val services = root.getElementsByTagName("service")
     for (index in 0 until services.length) {
         val service = services.item(index) as Element
-        if (childText(service, "serviceType").orEmpty().contains(":AVTransport:")) {
-            return service
+        val serviceType = childText(service, "serviceType").orEmpty()
+        if (!serviceType.contains(typeMarker)) {
+            continue
         }
+        val controlPath = childText(service, "controlURL") ?: return null
+        return DlnaService(URL(URL(location), controlPath).toString(), serviceType)
     }
     return null
 }

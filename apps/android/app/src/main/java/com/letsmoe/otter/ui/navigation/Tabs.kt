@@ -25,7 +25,7 @@ object Routes {
     const val LIBRARY = "library"
     const val HISTORY = "history"
     const val PERSON = "person/{personId}"
-    const val PLAYER = "player/{mediaId}?streamId={streamId}&downloadId={downloadId}"
+    const val PLAYER = "player/{mediaId}?streamId={streamId}&downloadId={downloadId}&start={start}"
     const val NOTIFICATIONS = "notifications"
     const val SETTINGS = "settings"
     const val PLUGINS = "plugins"
@@ -44,13 +44,16 @@ object Routes {
     fun person(personId: String) = "person/${android.net.Uri.encode(personId)}"
 
     /** Plays a movie or episode: on one chosen link, from a finished download, or on its best link. */
-    fun player(mediaId: String, streamId: String? = null, downloadId: String? = null): String {
+    fun player(mediaId: String, streamId: String? = null, downloadId: String? = null, startSeconds: Double? = null): String {
         var route = "player/${android.net.Uri.encode(mediaId)}?"
         if (streamId != null) {
             route += "streamId=${android.net.Uri.encode(streamId)}&"
         }
         if (downloadId != null) {
             route += "downloadId=${android.net.Uri.encode(downloadId)}&"
+        }
+        if (startSeconds != null) {
+            route += "start=$startSeconds&"
         }
         return route.trimEnd('?', '&')
     }

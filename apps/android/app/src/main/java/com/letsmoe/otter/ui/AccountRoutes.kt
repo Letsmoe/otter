@@ -19,6 +19,8 @@ import com.letsmoe.otter.ui.downloads.DownloadButton
 import com.letsmoe.otter.ui.downloads.DownloadButtonStyle
 import com.letsmoe.otter.ui.downloads.SeriesDownloadsScreen
 import com.letsmoe.otter.ui.navigation.Routes
+import com.letsmoe.otter.ui.navigation.play
+import com.letsmoe.otter.ui.player.TelevisionPlayback
 import com.letsmoe.otter.ui.navigation.Tab
 import com.letsmoe.otter.ui.notifications.NotificationsScreen
 import com.letsmoe.otter.ui.player.PlayerRequest
@@ -39,7 +41,7 @@ fun NavGraphBuilder.accountRoutes(navController: NavHostController) {
         WithoutBackdrop {
             SeriesDownloadsScreen(
                 seriesId = entry.arguments?.getString("seriesId").orEmpty(),
-                onPlay = { item -> navController.navigate(Routes.player(item.mediaId, downloadId = item.id)) },
+                onPlay = { item -> navController.play(PlayerRequest(item.mediaId, downloadId = item.id)) },
                 onBack = { navController.popBackStack() },
             )
         }
@@ -64,12 +66,14 @@ fun NavGraphBuilder.accountRoutes(navController: NavHostController) {
             navArgument("mediaId") { type = NavType.StringType },
             navArgument("streamId") { type = NavType.StringType; nullable = true; defaultValue = null },
             navArgument("downloadId") { type = NavType.StringType; nullable = true; defaultValue = null },
+            navArgument("start") { type = NavType.StringType; nullable = true; defaultValue = null },
         ),
     ) { entry ->
         val request = PlayerRequest(
             mediaId = entry.arguments?.getString("mediaId").orEmpty(),
             streamId = entry.arguments?.getString("streamId"),
             downloadId = entry.arguments?.getString("downloadId"),
+            startSeconds = entry.arguments?.getString("start")?.toDoubleOrNull(),
         )
         PlayerScreen(request, onBack = { navController.popBackStack() })
     }
@@ -111,8 +115,12 @@ fun AppServices(navController: NavHostController) {
     val remoteMedia by TogetherSession.remoteMedia.collectAsStateWithLifecycle()
     LaunchedEffect(remoteMedia) {
         val started = remoteMedia ?: return@LaunchedEffect
+        // A title already playing on the TV follows the room by itself.
+        if (TelevisionPlayback.player.value != null) {
+            return@LaunchedEffect
+        }
         if (navController.currentDestination?.route != Routes.PLAYER) {
-            navController.navigate(Routes.player(started.mediaId))
+            navController.play(PlayerRequest(started.mediaId))
         }
     }
 }

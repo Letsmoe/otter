@@ -32,19 +32,25 @@ import androidx.compose.ui.unit.sp
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.Television
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.letsmoe.otter.cast.DlnaRenderer
+import com.letsmoe.otter.cast.TelevisionConnection
+import com.letsmoe.otter.cast.TelevisionTarget
 import com.letsmoe.otter.cast.discoverRenderers
 import com.letsmoe.otter.cast.rememberChromecastAvailable
-import com.letsmoe.otter.cast.showChromecastPicker
 
-/** Lists the DLNA TVs on the Wi-Fi and, when there is one, the Chromecast picker; picking one moves playback there. */
+/**
+ * Lists the DLNA TVs on the Wi-Fi and, when there is one, the Chromecast picker. Picking a DLNA TV
+ * calls [onChoose]; a Chromecast connects through the system picker.
+ */
 @Composable
-fun TelevisionSheetContent(state: PlayerUiState, onChoose: (DlnaRenderer) -> Unit, onStop: () -> Unit) {
+fun TelevisionSheetContent(onChoose: (DlnaRenderer) -> Unit) {
     val context = LocalContext.current
     var renderers by remember { mutableStateOf<List<DlnaRenderer>>(emptyList()) }
     var searching by remember { mutableStateOf(true) }
     var searchRound by remember { mutableIntStateOf(0) }
     val chromecastAvailable = rememberChromecastAvailable()
+    val connected by TelevisionConnection.target.collectAsStateWithLifecycle()
     LaunchedEffect(searchRound) {
         searching = true
         renderers = discoverRenderers(context)
@@ -52,31 +58,23 @@ fun TelevisionSheetContent(state: PlayerUiState, onChoose: (DlnaRenderer) -> Uni
     }
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Play on TV", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        if (state.castsToTelevision) {
-            PlayingOnTelevision(state.castDeviceName.orEmpty(), onStop)
-        }
         if (chromecastAvailable) {
-            TelevisionRow("Chromecast…", current = state.isCasting && !state.castsToTelevision) { showChromecastPicker(context) }
+            TelevisionRow("Chromecast…", current = connected is TelevisionTarget.Chromecast) { TelevisionConnection.connectChromecast(context) }
         }
         LazyColumn(Modifier.weight(1f)) {
             items(renderers, key = { renderer -> renderer.controlUrl }) { renderer ->
-                TelevisionRow(renderer.name, current = state.castsToTelevision && renderer.name == state.castDeviceName) { onChoose(renderer) }
+                TelevisionRow(renderer.name, current = isConnectedTo(connected, renderer)) { onChoose(renderer) }
             }
         }
         SearchStatus(searching, renderers.isEmpty()) { searchRound += 1 }
     }
 }
 
-@Composable
-private fun PlayingOnTelevision(deviceName: String, onStop: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.08f), CircleShape).padding(horizontal = 16.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text("Playing on $deviceName", fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-        Text("Stop", fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickableWithoutRipple(onClick = onStop))
+private fun isConnectedTo(connected: TelevisionTarget?, renderer: DlnaRenderer): Boolean {
+    if (connected !is TelevisionTarget.Dlna) {
+        return false
     }
+    return connected.renderer.controlUrl == renderer.controlUrl
 }
 
 @Composable

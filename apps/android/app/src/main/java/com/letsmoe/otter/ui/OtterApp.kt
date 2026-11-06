@@ -54,7 +54,13 @@ import com.letsmoe.otter.ui.navigation.tabForRoute
 import com.letsmoe.otter.ui.profiles.ProfileGateScreen
 import com.letsmoe.otter.ui.components.ToastHost
 import com.letsmoe.otter.ui.theme.OtterTheme
+import androidx.compose.foundation.layout.padding
+import com.letsmoe.otter.ui.navigation.bottomBarClearance
+import com.letsmoe.otter.ui.navigation.play
+import com.letsmoe.otter.ui.player.PlayerRequest
 import com.letsmoe.otter.ui.setup.TmdbSetupOverlay
+import com.letsmoe.otter.ui.television.TelevisionNowPlayingBar
+import com.letsmoe.otter.ui.television.TelevisionRemoteHost
 import com.letsmoe.otter.ui.title.TitleScreen
 import com.letsmoe.otter.ui.updates.UpdateBanner
 
@@ -109,6 +115,7 @@ private fun AppShell() {
             OtterNavHost(navController, pagerState, openTab, Modifier.fillMaxSize().then(blurSourceFor(currentRoute, glassBackdrop)))
             AppServices(navController)
             if (currentRoute != Routes.PLAYER) {
+                TelevisionNowPlayingBar(Modifier.align(Alignment.BottomCenter).padding(bottom = bottomBarClearance()))
                 BottomBar(
                     activeTab = activeTab(currentRoute, pagerState),
                     onSelect = openTab,
@@ -119,6 +126,9 @@ private fun AppShell() {
                 onOpenItem = { item -> navController.openItem(item) },
                 onOpenPerson = { personId -> navController.navigate(Routes.person(personId)) },
             )
+            TelevisionRemoteHost(onContinueOnPhone = { request ->
+                navController.navigate(Routes.player(request.mediaId, request.streamId, startSeconds = request.startSeconds))
+            })
             SheetHostOutlet(sheetHost)
             AppOverlays()
         }
@@ -218,7 +228,7 @@ private fun OtterNavHost(navController: NavHostController, pagerState: PagerStat
                 titleId = entry.arguments?.getString("titleId").orEmpty(),
                 linkedSeasonNumber = entry.arguments?.getString("season")?.toIntOrNull(),
                 linkedEpisodeId = entry.arguments?.getString("episodeId"),
-                onPlay = { request -> navController.navigate(Routes.player(request.mediaId, request.streamId)) },
+                onPlay = { request -> navController.play(PlayerRequest(request.mediaId, request.streamId)) },
                 slots = titleSlots(openTab),
                 onBack = { navController.popBackStack() },
                 onSearch = { navController.navigate(Routes.SEARCH) },

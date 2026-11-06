@@ -67,15 +67,31 @@ class DlnaClient(private val renderer: DlnaRenderer) {
         return TransportPosition(parseTime(tagValue(response, "RelTime")), parseTime(tagValue(response, "TrackDuration")))
     }
 
-    private suspend fun call(action: String, arguments: String): String = withContext(Dispatchers.IO) {
+    /** The TV's volume, 0 to 100; null when it has no volume control. */
+    suspend fun volume(): Int? {
+        val service = renderer.volumeControl ?: return null
+        val response = call(service, "GetVolume", "<Channel>Master</Channel>")
+        return tagValue(response, "CurrentVolume").toIntOrNull()
+    }
+
+    suspend fun setVolume(volume: Int) {
+        val service = renderer.volumeControl ?: return
+        call(service, "SetVolume", "<Channel>Master</Channel><DesiredVolume>${volume.coerceIn(0, 100)}</DesiredVolume>")
+    }
+
+    private suspend fun call(action: String, arguments: String): String {
+        return call(DlnaService(renderer.controlUrl, renderer.serviceType), action, arguments)
+    }
+
+    private suspend fun call(service: DlnaService, action: String, arguments: String): String = withContext(Dispatchers.IO) {
         val envelope = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
             "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">" +
-            "<s:Body><u:$action xmlns:u=\"${renderer.serviceType}\"><InstanceID>0</InstanceID>$arguments</u:$action></s:Body></s:Envelope>"
-        val connection = openHttp(URL(renderer.controlUrl))
+            "<s:Body><u:$action xmlns:u=\"${service.serviceType}\"><InstanceID>0</InstanceID>$arguments</u:$action></s:Body></s:Envelope>"
+        val connection = openHttp(URL(service.controlUrl))
         connection.requestMethod = "POST"
         connection.doOutput = true
         connection.setRequestProperty("Content-Type", "text/xml; charset=\"utf-8\"")
-        connection.setRequestProperty("SOAPACTION", "\"${renderer.serviceType}#$action\"")
+        connection.setRequestProperty("SOAPACTION", "\"${service.serviceType}#$action\"")
         try {
             connection.outputStream.use { output -> output.write(envelope.toByteArray()) }
             if (connection.responseCode != 200) {

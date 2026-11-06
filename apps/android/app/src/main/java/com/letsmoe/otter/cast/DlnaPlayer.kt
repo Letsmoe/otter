@@ -148,6 +148,27 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         startLoad(currentPositionMilliseconds() / 1000.0)
     }
 
+    // Volume -------------------------------------------------------------------
+
+    val supportsVolume: Boolean
+        get() = renderer.volumeControl != null
+
+    /** The TV's volume, 0 to 100; null when it can't be read. */
+    suspend fun readVolume(): Int? {
+        return try {
+            client.volume()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Exception) {
+            Log.w(TAG, "reading the TV's volume failed", error)
+            null
+        }
+    }
+
+    fun changeVolume(volume: Int) {
+        sendCommand { client.setVolume(volume) }
+    }
+
     // Commands -----------------------------------------------------------------
 
     override fun handleSetMediaItems(mediaItems: MutableList<MediaItem>, startIndex: Int, startPositionMs: Long): ListenableFuture<*> {

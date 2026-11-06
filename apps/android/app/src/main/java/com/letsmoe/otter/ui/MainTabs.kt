@@ -17,6 +17,9 @@ import com.letsmoe.otter.ui.downloads.DownloadsScreen
 import com.letsmoe.otter.ui.home.HomeScreen
 import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.navigation.Routes
+import com.letsmoe.otter.ui.navigation.play
+import com.letsmoe.otter.ui.player.PlayerRequest
+import com.letsmoe.otter.ui.television.TelevisionButton
 import com.letsmoe.otter.ui.navigation.Tab
 import com.letsmoe.otter.ui.profile.ProfileScreen
 import com.letsmoe.otter.ui.together.TogetherButton
@@ -51,12 +54,15 @@ private fun TabPage(tab: Tab, navController: NavHostController, openTab: (Tab) -
             onOpenItem = onOpenItem,
             onOpenPerson = { personId -> navController.navigate(Routes.person(personId)) },
             onSearch = { navController.navigate(Routes.SEARCH) },
-            headerActions = { TogetherButton(iconSize = 26.dp) },
+            headerActions = {
+                TelevisionButton(iconSize = 26.dp)
+                TogetherButton(iconSize = 26.dp)
+            },
         )
         Tab.MY_LIST -> WatchlistScreen(onOpenItem = onOpenItem)
         Tab.DOWNLOADS -> WithoutBackdrop {
             DownloadsScreen(
-                onPlay = { item -> navController.navigate(Routes.player(item.mediaId, downloadId = item.id)) },
+                onPlay = { item -> navController.play(PlayerRequest(item.mediaId, downloadId = item.id)) },
                 onOpenSeries = { seriesId -> navController.navigate(Routes.seriesDownloads(seriesId)) },
                 onSearch = { navController.navigate(Routes.SEARCH) },
             )

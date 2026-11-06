@@ -4,6 +4,8 @@ import android.app.Application
 import com.letsmoe.otter.api.ServerSettings
 import com.letsmoe.otter.backend.EmbeddedBackend
 import com.letsmoe.otter.cast.CastSetup
+import com.letsmoe.otter.cast.TelevisionConnection
+import com.letsmoe.otter.ui.player.TelevisionPlayback
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.settings.PlaybackSettings
 
@@ -17,5 +19,7 @@ class OtterApplication : Application() {
         PlaybackSettings.initialize(this)
         ProfileSession.initialize(this)
         CastSetup.initialize(this)
+        TelevisionConnection.initialize(this)
+        TelevisionPlayback.initialize(this)
     }
 }

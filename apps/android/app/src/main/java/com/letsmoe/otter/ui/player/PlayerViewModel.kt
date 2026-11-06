@@ -12,13 +12,14 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
 import androidx.media3.exoplayer.ExoPlayer
-import com.letsmoe.otter.cast.CastKeepAliveService
 import com.letsmoe.otter.cast.CastCaptionSelector
 import com.letsmoe.otter.cast.CastSetup
 import com.letsmoe.otter.cast.DlnaPlayer
 import com.letsmoe.otter.cast.DlnaRenderer
 import com.letsmoe.otter.cast.LanMediaItemConverter
+import com.letsmoe.otter.cast.TelevisionConnection
 import com.letsmoe.otter.cast.TelevisionSubtitleFile
+import com.letsmoe.otter.cast.TelevisionTarget
 import com.letsmoe.otter.downloads.DownloadItem
 import com.letsmoe.otter.downloads.DownloadsRepository
 import com.letsmoe.otter.graphql.fragment.ProfileFields
@@ -53,17 +54,27 @@ private const val NEXT_EPISODE_DELAY_MILLISECONDS = 8000L
 // Playback starts without captions when the backend needs longer than this to find them.
 private const val SUBTITLE_WAIT_MILLISECONDS = 8000L
 
-/** Owns the ExoPlayer so playback survives rotation, and everything around it: sources, resume, progress, Watch Together. */
-class PlayerViewModel(application: Application, private val request: PlayerRequest) :
+/**
+ * Owns the ExoPlayer so playback survives rotation, and everything around it: sources, resume, progress, Watch Together.
+ * [forTelevision] marks the app-wide instance of [TelevisionPlayback], which plays on the connected TV; the player
+ * screen's own instance hands playback over to it as soon as a TV gets connected.
+ */
+class PlayerViewModel(application: Application, request: PlayerRequest, private val forTelevision: Boolean = false) :
     AndroidViewModel(application), TogetherPlayerHost {
+
+    private var request = request
 
     private val voiceBoost = VoiceBoostAudioProcessor()
 
     // Plays on the phone, or on a Chromecast once one is picked in the cast menu.
     val player: Player = buildPlayer(application, voiceBoost)
 
-    // Set while a DLNA TV plays; every control then goes to it.
+    // Set while a DLNA TV plays; every control then goes to it. Owned by TelevisionConnection, never released here.
     private var televisionPlayer: DlnaPlayer? = null
+
+    private val mutableHandOver = MutableStateFlow<PlayerRequest?>(null)
+    /** Set when a TV got connected while the player screen plays: the screen passes this on to TelevisionPlayback and closes. */
+    val handOver: StateFlow<PlayerRequest?> = mutableHandOver
     private val activePlayer: Player
         get() = televisionPlayer ?: player
 
@@ -149,7 +160,18 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
         viewModelScope.launch { followRemoteMedia() }
         viewModelScope.launch { ProfileSession.activeProfile.collect(::onProfileChanged) }
         togetherSync.start()
-        openMedia(request.mediaId, initial = true)
+        if (forTelevision) {
+            attachConnectedTelevision()
+        }
+        openRequest(request)
+    }
+
+    /** Plays another title (or the same one from another start), keeping the TV and the player. */
+    fun openRequest(newRequest: PlayerRequest) {
+        request = newRequest
+        openMedia(newRequest.mediaId, initial = true)
+        // Read by attachSource once a link is found.
+        sourceSwitchResumeSeconds = newRequest.startSeconds ?: 0.0
     }
 
     // Media ------------------------------------------------------------------
@@ -510,59 +532,56 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
         if (televisionPlayer != null) {
             return
         }
-        val application = getApplication<Application>()
         // Each output keeps its own track selection, so the profile's caption choice is handed over.
         applyCaptionSelection(player, ProfileSession.activeProfile.value)
         if (deviceInfo.playbackType != DeviceInfo.PLAYBACK_TYPE_REMOTE) {
-            CastKeepAliveService.stop(application)
             mutableState.update { current -> current.copy(castDeviceName = null) }
             return
         }
-        val deviceName = CastSetup.connectedDeviceName(application) ?: "TV"
-        CastKeepAliveService.start(application, deviceName)
+        // A session that is just ending (Continue on phone) isn't a new TV.
+        if (!forTelevision && TelevisionConnection.isConnected) {
+            handOverToTelevision()
+            return
+        }
+        val deviceName = CastSetup.connectedDeviceName(getApplication()) ?: "TV"
         mutableState.update { current -> current.copy(castDeviceName = deviceName) }
     }
 
-    /** Moves playback to a DLNA TV, where it is right now. */
-    fun playOnTelevision(renderer: DlnaRenderer) {
-        stopTelevision()
-        val application = getApplication<Application>()
-        val mediaItem = player.currentMediaItem ?: return
-        val positionMilliseconds = player.currentPosition
-        // Unhooked first: pausing the phone's player isn't the user pausing.
+    // The TV connected before this title started (TelevisionPlayback): it plays there from the start.
+    private fun attachConnectedTelevision() {
+        val target = TelevisionConnection.target.value ?: return
+        // A Chromecast is played by the CastPlayer itself once its session exists.
+        if (target !is TelevisionTarget.Dlna) {
+            mutableState.update { current -> current.copy(castDeviceName = target.name) }
+            return
+        }
+        // Unhooked: the phone's own player only holds the title, it never plays.
         player.removeListener(playerListener)
-        player.playWhenReady = false
-        // Stopped, not just paused: a paused player keeps buffering from the same source.
-        player.stop()
-        val television = DlnaPlayer(application, renderer)
-        televisionLinkRenewed = false
+        val television = target.player
         television.addListener(playerListener)
         televisionPlayer = television
-        mutableState.update { current ->
-            current.copy(castDeviceName = renderer.name, castsToTelevision = true, playbackError = null, isBuffering = true)
-        }
-        CastKeepAliveService.start(application, renderer.name)
-        television.setMediaItem(mediaItem, positionMilliseconds)
-        television.showSubtitle(televisionSubtitleFile())
-        television.prepare()
-        showTelevisionTracks()
-        applyIntent()
+        mutableState.update { current -> current.copy(castDeviceName = target.name, castsToTelevision = true) }
     }
 
-    /** Brings playback back to the phone, where the TV was. */
-    fun stopTelevision() {
-        val television = televisionPlayer ?: return
-        val positionMilliseconds = television.currentPosition
-        television.removeListener(playerListener)
-        television.release()
-        televisionPlayer = null
-        player.addListener(playerListener)
-        CastKeepAliveService.stop(getApplication())
-        mutableState.update { current -> current.copy(castDeviceName = null, castsToTelevision = false, playbackError = null) }
-        player.seekTo(positionMilliseconds)
-        applyCaptionSelection(player, ProfileSession.activeProfile.value)
-        player.prepare()
-        applyIntent()
+    /** Connects a DLNA TV and moves playback there (via [handOver]), where it is right now. */
+    fun playOnTelevision(renderer: DlnaRenderer) {
+        TelevisionConnection.connectDlna(renderer)
+        handOverToTelevision()
+    }
+
+    private fun handOverToTelevision() {
+        saveProgress(force = true)
+        // Stopped, not just paused: a paused player keeps buffering from the same source.
+        player.removeListener(playerListener)
+        player.playWhenReady = false
+        player.stop()
+        mutableHandOver.value = currentRequestAt()
+    }
+
+    /** This title with its source, from where it is now. */
+    fun currentRequestAt(): PlayerRequest {
+        saveProgress(force = true)
+        return PlayerRequest(currentMediaId, mutableState.value.currentSourceId, startSeconds = positionSeconds)
     }
 
     /**
@@ -839,15 +858,11 @@ class PlayerViewModel(application: Application, private val request: PlayerReque
 
     override fun onCleared() {
         saveProgress(force = true)
-        // The TV streams from this phone; leaving the player ends the cast with it.
-        if (mutableState.value.isCasting) {
-            CastSetup.endSession(getApplication())
-            CastKeepAliveService.stop(getApplication())
-        }
+        // The TV belongs to TelevisionConnection: it stays connected, only this title stops on it.
         televisionPlayer?.let { television ->
             television.removeListener(playerListener)
-            television.release()
-            CastKeepAliveService.stop(getApplication())
+            television.stop()
+            television.clearMediaItems()
         }
         TogetherSession.detachPlayer(currentMediaId)
         togetherSync.stop()

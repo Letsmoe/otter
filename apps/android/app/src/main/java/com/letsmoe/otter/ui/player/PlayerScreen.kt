@@ -56,6 +56,17 @@ fun PlayerScreen(request: PlayerRequest, onBack: () -> Unit) {
     }
 }
 
+// A TV got connected here: the title continues on it via TelevisionPlayback, and the screen closes onto the remote.
+@Composable
+private fun HandOverToTelevision(viewModel: PlayerViewModel, onBack: () -> Unit) {
+    val handOver by viewModel.handOver.collectAsStateWithLifecycle()
+    LaunchedEffect(handOver) {
+        val request = handOver ?: return@LaunchedEffect
+        TelevisionPlayback.play(request)
+        onBack()
+    }
+}
+
 @Composable
 private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -84,6 +95,7 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
 
     HideControlsAfterIdle(state, chrome, sheet)
     BackHandler { if (sheet != null) closeSheet() else close() }
+    HandOverToTelevision(viewModel, onBack)
 
     val actions = PlayerActions(
         close = ::close,
@@ -252,14 +264,9 @@ private fun SheetContent(kind: PlayerSheetKind, state: PlayerUiState, viewModel:
         }
         PlayerSheetKind.TOGETHER -> PlayerTogetherPane()
         PlayerSheetKind.TELEVISION -> TelevisionSheetContent(
-            state,
             onChoose = { renderer ->
                 closeSheet()
                 viewModel.playOnTelevision(renderer)
-            },
-            onStop = {
-                closeSheet()
-                viewModel.stopTelevision()
             },
         )
     }
