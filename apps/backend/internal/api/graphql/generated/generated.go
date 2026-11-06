@@ -267,6 +267,7 @@ type ComplexityRoot struct {
 
 	Settings struct {
 		DisabledPlugins    func(childComplexity int) int
+		HasDefaultTmdbKey  func(childComplexity int) int
 		RequireVpn         func(childComplexity int) int
 		TmdbAPIKey         func(childComplexity int) int
 		TmdbKeyPromptSeen  func(childComplexity int) int
@@ -1746,6 +1747,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Settings.DisabledPlugins(childComplexity), true
+	case "Settings.hasDefaultTmdbKey":
+		if e.ComplexityRoot.Settings.HasDefaultTmdbKey == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Settings.HasDefaultTmdbKey(childComplexity), true
 	case "Settings.requireVpn":
 		if e.ComplexityRoot.Settings.RequireVpn == nil {
 			break
@@ -2647,6 +2654,8 @@ type Settings {
   tmdbLanguage: String!
   tmdbKeyStatus: TmdbKeyStatus!
   usesDefaultTmdbKey: Boolean!
+  "Whether this build has a built-in key to fall back to (in use or not)."
+  hasDefaultTmdbKey: Boolean!
   "Whether the first-run TMDB key dialog was answered."
   tmdbKeyPromptSeen: Boolean!
   requireVpn: Boolean!
@@ -3249,6 +3258,8 @@ func (ec *executionContext) childFields_Settings(ctx context.Context, field grap
 		return ec.fieldContext_Settings_tmdbKeyStatus(ctx, field)
 	case "usesDefaultTmdbKey":
 		return ec.fieldContext_Settings_usesDefaultTmdbKey(ctx, field)
+	case "hasDefaultTmdbKey":
+		return ec.fieldContext_Settings_hasDefaultTmdbKey(ctx, field)
 	case "tmdbKeyPromptSeen":
 		return ec.fieldContext_Settings_tmdbKeyPromptSeen(ctx, field)
 	case "requireVpn":
@@ -10093,6 +10104,29 @@ func (ec *executionContext) fieldContext_Settings_usesDefaultTmdbKey(_ context.C
 	return graphql.NewScalarFieldContext("Settings", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
+func (ec *executionContext) _Settings_hasDefaultTmdbKey(ctx context.Context, field graphql.CollectedField, obj *model.Settings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Settings_hasDefaultTmdbKey(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HasDefaultTmdbKey, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Settings_hasDefaultTmdbKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Settings", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
 func (ec *executionContext) _Settings_tmdbKeyPromptSeen(ctx context.Context, field graphql.CollectedField, obj *model.Settings) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -15575,6 +15609,11 @@ func (ec *executionContext) _Settings(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "usesDefaultTmdbKey":
 			out.Values[i] = ec._Settings_usesDefaultTmdbKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "hasDefaultTmdbKey":
+			out.Values[i] = ec._Settings_hasDefaultTmdbKey(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

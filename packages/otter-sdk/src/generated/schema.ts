@@ -275,6 +275,8 @@ export interface Settings {
     tmdbLanguage: Scalars['String']
     tmdbKeyStatus: TmdbKeyStatus
     usesDefaultTmdbKey: Scalars['Boolean']
+    /** Whether this build has a built-in key to fall back to (in use or not). */
+    hasDefaultTmdbKey: Scalars['Boolean']
     /** Whether the first-run TMDB key dialog was answered. */
     tmdbKeyPromptSeen: Scalars['Boolean']
     requireVpn: Scalars['Boolean']
@@ -784,6 +786,8 @@ export interface SettingsGenqlSelection{
     tmdbLanguage?: boolean | number
     tmdbKeyStatus?: boolean | number
     usesDefaultTmdbKey?: boolean | number
+    /** Whether this build has a built-in key to fall back to (in use or not). */
+    hasDefaultTmdbKey?: boolean | number
     /** Whether the first-run TMDB key dialog was answered. */
     tmdbKeyPromptSeen?: boolean | number
     requireVpn?: boolean | number

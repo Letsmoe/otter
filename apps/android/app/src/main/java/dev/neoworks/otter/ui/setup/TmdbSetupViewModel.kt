@@ -18,13 +18,17 @@ import kotlin.coroutines.cancellation.CancellationException
 
 private const val REJECTED_KEY_MESSAGE = "TMDB didn't accept this key. Copy the “API Key”, not the Read Access Token."
 
+enum class SetupStep { CHOOSE_KEY, OWN_KEY }
+
 /**
- * First-run TMDB setup: asks for an own API key until one works, or until the
- * user goes with the key built into this build.
+ * First-run TMDB setup: the user picks the key built into this build or their own, and is asked
+ * again whenever no working key is set.
  */
 class TmdbSetupViewModel : ViewModel() {
 
     var visible by mutableStateOf(false)
+        private set
+    var step by mutableStateOf(SetupStep.OWN_KEY)
         private set
     var apiKey by mutableStateOf("")
     var saving by mutableStateOf(false)
@@ -32,7 +36,7 @@ class TmdbSetupViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    /** Remembered from the first load: saving an own key hides that the build has one too. */
+    /** Whether this build comes with a TMDB key of its own. */
     var builtInKeyAvailable by mutableStateOf(false)
         private set
 
@@ -45,7 +49,10 @@ class TmdbSetupViewModel : ViewModel() {
             OtterApi.awaitBackend()
             try {
                 val settings = OtterApi.client.query(TmdbSetupQuery()).execute().dataOrThrow().settings.tmdbSetupFields
-                builtInKeyAvailable = settings.usesDefaultTmdbKey && settings.tmdbKeyStatus == TmdbKeyStatus.OK
+                builtInKeyAvailable = settings.hasDefaultTmdbKey
+                if (builtInKeyAvailable) {
+                    step = SetupStep.CHOOSE_KEY
+                }
                 visible = needsSetup(settings)
             } catch (cancellation: CancellationException) {
                 throw cancellation
@@ -53,6 +60,15 @@ class TmdbSetupViewModel : ViewModel() {
                 // An unreachable backend shows its own errors; the prompt returns on the next start.
             }
         }
+    }
+
+    fun chooseOwnKey() {
+        step = SetupStep.OWN_KEY
+    }
+
+    fun backToChoice() {
+        errorMessage = null
+        step = SetupStep.CHOOSE_KEY
     }
 
     fun saveKey() {
@@ -93,10 +109,11 @@ class TmdbSetupViewModel : ViewModel() {
     }
 }
 
-// Shown on first start, and again whenever no working key is set.
+// Shown whenever no working key is set, and on first start while only the built-in key is in use.
+// An own key that works (e.g. saved before this prompt existed) never triggers it.
 private fun needsSetup(settings: TmdbSetupFields): Boolean {
-    if (!settings.tmdbKeyPromptSeen) {
+    if (settings.tmdbKeyStatus != TmdbKeyStatus.OK) {
         return true
     }
-    return settings.tmdbKeyStatus != TmdbKeyStatus.OK
+    return settings.usesDefaultTmdbKey && !settings.tmdbKeyPromptSeen
 }

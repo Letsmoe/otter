@@ -119,7 +119,6 @@ dependencies {
     implementation(libs.haze)
     implementation(libs.palette)
     implementation(libs.haze.blur)
-    implementation(libs.haze.glass)
     implementation(libs.phosphor.icons)
     testImplementation(libs.junit)
 }

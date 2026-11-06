@@ -266,6 +266,8 @@ type Settings {
   tmdbLanguage: String!
   tmdbKeyStatus: TmdbKeyStatus!
   usesDefaultTmdbKey: Boolean!
+  "Whether this build has a built-in key to fall back to (in use or not)."
+  hasDefaultTmdbKey: Boolean!
   "Whether the first-run TMDB key dialog was answered."
   tmdbKeyPromptSeen: Boolean!
   requireVpn: Boolean!

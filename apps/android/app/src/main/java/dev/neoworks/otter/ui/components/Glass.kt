@@ -17,14 +17,11 @@ import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.blur.HazeBlurStyle
 import dev.chrisbanes.haze.blur.HazeColorEffect
 import dev.chrisbanes.haze.blur.hazeBlur
-import dev.chrisbanes.haze.glass.GlassStyle
-import dev.chrisbanes.haze.glass.hazeGlass
 import dev.neoworks.otter.ui.theme.OtterColors
 
 /** What glass surfaces blur: the content marked with `hazeSource` under the nearest provider. */
@@ -34,17 +31,19 @@ val LocalGlassBackdrop = staticCompositionLocalOf<HazeState?> { null }
 val GlassColor = Color(0xCC141416)
 val SubtleFill = Color.White.copy(alpha = 0.06f)
 
-private const val FROSTED_SATURATION = 1.8f
-private val frostedBlurRadius = 20.dp
+// Slightly muted: the web's 1.8× saturation made bright posters glow through on the phone.
+private const val FROSTED_SATURATION = 0.9f
+private val frostedBlurRadius = 40.dp
+private const val FROSTED_TINT_ALPHA = 0.82f
 
-// Web `glass-bar`: base-200 at 65% over a 20px blur, saturated 1.8×.
+// Base-200 at 82% over a wide blur: what's behind only shows as soft color.
 private val frostedStyle = HazeBlurStyle {
     blurRadius(frostedBlurRadius)
     backgroundColor(OtterColors.base200)
     colorEffects(
         listOf(
             HazeColorEffect.colorFilter(ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(FROSTED_SATURATION) })),
-            HazeColorEffect.tint(OtterColors.base200.copy(alpha = 0.65f)),
+            HazeColorEffect.tint(OtterColors.base200.copy(alpha = FROSTED_TINT_ALPHA)),
         ),
     )
     fallbackColorEffect(HazeColorEffect.tint(GlassColor))
@@ -78,21 +77,11 @@ fun Modifier.frostedGlass(shape: Shape, withRim: Boolean = true): Modifier {
     return styled
 }
 
-/** Liquid glass (refraction, specular rim) over [LocalGlassBackdrop]; frosted where it can't render. */
-@OptIn(ExperimentalHazeApi::class)
+/**
+ * The floating bars' glass. Haze's hazeGlass (refraction) drew only its tint, no blur, on ColorOS
+ * (Android 16), so the bars use the same frosted blur as every other surface.
+ */
 @Composable
 fun Modifier.liquidGlass(cornerRadius: Dp): Modifier {
-    val shape = RoundedCornerShape(cornerRadius)
-    val backdrop = LocalGlassBackdrop.current ?: return frostedGlass(shape)
-    // Haze's defaults suit light UIs (bright fill and tint); over Otter's black they read as flat grey.
-    val style = GlassStyle {
-        shape(shape)
-        backgroundColor(OtterColors.base200)
-        tint(OtterColors.base200.copy(alpha = 0.65f))
-        ambientResponse(0f)
-        whitePoint(0f)
-    }
-    return glassShadow(shape)
-        .hazeGlass(input = HazeInput.Sources(backdrop), style = style)
-        .border(1.dp, glassRimBrush, shape)
+    return frostedGlass(RoundedCornerShape(cornerRadius))
 }

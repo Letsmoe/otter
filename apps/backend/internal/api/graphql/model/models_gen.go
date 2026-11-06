@@ -217,6 +217,8 @@ type Settings struct {
 	TmdbLanguage       string        `json:"tmdbLanguage"`
 	TmdbKeyStatus      TmdbKeyStatus `json:"tmdbKeyStatus"`
 	UsesDefaultTmdbKey bool          `json:"usesDefaultTmdbKey"`
+	// Whether this build has a built-in key to fall back to (in use or not).
+	HasDefaultTmdbKey bool `json:"hasDefaultTmdbKey"`
 	// Whether the first-run TMDB key dialog was answered.
 	TmdbKeyPromptSeen bool     `json:"tmdbKeyPromptSeen"`
 	RequireVpn        bool     `json:"requireVpn"`

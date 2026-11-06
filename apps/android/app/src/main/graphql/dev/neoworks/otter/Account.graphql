@@ -39,6 +39,8 @@ query AppSettings {
     tmdbApiKey
     tmdbLanguage
     requireVpn
+    usesDefaultTmdbKey
+    hasDefaultTmdbKey
   }
 }
 
@@ -53,6 +55,7 @@ mutation UpdateAppSettings($input: SettingsInput!) {
 fragment TmdbSetupFields on Settings {
   tmdbKeyStatus
   usesDefaultTmdbKey
+  hasDefaultTmdbKey
   tmdbKeyPromptSeen
 }
 

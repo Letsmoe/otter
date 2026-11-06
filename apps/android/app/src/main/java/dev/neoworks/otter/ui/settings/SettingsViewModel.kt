@@ -35,6 +35,10 @@ class SettingsViewModel : ViewModel() {
     var tmdbApiKey by mutableStateOf("")
     var tmdbLanguage by mutableStateOf("de-DE")
     var requireVpn by mutableStateOf(false)
+    var hasBuiltInKey by mutableStateOf(false)
+        private set
+    var usesBuiltInKey by mutableStateOf(false)
+        private set
 
     private var savedApiKey = ""
 
@@ -51,6 +55,8 @@ class SettingsViewModel : ViewModel() {
                 savedApiKey = settings.tmdbApiKey
                 tmdbLanguage = settings.tmdbLanguage
                 requireVpn = settings.requireVpn
+                hasBuiltInKey = settings.hasDefaultTmdbKey
+                usesBuiltInKey = settings.usesDefaultTmdbKey
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Exception) {
@@ -73,6 +79,20 @@ class SettingsViewModel : ViewModel() {
         }
         savedApiKey = tmdbApiKey
         save(SettingsInput(tmdbApiKey = Optional.present(tmdbApiKey)))
+    }
+
+    /**
+     * On clears the own key so the built-in one applies. Off only shows the key field: the built-in
+     * key stays in use until an own key is saved.
+     */
+    fun changeUsesBuiltInKey(value: Boolean) {
+        usesBuiltInKey = value
+        if (!value) {
+            return
+        }
+        tmdbApiKey = ""
+        savedApiKey = ""
+        save(SettingsInput(tmdbApiKey = Optional.present("")))
     }
 
     fun chooseLanguage(language: String) {

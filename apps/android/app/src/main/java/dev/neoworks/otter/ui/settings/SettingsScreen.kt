@@ -49,6 +49,7 @@ import dev.neoworks.otter.ui.components.OtterSwitch
 import dev.neoworks.otter.ui.components.PillButton
 import dev.neoworks.otter.ui.components.PlainTextField
 import dev.neoworks.otter.ui.components.TMDB_API_KEY_PAGE
+import dev.neoworks.otter.ui.components.TmdbAttribution
 import dev.neoworks.otter.ui.components.openWebPage
 import dev.neoworks.otter.ui.components.ScreenHeader
 import dev.neoworks.otter.ui.navigation.bottomBarClearance
@@ -69,6 +70,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenPlugins: () -> Unit, viewModel: Set
             StreamingGroup(viewModel)
             PlaybackGroup()
             ProfilesGroup(onOpenPlugins)
+            TmdbAttribution(Modifier.fillMaxWidth().padding(horizontal = 4.dp), horizontalAlignment = Alignment.CenterHorizontally)
         }
     }
 }
@@ -127,33 +129,44 @@ private fun restartApp(context: Context) {
 
 @Composable
 private fun MetadataGroup(viewModel: SettingsViewModel) {
-    val context = LocalContext.current
     SettingsGroup("Metadata", footer = "TMDB provides titles, posters and recommendations.") {
-        Column(Modifier.padding(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("TMDB API key", fontSize = 14.sp)
-                Text("Get key", fontSize = 12.sp, color = Color.White.copy(alpha = 0.4f), modifier = Modifier.clickable { openWebPage(context, TMDB_API_KEY_PAGE) })
-            }
-            var hadFocus by remember { mutableStateOf(false) }
-            PlainTextField(
-                value = viewModel.tmdbApiKey,
-                onValueChange = { typed -> viewModel.tmdbApiKey = typed },
-                placeholder = "Paste your key",
-                isPassword = true,
-                textColor = Color.White.copy(alpha = 0.7f),
-                modifier = Modifier.onFocusChanged { state ->
-                    if (hadFocus && !state.isFocused) {
-                        viewModel.saveApiKey()
-                    }
-                    hadFocus = state.isFocused
-                },
-            )
+        if (viewModel.hasBuiltInKey) {
+            SettingsSwitchRow("Use built-in key", "The TMDB key that comes with Otter", viewModel.usesBuiltInKey, viewModel::changeUsesBuiltInKey)
+            SettingsDivider()
         }
-        SettingsDivider()
+        if (!viewModel.hasBuiltInKey || !viewModel.usesBuiltInKey) {
+            ApiKeyRow(viewModel)
+            SettingsDivider()
+        }
         Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text("Language", fontSize = 14.sp)
             FilterSelect("Language", viewModel.languageOptions(), viewModel.tmdbLanguage, viewModel::chooseLanguage, showLabel = false)
         }
+    }
+}
+
+@Composable
+private fun ApiKeyRow(viewModel: SettingsViewModel) {
+    val context = LocalContext.current
+    Column(Modifier.padding(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("TMDB API key", fontSize = 14.sp)
+            Text("Get key", fontSize = 12.sp, color = Color.White.copy(alpha = 0.4f), modifier = Modifier.clickable { openWebPage(context, TMDB_API_KEY_PAGE) })
+        }
+        var hadFocus by remember { mutableStateOf(false) }
+        PlainTextField(
+            value = viewModel.tmdbApiKey,
+            onValueChange = { typed -> viewModel.tmdbApiKey = typed },
+            placeholder = "Paste your key",
+            isPassword = true,
+            textColor = Color.White.copy(alpha = 0.7f),
+            modifier = Modifier.onFocusChanged { state ->
+                if (hadFocus && !state.isFocused) {
+                    viewModel.saveApiKey()
+                }
+                hadFocus = state.isFocused
+            },
+        )
     }
 }
 

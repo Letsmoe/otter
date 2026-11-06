@@ -598,6 +598,9 @@ export default {
             "usesDefaultTmdbKey": [
                 6
             ],
+            "hasDefaultTmdbKey": [
+                6
+            ],
             "tmdbKeyPromptSeen": [
                 6
             ],

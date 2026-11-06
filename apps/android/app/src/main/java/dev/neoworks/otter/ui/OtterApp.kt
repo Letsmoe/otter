@@ -63,16 +63,33 @@ fun OtterApp() {
     OtterTheme {
         // Sets the default content color; bare Text would otherwise be black.
         Surface(color = MaterialTheme.colorScheme.background) {
-            val activeProfile by ProfileSession.activeProfile.collectAsStateWithLifecycle()
-            if (activeProfile == null) {
-                ProfileGateScreen()
-                ToastHost()
-            } else {
-                AppShell()
+            // App-wide overlays blur the whole app below them; they sit outside that source, never in it.
+            val rootBackdrop = rememberHazeState()
+            Box(Modifier.fillMaxSize().hazeSource(rootBackdrop)) {
+                ProfileGateOrShell()
             }
-            UpdateBanner()
-            TmdbSetupOverlay()
+            CompositionLocalProvider(LocalGlassBackdrop provides rootBackdrop) {
+                UpdateBanner()
+                TmdbSetupOverlay()
+            }
         }
+    }
+}
+
+@Composable
+private fun ProfileGateOrShell() {
+    val activeProfile by ProfileSession.activeProfile.collectAsStateWithLifecycle()
+    if (activeProfile != null) {
+        AppShell()
+        return
+    }
+    val gateBackdrop = rememberHazeState()
+    Box(Modifier.fillMaxSize().hazeSource(gateBackdrop)) {
+        ProfileGateScreen()
+    }
+    // Toasts over the gate blur it; inside the shell they come with AppOverlays.
+    CompositionLocalProvider(LocalGlassBackdrop provides gateBackdrop) {
+        ToastHost()
     }
 }
 

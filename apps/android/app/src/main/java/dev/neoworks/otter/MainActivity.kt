@@ -6,10 +6,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import dev.neoworks.otter.together.INVITE_LINK_PREFIX
 import dev.neoworks.otter.together.TogetherSession
 import dev.neoworks.otter.together.roomCodeFromText
 import dev.neoworks.otter.ui.OtterApp
+import dev.neoworks.otter.ui.splash.SplashOverlay
+import dev.neoworks.otter.ui.splash.SplashPlayback
 
 class MainActivity : ComponentActivity() {
 
@@ -17,7 +22,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         preferFastestRefreshRate()
-        setContent { OtterApp() }
+        setContent {
+            Box(Modifier.fillMaxSize()) {
+                if (SplashPlayback.appMayCompose || !SplashPlayback.shouldPlay()) {
+                    OtterApp()
+                }
+                SplashOverlay()
+            }
+        }
         openInvite(intent)
     }
 
