@@ -8,7 +8,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.letsmoe.otter.ui.ShellReloads
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.letsmoe.otter.ui.components.PillButton
@@ -20,7 +23,9 @@ fun TmdbConnectionOverlay(connection: TmdbConnectionViewModel = viewModel()) {
     LaunchedEffect(connection, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) { connection.watch() }
     }
-    if (!connection.visible) {
+    // Playback already running (a download, or a stream that still loads) stays uncovered.
+    val playerOpen by ShellReloads.playerOpen.collectAsStateWithLifecycle()
+    if (!connection.visible || playerOpen) {
         return
     }
     SetupCard {

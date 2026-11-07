@@ -9,6 +9,7 @@ import com.letsmoe.otter.api.OtterApi
 import com.letsmoe.otter.api.dataOrThrow
 import com.letsmoe.otter.graphql.CheckTmdbConnectionMutation
 import com.letsmoe.otter.graphql.TmdbReachableQuery
+import com.letsmoe.otter.network.ConnectivityStore
 import com.letsmoe.otter.ui.ShellReloads
 import com.letsmoe.otter.ui.navigation.Tab
 import kotlinx.coroutines.delay
@@ -31,6 +32,9 @@ class TmdbConnectionViewModel : ViewModel() {
 
     /** "Continue anyway" hides the overlay until TMDB answers again. */
     private var dismissed = false
+
+    /** The backend's last answer may date from being offline, so the next check asks TMDB itself. */
+    private var recheckWhenOnline = false
 
     /** Runs while the app is in the foreground; each start asks TMDB itself. */
     suspend fun watch() {
@@ -66,11 +70,21 @@ class TmdbConnectionViewModel : ViewModel() {
         if (visible) {
             return askTmdb()
         }
+        if (recheckWhenOnline && ConnectivityStore.online.value) {
+            recheckWhenOnline = false
+            return askTmdb()
+        }
         return lastKnownReachability()
     }
 
     // Pages loaded while TMDB was unreachable are empty: rebuild them once it answers again.
     private fun showReachability(reachable: Boolean) {
+        if (!ConnectivityStore.online.value) {
+            // The offline bar says why nothing loads; ask TMDB itself once the phone is back online.
+            visible = false
+            recheckWhenOnline = true
+            return
+        }
         if (!reachable) {
             visible = !dismissed
             return

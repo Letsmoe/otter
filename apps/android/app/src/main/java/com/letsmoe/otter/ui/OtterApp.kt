@@ -1,6 +1,7 @@
 package com.letsmoe.otter.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -14,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -38,6 +40,7 @@ import dev.chrisbanes.haze.rememberHazeState
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.ui.components.LocalGlassBackdrop
 import com.letsmoe.otter.ui.components.LocalSheetHost
+import com.letsmoe.otter.ui.components.OfflineBar
 import com.letsmoe.otter.ui.components.SheetHostOutlet
 import com.letsmoe.otter.ui.preview.TitlePreviewSheet
 import com.letsmoe.otter.ui.components.SheetHostState
@@ -116,12 +119,19 @@ private fun AppShell(startTab: Tab) {
     val pagerState = rememberPagerState(initialPage = startTab.ordinal) { Tab.entries.size }
     val scope = rememberCoroutineScope()
     val openTab: (Tab) -> Unit = { tab -> navController.showTab(tab, pagerState, scope) }
+    LaunchedEffect(currentRoute) { ShellReloads.setPlayerOpen(currentRoute == Routes.PLAYER) }
     CompositionLocalProvider(LocalGlassBackdrop provides glassBackdrop, LocalSheetHost provides sheetHost) {
         Box(Modifier.fillMaxSize()) {
             OtterNavHost(navController, pagerState, openTab, Modifier.fillMaxSize().then(blurSourceFor(currentRoute, glassBackdrop)))
             AppServices(navController)
             if (currentRoute != Routes.PLAYER) {
-                TelevisionNowPlayingBar(Modifier.align(Alignment.BottomCenter).padding(bottom = bottomBarClearance()))
+                Column(
+                    Modifier.align(Alignment.BottomCenter).padding(bottom = bottomBarClearance()),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    OfflineBar()
+                    TelevisionNowPlayingBar()
+                }
                 BottomBar(
                     activeTab = activeTab(currentRoute, pagerState),
                     onSelect = openTab,
