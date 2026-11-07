@@ -19,14 +19,15 @@ import (
 
 // Services is everything the API reads from or acts on.
 type Services struct {
-	Library       *library.Service
-	Profiles      *profiles.Service
-	Notifications *notify.Store
-	Downloads     *downloads.Service
-	Subtitles     *subtitles.Service
-	Recommender   *recommend.Engine
-	Settings      *settings.Service
-	Plugins       *plugins.Registry
+	Library             *library.Service
+	Profiles            *profiles.Service
+	Notifications       *notify.Store
+	NotificationWatcher *notify.Watcher
+	Downloads           *downloads.Service
+	Subtitles           *subtitles.Service
+	Recommender         *recommend.Engine
+	Settings            *settings.Service
+	Plugins             *plugins.Registry
 	// PluginStore is nil while plugin updates are turned off.
 	PluginStore    *pluginstore.Service
 	StreamResolver *resolve.Service

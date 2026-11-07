@@ -607,6 +607,11 @@ type Mutation {
   markNotificationsRead(profileId: ID!): Boolean!
 
   """
+  Check every title on any My List for news now instead of at the next sweep; returns when done. Used by the phone's background check.
+  """
+  checkNotifications: Boolean!
+
+  """
   Queue a movie or episode for download; a failed one is retried. streamId picks the link, otherwise the best ones are tried.
   """
   startDownload(profileId: ID!, mediaId: ID!, streamId: ID): Download!

@@ -170,25 +170,27 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 		cacheClient, store, streamsAllowed)
 	notificationStore := notify.NewStore(database)
 	go downloadService.Run(ctx)
-	go notify.NewWatcher(notificationStore, database, libraryService).Run(ctx)
+	notificationWatcher := notify.NewWatcher(notificationStore, database, libraryService)
+	go notificationWatcher.Run(ctx)
 
 	pluginStore := startPluginStore(ctx, cfg.pluginDir)
 	resolver := gqlapi.NewResolver(gqlapi.Services{
-		Library:        libraryService,
-		Profiles:       profiles.NewService(database, cacheClient, hookRunner),
-		Notifications:  notificationStore,
-		Downloads:      downloadService,
-		Subtitles:      subtitleService,
-		Recommender:    recommend.New(database),
-		Settings:       settingsService,
-		Plugins:        registry,
-		PluginStore:    pluginStore,
-		StreamResolver: streamResolver,
-		StreamProxy:    streamProxy,
-		TMDB:           tmdbClient,
-		Skips:          skips.New(cacheClient),
-		Together:       togetherService(),
-		VpnConnected:   vpnConnected,
+		Library:             libraryService,
+		Profiles:            profiles.NewService(database, cacheClient, hookRunner),
+		Notifications:       notificationStore,
+		NotificationWatcher: notificationWatcher,
+		Downloads:           downloadService,
+		Subtitles:           subtitleService,
+		Recommender:         recommend.New(database),
+		Settings:            settingsService,
+		Plugins:             registry,
+		PluginStore:         pluginStore,
+		StreamResolver:      streamResolver,
+		StreamProxy:         streamProxy,
+		TMDB:                tmdbClient,
+		Skips:               skips.New(cacheClient),
+		Together:            togetherService(),
+		VpnConnected:        vpnConnected,
 	})
 	graphqlHandler, err := gqlapi.NewHandler(resolver)
 	if err != nil {

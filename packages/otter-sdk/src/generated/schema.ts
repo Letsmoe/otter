@@ -471,6 +471,8 @@ export interface Mutation {
     addToWatchlist: Scalars['Boolean']
     removeFromWatchlist: Scalars['Boolean']
     markNotificationsRead: Scalars['Boolean']
+    /** Check every title on any My List for news now instead of at the next sweep; returns when done. Used by the phone's background check. */
+    checkNotifications: Scalars['Boolean']
     /** Queue a movie or episode for download; a failed one is retried. streamId picks the link, otherwise the best ones are tried. */
     startDownload: Download
     /** Remove a download (stops it when running). */
@@ -1003,6 +1005,8 @@ export interface MutationGenqlSelection{
     addToWatchlist?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
     removeFromWatchlist?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
     markNotificationsRead?: { __args: {profileId: Scalars['ID']} }
+    /** Check every title on any My List for news now instead of at the next sweep; returns when done. Used by the phone's background check. */
+    checkNotifications?: boolean | number
     /** Queue a movie or episode for download; a failed one is retried. streamId picks the link, otherwise the best ones are tried. */
     startDownload?: (DownloadGenqlSelection & { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], streamId?: (Scalars['ID'] | null)} })
     /** Remove a download (stops it when running). */

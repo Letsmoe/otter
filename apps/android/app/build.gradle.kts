@@ -118,6 +118,7 @@ dependencies {
     implementation(libs.coil.network)
     implementation(libs.haze)
     implementation(libs.palette)
+    implementation(libs.work.runtime)
     implementation(libs.haze.blur)
     implementation(libs.phosphor.icons)
     testImplementation(libs.junit)

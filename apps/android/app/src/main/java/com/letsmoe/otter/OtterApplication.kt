@@ -6,6 +6,7 @@ import com.letsmoe.otter.backend.EmbeddedBackend
 import com.letsmoe.otter.cast.CastSetup
 import com.letsmoe.otter.cast.LocalNetworkRouting
 import com.letsmoe.otter.cast.TelevisionConnection
+import com.letsmoe.otter.notifications.NotificationCheckWorker
 import com.letsmoe.otter.ui.player.TelevisionPlayback
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.settings.PlaybackSettings
@@ -25,5 +26,6 @@ class OtterApplication : Application() {
         CastSetup.initialize(this)
         TelevisionConnection.initialize(this)
         TelevisionPlayback.initialize(this)
+        NotificationCheckWorker.schedule(this)
     }
 }

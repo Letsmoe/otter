@@ -111,6 +111,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AddToWatchlist        func(childComplexity int, profileID string, mediaID string) int
 		AdoptStream           func(childComplexity int, mediaID string, url string, plugin string, label *string) int
+		CheckNotifications    func(childComplexity int) int
 		ClearRating           func(childComplexity int, profileID string, mediaID string) int
 		CreateProfile         func(childComplexity int, name string, avatarURL *string, pin *string, isChild *bool, languages []string) int
 		DeleteDownload        func(childComplexity int, id string) int
@@ -418,6 +419,7 @@ type MutationResolver interface {
 	AddToWatchlist(ctx context.Context, profileID string, mediaID string) (bool, error)
 	RemoveFromWatchlist(ctx context.Context, profileID string, mediaID string) (bool, error)
 	MarkNotificationsRead(ctx context.Context, profileID string) (bool, error)
+	CheckNotifications(ctx context.Context) (bool, error)
 	StartDownload(ctx context.Context, profileID string, mediaID string, streamID *string) (*model.Download, error)
 	DeleteDownload(ctx context.Context, id string) (bool, error)
 	OpenDownloadsFolder(ctx context.Context) (bool, error)
@@ -797,6 +799,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.AdoptStream(childComplexity, args["mediaId"].(string), args["url"].(string), args["plugin"].(string), args["label"].(*string)), true
+	case "Mutation.checkNotifications":
+		if e.ComplexityRoot.Mutation.CheckNotifications == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Mutation.CheckNotifications(childComplexity), true
 	case "Mutation.clearRating":
 		if e.ComplexityRoot.Mutation.ClearRating == nil {
 			break
@@ -2930,6 +2938,8 @@ type Mutation {
   addToWatchlist(profileId: ID!, mediaId: ID!): Boolean!
   removeFromWatchlist(profileId: ID!, mediaId: ID!): Boolean!
   markNotificationsRead(profileId: ID!): Boolean!
+  "Check every title on any My List for news now instead of at the next sweep; returns when done. Used by the phone's background check."
+  checkNotifications: Boolean!
   "Queue a movie or episode for download; a failed one is retried. streamId picks the link, otherwise the best ones are tried."
   startDownload(profileId: ID!, mediaId: ID!, streamId: ID): Download!
   "Remove a download (stops it when running)."
@@ -6528,6 +6538,29 @@ func (ec *executionContext) fieldContext_Mutation_markNotificationsRead(ctx cont
 		return fc, err
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_checkNotifications(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_checkNotifications(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Mutation().CheckNotifications(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_checkNotifications(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Mutation", field, true, true, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _Mutation_startDownload(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -14268,6 +14301,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "markNotificationsRead":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_markNotificationsRead(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "checkNotifications":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_checkNotifications(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

@@ -1272,6 +1272,9 @@ export default {
                     ]
                 }
             ],
+            "checkNotifications": [
+                6
+            ],
             "startDownload": [
                 37,
                 {

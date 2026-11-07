@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.letsmoe.otter.graphql.type.MediaType
+import com.letsmoe.otter.notifications.rememberNotificationPermissionRequest
 import com.letsmoe.otter.ui.FailedMessage
 import com.letsmoe.otter.ui.LoadState
 import com.letsmoe.otter.ui.media.RailItem
@@ -59,7 +60,14 @@ private fun LoadedTitle(
     slots: TitleSlots,
 ) {
     val rails by titleViewModel.rails.collectAsStateWithLifecycle()
-    val actions = TitlePageActions(onBack, onOpenPerson, onSearch, titleViewModel::toggleWatchlist, titleViewModel::rate)
+    val requestNotificationPermission = rememberNotificationPermissionRequest()
+    val toggleWatchlist = {
+        if (!detail.inWatchlist) {
+            requestNotificationPermission()
+        }
+        titleViewModel.toggleWatchlist()
+    }
+    val actions = TitlePageActions(onBack, onOpenPerson, onSearch, toggleWatchlist, titleViewModel::rate)
     if (detail.mediaType == MediaType.SERIES) {
         SeriesTitle(detail, rails, actions, slots, linkedSeasonNumber, linkedEpisodeId, onPlay, onOpenItem)
         return

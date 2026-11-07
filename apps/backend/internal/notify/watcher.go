@@ -3,6 +3,7 @@ package notify
 import (
 	"context"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/Letsmoe/otter/internal/db"
@@ -34,6 +35,7 @@ type Watcher struct {
 	store    *Store
 	database *db.DB
 	library  *library.Service
+	sweeping sync.Mutex
 }
 
 func NewWatcher(store *Store, database *db.DB, libraryService *library.Service) *Watcher {
@@ -55,8 +57,11 @@ func (w *Watcher) Run(ctx context.Context) {
 	}
 }
 
-// Sweep checks every title on any watchlist once.
+// Sweep checks every title on any watchlist once. Concurrent sweeps (the
+// periodic one and one asked for over the API) run one after the other.
 func (w *Watcher) Sweep(ctx context.Context) {
+	w.sweeping.Lock()
+	defer w.sweeping.Unlock()
 	followed, err := w.followedTitles(ctx)
 	if err != nil {
 		log.Printf("notify: read watchlists: %v", err)

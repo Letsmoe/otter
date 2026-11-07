@@ -187,6 +187,12 @@ func (r *mutationResolver) MarkNotificationsRead(ctx context.Context, profileID 
 	return true, r.Notifications.MarkAllRead(ctx, profile)
 }
 
+// CheckNotifications is the resolver for the checkNotifications field.
+func (r *mutationResolver) CheckNotifications(ctx context.Context) (bool, error) {
+	r.NotificationWatcher.Sweep(ctx)
+	return true, nil
+}
+
 // StartDownload is the resolver for the startDownload field.
 func (r *mutationResolver) StartDownload(ctx context.Context, profileID string, mediaID string, streamID *string) (*model.Download, error) {
 	profile, ref, err := profileAndMedia(profileID, mediaID)

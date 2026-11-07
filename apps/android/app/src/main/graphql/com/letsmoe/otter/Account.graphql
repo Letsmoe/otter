@@ -28,6 +28,10 @@ mutation MarkNotificationsRead($profileId: ID!) {
   markNotificationsRead(profileId: $profileId)
 }
 
+mutation CheckNotifications {
+  checkNotifications
+}
+
 query ProfileLiked($profileId: ID!) {
   likedTitles(profileId: $profileId) {
     ...TitleCard

@@ -9,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import com.letsmoe.otter.notifications.NotificationLinks
 import com.letsmoe.otter.together.INVITE_LINK_PREFIX
 import com.letsmoe.otter.together.TogetherSession
 import com.letsmoe.otter.together.roomCodeFromText
@@ -30,11 +31,18 @@ class MainActivity : ComponentActivity() {
                 SplashOverlay()
             }
         }
-        openInvite(intent)
+        openLink(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        openLink(intent)
+    }
+
+    private fun openLink(intent: Intent?) {
+        if (NotificationLinks.handle(intent)) {
+            return
+        }
         openInvite(intent)
     }
 

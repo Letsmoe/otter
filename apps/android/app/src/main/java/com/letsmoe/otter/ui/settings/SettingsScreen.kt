@@ -38,6 +38,10 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.CaretRight
 import com.letsmoe.otter.api.ServerSettings
+import com.letsmoe.otter.notifications.NotificationItem
+import com.letsmoe.otter.notifications.NotificationsRepository
+import com.letsmoe.otter.notifications.PhoneNotifications
+import com.letsmoe.otter.notifications.rememberNotificationPermissionRequest
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.settings.AutoSkipIntro
 import com.letsmoe.otter.settings.PlaybackSettings
@@ -70,6 +74,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenPlugins: () -> Unit, viewModel: Set
             MetadataGroup(viewModel)
             StreamingGroup(viewModel)
             PlaybackGroup()
+            NotificationsGroup()
             ProfilesGroup(onOpenPlugins)
             TmdbAttribution(Modifier.fillMaxWidth().padding(horizontal = 4.dp), horizontalAlignment = Alignment.CenterHorizontally)
         }
@@ -224,6 +229,43 @@ private fun vpnLine(known: Boolean, connected: Boolean): String {
     }
     return "Not connected"
 }
+
+@Composable
+private fun NotificationsGroup() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val sendTest = rememberNotificationPermissionRequest(openSettingsWhenRefused = true) {
+        scope.launch { sendTestNotification(context) }
+    }
+    val footer = "Every few hours Otter checks the titles on My List, even while closed, and tells you " +
+        "about new episodes, releases and found sources."
+    SettingsGroup("Notifications", footer = footer) {
+        LinkRow("Send a test notification", sendTest)
+    }
+}
+
+// The newest real notification of the profile when there is one, else a sample.
+private suspend fun sendTestNotification(context: Context) {
+    val profileId = ProfileSession.activeProfile.value?.id
+    var item = sampleNotification
+    if (profileId != null) {
+        item = NotificationsRepository.fetch(profileId, 1).firstOrNull() ?: sampleNotification
+    }
+    PhoneNotifications.post(context, item, profileName = null)
+}
+
+private val sampleNotification = NotificationItem(
+    id = "test",
+    heading = "Notifications are on",
+    body = "News about titles on My List shows up like this",
+    createdAt = "",
+    read = false,
+    titleId = "",
+    titleName = "Otter",
+    imageUrl = null,
+    seasonNumber = null,
+    episodeId = null,
+)
 
 @Composable
 private fun ProfilesGroup(onOpenPlugins: () -> Unit) {
