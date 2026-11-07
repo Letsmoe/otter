@@ -157,12 +157,21 @@ func (s *CacheService) manifestReferences(ctx context.Context, manifestKey strin
 	}
 	var references []string
 	for _, line := range strings.Split(string(content), "\n") {
-		key, ok := storage.KeyFromURL(strings.TrimSpace(line))
+		key, ok := storage.KeyFromURL(referencedURL(strings.TrimSpace(line)))
 		if ok && strings.HasPrefix(key, blobPrefix) {
 			references = append(references, key)
 		}
 	}
 	return references, nil
+}
+
+// referencedURL is the URL a playlist line points at: the line itself, or the
+// URI attribute of a tag like #EXT-X-MAP.
+func referencedURL(line string) string {
+	if strings.HasPrefix(line, "#") {
+		return attributeValue(line, "URI")
+	}
+	return line
 }
 
 // entryKey returns the kv key that marks a stream cache blob as cached:

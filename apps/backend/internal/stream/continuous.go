@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/aes"
-	"crypto/cipher"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -292,20 +291,7 @@ func (p *Proxy) decryptSegment(ctx context.Context, body []byte, segment mediaSe
 	if err != nil {
 		return nil, err
 	}
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	if len(body)%aes.BlockSize != 0 {
-		return nil, errors.New("ciphertext is not a whole number of blocks")
-	}
-	iv := segment.key.iv
-	if iv == nil {
-		iv = sequenceIV(segment.sequence)
-	}
-	plain := make([]byte, len(body))
-	cipher.NewCBCDecrypter(block, iv).CryptBlocks(plain, body)
-	return withoutPadding(plain), nil
+	return decryptAES128(body, key, segmentIV(segment))
 }
 
 // segmentKeyBytes fetches each key once; the lock makes parallel segments wait for it.

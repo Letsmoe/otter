@@ -101,83 +101,7 @@ func startsAt(resp *http.Response, offset int64) bool {
 	return strings.HasPrefix(resp.Header.Get("Content-Range"), fmt.Sprintf("bytes %d-", offset))
 }
 
-// -- HLS --
-
-func (s *CacheService) downloadHLS(ctx context.Context, manifestURL string, headers map[string]string, resumeKey string, progress func(float64, int64, int64)) (string, error) {
-	resp, err := s.fetch(ctx, manifestURL, headers)
-	if err != nil {
-		return "", fmt.Errorf("fetch manifest %s: %w", manifestURL, err)
-	}
-	body, err := io.ReadAll(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		return "", fmt.Errorf("read manifest: %w", err)
-	}
-	base, _ := url.Parse(manifestURL)
-	lines := strings.Split(string(body), "\n")
-	segments := mediaSegments(lines, base)
-	keys := downloadSegmentKeys(segments, resumeKey)
-
-	if err := s.downloadSegments(ctx, segments, keys, headers, progress); err != nil {
-		return "", fmt.Errorf("download segments: %w", err)
-	}
-	manifest := s.rewriteSegments(lines, keys)
-	manifestKey := blobPrefix + "manifest/" + urlHash("download:"+resumeKey) + ".m3u8"
-	if err := s.storage.Put(ctx, manifestKey, strings.NewReader(manifest), int64(len(manifest)), "application/x-mpegURL"); err != nil {
-		return "", fmt.Errorf("save manifest: %w", err)
-	}
-	return s.storage.DirectURL(manifestKey), nil
-}
-
-// mediaSegments returns the absolute segment URLs of a media playlist, in order.
-func mediaSegments(lines []string, base *url.URL) []string {
-	var segments []string
-	afterExtInf := false
-	for _, rawLine := range lines {
-		line := strings.TrimSpace(rawLine)
-		if afterExtInf && line != "" && !strings.HasPrefix(line, "#") {
-			segments = append(segments, absURL(base, line))
-			afterExtInf = false
-			continue
-		}
-		if strings.HasPrefix(line, "#EXTINF") {
-			afterExtInf = true
-		}
-	}
-	return segments
-}
-
-// downloadSegmentKeys names segments by link, segment count and position
-// instead of by URL, whose signed tokens change with every resolve.
-func downloadSegmentKeys(segments []string, resumeKey string) []string {
-	keys := make([]string, len(segments))
-	for index, segment := range segments {
-		identity := fmt.Sprintf("download:%s#%d/%d", resumeKey, index, len(segments))
-		keys[index] = blobPrefix + "seg/" + urlHash(identity) + segExt(segment)
-	}
-	return keys
-}
-
-// rewriteSegments replaces each segment line with its blob URL, in order.
-func (s *CacheService) rewriteSegments(lines []string, keys []string) string {
-	out := make([]string, 0, len(lines))
-	next := 0
-	afterExtInf := false
-	for _, rawLine := range lines {
-		line := strings.TrimSpace(rawLine)
-		if afterExtInf && line != "" && !strings.HasPrefix(line, "#") && next < len(keys) {
-			out = append(out, s.storage.DirectURL(keys[next]))
-			next++
-			afterExtInf = false
-			continue
-		}
-		if strings.HasPrefix(line, "#EXTINF") {
-			afterExtInf = true
-		}
-		out = append(out, line)
-	}
-	return strings.Join(out, "\n")
-}
+// -- HLS (download_hls.go) --
 
 // segmentProgress counts finished segments and their bytes across workers.
 type segmentProgress struct {
@@ -198,69 +122,15 @@ func (p *segmentProgress) add(size int64) {
 	}
 }
 
-// downloadSegments stores every segment not stored yet; ones kept from an
-// interrupted run count as done right away.
-func (s *CacheService) downloadSegments(ctx context.Context, segments, keys []string, headers map[string]string, progress func(float64, int64, int64)) error {
-	tracker := &segmentProgress{total: len(segments), report: progress}
-	var (
-		workers     sync.WaitGroup
-		errorsMutex sync.Mutex
-		failures    []error
-		slots       = make(chan struct{}, segWorkers)
-	)
-	for index, segment := range segments {
-		if s.storage.Touch(ctx, keys[index]) == nil {
-			tracker.add(s.storage.Size(keys[index]))
-			continue
-		}
-		workers.Add(1)
-		slots <- struct{}{}
-		go func(segmentURL, key string) {
-			defer workers.Done()
-			defer func() { <-slots }()
-			size, err := s.downloadSegment(ctx, segmentURL, key, headers)
-			if err != nil {
-				errorsMutex.Lock()
-				failures = append(failures, err)
-				errorsMutex.Unlock()
-				return
-			}
-			tracker.add(size)
-		}(segment, keys[index])
-	}
-	workers.Wait()
-	if len(failures) > 0 {
-		return fmt.Errorf("%d/%d segments failed (first: %w)", len(failures), len(segments), failures[0])
-	}
-	return nil
-}
-
-func (s *CacheService) downloadSegment(ctx context.Context, segmentURL, key string, headers map[string]string) (int64, error) {
-	resp, err := s.fetch(ctx, segmentURL, headers)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-	if err := s.storage.Put(ctx, key, resp.Body, resp.ContentLength, "video/MP2T"); err != nil {
-		return 0, fmt.Errorf("save segment: %w", err)
-	}
-	return s.storage.Size(key), nil
-}
-
 // bestVariant returns the highest-bandwidth variant of a master playlist, or
 // the URL itself when it is already a media playlist.
 func (s *CacheService) bestVariant(ctx context.Context, manifestURL string, headers map[string]string) (string, error) {
-	resp, err := s.fetch(ctx, manifestURL, headers)
+	content, err := s.fetchManifest(ctx, manifestURL, headers)
 	if err != nil {
-		return "", fmt.Errorf("fetch manifest %s: %w", manifestURL, err)
-	}
-	body, err := io.ReadAll(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		return "", fmt.Errorf("read manifest: %w", err)
+		return "", err
 	}
 	base, _ := url.Parse(manifestURL)
-	best := highestBandwidthVariant(string(body), base)
+	best := highestBandwidthVariant(content, base)
 	if best == "" {
 		return manifestURL, nil
 	}
