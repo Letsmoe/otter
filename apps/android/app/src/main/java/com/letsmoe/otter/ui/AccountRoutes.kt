@@ -30,6 +30,7 @@ import com.letsmoe.otter.ui.profile.ProfileFlightOverlay
 import com.letsmoe.otter.ui.profile.ProfileNavigation
 import com.letsmoe.otter.ui.settings.SettingsScreen
 import com.letsmoe.otter.ui.title.TitleSlots
+import com.letsmoe.otter.ui.television.TelevisionButton
 import com.letsmoe.otter.ui.together.TogetherButton
 import com.letsmoe.otter.ui.together.TogetherChatSheet
 import com.letsmoe.otter.ui.together.TogetherSheet
@@ -100,7 +101,10 @@ private fun NavHostController.openNotification(notification: NotificationItem) {
 fun titleSlots(openTab: (Tab) -> Unit): TitleSlots {
     val openDownloads = { openTab(Tab.DOWNLOADS) }
     return TitleSlots(
-        togetherButton = { TogetherButton(glass = true) },
+        headerButtons = {
+            TelevisionButton(glass = true)
+            TogetherButton(glass = true)
+        },
         downloadButton = { mediaId, title -> DownloadButton(mediaId, title, openDownloads) },
         episodeDownloadButton = { mediaId, label -> DownloadButton(mediaId, label, openDownloads, style = DownloadButtonStyle.ICON) },
     )

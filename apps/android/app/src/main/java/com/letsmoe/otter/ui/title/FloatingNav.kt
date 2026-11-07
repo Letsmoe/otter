@@ -22,18 +22,18 @@ import com.letsmoe.otter.ui.components.frostedGlass
 import com.letsmoe.otter.ui.components.pressable
 
 /**
- * Round glass back, Watch Together and search buttons floating over a title page's banner.
- * [togetherButton] is the slot for the Watch Together button (glass, 40dp, like the others).
+ * Round glass back, Play on TV, Watch Together and search buttons floating over a title page's banner.
+ * [headerButtons] is the slot for Play on TV and Watch Together (glass, 40dp, like the others).
  */
 @Composable
-fun FloatingNav(onBack: () -> Unit, onSearch: () -> Unit, modifier: Modifier = Modifier, togetherButton: @Composable () -> Unit = {}) {
+fun FloatingNav(onBack: () -> Unit, onSearch: () -> Unit, modifier: Modifier = Modifier, headerButtons: @Composable () -> Unit = {}) {
     Row(
         modifier.fillMaxWidth().statusBarsPadding().padding(start = 12.dp, end = 12.dp, top = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         GlassIconButton(PhosphorIcons.Regular.ArrowLeft, "Back", onBack)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            togetherButton()
+            headerButtons()
             GlassIconButton(PhosphorIcons.Regular.MagnifyingGlass, "Search", onSearch)
         }
     }

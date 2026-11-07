@@ -100,7 +100,7 @@ fun TitlePage(
                 item { Box(Modifier.padding(top = 8.dp, bottom = 16.dp)) { tabContent() } }
             }
         }
-        FloatingNav(actions.onBack, actions.onSearch, togetherButton = slots.togetherButton)
+        FloatingNav(actions.onBack, actions.onSearch, headerButtons = slots.headerButtons)
     }
 }
 

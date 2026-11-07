@@ -7,8 +7,8 @@ data class PlayRequest(val mediaId: String, val streamId: String? = null)
 
 /** Places on the title pages where other features (Watch Together, downloads) plug in their buttons. */
 class TitleSlots(
-    /** Round 40dp glass button left of search in the floating nav. */
-    val togetherButton: @Composable () -> Unit = {},
+    /** Round 40dp glass buttons (Play on TV, Watch Together) left of search in the floating nav. */
+    val headerButtons: @Composable () -> Unit = {},
     /** The "Download" action in the action row of a movie; gets the movie id and its title. */
     val downloadButton: @Composable (mediaId: String, title: String) -> Unit = { _, _ -> },
     /** The download icon on an episode row; gets the episode id and a label like "S1:E2 Name". */

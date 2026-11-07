@@ -48,22 +48,21 @@ import com.letsmoe.otter.ui.theme.OtterColors
 
 /** Not connected: picks a TV. Connected: opens the remote. */
 @Composable
-fun TelevisionButton(modifier: Modifier = Modifier, iconSize: Dp = 22.dp) {
+fun TelevisionButton(modifier: Modifier = Modifier, glass: Boolean = false, iconSize: Dp = 22.dp) {
     val target by TelevisionConnection.target.collectAsStateWithLifecycle()
     var pickerOpen by remember { mutableStateOf(false) }
-    Box(
-        modifier
-            .pressable {
-                if (target == null) {
-                    pickerOpen = true
-                } else {
-                    TelevisionPlayback.openRemote()
-                }
-            }
-            .size(40.dp)
-            .clip(CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
+    val pressableModifier = modifier.pressable {
+        if (target == null) {
+            pickerOpen = true
+        } else {
+            TelevisionPlayback.openRemote()
+        }
+    }
+    var shape = pressableModifier.size(40.dp).clip(CircleShape)
+    if (glass) {
+        shape = pressableModifier.size(40.dp).frostedGlass(CircleShape)
+    }
+    Box(shape, contentAlignment = Alignment.Center) {
         Icon(PhosphorIcons.Regular.Screencast, contentDescription = "Play on TV", modifier = Modifier.size(iconSize))
         if (target != null) {
             ConnectedDot(Modifier.align(Alignment.TopEnd))
