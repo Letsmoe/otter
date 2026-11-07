@@ -251,8 +251,11 @@ func keepOriginalReferer(req *http.Request, via []*http.Request) error {
 }
 
 func (s *CacheService) fetch(ctx context.Context, rawURL string, headers map[string]string) (*http.Response, error) {
-	if err := s.checkUpstream(); err != nil {
-		return nil, err
+	// Own blobs (downloads remuxed for a TV) are local reads: they play without a VPN and offline.
+	if !s.storage.IsDirectURL(rawURL) {
+		if err := s.checkUpstream(); err != nil {
+			return nil, err
+		}
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
 	if err != nil {

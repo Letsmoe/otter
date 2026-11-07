@@ -67,6 +67,12 @@ func (c *Client) DirectURL(key string) string {
 	return c.publicBase + RoutePrefix + key
 }
 
+// IsDirectURL reports whether rawURL points at a blob of this backend, so
+// reading it is a local file read, not internet traffic.
+func (c *Client) IsDirectURL(rawURL string) bool {
+	return strings.HasPrefix(rawURL, c.publicBase+RoutePrefix)
+}
+
 // RelativeURL returns the root-relative path Handler serves key at. Redirects
 // use it so they resolve against whatever host the client reached the backend
 // on, instead of the configured public origin.
@@ -375,8 +381,25 @@ func (c *Client) Handler() http.Handler {
 		// Serving counts as use, keeping cache blobs in play out of eviction.
 		_ = touchFile(target, info)
 		w.Header().Set("Cache-Control", "public, max-age=86400")
+		if strings.HasSuffix(info.Name(), ".m3u8") {
+			c.servePlaylist(w, r, info, file)
+			return
+		}
 		http.ServeContent(w, r, info.Name(), info.ModTime(), file)
 	})
+}
+
+// servePlaylist serves a stored playlist with its blob URLs root-relative.
+// Downloads store them under the public origin (127.0.0.1 on the phone), which
+// a TV reaching the backend over the LAN would resolve to itself.
+func (c *Client) servePlaylist(w http.ResponseWriter, r *http.Request, info os.FileInfo, file *os.File) {
+	body, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, "read playlist", http.StatusInternalServerError)
+		return
+	}
+	relative := strings.ReplaceAll(string(body), c.publicBase+RoutePrefix, RoutePrefix)
+	http.ServeContent(w, r, info.Name(), info.ModTime(), strings.NewReader(relative))
 }
 
 // path maps a key to a file under root. Cleaning against "/" first means
