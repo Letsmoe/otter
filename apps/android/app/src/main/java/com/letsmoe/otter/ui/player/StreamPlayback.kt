@@ -1,5 +1,6 @@
 package com.letsmoe.otter.ui.player
 
+import android.util.Log
 import com.apollographql.apollo.api.Optional
 import com.letsmoe.otter.api.OtterApi
 import com.letsmoe.otter.api.dataOrThrow
@@ -19,6 +20,8 @@ import kotlinx.coroutines.launch
 import com.letsmoe.otter.profiles.languageRank
 import com.letsmoe.otter.profiles.preferredLanguages
 import com.letsmoe.otter.ui.title.formatSpeed
+
+private const val TAG = "OtterSources"
 
 /** How many sources Play tries before giving up. */
 
@@ -352,14 +355,22 @@ fun raceGroups(rankedStreams: List<SourceStream>): List<List<SourceStream>> {
 suspend fun followSourceStreams(mediaId: String, onUpdate: (List<SourceStream>, Boolean) -> Unit) {
     try {
         OtterApi.awaitBackend()
+        Log.d(TAG, "following sources of $mediaId")
         OtterApi.client.subscription(SourceStreamsSubscription(mediaId)).toFlow().collect { response ->
-            val update = response.data?.streams ?: return@collect
+            // Apollo reports failures in the response instead of throwing; without data the search is over.
+            val update = response.data?.streams
+            if (update == null) {
+                Log.w(TAG, "sources of $mediaId failed: ${response.errors} ${response.exception}")
+                onUpdate(emptyList(), true)
+                return@collect
+            }
             val streams = rankStreams(update.streams.map { stream -> stream.sourceStreamFields.toSourceStream() })
             onUpdate(streams, update.done)
         }
     } catch (cancellation: CancellationException) {
         throw cancellation
     } catch (error: Exception) {
+        Log.w(TAG, "sources of $mediaId failed", error)
         onUpdate(emptyList(), true)
     }
 }

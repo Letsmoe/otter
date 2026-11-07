@@ -60,6 +60,7 @@ fun SeriesPage(
         shareUrl = "https://www.themoviedb.org/tv/${detail.id.substringAfter(':')}",
         actions = actions,
         slots = slots,
+        downloadTarget = upNextDownload(detail, upNext),
         tabBar = { SegmentedBar(seriesTabs, tab, onSelect = { chosen -> tab = chosen }) },
         playExtras = { UpNextBar(upNext) },
     ) {
@@ -116,6 +117,14 @@ private fun seasonLabel(season: SeasonInfo): String {
         return season.name
     }
     return "Season ${season.seasonNumber}"
+}
+
+// The episode Play would start, e.g. "Bosch S1:E6 Lost Light"; none while episodes load.
+private fun upNextDownload(detail: TitleDetail, upNext: UpNext?): DownloadTarget? {
+    if (upNext == null) {
+        return null
+    }
+    return DownloadTarget(upNext.episode.id, "${detail.title} ${upNext.episode.code} ${upNext.episode.displayName}")
 }
 
 private fun seriesPlayLabel(upNext: UpNext?): String {

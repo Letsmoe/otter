@@ -45,6 +45,9 @@ import com.letsmoe.otter.ui.theme.OtterColors
 /** The state of the page's Play button. */
 class PlayButtonState(val label: String, val busy: Boolean, val ready: Boolean, val disabled: Boolean, val onClick: () -> Unit)
 
+/** What the action row's Download saves: the movie, or a series' up-next episode (streams only exist for those). */
+class DownloadTarget(val mediaId: String, val title: String)
+
 class TitlePageActions(
     val onBack: () -> Unit,
     val onOpenPerson: (String) -> Unit,
@@ -71,6 +74,7 @@ fun TitlePage(
     shareUrl: String,
     actions: TitlePageActions,
     slots: TitleSlots,
+    downloadTarget: DownloadTarget?,
     tabBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     playExtras: @Composable () -> Unit = {},
@@ -94,7 +98,7 @@ fun TitlePage(
             ) {
                 item { TitleBackdropOverlay(trailer, modifier = bannerPlacement) }
                 item {
-                    TitleSummary(detail, facts, playButton, creditLines, shareUrl, actions, slots, playExtras)
+                    TitleSummary(detail, facts, playButton, creditLines, shareUrl, actions, slots, downloadTarget, playExtras)
                 }
                 item { CastRow(detail.cast, actions.onOpenPerson) }
                 item { Box(Modifier.padding(horizontal = 12.dp).padding(top = 12.dp)) { tabBar() } }
@@ -130,6 +134,7 @@ private fun TitleSummary(
     shareUrl: String,
     actions: TitlePageActions,
     slots: TitleSlots,
+    downloadTarget: DownloadTarget?,
     playExtras: @Composable () -> Unit,
 ) {
     Column(Modifier.padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -152,7 +157,11 @@ private fun TitleSummary(
             onToggleWatchlist = actions.onToggleWatchlist,
             onToggleNotifying = actions.onToggleNotifying,
             onRate = actions.onRate,
-            downloadButton = { slots.downloadButton(detail.id, detail.title) },
+            downloadButton = {
+                if (downloadTarget != null) {
+                    slots.downloadButton(downloadTarget.mediaId, downloadTarget.title)
+                }
+            },
         )
     }
 }

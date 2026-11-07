@@ -49,6 +49,7 @@ fun MoviePage(
         shareUrl = "https://www.themoviedb.org/movie/${detail.id.substringAfter(':')}",
         actions = actions,
         slots = slots,
+        downloadTarget = DownloadTarget(detail.id, detail.title),
         tabBar = { SegmentedBar(movieTabs, tab, onSelect = { chosen -> tab = chosen }) },
     ) {
         when (tab) {

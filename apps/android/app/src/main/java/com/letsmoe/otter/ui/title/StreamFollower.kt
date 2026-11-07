@@ -66,7 +66,12 @@ class StreamFollower(private val scope: CoroutineScope) {
         OtterApi.client.subscription(StreamsSubscription(mediaId)).toFlow()
             .catch { mutableStreams.update { current -> current.copy(searching = false) } }
             .collect { response ->
-                val update = response.data?.streams ?: return@collect
+                // Apollo reports failures in the response instead of throwing; without data the search is over.
+                val update = response.data?.streams
+                if (update == null) {
+                    mutableStreams.update { current -> current.copy(searching = false) }
+                    return@collect
+                }
                 val ranked = rankStreams(update.streams.map { stream -> stream.streamLink })
                 mutableStreams.value = StreamList(ranked, searching = !update.done)
             }
