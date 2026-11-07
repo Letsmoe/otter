@@ -63,7 +63,7 @@ Then enter `http://<your-server>:8080` under **App Settings → Server** in the 
 
 Every streaming site Otter knows is a small plugin. Plugins update on their own in the background, so when a site changes, Otter keeps up without a new app release.
 
-> Want to contribute or tinker with the code? Have a look at [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Want to contribute or tinker with the code? Have a look at [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## A note
 
