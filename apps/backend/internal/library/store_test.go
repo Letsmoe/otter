@@ -43,6 +43,33 @@ func TestStubNeverOverwritesFetchedDetail(t *testing.T) {
 	}
 }
 
+func TestLanguageChangeLetsListsRenameTitles(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t)
+	ref := MediaRef{MediaType: MediaTypeMovie, MediaID: 603}
+	movie := Title{MediaType: MediaTypeMovie, TMDBID: 603, Title: "Matrix", Overview: "deutsch"}
+	if err := store.SaveMovie(ctx, movie); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.ExpireAllDetails(ctx); err != nil {
+		t.Fatal(err)
+	}
+	stub := Title{MediaType: MediaTypeMovie, TMDBID: 603, Title: "The Matrix", Overview: "english"}
+	if err := store.SaveStub(ctx, stub); err != nil {
+		t.Fatal(err)
+	}
+	stored, err := store.Title(ctx, ref)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.Title != "The Matrix" || stored.Overview != "english" {
+		t.Fatalf("list result in the new language was ignored: %+v", stored)
+	}
+	if stored.DetailFetchedAt == "" || !isStale(stored.DetailFetchedAt, titleDetailTTL) {
+		t.Fatalf("expired detail should be stale but not new: %q", stored.DetailFetchedAt)
+	}
+}
+
 func TestPluginStreamsReplaceOnlyTheirOwnLinks(t *testing.T) {
 	ctx := context.Background()
 	store := newTestStore(t)

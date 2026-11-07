@@ -344,6 +344,7 @@ func (r *mutationResolver) VerifyPin(ctx context.Context, profileID string, pin 
 
 // UpdateSettings is the resolver for the updateSettings field.
 func (r *mutationResolver) UpdateSettings(ctx context.Context, input model.SettingsInput) (*model.Settings, error) {
+	previousLanguage := r.Settings.Cached().TMDBLanguage
 	updated, err := r.Settings.Apply(ctx, settings.Update{
 		TMDBApiKey: input.TmdbAPIKey, TMDBLanguage: input.TmdbLanguage, RequireVpn: input.RequireVpn,
 		TMDBKeyPromptSeen: input.TmdbKeyPromptSeen,
@@ -353,6 +354,11 @@ func (r *mutationResolver) UpdateSettings(ctx context.Context, input model.Setti
 	}
 	if input.TmdbAPIKey != nil {
 		r.TMDB.VerifyKey(ctx)
+	}
+	if updated.TMDBLanguage != previousLanguage {
+		if err := r.Library.Store.ExpireAllDetails(ctx); err != nil {
+			log.Printf("settings: expiring details after a language change: %v", err)
+		}
 	}
 	return r.settingsModel(updated), nil
 }

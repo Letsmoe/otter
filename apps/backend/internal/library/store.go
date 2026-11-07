@@ -152,9 +152,13 @@ func titleVars(title Title) db.Vars {
 	}
 }
 
+// expiredFetchedAt marks details fetched in another TMDB language: stale, but
+// unlike NULL not a title seen for the first time (no title.added hook).
+const expiredFetchedAt = "1970-01-01T00:00:00.000Z"
+
 // SaveStub records a title only seen in a list (search, related,
-// filmography). It refreshes list-level fields but never overwrites a title
-// whose detail was already fetched.
+// filmography). It refreshes list-level fields, including the localized
+// title and overview, but never overwrites a title whose detail is current.
 func (s *Store) SaveStub(ctx context.Context, stub Title) error {
 	table, dateColumn := "movie", "release_date"
 	if stub.MediaType == MediaTypeSeries {
@@ -165,10 +169,26 @@ func (s *Store) SaveStub(ctx context.Context, stub Title) error {
 	VALUES ($tmdb_id, $title, $overview, $release_date, $popularity, $vote_average,
 		$vote_count, $poster_path, $backdrop_path, $genres, $adult, $now)
 	ON CONFLICT (tmdb_id) DO UPDATE SET popularity = excluded.popularity,
-		vote_average = excluded.vote_average, vote_count = excluded.vote_count
-	WHERE %[1]s.detail_fetched_at IS NULL`, table, dateColumn)
-	_, err := s.database.Exec(ctx, query, titleVars(stub))
+		vote_average = excluded.vote_average, vote_count = excluded.vote_count,
+		title = excluded.title, overview = excluded.overview, genres = excluded.genres
+	WHERE %[1]s.detail_fetched_at IS NULL OR %[1]s.detail_fetched_at = $expired`, table, dateColumn)
+	vars := titleVars(stub)
+	vars["expired"] = expiredFetchedAt
+	_, err := s.database.Exec(ctx, query, vars)
 	return err
+}
+
+// ExpireAllDetails marks every fetched title, season and person as due, so
+// they are fetched again in a new TMDB language.
+func (s *Store) ExpireAllDetails(ctx context.Context) error {
+	for _, table := range []string{"movie", "series", "season", "person"} {
+		_, err := s.database.Exec(ctx, "UPDATE "+table+" SET detail_fetched_at = $expired WHERE detail_fetched_at IS NOT NULL",
+			db.Vars{"expired": expiredFetchedAt})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // ReplaceCredits swaps a title's credits and upserts the credited people.
