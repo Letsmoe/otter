@@ -1,6 +1,5 @@
 package com.letsmoe.otter.ui.downloads
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +25,7 @@ import com.letsmoe.otter.downloads.DownloadsRepository
 import com.letsmoe.otter.graphql.type.DownloadStatus
 import com.letsmoe.otter.toasts.ToastKind
 import com.letsmoe.otter.toasts.Toasts
+import com.letsmoe.otter.ui.components.pressable
 import kotlinx.coroutines.launch
 
 enum class DownloadButtonStyle { LABELED, ICON }
@@ -70,7 +70,7 @@ fun DownloadButton(
         LabeledButton(item, modifier, ::onClick)
         return
     }
-    Box(modifier.size(40.dp).clip(CircleShape).clickable(onClick = ::onClick), contentAlignment = Alignment.Center) {
+    Box(modifier.pressable(onClick = ::onClick).size(40.dp).clip(CircleShape),contentAlignment = Alignment.Center) {
         DownloadStateIcon(item, 22.dp)
     }
 }
@@ -78,7 +78,7 @@ fun DownloadButton(
 @Composable
 private fun LabeledButton(item: DownloadItem?, modifier: Modifier, onClick: () -> Unit) {
     Column(
-        modifier.width(80.dp).clip(CircleShape).clickable(onClick = onClick),
+        modifier.pressable(onClick = onClick).width(80.dp).clip(CircleShape),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {

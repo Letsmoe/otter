@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.X
+import com.letsmoe.otter.ui.components.WithoutBackdrop
+import com.letsmoe.otter.ui.components.frostedGlass
 
 private val panelShape = RoundedCornerShape(24.dp)
 private val maxSidePanelWidth = 384.dp
@@ -83,8 +85,11 @@ private fun SheetPanel(visible: Boolean, side: Boolean, onClose: () -> Unit, con
 
 @Composable
 private fun PanelBody(modifier: Modifier, onClose: () -> Unit, content: @Composable () -> Unit) {
-    Box(modifier.playerGlass(panelShape).clickableWithoutRipple {}) {
-        Column(Modifier.fillMaxSize()) { content() }
+    Box(modifier.frostedGlass(panelShape).clickableWithoutRipple {}) {
+        // Glass inside the panel gets a plain fill; blurring the video would cut a window through the panel.
+        WithoutBackdrop {
+            Column(Modifier.fillMaxSize()) { content() }
+        }
         GlassIconButton(PhosphorIcons.Regular.X, "Close", 40.dp, onClose, Modifier.align(Alignment.TopEnd).padding(16.dp))
     }
 }

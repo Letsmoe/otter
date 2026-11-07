@@ -50,6 +50,7 @@ import com.adamglin.phosphoricons.regular.LockSimpleOpen
 import com.adamglin.phosphoricons.regular.X
 import com.letsmoe.otter.together.TogetherSession
 import com.letsmoe.otter.together.otherPeers
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.together.PeerAvatar
 
 const val SKIP_SECONDS = 10
@@ -192,7 +193,7 @@ private fun TogetherPeersButton(onClick: () -> Unit) {
     if (others.isEmpty()) {
         return
     }
-    Row(Modifier.clickableWithoutRipple(onClick = onClick).padding(end = 4.dp), horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
+    Row(Modifier.pressable(onClick = onClick).padding(end = 4.dp), horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
         for (peer in others) {
             PeerAvatar(peer, 30.dp, buffering = peerStates[peer.id]?.buffering == true)
         }
@@ -201,7 +202,7 @@ private fun TogetherPeersButton(onClick: () -> Unit) {
 
 @Composable
 private fun PlainIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, description: String, iconSize: Int, onClick: () -> Unit) {
-    Box(Modifier.size(44.dp).clickableWithoutRipple(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(Modifier.pressable(onClick = onClick).size(44.dp), contentAlignment = Alignment.Center) {
         Icon(icon, contentDescription = description, modifier = Modifier.size(iconSize.dp))
     }
 }
@@ -213,7 +214,7 @@ private fun CastButton(casting: Boolean, onClick: () -> Unit) {
     if (casting) {
         icon = androidx.media3.cast.R.drawable.media_route_button_connected
     }
-    Box(Modifier.size(44.dp).clickableWithoutRipple(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(Modifier.pressable(onClick = onClick).size(44.dp), contentAlignment = Alignment.Center) {
         Icon(painterResource(icon), contentDescription = "Play on TV", modifier = Modifier.size(24.dp))
     }
 }
@@ -222,7 +223,7 @@ private fun CastButton(casting: Boolean, onClick: () -> Unit) {
 private fun CenterControls(isPlaying: Boolean, actions: PlayerActions, modifier: Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(80.dp), verticalAlignment = Alignment.CenterVertically) {
         SkipButton(PhosphorIcons.Regular.ArrowCounterClockwise, "Back $SKIP_SECONDS seconds") { actions.skip(-SKIP_SECONDS) }
-        Box(Modifier.size(80.dp).clickableWithoutRipple(onClick = actions.togglePlay), contentAlignment = Alignment.Center) {
+        Box(Modifier.pressable(onClick = actions.togglePlay).size(80.dp), contentAlignment = Alignment.Center) {
             if (isPlaying) {
                 Icon(PhosphorIcons.Fill.Pause, "Pause", modifier = Modifier.size(56.dp))
             } else {
@@ -235,7 +236,7 @@ private fun CenterControls(isPlaying: Boolean, actions: PlayerActions, modifier:
 
 @Composable
 private fun SkipButton(icon: androidx.compose.ui.graphics.vector.ImageVector, description: String, onClick: () -> Unit) {
-    Box(Modifier.size(64.dp).clickableWithoutRipple(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(Modifier.pressable(onClick = onClick).size(64.dp), contentAlignment = Alignment.Center) {
         Icon(icon, contentDescription = description, modifier = Modifier.size(44.dp))
         Text("$SKIP_SECONDS", fontSize = 11.sp, fontWeight = FontWeight.Bold)
     }

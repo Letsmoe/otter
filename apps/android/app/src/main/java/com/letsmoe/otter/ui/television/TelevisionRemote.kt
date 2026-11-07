@@ -1,17 +1,25 @@
 package com.letsmoe.otter.ui.television
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -42,10 +50,15 @@ import com.adamglin.phosphoricons.regular.CaretRight
 import com.adamglin.phosphoricons.regular.SkipForward
 import com.adamglin.phosphoricons.regular.SpeakerHigh
 import com.adamglin.phosphoricons.regular.Television
+import com.adamglin.phosphoricons.regular.WarningCircle
 import com.letsmoe.otter.cast.TelevisionConnection
 import com.letsmoe.otter.cast.TelevisionTarget
 import com.letsmoe.otter.ui.components.GlassBottomSheet
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.PillButton
+import com.letsmoe.otter.ui.components.SubtleFill
+import com.letsmoe.otter.ui.theme.OtterColors
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.player.PlaybackPosition
 import com.letsmoe.otter.ui.player.PlayerRequest
 import com.letsmoe.otter.ui.player.PlayerUiState
@@ -53,15 +66,22 @@ import com.letsmoe.otter.ui.player.PlayerViewModel
 import com.letsmoe.otter.ui.player.SourcesSheetContent
 import com.letsmoe.otter.ui.player.SpeedSheetContent
 import com.letsmoe.otter.ui.player.TelevisionPlayback
-import com.letsmoe.otter.ui.player.TracksSheetContent
 import com.letsmoe.otter.ui.player.sourceStatusText
 import com.letsmoe.otter.vpn.VpnStatus
 import com.letsmoe.otter.vpn.VpnStatusStore
 import kotlinx.coroutines.delay
+import kotlin.math.abs
 
 private const val SKIP_SECONDS = 10
 // Volume changes are sent once the finger rests this long, not on every slider step.
 private const val VOLUME_SEND_DELAY_MILLISECONDS = 150L
+// After a seek the thumb stays where the user let go until the TV reports a position this close,
+// or for this long: a TV takes seconds to get there and would otherwise pull the thumb back.
+private const val SEEK_ARRIVED_SECONDS = 5f
+private const val SEEK_HOLD_MILLISECONDS = 15_000L
+private val SLIDER_TRACK_HEIGHT = 6.dp
+private val SLIDER_THUMB_SIZE = 18.dp
+private val SLIDER_THUMB_TOUCHED_SIZE = 26.dp
 
 private enum class RemotePage { MAIN, CAPTIONS, SOURCES, SPEED }
 
@@ -93,7 +113,7 @@ private fun ColumnScope.RemoteContent(target: TelevisionTarget, onContinueOnPhon
     when (page) {
         RemotePage.MAIN -> PlayingRemote(target, viewModel, state, position, onOpen = { chosen -> page = chosen }, onContinueOnPhone = onContinueOnPhone)
         RemotePage.CAPTIONS -> SubPage(onBack = { page = RemotePage.MAIN }) {
-            TracksSheetContent(state, viewModel::chooseAudio, viewModel::chooseSubtitle, viewModel::toggleVoiceBoost)
+            TelevisionCaptionsContent(state, viewModel::chooseAudio, viewModel::chooseSubtitle)
         }
         RemotePage.SOURCES -> SubPage(onBack = { page = RemotePage.MAIN }) {
             SourcesSheetContent(state.sources, state.currentSourceId, state.searchingSources, { sourceId ->
@@ -128,6 +148,9 @@ private fun PlayingRemote(
     Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         ConnectionHeader(target)
         NowPlaying(state)
+        if (state.shownError != null) {
+            ErrorActions(onRetry = viewModel::retryAfterError, onOtherSource = { onOpen(RemotePage.SOURCES) })
+        }
         RemoteScrubber(position, state.durationSeconds, viewModel::seekTo)
         TransportRow(state, viewModel)
         VolumeRow()
@@ -141,50 +164,87 @@ private fun ConnectionHeader(target: TelevisionTarget) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(PhosphorIcons.Regular.Television, contentDescription = null, modifier = Modifier.size(22.dp))
         Text(target.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-        Text(
-            "Disconnect",
-            fontSize = 14.sp,
-            color = Color.White.copy(alpha = 0.7f),
-            modifier = Modifier.clickable(onClick = TelevisionPlayback::disconnect).padding(8.dp),
-        )
+        PillButton("Disconnect", Modifier, enabled = true, filled = false, onClick = TelevisionPlayback::disconnect)
     }
 }
 
 @Composable
 private fun NowPlaying(state: PlayerUiState) {
     val vpn by VpnStatusStore.status.collectAsStateWithLifecycle()
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(state.title, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-        val status = statusLine(state, vpn) ?: return
-        Text(status, fontSize = 13.sp, color = Color.White.copy(alpha = 0.6f))
+        val status = remoteStatus(state, vpn) ?: return
+        StatusChip(status)
     }
 }
 
-private fun statusLine(state: PlayerUiState, vpn: VpnStatus): String? {
+@Composable
+private fun ErrorActions(onRetry: () -> Unit, onOtherSource: () -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        PillButton("Try again", Modifier, enabled = true, filled = true, onClick = onRetry)
+        PillButton("Other source", Modifier, enabled = true, filled = false, onClick = onOtherSource)
+    }
+}
+
+/** What the remote says under the title; [busy] shows a spinner, [problem] the warning look. */
+private class RemoteStatus(val text: String, val busy: Boolean, val problem: Boolean)
+
+private fun remoteStatus(state: PlayerUiState, vpn: VpnStatus): RemoteStatus? {
     val error = state.shownError
     if (error != null) {
-        return error
+        return RemoteStatus(error, busy = false, problem = true)
     }
     if (!state.hasSource) {
-        return sourceStatusText(state, vpn)
+        val blocked = vpn.blocksStreaming
+        return RemoteStatus(sourceStatusText(state, vpn), busy = !blocked, problem = blocked)
     }
     if (state.isBuffering) {
-        return "Loading on the TV…"
+        return RemoteStatus("Loading on the TV…", busy = true, problem = false)
     }
     return null
+}
+
+@Composable
+private fun StatusChip(status: RemoteStatus) {
+    var tint = Color.White.copy(alpha = 0.75f)
+    if (status.problem) {
+        tint = OtterColors.warning
+    }
+    Row(
+        Modifier.background(SubtleFill, CircleShape).padding(horizontal = 14.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (status.busy) {
+            CircularProgressIndicator(Modifier.size(14.dp), color = tint, strokeWidth = 2.dp)
+        }
+        if (status.problem) {
+            Icon(PhosphorIcons.Regular.WarningCircle, contentDescription = null, tint = tint, modifier = Modifier.size(16.dp))
+        }
+        Text(status.text, fontSize = 13.sp, color = tint)
+    }
 }
 
 @Composable
 private fun RemoteScrubber(position: PlaybackPosition, durationSeconds: Double, onSeek: (Double) -> Unit) {
     var dragging by remember { mutableStateOf(false) }
     var draggedSeconds by remember { mutableFloatStateOf(0f) }
-    val duration = durationSeconds.toFloat().coerceAtLeast(1f)
-    var shownSeconds = position.positionSeconds.toFloat()
-    if (dragging) {
-        shownSeconds = draggedSeconds
+    // Where the user let go, shown until the TV reports it got there.
+    var seekTargetSeconds by remember { mutableStateOf<Float?>(null) }
+    val reportedSeconds = position.positionSeconds.toFloat()
+    LaunchedEffect(seekTargetSeconds, reportedSeconds) {
+        val target = seekTargetSeconds ?: return@LaunchedEffect
+        if (abs(reportedSeconds - target) < SEEK_ARRIVED_SECONDS) {
+            seekTargetSeconds = null
+            return@LaunchedEffect
+        }
+        delay(SEEK_HOLD_MILLISECONDS)
+        seekTargetSeconds = null
     }
+    val duration = durationSeconds.toFloat().coerceAtLeast(1f)
+    val shownSeconds = scrubberSeconds(dragging, draggedSeconds, seekTargetSeconds, reportedSeconds)
     Column {
-        Slider(
+        RemoteSlider(
             value = shownSeconds.coerceIn(0f, duration),
             onValueChange = { seconds ->
                 dragging = true
@@ -192,16 +252,26 @@ private fun RemoteScrubber(position: PlaybackPosition, durationSeconds: Double, 
             },
             onValueChangeFinished = {
                 dragging = false
+                seekTargetSeconds = draggedSeconds
                 onSeek(draggedSeconds.toDouble())
             },
             valueRange = 0f..duration,
-            colors = remoteSliderColors(),
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(formatClock(shownSeconds.toDouble()), fontSize = 12.sp, color = Color.White.copy(alpha = 0.6f))
             Text(formatClock(durationSeconds), fontSize = 12.sp, color = Color.White.copy(alpha = 0.6f))
         }
     }
+}
+
+private fun scrubberSeconds(dragging: Boolean, draggedSeconds: Float, seekTargetSeconds: Float?, reportedSeconds: Float): Float {
+    if (dragging) {
+        return draggedSeconds
+    }
+    if (seekTargetSeconds != null) {
+        return seekTargetSeconds
+    }
+    return reportedSeconds
 }
 
 @Composable
@@ -220,7 +290,10 @@ private fun TransportRow(state: PlayerUiState, viewModel: PlayerViewModel) {
     if (state.hasNextEpisode) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             Row(
-                Modifier.clickable(onClick = viewModel::playNext).padding(8.dp),
+                Modifier
+                    .pressable(onClick = viewModel::playNext)
+                    .background(Color.White.copy(alpha = 0.08f), CircleShape)
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -245,7 +318,7 @@ private fun RoundIconButton(
         fill = Color.White
         tint = Color.Black
     }
-    Box(Modifier.size(sizeDp.dp).background(fill, CircleShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(Modifier.pressable(onClick = onClick).size(sizeDp.dp).background(fill, CircleShape), contentAlignment = Alignment.Center) {
         Icon(icon, contentDescription = label, tint = tint, modifier = Modifier.size((sizeDp * 0.42f).dp))
     }
 }
@@ -267,13 +340,12 @@ private fun VolumeRow() {
     val shown = volume ?: return
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(PhosphorIcons.Regular.SpeakerHigh, contentDescription = "Volume", modifier = Modifier.size(20.dp))
-        Slider(
+        RemoteSlider(
             value = shown,
             onValueChange = { changed ->
                 volume = changed
                 pendingVolume = changed
             },
-            colors = remoteSliderColors(),
             modifier = Modifier.weight(1f),
         )
     }
@@ -306,7 +378,7 @@ private fun sourceLabel(state: PlayerUiState): String {
 @Composable
 private fun SettingsRow(title: String, value: String, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 14.dp),
+        Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onClick).fillMaxWidth().padding(vertical = 14.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -318,9 +390,9 @@ private fun SettingsRow(title: String, value: String, onClick: () -> Unit) {
 
 @Composable
 private fun RemoteActions(onContinueOnPhone: (PlayerRequest) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        PillButton("Stop", Modifier.weight(1f), enabled = true, filled = false, onClick = TelevisionPlayback::stop)
-        PillButton("Continue on phone", Modifier.weight(1f), enabled = true, filled = true) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
+        PillButton("Stop", Modifier, enabled = true, filled = false, onClick = TelevisionPlayback::stop)
+        PillButton("Continue on phone", Modifier, enabled = true, filled = true) {
             val request = TelevisionPlayback.continueOnPhone() ?: return@PillButton
             onContinueOnPhone(request)
         }
@@ -329,13 +401,55 @@ private fun RemoteActions(onContinueOnPhone: (PlayerRequest) -> Unit) {
 
 @Composable
 private fun ColumnScope.SubPage(onBack: () -> Unit, content: @Composable () -> Unit) {
-    Text(
-        "‹ Back",
-        fontSize = 14.sp,
-        color = Color.White.copy(alpha = 0.7f),
-        modifier = Modifier.clickable(onClick = onBack).padding(horizontal = 24.dp, vertical = 12.dp),
-    )
+    PillButton("‹ Back", Modifier.padding(start = 24.dp, top = 12.dp), enabled = true, filled = false, onClick = onBack)
     Box(Modifier.weight(1f)) { content() }
+}
+
+/** A slider with a round thumb that grows under the finger and a thick track without gaps. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RemoteSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    onValueChangeFinished: (() -> Unit)? = null,
+    valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val colors = remoteSliderColors()
+    Slider(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
+        onValueChangeFinished = onValueChangeFinished,
+        valueRange = valueRange,
+        colors = colors,
+        interactionSource = interactionSource,
+        thumb = { RemoteSliderThumb(interactionSource) },
+        track = { sliderState ->
+            SliderDefaults.Track(
+                sliderState = sliderState,
+                colors = colors,
+                drawStopIndicator = null,
+                thumbTrackGapSize = 0.dp,
+                modifier = Modifier.height(SLIDER_TRACK_HEIGHT),
+            )
+        },
+    )
+}
+
+@Composable
+private fun RemoteSliderThumb(interactionSource: MutableInteractionSource) {
+    val pressed by interactionSource.collectIsPressedAsState()
+    val dragged by interactionSource.collectIsDraggedAsState()
+    var targetSize = SLIDER_THUMB_SIZE
+    if (pressed || dragged) {
+        targetSize = SLIDER_THUMB_TOUCHED_SIZE
+    }
+    val size by animateDpAsState(targetSize, spring(dampingRatio = Spring.DampingRatioMediumBouncy), label = "thumbSize")
+    Box(Modifier.size(SLIDER_THUMB_TOUCHED_SIZE), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(size).background(Color.White, CircleShape))
+    }
 }
 
 @Composable

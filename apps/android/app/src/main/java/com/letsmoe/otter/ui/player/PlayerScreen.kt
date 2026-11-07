@@ -1,6 +1,7 @@
 package com.letsmoe.otter.ui.player
 
 import android.app.Application
+import android.view.LayoutInflater
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,9 +38,13 @@ import androidx.media3.ui.PlayerView
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.Television
+import com.letsmoe.otter.R
 import com.letsmoe.otter.together.TogetherSession
 import com.letsmoe.otter.together.isOpen
+import com.letsmoe.otter.ui.components.LocalGlassBackdrop
 import com.letsmoe.otter.ui.components.WithoutBackdrop
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import com.letsmoe.otter.ui.together.TogetherOverlay
 import kotlinx.coroutines.delay
 
@@ -108,9 +114,13 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
         toggleLock = { chrome.locked = !chrome.locked; sheet = null; chrome.show() },
     )
 
+    // The sheets' glass blurs the video (or the casting backdrop) behind them.
+    val videoBackdrop = rememberHazeState()
     Box(Modifier.fillMaxSize().background(Color.Black)) {
-        VideoSurface(viewModel.player, state.subtitleFraction)
-        state.castDeviceName?.let { deviceName -> CastingBackdrop(deviceName) }
+        Box(Modifier.fillMaxSize().hazeSource(videoBackdrop)) {
+            VideoSurface(viewModel.player, state.subtitleFraction)
+            state.castDeviceName?.let { deviceName -> CastingBackdrop(deviceName) }
+        }
         PlayerTapSurface(
             onToggleControls = chrome::toggle,
             onDoubleTap = { side ->
@@ -123,7 +133,7 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
             },
         )
         skipFeedback?.let { feedback -> SkipFeedbackBubble(feedback) }
-        StatusNotice(state, viewModel, ::openSheet, ::close)
+        StatusNotice(state, viewModel, ::openSheet)
         if (!state.hasEnded) {
             PlayerControlsLayer(state, position, chrome, actions) { viewModel.previewPlayer }
             SkipSegmentButton(skipButton.takeIf { upNext == null }, chrome.visible, viewModel::skipSegment)
@@ -136,7 +146,9 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
         AnimatedVisibility(state.hasEnded, enter = fadeIn(), exit = fadeOut()) {
             EndScreen(state.title, state.mediaId, state.hasNextEpisode, onNext = viewModel::playNextAfterEnd, onClose = ::close)
         }
-        PlayerSheetHost(sheet, onClose = ::closeSheet) { kind -> SheetContent(kind, state, viewModel, ::closeSheet) }
+        CompositionLocalProvider(LocalGlassBackdrop provides videoBackdrop) {
+            PlayerSheetHost(sheet, onClose = ::closeSheet) { kind -> SheetContent(kind, state, viewModel, ::closeSheet) }
+        }
     }
 }
 
@@ -176,8 +188,7 @@ private fun HideControlsAfterIdle(state: PlayerUiState, chrome: PlayerChrome, sh
 private fun VideoSurface(player: Player, subtitleFraction: Float) {
     AndroidView(
         factory = { context ->
-            PlayerView(context).apply {
-                useController = false
+            (LayoutInflater.from(context).inflate(R.layout.player_video, null) as PlayerView).apply {
                 resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                 setShutterBackgroundColor(android.graphics.Color.BLACK)
                 this.player = player
@@ -215,11 +226,16 @@ private fun CastingBackdrop(deviceName: String) {
 
 // Waiting for the room, buffering, or a failure, in the middle of the video.
 @Composable
-private fun StatusNotice(state: PlayerUiState, viewModel: PlayerViewModel, openSheet: (PlayerSheetKind) -> Unit, close: () -> Unit) {
+private fun StatusNotice(state: PlayerUiState, viewModel: PlayerViewModel, openSheet: (PlayerSheetKind) -> Unit) {
     Box(Modifier.fillMaxSize()) {
         val error = state.shownError
         if (error != null) {
-            PlayerErrorNotice(error, onChooseAnotherSource = { chooseAnotherSource(state, openSheet, close) }, modifier = Modifier.align(Alignment.Center))
+            PlayerErrorNotice(
+                error,
+                onRetry = viewModel::retryAfterError,
+                onChooseAnotherSource = chooseAnotherSourceAction(state, openSheet),
+                modifier = Modifier.align(Alignment.Center),
+            )
             return@Box
         }
         if (state.hasEnded) {
@@ -235,12 +251,12 @@ private fun StatusNotice(state: PlayerUiState, viewModel: PlayerViewModel, openS
     }
 }
 
-private fun chooseAnotherSource(state: PlayerUiState, openSheet: (PlayerSheetKind) -> Unit, close: () -> Unit) {
-    if (state.sources.size > 1) {
-        openSheet(PlayerSheetKind.SOURCES)
-        return
+// Only offered when there is another source to pick.
+private fun chooseAnotherSourceAction(state: PlayerUiState, openSheet: (PlayerSheetKind) -> Unit): (() -> Unit)? {
+    if (state.sources.size <= 1) {
+        return null
     }
-    close()
+    return { openSheet(PlayerSheetKind.SOURCES) }
 }
 
 @Composable

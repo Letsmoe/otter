@@ -18,12 +18,13 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.theme.OtterColors
 
 internal val playerGlassFill = OtterColors.base200.copy(alpha = 0.78f)
 internal val playerRimColor = Color.White.copy(alpha = 0.12f)
 
-/** The player's glass: video can't be blurred behind it, so it is a translucent fill with the web app's rim. */
+/** The player's small glass (buttons, notices): a translucent fill with the web app's rim; only the sheets blur the video. */
 internal fun Modifier.playerGlass(shape: Shape): Modifier {
     return this.clip(shape).background(playerGlassFill).border(1.dp, playerRimColor, shape)
 }
@@ -37,7 +38,7 @@ internal fun Modifier.clickableWithoutRipple(enabled: Boolean = true, onClick: (
 /** Round glass button with an icon. */
 @Composable
 internal fun GlassIconButton(icon: ImageVector, description: String, size: Dp, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(modifier.size(size).playerGlass(CircleShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(modifier.pressable(onClick = onClick).size(size).playerGlass(CircleShape),contentAlignment = Alignment.Center) {
         Icon(icon, contentDescription = description, modifier = Modifier.size(size * 0.5f))
     }
 }

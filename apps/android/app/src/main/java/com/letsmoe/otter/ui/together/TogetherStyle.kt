@@ -24,23 +24,6 @@ internal val cardShape = RoundedCornerShape(20.dp)
 internal val mutedText = Color.White.copy(alpha = 0.55f)
 internal val faintText = Color.White.copy(alpha = 0.4f)
 
-private const val PRESSED_SCALE = 0.96f
-
-/** Clickable without a ripple that springs down to 96% while pressed. */
-@Composable
-internal fun Modifier.pressable(enabled: Boolean = true, onClick: () -> Unit): Modifier {
-    val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    var targetScale = 1f
-    if (pressed) {
-        targetScale = PRESSED_SCALE
-    }
-    val scale by animateFloatAsState(targetScale, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium), label = "pressScale")
-    return this
-        .scale(scale)
-        .clickable(interactionSource = interactionSource, indication = null, enabled = enabled, onClick = onClick)
-}
-
 internal fun Modifier.subtleCard(): Modifier {
     return this
         .background(SubtleFill, cardShape)

@@ -1,17 +1,9 @@
 package com.letsmoe.otter.ui.home
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.pressable
 
 private val chipShape = CircleShape
 
@@ -71,25 +64,14 @@ fun CategoryChips(
 
 @Composable
 private fun CategoryChip(label: String, isSelected: Boolean, trailingIcon: ImageVector?, onClick: () -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    var targetScale = 1f
-    if (pressed) {
-        targetScale = 0.92f
-    }
-    val scale by animateFloatAsState(targetScale, spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium), label = "chipScale")
     val style = chipStyle(isSelected)
     Row(
         Modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
+            .pressable(onClick = onClick)
             .height(36.dp)
             .frostedGlass(chipShape)
             .clip(chipShape)
             .background(style.highlight)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
             .padding(horizontal = 18.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,

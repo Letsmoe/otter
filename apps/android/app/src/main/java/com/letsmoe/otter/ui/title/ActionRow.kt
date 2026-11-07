@@ -44,6 +44,7 @@ import com.adamglin.phosphoricons.regular.ShareNetwork
 import com.adamglin.phosphoricons.regular.ThumbsDown
 import com.adamglin.phosphoricons.regular.ThumbsUp
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.pressable
 
 /** Netflix's three ratings on the backend's 1-10 scale. */
 private enum class RatingOption(val label: String, val value: Double, val icon: ImageVector, val filledIcon: ImageVector) {
@@ -86,7 +87,7 @@ fun ActionRow(
 @Composable
 fun ActionButton(icon: ImageVector, label: String, onClick: () -> Unit) {
     Column(
-        Modifier.width(80.dp).clip(CircleShape).clickable(onClick = onClick),
+        Modifier.pressable(onClick = onClick).width(80.dp).clip(CircleShape),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {

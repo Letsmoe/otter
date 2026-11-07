@@ -9,10 +9,14 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.ui.components.WithoutBackdrop
+import com.letsmoe.otter.ui.title.fetchUpNextEpisodeId
+import kotlinx.coroutines.launch
 import com.letsmoe.otter.ui.downloads.DownloadsScreen
 import com.letsmoe.otter.ui.home.HomeScreen
 import com.letsmoe.otter.ui.media.RailItem
@@ -49,9 +53,11 @@ private val keepSidewaysScroll = object : NestedScrollConnection {
 
 @Composable
 private fun TabPage(tab: Tab, navController: NavHostController, openTab: (Tab) -> Unit, onOpenItem: (RailItem) -> Unit) {
+    val scope = rememberCoroutineScope()
     when (tab) {
         Tab.HOME -> HomeScreen(
             onOpenItem = onOpenItem,
+            onPlayItem = { item -> scope.launch { playItem(navController, item, onOpenItem) } },
             onOpenPerson = { personId -> navController.navigate(Routes.person(personId)) },
             onSearch = { navController.navigate(Routes.SEARCH) },
             headerActions = {
@@ -69,4 +75,19 @@ private fun TabPage(tab: Tab, navController: NavHostController, openTab: (Tab) -
         }
         Tab.PROFILE -> WithoutBackdrop { ProfileScreen(profileNavigation(navController, openTab, onOpenItem)) }
     }
+}
+
+// Play on a card starts what the title page's Play would: the movie, or the series' up-next episode.
+// A series without one (or a failed lookup) opens its page instead.
+private suspend fun playItem(navController: NavHostController, item: RailItem, onOpenItem: (RailItem) -> Unit) {
+    if (item.mediaType != MediaType.SERIES) {
+        navController.play(PlayerRequest(item.id))
+        return
+    }
+    val episodeId = fetchUpNextEpisodeId(item.id)
+    if (episodeId == null) {
+        onOpenItem(item)
+        return
+    }
+    navController.play(PlayerRequest(episodeId))
 }

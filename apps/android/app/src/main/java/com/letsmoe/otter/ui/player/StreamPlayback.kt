@@ -155,6 +155,12 @@ class StreamPlayback(private val scope: CoroutineScope) {
         autoplay()
     }
 
+    /** Tries every link again, the ones that failed before included. */
+    fun retryAll() {
+        failedIds.clear()
+        play()
+    }
+
     /** Plays one chosen link. */
     fun playSource(streamId: String) {
         mutableState.update { current -> current.copy(playing = null, error = null) }

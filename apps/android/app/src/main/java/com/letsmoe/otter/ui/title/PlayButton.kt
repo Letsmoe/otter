@@ -9,7 +9,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,6 +35,7 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Fill
 import com.adamglin.phosphoricons.fill.Play
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.pressable
 
 /**
  * The title page's glass Play button: a light sweep while sources load,
@@ -56,13 +56,13 @@ fun PlayButton(label: String, busy: Boolean, ready: Boolean, disabled: Boolean, 
     }
     Row(
         modifier
+            .pressable(enabled = !disabled, onClick = onClick)
             .fillMaxWidth()
             .height(48.dp)
             .scale(pop.value)
             .alpha(contentAlpha)
             .frostedGlass(CircleShape)
-            .lightSweep(busy)
-            .clickable(enabled = !disabled, onClick = onClick),
+            .lightSweep(busy),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {

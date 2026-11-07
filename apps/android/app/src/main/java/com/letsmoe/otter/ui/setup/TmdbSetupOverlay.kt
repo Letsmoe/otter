@@ -34,7 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.letsmoe.otter.R
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.PillButton
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.components.PlainTextField
 import com.letsmoe.otter.ui.components.TMDB_API_KEY_PAGE
 import com.letsmoe.otter.ui.components.TmdbAttribution
@@ -100,10 +102,10 @@ private fun ChoiceCard(title: String, description: String, enabled: Boolean, onC
     val shape = RoundedCornerShape(16.dp)
     Column(
         Modifier
+            .pressable(enabled = enabled, pressedScale = PRESSED_SCALE_LARGE, onClick = onClick)
             .fillMaxWidth()
             .background(Color.White.copy(alpha = 0.06f), shape)
             .border(1.dp, Color.White.copy(alpha = 0.1f), shape)
-            .clickable(enabled = enabled, onClick = onClick)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -167,7 +169,7 @@ private fun StepLink(label: String, onClick: () -> Unit) {
         fontSize = 14.sp,
         color = OtterColors.accent,
         textDecoration = TextDecoration.Underline,
-        modifier = Modifier.clickable(onClick = onClick),
+        modifier = Modifier.pressable(onClick = onClick),
     )
 }
 

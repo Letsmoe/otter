@@ -36,7 +36,9 @@ import androidx.compose.ui.unit.sp
 import com.letsmoe.otter.ui.components.ActorItem
 import com.letsmoe.otter.ui.components.ActorRail
 import com.letsmoe.otter.ui.components.GlassBackdropBox
+import com.letsmoe.otter.ui.components.LocalGlassBackdrop
 import com.letsmoe.otter.ui.components.WithoutBackdrop
+import com.letsmoe.otter.ui.components.alsoBackdropOf
 import com.letsmoe.otter.ui.navigation.bottomBarClearance
 import com.letsmoe.otter.ui.theme.OtterColors
 
@@ -77,12 +79,15 @@ fun TitlePage(
     val trailer = rememberTrailerState(detail.trailerKey)
     // The banner sits below the status bar and the floating back/search row, not under them.
     val bannerPlacement = Modifier.statusBarsPadding().padding(top = floatingNavHeight)
+    // App-wide sheets (the TV remote) blur the app's backdrop, which leaves title pages out for the
+    // trailer's sake; the list (without the trailer) feeds it here so their glass isn't see-through.
+    val appBackdrop = LocalGlassBackdrop.current
     GlassBackdropBox(modifier.fillMaxSize()) { backdropSource ->
         TitleBackdropMedia(detail.bannerUrl, trailer, scroll = { bannerScroll(listState) }, modifier = bannerPlacement)
         WithoutBackdrop {
             LazyColumn(
                 state = listState,
-                modifier = backdropSource.fillMaxSize(),
+                modifier = backdropSource.alsoBackdropOf(appBackdrop).fillMaxSize(),
                 contentPadding = PaddingValues(bottom = bottomBarClearance()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {

@@ -45,6 +45,7 @@ import com.adamglin.phosphoricons.regular.Info
 import com.adamglin.phosphoricons.regular.Plus
 import com.letsmoe.otter.ui.components.ActorRail
 import com.letsmoe.otter.ui.components.GlassBottomSheet
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.title.TrailerVideo
 import com.letsmoe.otter.ui.title.rememberTrailerState
@@ -160,7 +161,7 @@ private fun PreviewButtons(inMyList: Boolean, onDetails: () -> Unit, onToggleMyL
 @Composable
 private fun PreviewButton(label: String, icon: ImageVector, background: Color, content: Color, onClick: () -> Unit, modifier: Modifier) {
     Row(
-        modifier.height(48.dp).clip(buttonShape).background(background).clickable(onClick = onClick),
+        modifier.pressable(onClick = onClick).height(48.dp).clip(buttonShape).background(background),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {

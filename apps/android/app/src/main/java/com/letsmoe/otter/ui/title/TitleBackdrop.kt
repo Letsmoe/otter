@@ -3,7 +3,6 @@ package com.letsmoe.otter.ui.title
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -36,6 +35,7 @@ import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.SpeakerHigh
 import com.adamglin.phosphoricons.regular.SpeakerSlash
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.theme.OtterColors
 import kotlin.math.roundToInt
 
@@ -136,7 +136,7 @@ private fun MuteButton(muted: Boolean, onToggle: () -> Unit, modifier: Modifier)
         icon = PhosphorIcons.Regular.SpeakerSlash
         label = "Unmute trailer"
     }
-    Box(modifier.size(36.dp).frostedGlass(CircleShape).clickable(onClick = onToggle), contentAlignment = Alignment.Center) {
+    Box(modifier.pressable(onClick = onToggle).size(36.dp).frostedGlass(CircleShape),contentAlignment = Alignment.Center) {
         Icon(icon, contentDescription = label, modifier = Modifier.size(18.dp))
     }
 }

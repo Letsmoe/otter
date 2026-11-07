@@ -39,6 +39,7 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.ArrowClockwise
 import com.adamglin.phosphoricons.regular.ArrowCounterClockwise
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.together.PeerAvatar
 
 enum class TapSide { LEFT, RIGHT }
@@ -159,12 +160,26 @@ fun sourceStatusText(state: PlayerUiState, vpn: VpnStatus): String {
     return state.statusText
 }
 
+/** A failure in the middle of the video; [onChooseAnotherSource] is null when there is no other source. */
 @Composable
-fun PlayerErrorNotice(message: String, onChooseAnotherSource: () -> Unit, modifier: Modifier = Modifier) {
+fun PlayerErrorNotice(message: String, onRetry: () -> Unit, onChooseAnotherSource: (() -> Unit)?, modifier: Modifier = Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(message, fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f))
-        Box(Modifier.height(40.dp).playerGlass(CircleShape).clickableWithoutRipple(onClick = onChooseAnotherSource).padding(horizontal = 20.dp), contentAlignment = Alignment.Center) {
-            Text("Choose another source", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+        Text(message, fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f), textAlign = TextAlign.Center)
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Box(
+                Modifier.pressable(onClick = onRetry).height(40.dp).background(Color.White, CircleShape).padding(horizontal = 20.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("Try again", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.Black)
+            }
+            if (onChooseAnotherSource != null) {
+                Box(
+                    Modifier.pressable(onClick = onChooseAnotherSource).height(40.dp).playerGlass(CircleShape).padding(horizontal = 20.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("Choose another source", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
         }
     }
 }

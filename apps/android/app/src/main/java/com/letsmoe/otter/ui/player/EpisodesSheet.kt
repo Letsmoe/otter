@@ -40,6 +40,7 @@ import coil3.compose.AsyncImage
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Fill
 import com.adamglin.phosphoricons.fill.Play
+import com.letsmoe.otter.ui.components.pressable
 
 /**
  * Netflix's episodes panel: season switch on top, the season's episodes as a horizontal row of
@@ -83,7 +84,7 @@ private fun SeasonChip(label: String, selected: Boolean, onClick: () -> Unit) {
         fill = Color.White
         content = Color.Black
     }
-    Box(Modifier.height(36.dp).background(fill, CircleShape).clickableWithoutRipple(onClick = onClick).padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.pressable(onClick = onClick).height(36.dp).background(fill, CircleShape).padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
         Text(label, color = content, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
     }
 }

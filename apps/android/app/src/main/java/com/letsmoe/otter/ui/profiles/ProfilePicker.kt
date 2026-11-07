@@ -1,7 +1,6 @@
 package com.letsmoe.otter.ui.profiles
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,7 +57,9 @@ import com.letsmoe.otter.ui.profile.ProfileFlight
 import com.letsmoe.otter.graphql.fragment.ProfileFields
 import com.letsmoe.otter.profiles.avatarImage
 import com.letsmoe.otter.ui.LoadState
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.pressable
 
 private val tileShape = RoundedCornerShape(16.dp)
 
@@ -198,7 +199,7 @@ private fun openProfileWithFlight(gate: ProfileGateViewModel, profile: ProfileFi
 private fun ProfileTile(profile: ProfileFields, managing: Boolean, onClick: (Rect) -> Unit) {
     var avatarBounds by remember { mutableStateOf(Rect.Zero) }
     Column(
-        modifier = Modifier.clickable { onClick(avatarBounds) },
+        modifier = Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = { onClick(avatarBounds) }),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -222,7 +223,7 @@ private fun ProfileTile(profile: ProfileFields, managing: Boolean, onClick: (Rec
 @Composable
 private fun ActionTile(icon: ImageVector, label: String, onClick: () -> Unit) {
     Column(
-        modifier = Modifier.clickable(onClick = onClick),
+        modifier = Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {

@@ -53,6 +53,7 @@ import com.letsmoe.otter.graphql.type.DownloadStatus
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.profiles.avatarImage
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.navigation.bottomBarClearance
 import kotlinx.coroutines.launch
 
@@ -184,7 +185,7 @@ private fun EmptyDownloads() {
 private fun FindMoreButton(onSearch: () -> Unit) {
     Box(Modifier.fillMaxWidth().padding(top = 24.dp), contentAlignment = Alignment.Center) {
         Box(
-            Modifier.frostedGlass(CircleShape).clickable(onClick = onSearch).padding(horizontal = 24.dp, vertical = 12.dp),
+            Modifier.pressable(onClick = onSearch).frostedGlass(CircleShape).padding(horizontal = 24.dp, vertical = 12.dp),
             contentAlignment = Alignment.Center,
         ) {
             Text("See What You Can Download", fontSize = 14.sp, fontWeight = FontWeight.Bold)

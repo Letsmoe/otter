@@ -2,7 +2,7 @@ package com.letsmoe.otter.ui.together
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import com.letsmoe.otter.ui.components.pressable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
@@ -28,11 +28,12 @@ import com.letsmoe.otter.ui.components.frostedGlass
 @Composable
 fun TogetherButton(modifier: Modifier = Modifier, glass: Boolean = false, iconSize: Dp = 22.dp) {
     val room by TogetherSession.room.collectAsStateWithLifecycle()
-    var shape = modifier.size(40.dp).clip(CircleShape)
+    val pressableModifier = modifier.pressable { TogetherSession.openSheet() }
+    var shape = pressableModifier.size(40.dp).clip(CircleShape)
     if (glass) {
-        shape = modifier.size(40.dp).frostedGlass(CircleShape)
+        shape = pressableModifier.size(40.dp).frostedGlass(CircleShape)
     }
-    Box(shape.clickable { TogetherSession.openSheet() }, contentAlignment = Alignment.Center) {
+    Box(shape, contentAlignment = Alignment.Center) {
         Icon(PhosphorIcons.Regular.UsersThree, contentDescription = "Watch Together", modifier = Modifier.size(iconSize))
         if (room.isOpen()) {
             Box(

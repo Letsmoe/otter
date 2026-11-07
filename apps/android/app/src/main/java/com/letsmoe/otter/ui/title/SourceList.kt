@@ -32,6 +32,7 @@ import com.adamglin.phosphoricons.fill.Play
 import com.adamglin.phosphoricons.fill.SealCheck
 import com.adamglin.phosphoricons.regular.ArrowClockwise
 import com.letsmoe.otter.graphql.fragment.StreamLink
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.theme.OtterColors
 
 private val mutedText = Color.White.copy(alpha = 0.5f)
@@ -172,12 +173,17 @@ fun formatSpeed(bytesPerSecond: Double?): String? {
 
 @Composable
 private fun SearchAgainButton(onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(PhosphorIcons.Regular.ArrowClockwise, contentDescription = null, tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(16.dp))
-        Text("Search again", fontSize = 14.sp, color = Color.White.copy(alpha = 0.7f))
+    Box(Modifier.fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
+        Row(
+            Modifier
+                .pressable(onClick = onClick)
+                .background(Color.White.copy(alpha = 0.08f), CircleShape)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(PhosphorIcons.Regular.ArrowClockwise, contentDescription = null, tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(16.dp))
+            Text("Search again", fontSize = 14.sp, color = Color.White.copy(alpha = 0.7f))
+        }
     }
 }

@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -78,7 +77,7 @@ private fun HeaderTopRow(onSearch: () -> Unit, trailingActions: @Composable RowS
         Text("OTTER", fontSize = 18.sp, fontWeight = FontWeight.Black, letterSpacing = 3.2.sp, modifier = Modifier.padding(start = 8.dp))
         Box(Modifier.weight(1f))
         trailingActions()
-        Box(Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onSearch), contentAlignment = Alignment.Center) {
+        Box(Modifier.pressable(onClick = onSearch).size(40.dp).clip(CircleShape), contentAlignment = Alignment.Center) {
             Icon(PhosphorIcons.Regular.MagnifyingGlass, contentDescription = "Search", modifier = Modifier.size(22.dp))
         }
     }

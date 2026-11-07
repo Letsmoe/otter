@@ -9,8 +9,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -54,6 +52,7 @@ import coil3.compose.AsyncImage
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.profiles.avatarImage
 import com.letsmoe.otter.ui.components.liquidGlass
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.profile.ProfileFlight
 import com.letsmoe.otter.ui.theme.OtterColors
 import com.letsmoe.otter.vpn.VpnStatusStore
@@ -147,9 +146,9 @@ private fun TabButton(tab: Tab, isActive: Boolean, onClick: () -> Unit, modifier
     }
     Column(
         modifier = modifier
+            .pressable(onClick = onClick)
             .height(tabHeight)
-            .clip(RoundedCornerShape(pillCornerRadius))
-            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick),
+            .clip(RoundedCornerShape(pillCornerRadius)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterVertically),
     ) {

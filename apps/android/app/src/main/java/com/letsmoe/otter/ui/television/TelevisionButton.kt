@@ -34,10 +34,13 @@ import com.adamglin.phosphoricons.Fill
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.fill.Pause
 import com.adamglin.phosphoricons.fill.Play
+import com.adamglin.phosphoricons.regular.Screencast
 import com.adamglin.phosphoricons.regular.Television
 import com.letsmoe.otter.cast.TelevisionConnection
 import com.letsmoe.otter.cast.TelevisionTarget
 import com.letsmoe.otter.ui.components.GlassBottomSheet
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.components.frostedGlass
 import com.letsmoe.otter.ui.player.TelevisionPlayback
 import com.letsmoe.otter.ui.player.TelevisionSheetContent
@@ -49,16 +52,19 @@ fun TelevisionButton(modifier: Modifier = Modifier, iconSize: Dp = 22.dp) {
     val target by TelevisionConnection.target.collectAsStateWithLifecycle()
     var pickerOpen by remember { mutableStateOf(false) }
     Box(
-        modifier.size(40.dp).clip(CircleShape).clickable {
-            if (target == null) {
-                pickerOpen = true
-            } else {
-                TelevisionPlayback.openRemote()
+        modifier
+            .pressable {
+                if (target == null) {
+                    pickerOpen = true
+                } else {
+                    TelevisionPlayback.openRemote()
+                }
             }
-        },
+            .size(40.dp)
+            .clip(CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(PhosphorIcons.Regular.Television, contentDescription = "Play on TV", modifier = Modifier.size(iconSize))
+        Icon(PhosphorIcons.Regular.Screencast, contentDescription = "Play on TV", modifier = Modifier.size(iconSize))
         if (target != null) {
             ConnectedDot(Modifier.align(Alignment.TopEnd))
         }
@@ -93,10 +99,10 @@ fun TelevisionNowPlayingBar(modifier: Modifier = Modifier) {
     val playback by TelevisionPlayback.player.collectAsStateWithLifecycle()
     Row(
         modifier
-            .fillMaxWidth()
             .padding(horizontal = 12.dp)
+            .pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = TelevisionPlayback::openRemote)
+            .fillMaxWidth()
             .frostedGlass(RoundedCornerShape(20.dp))
-            .clickable(onClick = TelevisionPlayback::openRemote)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -113,7 +119,7 @@ fun TelevisionNowPlayingBar(modifier: Modifier = Modifier) {
         if (state.isPlaying) {
             icon = PhosphorIcons.Fill.Pause
         }
-        Box(Modifier.size(32.dp).clip(CircleShape).clickable(onClick = viewModel::togglePlay), contentAlignment = Alignment.Center) {
+        Box(Modifier.pressable(onClick = viewModel::togglePlay).size(32.dp).clip(CircleShape), contentAlignment = Alignment.Center) {
             Icon(icon, contentDescription = "Play or pause", modifier = Modifier.size(20.dp))
         }
     }

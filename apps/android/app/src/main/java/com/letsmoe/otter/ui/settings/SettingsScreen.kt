@@ -3,7 +3,6 @@ package com.letsmoe.otter.ui.settings
 import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,7 +45,9 @@ import com.letsmoe.otter.toasts.ToastKind
 import com.letsmoe.otter.toasts.Toasts
 import com.letsmoe.otter.ui.components.FilterSelect
 import com.letsmoe.otter.ui.components.OtterSwitch
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.PillButton
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.components.PlainTextField
 import com.letsmoe.otter.ui.components.TMDB_API_KEY_PAGE
 import com.letsmoe.otter.ui.components.TmdbAttribution
@@ -151,7 +152,7 @@ private fun ApiKeyRow(viewModel: SettingsViewModel) {
     Column(Modifier.padding(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text("TMDB API key", fontSize = 14.sp)
-            Text("Get key", fontSize = 12.sp, color = Color.White.copy(alpha = 0.4f), modifier = Modifier.clickable { openWebPage(context, TMDB_API_KEY_PAGE) })
+            Text("Get key", fontSize = 12.sp, color = Color.White.copy(alpha = 0.4f), modifier = Modifier.pressable { openWebPage(context, TMDB_API_KEY_PAGE) })
         }
         var hadFocus by remember { mutableStateOf(false) }
         PlainTextField(
@@ -236,7 +237,7 @@ private fun ProfilesGroup(onOpenPlugins: () -> Unit) {
 @Composable
 private fun LinkRow(label: String, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 14.dp),
+        Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onClick).fillMaxWidth().padding(vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {

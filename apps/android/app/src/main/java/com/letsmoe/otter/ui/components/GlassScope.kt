@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
@@ -19,6 +20,14 @@ fun GlassBackdropBox(modifier: Modifier = Modifier, content: @Composable BoxScop
     CompositionLocalProvider(LocalGlassBackdrop provides backdrop) {
         Box(modifier) { content(Modifier.hazeSource(backdrop)) }
     }
+}
+
+/** Marks this content as part of [backdrop] too, for glass outside the enclosing [GlassBackdropBox]. */
+fun Modifier.alsoBackdropOf(backdrop: HazeState?): Modifier {
+    if (backdrop == null) {
+        return this
+    }
+    return this.hazeSource(backdrop)
 }
 
 /** Glass in here falls back to a plain translucent fill instead of blurring its own surroundings. */

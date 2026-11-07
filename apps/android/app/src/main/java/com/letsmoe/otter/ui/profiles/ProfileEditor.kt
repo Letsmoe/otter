@@ -55,8 +55,10 @@ import com.letsmoe.otter.profiles.LANGUAGE_CHOICES
 import com.letsmoe.otter.profiles.avatarImage
 import com.letsmoe.otter.ui.components.GlassColor
 import com.letsmoe.otter.ui.components.OtterSwitch
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.ScreenHeader
 import com.letsmoe.otter.ui.components.SubtleFill
+import com.letsmoe.otter.ui.components.pressable
 
 private const val NAME_MAX_LENGTH = 32
 
@@ -130,7 +132,7 @@ private fun EditorForm(editor: ProfileEditorViewModel, onBack: () -> Unit, onSav
 @Composable
 private fun AvatarButton(avatarModel: String, onClick: () -> Unit) {
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Box(Modifier.size(112.dp).clickable(onClick = onClick)) {
+        Box(Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onClick).size(112.dp)) {
             AsyncImage(avatarModel, contentDescription = "Change icon", modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp)))
             Box(
                 modifier = Modifier
@@ -228,9 +230,9 @@ private fun LanguageChip(name: String, position: Int, onClick: () -> Unit) {
         fontSize = 14.sp,
         fontWeight = FontWeight.Medium,
         modifier = Modifier
+            .pressable(onClick = onClick)
             .clip(CircleShape)
             .background(background)
-            .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 8.dp)
             .alpha(textAlpha),
     )
@@ -274,16 +276,25 @@ private fun SaveButton(editor: ProfileEditorViewModel, onSaved: () -> Unit) {
     if (editor.isNew) {
         label = "Create Profile"
     }
-    Button(
-        onClick = { editor.save(onSaved) },
-        enabled = !editor.saving && editor.name.isNotBlank(),
-        modifier = Modifier.fillMaxWidth().height(48.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
+    val enabled = !editor.saving && editor.name.isNotBlank()
+    var buttonAlpha = 1f
+    if (!enabled) {
+        buttonAlpha = 0.5f
+    }
+    Row(
+        Modifier
+            .pressable(enabled = enabled, onClick = { editor.save(onSaved) })
+            .fillMaxWidth()
+            .height(48.dp)
+            .alpha(buttonAlpha)
+            .background(Color.White, CircleShape),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         if (editor.saving) {
             CircularProgressIndicator(Modifier.size(14.dp).padding(end = 4.dp), color = Color.Black, strokeWidth = 2.dp)
         }
-        Text(label, fontWeight = FontWeight.Bold)
+        Text(label, color = Color.Black, fontWeight = FontWeight.Bold)
     }
 }
 

@@ -8,7 +8,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.MagnifyingGlass
+import com.letsmoe.otter.ui.components.pressable
 
 
 /**
@@ -80,7 +80,7 @@ private fun HeaderTitleRow(profileName: String, onSearch: () -> Unit, trailingAc
             modifier = Modifier.weight(1f),
         )
         trailingActions()
-        Box(Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onSearch), contentAlignment = Alignment.Center) {
+        Box(Modifier.pressable(onClick = onSearch).size(44.dp).clip(CircleShape), contentAlignment = Alignment.Center) {
             Icon(PhosphorIcons.Regular.MagnifyingGlass, contentDescription = "Search", modifier = Modifier.size(26.dp))
         }
     }

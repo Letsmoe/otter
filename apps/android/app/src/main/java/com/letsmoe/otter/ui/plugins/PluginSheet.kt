@@ -1,7 +1,6 @@
 package com.letsmoe.otter.ui.plugins
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +30,7 @@ import com.letsmoe.otter.graphql.fragment.PluginFields
 import com.letsmoe.otter.ui.components.GlassBottomSheet
 import com.letsmoe.otter.ui.components.OtterSwitch
 import com.letsmoe.otter.ui.components.PlainTextField
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.theme.OtterColors
 
 private val capabilityText = mapOf(
@@ -148,7 +148,7 @@ private fun SaveButton(saving: Boolean, onClick: () -> Unit) {
         buttonAlpha = 0.5f
     }
     Row(
-        Modifier.fillMaxWidth().height(48.dp).alpha(buttonAlpha).background(Color.White, CircleShape).clickable(enabled = !saving, onClick = onClick),
+        Modifier.pressable(enabled = !saving, onClick = onClick).fillMaxWidth().height(48.dp).alpha(buttonAlpha).background(Color.White, CircleShape),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -37,17 +37,19 @@ import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.fill.Play
 import com.adamglin.phosphoricons.regular.Check
 import com.adamglin.phosphoricons.regular.Plus
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.media.FeaturedItem
 
 private const val MAX_GENRES = 3
 private val cardShape = RoundedCornerShape(8.dp)
 
-/** Large poster card at the top of a home page: genres, Play and My List. */
+/** Large poster card at the top of a home page: genres, Play and My List. The poster opens the title, Play plays it. */
 @Composable
 fun FeaturedPreview(
     featured: FeaturedItem?,
     inMyList: Boolean,
     onOpen: () -> Unit,
+    onPlay: () -> Unit,
     onToggleMyList: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -67,7 +69,7 @@ fun FeaturedPreview(
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize().clickable(onClick = onOpen),
         )
-        FeaturedFooter(featured, inMyList, onOpen, onToggleMyList, Modifier.align(Alignment.BottomCenter))
+        FeaturedFooter(featured, inMyList, onPlay, onToggleMyList, Modifier.align(Alignment.BottomCenter))
     }
 }
 
@@ -75,7 +77,7 @@ fun FeaturedPreview(
 private fun FeaturedFooter(
     featured: FeaturedItem,
     inMyList: Boolean,
-    onOpen: () -> Unit,
+    onPlay: () -> Unit,
     onToggleMyList: () -> Unit,
     modifier: Modifier,
 ) {
@@ -87,7 +89,7 @@ private fun FeaturedFooter(
     ) {
         Text(featured.genres.take(MAX_GENRES).joinToString(" • "), fontSize = 14.sp, color = Color.White.copy(alpha = 0.85f), textAlign = TextAlign.Center)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            FeaturedButton("Play", PhosphorIcons.Fill.Play, Color.White, Color.Black, onOpen, Modifier.weight(1f))
+            FeaturedButton("Play", PhosphorIcons.Fill.Play, Color.White, Color.Black, onPlay, Modifier.weight(1f))
             var myListIcon = PhosphorIcons.Regular.Plus
             if (inMyList) {
                 myListIcon = PhosphorIcons.Regular.Check
@@ -108,10 +110,10 @@ private fun FeaturedButton(
 ) {
     Row(
         modifier
+            .pressable(onClick = onClick)
             .height(44.dp)
             .clip(RoundedCornerShape(6.dp))
-            .background(background)
-            .clickable(onClick = onClick),
+            .background(background),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {

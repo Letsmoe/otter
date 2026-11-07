@@ -31,6 +31,7 @@ import com.letsmoe.otter.together.ChatLine
 import com.letsmoe.otter.together.TogetherSession
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
+import com.letsmoe.otter.ui.components.pressable
 
 private val reactions = listOf("😂", "😮", "😍", "😱", "👏", "🔥")
 private val maxMessagesHeight = 260.dp

@@ -42,6 +42,8 @@ import com.adamglin.phosphoricons.Fill
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.fill.Play
 import com.adamglin.phosphoricons.regular.X
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
+import com.letsmoe.otter.ui.components.pressable
 
 private const val NEXT_COUNTDOWN_MILLISECONDS = 8000
 
@@ -68,7 +70,10 @@ fun EndScreen(title: String, mediaId: String, hasNext: Boolean, onNext: () -> Un
 
 @Composable
 private fun TextPill(label: String, onClick: () -> Unit) {
-    Box(Modifier.height(44.dp).playerGlass(CircleShape).clickableWithoutRipple(onClick = onClick).padding(horizontal = 20.dp), contentAlignment = Alignment.Center) {
+    Box(
+        Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onClick).height(44.dp).playerGlass(CircleShape).padding(horizontal = 20.dp),
+        contentAlignment = Alignment.Center,
+    ) {
         Text(label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
     }
 }
@@ -81,7 +86,10 @@ private fun NextEpisodePill(onNext: () -> Unit) {
         progress.animateTo(1f, tween(NEXT_COUNTDOWN_MILLISECONDS, easing = LinearEasing))
         onNext()
     }
-    Box(Modifier.height(44.dp).playerGlass(CircleShape).clickableWithoutRipple(onClick = onNext), contentAlignment = Alignment.Center) {
+    Box(
+        Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onNext).height(44.dp).playerGlass(CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
         Box(Modifier.matchParentSize()) {
             Box(Modifier.fillMaxHeight().fillMaxWidth(progress.value).background(Color.White))
         }

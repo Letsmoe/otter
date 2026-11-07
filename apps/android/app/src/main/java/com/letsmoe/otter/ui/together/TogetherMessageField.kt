@@ -32,6 +32,7 @@ import com.adamglin.phosphoricons.Fill
 import com.adamglin.phosphoricons.fill.PaperPlaneRight
 import com.letsmoe.otter.together.TogetherSession
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.pressable
 
 private const val MESSAGE_LIMIT = 300
 

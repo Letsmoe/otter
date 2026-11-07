@@ -31,6 +31,7 @@ import com.letsmoe.otter.together.ChatLine
 import com.letsmoe.otter.together.TogetherSession
 import com.letsmoe.otter.together.isOpen
 import com.letsmoe.otter.ui.components.GlassBottomSheet
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.theme.OtterColors
 
 /** The room's chat in its own tall sheet, stacked on the Watch Together sheet; its field sits above the keyboard. */

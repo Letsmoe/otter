@@ -45,6 +45,7 @@ import com.adamglin.phosphoricons.regular.SkipForward
 import com.adamglin.phosphoricons.regular.Stack
 import com.adamglin.phosphoricons.regular.Subtitles
 import com.adamglin.phosphoricons.regular.UsersThree
+import com.letsmoe.otter.ui.components.pressable
 
 private val bottomFade = Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)))
 private val previewFrameHeight = 112.dp
@@ -181,7 +182,7 @@ fun formatSpeed(speed: Float): String {
 @Composable
 private fun ActionButton(icon: ImageVector, label: String, onClick: () -> Unit) {
     Row(
-        Modifier.height(40.dp).clickableWithoutRipple(onClick = onClick).padding(horizontal = 8.dp),
+        Modifier.pressable(onClick = onClick).height(40.dp).padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

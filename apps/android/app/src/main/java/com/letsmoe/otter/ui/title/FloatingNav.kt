@@ -1,6 +1,5 @@
 package com.letsmoe.otter.ui.title
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -20,6 +19,7 @@ import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.ArrowLeft
 import com.adamglin.phosphoricons.regular.MagnifyingGlass
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.pressable
 
 /**
  * Round glass back, Watch Together and search buttons floating over a title page's banner.
@@ -41,7 +41,7 @@ fun FloatingNav(onBack: () -> Unit, onSearch: () -> Unit, modifier: Modifier = M
 
 @Composable
 fun GlassIconButton(icon: ImageVector, description: String, onClick: () -> Unit) {
-    Box(Modifier.size(40.dp).frostedGlass(CircleShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(Modifier.pressable(onClick = onClick).size(40.dp).frostedGlass(CircleShape),contentAlignment = Alignment.Center) {
         Icon(icon, contentDescription = description, modifier = Modifier.size(20.dp))
     }
 }

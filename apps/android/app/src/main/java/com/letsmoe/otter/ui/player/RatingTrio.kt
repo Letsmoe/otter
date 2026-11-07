@@ -1,7 +1,6 @@
 package com.letsmoe.otter.ui.player
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -30,6 +29,7 @@ import com.adamglin.phosphoricons.regular.Heart
 import com.adamglin.phosphoricons.regular.ThumbsDown
 import com.adamglin.phosphoricons.regular.ThumbsUp
 import com.letsmoe.otter.profiles.ProfileSession
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.media.TitleActions
 import kotlinx.coroutines.launch
 
@@ -79,15 +79,15 @@ fun RatingTrio(mediaId: String, modifier: Modifier = Modifier, onInteract: () ->
 
 @Composable
 private fun RatingButton(option: RatingOption, selected: Boolean, onClick: () -> Unit) {
-    var background = Modifier.size(44.dp).playerGlass(CircleShape)
+    var background = Modifier.playerGlass(CircleShape)
     var icon = option.icon
     var tint = Color.White
     if (selected) {
-        background = Modifier.size(44.dp).background(Color.White, CircleShape)
+        background = Modifier.background(Color.White, CircleShape)
         icon = option.activeIcon
         tint = Color.Black
     }
-    Box(background.clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(Modifier.pressable(onClick = onClick).size(44.dp).then(background), contentAlignment = Alignment.Center) {
         Icon(icon, contentDescription = option.label, tint = tint, modifier = Modifier.size(20.dp))
     }
 }

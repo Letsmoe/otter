@@ -333,11 +333,39 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     }
 
     fun chooseSource(sourceId: String) {
-        if (sourceId == mutableState.value.currentSourceId) {
+        // The playing link again is a no-op, unless it failed: then it loads anew.
+        val current = mutableState.value
+        if (sourceId == current.currentSourceId && current.shownError == null) {
             return
         }
-        // Continue the new link where the old one was.
+        reloadSource(sourceId)
+    }
+
+    /**
+     * After an error: the failed link is resolved again and continues where it stopped; when no
+     * link could be started, all of them are tried again (or the sites asked again when there are none).
+     */
+    fun retryAfterError() {
+        val current = mutableState.value
+        val sourceId = current.currentSourceId
+        if (sourceId != null && current.playbackError != null) {
+            reloadSource(sourceId)
+            return
+        }
+        if (current.sources.isEmpty()) {
+            searchSourcesAgain()
+            return
+        }
+        mutableState.update { state -> state.copy(playbackError = null) }
+        streamPlayback.retryAll()
+    }
+
+    // Continues the link where playback is now; a fresh resolve, even for the link already playing.
+    private fun reloadSource(sourceId: String) {
         sourceSwitchResumeSeconds = positionSeconds
+        televisionLinkRenewed = false
+        playing = null
+        mutableState.update { state -> state.copy(playbackError = null, isBuffering = true) }
         streamPlayback.switchSource(sourceId)
     }
 

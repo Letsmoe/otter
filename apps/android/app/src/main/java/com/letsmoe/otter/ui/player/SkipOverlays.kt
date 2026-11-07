@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.letsmoe.otter.ui.components.pressable
 import kotlinx.coroutines.delay
 
 private const val COUNTDOWN_TICK_MILLISECONDS = 100L
@@ -60,7 +61,7 @@ fun BoxScope.SkipSegmentButton(jump: SkipJump?, controlsVisible: Boolean, onSkip
         .padding(end = 24.dp, bottom = bottomOffset(controlsVisible))
     AnimatedVisibility(jump != null, modifier, enter = fadeIn(), exit = fadeOut()) {
         val label = jump?.label.orEmpty()
-        Box(Modifier.height(44.dp).playerGlass(CircleShape).clickableWithoutRipple(onClick = onSkip).padding(horizontal = 22.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.pressable(onClick = onSkip).height(44.dp).playerGlass(CircleShape).padding(horizontal = 22.dp), contentAlignment = Alignment.Center) {
             Text(label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
         }
     }
@@ -119,7 +120,7 @@ private fun remainingOf(card: UpNextCard): Long {
 
 @Composable
 private fun CancelButton(onClick: () -> Unit, modifier: Modifier) {
-    Box(modifier.height(40.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.12f)).clickableWithoutRipple(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(modifier.pressable(onClick = onClick).height(40.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
         Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
     }
 }
@@ -127,7 +128,7 @@ private fun CancelButton(onClick: () -> Unit, modifier: Modifier) {
 // Fills left to right with the countdown.
 @Composable
 private fun PlayNowButton(progress: Float, onClick: () -> Unit, modifier: Modifier) {
-    Box(modifier.height(40.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.25f)).clickableWithoutRipple(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(modifier.pressable(onClick = onClick).height(40.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.25f)), contentAlignment = Alignment.Center) {
         Box(Modifier.align(Alignment.CenterStart).fillMaxHeight().fillMaxWidth(progress.coerceIn(0f, 1f)).background(Color.White.copy(alpha = 0.45f)))
         Text("Play now", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
     }

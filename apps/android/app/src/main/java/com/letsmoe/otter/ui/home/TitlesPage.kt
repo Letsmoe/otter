@@ -34,6 +34,7 @@ fun TitlesPage(
     ambientColor: Color,
     onFeaturedPoster: (String?) -> Unit,
     onOpenItem: (RailItem) -> Unit,
+    onPlayItem: (RailItem) -> Unit,
     onOpenPerson: (String) -> Unit,
     modifier: Modifier = Modifier,
     chips: @Composable () -> Unit = {},
@@ -61,6 +62,7 @@ fun TitlesPage(
                     featured = state.featured,
                     inMyList = state.featuredInMyList,
                     onOpen = { state.featured?.let { featured -> onOpenItem(featured.item) } },
+                    onPlay = { state.featured?.let { featured -> onPlayItem(featured.item) } },
                     onToggleMyList = viewModel::toggleFeaturedInMyList,
                     modifier = Modifier.padding(horizontal = 16.dp).align(Alignment.CenterHorizontally),
                 )

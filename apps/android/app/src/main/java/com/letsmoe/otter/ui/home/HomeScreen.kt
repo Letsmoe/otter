@@ -39,6 +39,7 @@ enum class HomeCategory(val label: String) {
 @Composable
 fun HomeScreen(
     onOpenItem: (RailItem) -> Unit,
+    onPlayItem: (RailItem) -> Unit,
     onOpenPerson: (String) -> Unit,
     onSearch: () -> Unit,
     modifier: Modifier = Modifier,
@@ -62,6 +63,7 @@ fun HomeScreen(
         ambientColor = ambientColor,
         onFeaturedPoster = { posterUrl -> featuredPoster = posterUrl },
         onOpenItem = onOpenItem,
+        onPlayItem = onPlayItem,
         onOpenPerson = onOpenPerson,
         chips = {
             CategoryChips(
@@ -110,6 +112,7 @@ private class HomePage(
     val ambientColor: Color,
     val onFeaturedPoster: (String?) -> Unit,
     val onOpenItem: (RailItem) -> Unit,
+    val onPlayItem: (RailItem) -> Unit,
     val onOpenPerson: (String) -> Unit,
     val chips: @Composable () -> Unit,
 )
@@ -140,7 +143,7 @@ private fun CategoryContent(category: HomeCategory, genre: String?, listState: L
         mediaType = MediaType.SERIES
     }
     if (genre != null) {
-        GenrePage(mediaType, genre, listState, page.topPadding, page.ambientColor, page.onFeaturedPoster, page.onOpenItem, page.chips)
+        GenrePage(mediaType, genre, listState, page.topPadding, page.ambientColor, page.onFeaturedPoster, page.onOpenItem, page.onPlayItem, page.chips)
         return
     }
     TitlesPage(
@@ -150,6 +153,7 @@ private fun CategoryContent(category: HomeCategory, genre: String?, listState: L
         ambientColor = page.ambientColor,
         onFeaturedPoster = page.onFeaturedPoster,
         onOpenItem = page.onOpenItem,
+        onPlayItem = page.onPlayItem,
         onOpenPerson = page.onOpenPerson,
         chips = page.chips,
     )
