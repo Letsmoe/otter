@@ -54,6 +54,8 @@ export interface Title {
     progress: (WatchProgress | null)
     rating: (Scalars['Float'] | null)
     inWatchlist: Scalars['Boolean']
+    /** Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List. */
+    notifying: Scalars['Boolean']
     __typename: 'Title'
 }
 
@@ -470,6 +472,8 @@ export interface Mutation {
     clearRating: Scalars['Boolean']
     addToWatchlist: Scalars['Boolean']
     removeFromWatchlist: Scalars['Boolean']
+    /** The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it. */
+    setNotifying: Scalars['Boolean']
     markNotificationsRead: Scalars['Boolean']
     /** Check every title on any My List for news now instead of at the next sweep; returns when done. Used by the phone's background check. */
     checkNotifications: Scalars['Boolean']
@@ -565,6 +569,8 @@ export interface TitleGenqlSelection{
     progress?: (WatchProgressGenqlSelection & { __args: {profileId: Scalars['ID']} })
     rating?: { __args: {profileId: Scalars['ID']} }
     inWatchlist?: { __args: {profileId: Scalars['ID']} }
+    /** Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List. */
+    notifying?: { __args: {profileId: Scalars['ID']} }
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1004,6 +1010,8 @@ export interface MutationGenqlSelection{
     clearRating?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
     addToWatchlist?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
     removeFromWatchlist?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
+    /** The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it. */
+    setNotifying?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], notifying: Scalars['Boolean']} }
     markNotificationsRead?: { __args: {profileId: Scalars['ID']} }
     /** Check every title on any My List for news now instead of at the next sweep; returns when done. Used by the phone's background check. */
     checkNotifications?: boolean | number

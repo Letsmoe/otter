@@ -342,6 +342,8 @@ type Title struct {
 	Progress    *WatchProgress `json:"progress,omitempty"`
 	Rating      *float64       `json:"rating,omitempty"`
 	InWatchlist bool           `json:"inWatchlist"`
+	// Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List.
+	Notifying bool `json:"notifying"`
 }
 
 // Narrows search results; omitted fields don't filter. Runtime is in minutes.

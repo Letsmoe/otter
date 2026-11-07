@@ -86,9 +86,22 @@ func startOfDay(moment time.Time) time.Time {
 	return time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
 }
 
+// followedTitlesQuery lists who follows what: titles on My List unless the
+// bell muted them, plus titles followed with the bell alone.
+const followedTitlesQuery = `
+	SELECT profile_id, media_type, media_id, added_at FROM watchlist
+	WHERE NOT EXISTS (SELECT 1 FROM notification_follow AS muted
+		WHERE muted.profile_id = watchlist.profile_id AND muted.media_type = watchlist.media_type
+		AND muted.media_id = watchlist.media_id AND muted.following = 0)
+	UNION ALL
+	SELECT profile_id, media_type, media_id, followed_at AS added_at FROM notification_follow
+	WHERE following = 1 AND NOT EXISTS (SELECT 1 FROM watchlist AS listed
+		WHERE listed.profile_id = notification_follow.profile_id
+		AND listed.media_type = notification_follow.media_type
+		AND listed.media_id = notification_follow.media_id)`
+
 func (w *Watcher) followedTitles(ctx context.Context) (map[library.MediaRef][]follower, error) {
-	rows, err := db.QueryAs[watchlistRow](ctx, w.database,
-		"SELECT profile_id, media_type, media_id, added_at FROM watchlist", nil)
+	rows, err := db.QueryAs[watchlistRow](ctx, w.database, followedTitlesQuery, nil)
 	if err != nil {
 		return nil, err
 	}

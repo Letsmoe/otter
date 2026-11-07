@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.letsmoe.otter.ui.title.ACTION_BUTTON_WIDTH
 import com.letsmoe.otter.downloads.DownloadItem
 import com.letsmoe.otter.downloads.DownloadsRepository
 import com.letsmoe.otter.graphql.type.DownloadStatus
@@ -78,7 +79,7 @@ fun DownloadButton(
 @Composable
 private fun LabeledButton(item: DownloadItem?, modifier: Modifier, onClick: () -> Unit) {
     Column(
-        modifier.pressable(onClick = onClick).width(80.dp).clip(CircleShape),
+        modifier.pressable(onClick = onClick).width(ACTION_BUTTON_WIDTH).clip(CircleShape),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {

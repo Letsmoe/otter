@@ -127,6 +127,7 @@ type ComplexityRoot struct {
 		ResolveBestStream     func(childComplexity int, streamIds []string) int
 		ResolveStream         func(childComplexity int, streamID string) int
 		SendTogether          func(childComplexity int, payload string) int
+		SetNotifying          func(childComplexity int, profileID string, mediaID string, notifying bool) int
 		SetPluginEnabled      func(childComplexity int, name string, enabled bool) int
 		SetPluginSettings     func(childComplexity int, name string, values []*model.PluginSettingInput) int
 		SetRating             func(childComplexity int, profileID string, mediaID string, rating float64) int
@@ -347,6 +348,7 @@ type ComplexityRoot struct {
 		Keywords      func(childComplexity int) int
 		LogoPath      func(childComplexity int) int
 		MediaType     func(childComplexity int) int
+		Notifying     func(childComplexity int, profileID string) int
 		OriginalTitle func(childComplexity int) int
 		Overview      func(childComplexity int) int
 		Popularity    func(childComplexity int) int
@@ -418,6 +420,7 @@ type MutationResolver interface {
 	ClearRating(ctx context.Context, profileID string, mediaID string) (bool, error)
 	AddToWatchlist(ctx context.Context, profileID string, mediaID string) (bool, error)
 	RemoveFromWatchlist(ctx context.Context, profileID string, mediaID string) (bool, error)
+	SetNotifying(ctx context.Context, profileID string, mediaID string, notifying bool) (bool, error)
 	MarkNotificationsRead(ctx context.Context, profileID string) (bool, error)
 	CheckNotifications(ctx context.Context) (bool, error)
 	StartDownload(ctx context.Context, profileID string, mediaID string, streamID *string) (*model.Download, error)
@@ -490,6 +493,7 @@ type TitleResolver interface {
 	Progress(ctx context.Context, obj *model.Title, profileID string) (*model.WatchProgress, error)
 	Rating(ctx context.Context, obj *model.Title, profileID string) (*float64, error)
 	InWatchlist(ctx context.Context, obj *model.Title, profileID string) (bool, error)
+	Notifying(ctx context.Context, obj *model.Title, profileID string) (bool, error)
 }
 
 type executableSchema graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot]
@@ -960,6 +964,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.SendTogether(childComplexity, args["payload"].(string)), true
+	case "Mutation.setNotifying":
+		if e.ComplexityRoot.Mutation.SetNotifying == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setNotifying_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.SetNotifying(childComplexity, args["profileId"].(string), args["mediaId"].(string), args["notifying"].(bool)), true
 	case "Mutation.setPluginEnabled":
 		if e.ComplexityRoot.Mutation.SetPluginEnabled == nil {
 			break
@@ -2099,6 +2114,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Title.MediaType(childComplexity), true
+	case "Title.notifying":
+		if e.ComplexityRoot.Title.Notifying == nil {
+			break
+		}
+
+		args, err := ec.field_Title_notifying_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Title.Notifying(childComplexity, args["profileId"].(string)), true
 	case "Title.originalTitle":
 		if e.ComplexityRoot.Title.OriginalTitle == nil {
 			break
@@ -2496,6 +2522,8 @@ type Title {
   progress(profileId: ID!): WatchProgress
   rating(profileId: ID!): Float
   inWatchlist(profileId: ID!): Boolean!
+  "Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List."
+  notifying(profileId: ID!): Boolean!
 }
 
 type Season {
@@ -2937,6 +2965,8 @@ type Mutation {
   clearRating(profileId: ID!, mediaId: ID!): Boolean!
   addToWatchlist(profileId: ID!, mediaId: ID!): Boolean!
   removeFromWatchlist(profileId: ID!, mediaId: ID!): Boolean!
+  "The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it."
+  setNotifying(profileId: ID!, mediaId: ID!, notifying: Boolean!): Boolean!
   markNotificationsRead(profileId: ID!): Boolean!
   "Check every title on any My List for news now instead of at the next sweep; returns when done. Used by the phone's background check."
   checkNotifications: Boolean!
@@ -3514,6 +3544,8 @@ func (ec *executionContext) childFields_Title(ctx context.Context, field graphql
 		return ec.fieldContext_Title_rating(ctx, field)
 	case "inWatchlist":
 		return ec.fieldContext_Title_inWatchlist(ctx, field)
+	case "notifying":
+		return ec.fieldContext_Title_notifying(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Title", field.Name)
 }
@@ -4031,6 +4063,36 @@ func (ec *executionContext) field_Mutation_sendTogether_args(ctx context.Context
 		return nil, err
 	}
 	args["payload"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setNotifying_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "mediaId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mediaId"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "notifying",
+		func(ctx context.Context, v any) (bool, error) {
+			return ec.unmarshalNBoolean2bool(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["notifying"] = arg2
 	return args, nil
 }
 
@@ -4853,6 +4915,20 @@ func (ec *executionContext) field_Subscription_streams_args(ctx context.Context,
 }
 
 func (ec *executionContext) field_Title_inWatchlist_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Title_notifying_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
@@ -6490,6 +6566,50 @@ func (ec *executionContext) fieldContext_Mutation_removeFromWatchlist(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_removeFromWatchlist_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_setNotifying(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_setNotifying(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().SetNotifying(ctx, fc.Args["profileId"].(string), fc.Args["mediaId"].(string), fc.Args["notifying"].(bool))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_setNotifying(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setNotifying_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -11980,6 +12100,50 @@ func (ec *executionContext) fieldContext_Title_inWatchlist(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Title_notifying(ctx context.Context, field graphql.CollectedField, obj *model.Title) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Title_notifying(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Title().Notifying(ctx, obj, fc.Args["profileId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Title_notifying(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Title",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Title_notifying_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _TogetherMessage_from(ctx context.Context, field graphql.CollectedField, obj *model.TogetherMessage) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -14294,6 +14458,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "removeFromWatchlist":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_removeFromWatchlist(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "setNotifying":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setNotifying(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -16680,6 +16851,42 @@ func (ec *executionContext) _Title(ctx context.Context, sel ast.SelectionSet, ob
 					}
 				}()
 				res = ec._Title_inWatchlist(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "notifying":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Title_notifying(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

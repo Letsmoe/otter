@@ -14,6 +14,7 @@ query TitleDetail($id: ID!, $profileId: ID!) {
     trailerKey
     genres
     inWatchlist(profileId: $profileId)
+    notifying(profileId: $profileId)
     rating(profileId: $profileId)
     credits {
       person {

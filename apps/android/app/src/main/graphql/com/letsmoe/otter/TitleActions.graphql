@@ -1,3 +1,7 @@
+mutation SetNotifying($profileId: ID!, $mediaId: ID!, $notifying: Boolean!) {
+  setNotifying(profileId: $profileId, mediaId: $mediaId, notifying: $notifying)
+}
+
 mutation AddToWatchlist($profileId: ID!, $mediaId: ID!) {
   addToWatchlist(profileId: $profileId, mediaId: $mediaId)
 }

@@ -37,6 +37,8 @@ import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.fill.Heart as HeartFill
 import com.adamglin.phosphoricons.fill.ThumbsDown as ThumbsDownFill
 import com.adamglin.phosphoricons.fill.ThumbsUp as ThumbsUpFill
+import com.adamglin.phosphoricons.fill.BellRinging as BellRingingFill
+import com.adamglin.phosphoricons.regular.Bell
 import com.adamglin.phosphoricons.regular.Check
 import com.adamglin.phosphoricons.regular.Heart
 import com.adamglin.phosphoricons.regular.Plus
@@ -56,6 +58,9 @@ private enum class RatingOption(val label: String, val value: Double, val icon: 
 private val actionTextColor = Color.White.copy(alpha = 0.7f)
 private val rateMenuLift = 64.dp
 
+/** Width of each action in the row; five of them fit a phone's width. */
+val ACTION_BUTTON_WIDTH = 68.dp
+
 /**
  * Netflix's icon row under the description: My List, Rate, Share and a download slot.
  * [downloadButton] renders the offline-download action, sized like the other four-by-column items.
@@ -65,8 +70,10 @@ fun ActionRow(
     title: String,
     shareUrl: String,
     inWatchlist: Boolean,
+    notifying: Boolean,
     rating: Double?,
     onToggleWatchlist: () -> Unit,
+    onToggleNotifying: () -> Unit,
     onRate: (Double) -> Unit,
     modifier: Modifier = Modifier,
     downloadButton: @Composable () -> Unit = {},
@@ -78,6 +85,7 @@ fun ActionRow(
             listIcon = PhosphorIcons.Regular.Check
         }
         ActionButton(listIcon, "My List", onToggleWatchlist)
+        NotifyButton(notifying, onToggleNotifying)
         RateButton(rating, onRate)
         ActionButton(PhosphorIcons.Regular.ShareNetwork, "Share", onClick = { share(context, title, shareUrl) })
         downloadButton()
@@ -87,13 +95,22 @@ fun ActionRow(
 @Composable
 fun ActionButton(icon: ImageVector, label: String, onClick: () -> Unit) {
     Column(
-        Modifier.pressable(onClick = onClick).width(80.dp).clip(CircleShape),
+        Modifier.pressable(onClick = onClick).width(ACTION_BUTTON_WIDTH).clip(CircleShape),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(26.dp))
         Text(label, fontSize = 11.sp, color = actionTextColor)
     }
+}
+
+@Composable
+private fun NotifyButton(notifying: Boolean, onToggle: () -> Unit) {
+    if (notifying) {
+        ActionButton(PhosphorIcons.Fill.BellRingingFill, "Notifying", onToggle)
+        return
+    }
+    ActionButton(PhosphorIcons.Regular.Bell, "Notify me", onToggle)
 }
 
 @Composable

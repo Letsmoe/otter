@@ -32,6 +32,8 @@ data class TitleDetail(
     val seasons: List<SeasonInfo>,
     val related: List<RailItem>,
     val inWatchlist: Boolean,
+    /** News about it reaches this profile (the Notify me bell, by default My List). */
+    val notifying: Boolean,
     val rating: Double?,
 ) {
     /** Seasons without specials. */
@@ -63,6 +65,7 @@ fun TitleDetailQuery.Title.toDetail(): TitleDetail {
         seasons = seasons.sortedBy { season -> season.seasonNumber }.map { season -> SeasonInfo(season.seasonNumber, season.name, season.episodeCount) },
         related = related.map { title -> title.titleCard.toRailItem() },
         inWatchlist = inWatchlist,
+        notifying = notifying,
         rating = rating,
     )
 }

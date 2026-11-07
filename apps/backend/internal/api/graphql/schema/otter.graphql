@@ -49,6 +49,8 @@ type Title {
   progress(profileId: ID!): WatchProgress
   rating(profileId: ID!): Float
   inWatchlist(profileId: ID!): Boolean!
+  "Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List."
+  notifying(profileId: ID!): Boolean!
 }
 
 type Season {
@@ -490,6 +492,8 @@ type Mutation {
   clearRating(profileId: ID!, mediaId: ID!): Boolean!
   addToWatchlist(profileId: ID!, mediaId: ID!): Boolean!
   removeFromWatchlist(profileId: ID!, mediaId: ID!): Boolean!
+  "The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it."
+  setNotifying(profileId: ID!, mediaId: ID!, notifying: Boolean!): Boolean!
   markNotificationsRead(profileId: ID!): Boolean!
   "Check every title on any My List for news now instead of at the next sweep; returns when done. Used by the phone's background check."
   checkNotifications: Boolean!

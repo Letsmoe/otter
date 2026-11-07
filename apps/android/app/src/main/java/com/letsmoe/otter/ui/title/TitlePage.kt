@@ -50,6 +50,7 @@ class TitlePageActions(
     val onOpenPerson: (String) -> Unit,
     val onSearch: () -> Unit,
     val onToggleWatchlist: () -> Unit,
+    val onToggleNotifying: () -> Unit,
     val onRate: (Double) -> Unit,
 )
 
@@ -146,8 +147,10 @@ private fun TitleSummary(
             title = detail.title,
             shareUrl = shareUrl,
             inWatchlist = detail.inWatchlist,
+            notifying = detail.notifying,
             rating = detail.rating,
             onToggleWatchlist = actions.onToggleWatchlist,
+            onToggleNotifying = actions.onToggleNotifying,
             onRate = actions.onRate,
             downloadButton = { slots.downloadButton(detail.id, detail.title) },
         )

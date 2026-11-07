@@ -156,6 +156,9 @@ func (s *Service) AddToWatchlist(ctx context.Context, profileID int, ref library
 	if err != nil {
 		return err
 	}
+	if err := s.clearNotifyingChoice(ctx, profileID, ref); err != nil {
+		return err
+	}
 	s.hooks.Emit(hooks.EventWatchlistAdded, map[string]any{
 		"profile_id": profileID, "media_type": ref.MediaType, "media_id": ref.MediaID,
 	})
@@ -165,7 +168,10 @@ func (s *Service) AddToWatchlist(ctx context.Context, profileID int, ref library
 func (s *Service) RemoveFromWatchlist(ctx context.Context, profileID int, ref library.MediaRef) error {
 	_, err := s.database.Exec(ctx, `DELETE FROM watchlist WHERE profile_id = $profile_id
 		AND media_type = $media_type AND media_id = $media_id`, refVars(profileID, ref))
-	return err
+	if err != nil {
+		return err
+	}
+	return s.clearNotifyingChoice(ctx, profileID, ref)
 }
 
 // Watchlist lists the profile's saved titles, newest first.

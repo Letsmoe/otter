@@ -27,6 +27,7 @@ models:
       progress: { resolver: true }
       rating: { resolver: true }
       inWatchlist: { resolver: true }
+      notifying: { resolver: true }
   Season:
     fields:
       episodes: { resolver: true }

@@ -75,16 +75,41 @@ class TitleViewModel(private val titleId: String) : ViewModel() {
             return
         }
         val inWatchlist = !detail.inWatchlist
-        updateDetail { current -> current.copy(inWatchlist = inWatchlist) }
-        viewModelScope.launch { saveWatchlist(inWatchlist) }
+        val notifyingBefore = detail.notifying
+        // Changing My List resets the bell to follow the list (see setNotifying in the schema).
+        updateDetail { current -> current.copy(inWatchlist = inWatchlist, notifying = inWatchlist) }
+        viewModelScope.launch { saveWatchlist(inWatchlist, notifyingBefore) }
     }
 
-    private suspend fun saveWatchlist(inWatchlist: Boolean) {
+    private suspend fun saveWatchlist(inWatchlist: Boolean, notifyingBefore: Boolean) {
         try {
             TitleActions.setInWatchlist(profileId, titleId, inWatchlist)
         } catch (error: Exception) {
-            updateDetail { current -> current.copy(inWatchlist = !inWatchlist) }
+            updateDetail { current -> current.copy(inWatchlist = !inWatchlist, notifying = notifyingBefore) }
             Toasts.push("Could not update watchlist", ToastKind.ERROR)
+        }
+    }
+
+    /** The Notify me bell. */
+    fun toggleNotifying() {
+        val detail = loadedDetail()
+        if (detail == null) {
+            return
+        }
+        val notifying = !detail.notifying
+        updateDetail { current -> current.copy(notifying = notifying) }
+        viewModelScope.launch { saveNotifying(notifying) }
+    }
+
+    private suspend fun saveNotifying(notifying: Boolean) {
+        try {
+            TitleActions.setNotifying(profileId, titleId, notifying)
+            if (notifying) {
+                Toasts.push("You'll get notified about news", ToastKind.SUCCESS)
+            }
+        } catch (error: Exception) {
+            updateDetail { current -> current.copy(notifying = !notifying) }
+            Toasts.push("Could not change notifications", ToastKind.ERROR)
         }
     }
 

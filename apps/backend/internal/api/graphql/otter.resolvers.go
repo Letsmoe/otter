@@ -178,6 +178,15 @@ func (r *mutationResolver) RemoveFromWatchlist(ctx context.Context, profileID st
 	return true, r.Profiles.RemoveFromWatchlist(ctx, profile, ref)
 }
 
+// SetNotifying is the resolver for the setNotifying field.
+func (r *mutationResolver) SetNotifying(ctx context.Context, profileID string, mediaID string, notifying bool) (bool, error) {
+	profile, ref, err := profileAndMedia(profileID, mediaID)
+	if err != nil {
+		return false, err
+	}
+	return true, r.Profiles.SetNotifying(ctx, profile, ref, notifying)
+}
+
 // MarkNotificationsRead is the resolver for the markNotificationsRead field.
 func (r *mutationResolver) MarkNotificationsRead(ctx context.Context, profileID string) (bool, error) {
 	profile, err := parseProfile(profileID)
@@ -962,6 +971,15 @@ func (r *titleResolver) InWatchlist(ctx context.Context, obj *model.Title, profi
 		return false, err
 	}
 	return r.Profiles.InWatchlist(ctx, profile, titleRef(obj))
+}
+
+// Notifying is the resolver for the notifying field.
+func (r *titleResolver) Notifying(ctx context.Context, obj *model.Title, profileID string) (bool, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return false, err
+	}
+	return r.Profiles.Notifying(ctx, profile, titleRef(obj))
 }
 
 // Episode returns generated.EpisodeResolver implementation.

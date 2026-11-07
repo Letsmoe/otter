@@ -130,6 +130,15 @@ export default {
                     ]
                 }
             ],
+            "notifying": [
+                6,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
             "__typename": [
                 4
             ]
@@ -1260,6 +1269,23 @@ export default {
                     "mediaId": [
                         2,
                         "ID!"
+                    ]
+                }
+            ],
+            "setNotifying": [
+                6,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "mediaId": [
+                        2,
+                        "ID!"
+                    ],
+                    "notifying": [
+                        6,
+                        "Boolean!"
                     ]
                 }
             ],

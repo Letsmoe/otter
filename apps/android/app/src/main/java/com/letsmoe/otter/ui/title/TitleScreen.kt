@@ -67,7 +67,13 @@ private fun LoadedTitle(
         }
         titleViewModel.toggleWatchlist()
     }
-    val actions = TitlePageActions(onBack, onOpenPerson, onSearch, toggleWatchlist, titleViewModel::rate)
+    val toggleNotifying = {
+        if (!detail.notifying) {
+            requestNotificationPermission()
+        }
+        titleViewModel.toggleNotifying()
+    }
+    val actions = TitlePageActions(onBack, onOpenPerson, onSearch, toggleWatchlist, toggleNotifying, titleViewModel::rate)
     if (detail.mediaType == MediaType.SERIES) {
         SeriesTitle(detail, rails, actions, slots, linkedSeasonNumber, linkedEpisodeId, onPlay, onOpenItem)
         return

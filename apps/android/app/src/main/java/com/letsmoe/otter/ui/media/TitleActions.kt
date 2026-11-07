@@ -7,6 +7,7 @@ import com.letsmoe.otter.graphql.ClearRatingMutation
 import com.letsmoe.otter.graphql.FindStreamsMutation
 import com.letsmoe.otter.graphql.InWatchlistQuery
 import com.letsmoe.otter.graphql.RemoveFromWatchlistMutation
+import com.letsmoe.otter.graphql.SetNotifyingMutation
 import com.letsmoe.otter.graphql.SetRatingMutation
 
 /** Watchlist, rating and stream-lookup writes on one movie, series or episode. */
@@ -27,6 +28,10 @@ object TitleActions {
             return
         }
         OtterApi.client.mutation(RemoveFromWatchlistMutation(profileId, mediaId)).execute().dataOrThrow()
+    }
+
+    suspend fun setNotifying(profileId: String, mediaId: String, notifying: Boolean) {
+        OtterApi.client.mutation(SetNotifyingMutation(profileId, mediaId, notifying)).execute().dataOrThrow()
     }
 
     suspend fun setRating(profileId: String, mediaId: String, rating: Double) {
