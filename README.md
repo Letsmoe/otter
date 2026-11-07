@@ -1,9 +1,5 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Letsmoe/otter/main/.github/assets/logo-white.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Letsmoe/otter/main/.github/assets/logo-black.svg">
-    <img src="https://raw.githubusercontent.com/Letsmoe/otter/main/.github/assets/logo-black.svg" alt="Otter" width="320">
-  </picture>
+  <img src="https://raw.githubusercontent.com/Letsmoe/otter/main/.github/assets/logo-black.svg" alt="Otter" width="320">
 </p>
 
 <h3 align="center">Find something to watch. Press play. That's it.</h3>
