@@ -1,14 +1,21 @@
 package com.letsmoe.otter.vpn
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import com.letsmoe.otter.AppScope
 import com.letsmoe.otter.api.OtterApi
 import com.letsmoe.otter.api.dataOrThrow
 import com.letsmoe.otter.graphql.VpnStatusQuery
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.withTimeoutOrNull
 
 data class VpnStatus(
     val connected: Boolean,
@@ -31,13 +38,33 @@ object VpnStatusStore {
 
     private val unknown = VpnStatus(connected = false, required = false, known = false)
 
+    /** A VPN on the phone came up or went down: ask the backend right away. */
+    private val networkChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
     val status: StateFlow<VpnStatus> = flow {
         while (true) {
             val current = fetchStatus()
             emit(current)
-            delay(nextDelay(current))
+            withTimeoutOrNull(nextDelay(current)) { networkChanges.first() }
         }
     }.stateIn(AppScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLISECONDS), unknown)
+
+    fun initialize(context: Context) {
+        val connectivity = context.getSystemService(ConnectivityManager::class.java)
+        val vpnNetworks = NetworkRequest.Builder()
+            .addTransportType(NetworkCapabilities.TRANSPORT_VPN)
+            .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+            .build()
+        connectivity.registerNetworkCallback(vpnNetworks, object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                networkChanges.tryEmit(Unit)
+            }
+
+            override fun onLost(network: Network) {
+                networkChanges.tryEmit(Unit)
+            }
+        })
+    }
 
     // Fast while unknown or blocked, so a VPN switched on unblocks the app within seconds.
     private fun nextDelay(current: VpnStatus): Long {
