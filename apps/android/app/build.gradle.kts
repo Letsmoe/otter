@@ -15,7 +15,7 @@ android {
         targetSdk = 36
         // CI sets both from the release tag; the updater compares versionName with the latest release.
         versionCode = providers.environmentVariable("OTTER_VERSION_CODE").orElse("1").get().toInt()
-        versionName = providers.environmentVariable("OTTER_VERSION_NAME").orElse("0.1.0").get()
+        versionName = providers.environmentVariable("OTTER_VERSION_NAME").orElse("0.0.0").get()
         // Not 47832 (Capacitor app): both may run at once.
         buildConfigField("int", "BACKEND_PORT", "47833")
         // Stream-only port on the Wi-Fi interface, read by Chromecasts.
