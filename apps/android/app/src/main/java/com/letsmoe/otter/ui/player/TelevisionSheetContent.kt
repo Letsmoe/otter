@@ -135,10 +135,12 @@ private fun SearchStatus(searching: Boolean, nothingFound: Boolean, onSearchAgai
     SearchAgainLink(onSearchAgain)
 }
 
-// Some VPNs send even local traffic into their tunnel, which hides the TV.
+// Some VPNs send even local traffic into their tunnel, which hides the TV. ProtonVPN only offers
+// its "Allow LAN connections" switch on paid plans, so free users have to pause it.
 private fun nothingFoundMessage(context: Context): String {
     if (phoneVpnActive(context)) {
-        return "No TV found. Your VPN may be hiding it: allow LAN connections in the VPN's settings, or pause it."
+        return "No TV found. Your VPN may be hiding it: allow LAN connections in the VPN's settings " +
+            "(ProtonVPN only offers this on paid plans), or pause the VPN while you pick the TV."
     }
     return "No TV found. Is it on and on the same Wi-Fi?"
 }
