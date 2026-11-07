@@ -70,10 +70,10 @@ fun PosterRail(
 fun PosterTile(item: RailItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier
+            .openOrPreview(item, onClick)
             .aspectRatio(2f / 3f)
             .clip(posterShape)
-            .background(posterBackground)
-            .openOrPreview(item, onClick),
+            .background(posterBackground),
     ) {
         PosterImage(item)
         if (item.badge != null) {

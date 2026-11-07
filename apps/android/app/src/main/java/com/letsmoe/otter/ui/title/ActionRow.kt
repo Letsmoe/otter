@@ -3,7 +3,9 @@ package com.letsmoe.otter.ui.title
 import android.content.Context
 import android.content.Intent
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.spring
@@ -116,7 +118,8 @@ fun ActionButton(icon: ImageVector, label: String, onClick: () -> Unit) {
 @Composable
 fun ActionButton(label: String, onClick: () -> Unit, icon: @Composable () -> Unit) {
     Column(
-        Modifier.pressable(onClick = onClick).width(ACTION_BUTTON_WIDTH).clip(CircleShape),
+        // No clip: the icons jump and pop past the button's bounds.
+        Modifier.pressable(onClick = onClick).width(ACTION_BUTTON_WIDTH),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -162,8 +165,11 @@ private fun quarterTurnUnlessVisible(state: EnterExitState): Float {
 }
 
 // The new icon grows in with an overshoot while the old one shrinks away.
-private val popSwap = (scaleIn(spring(dampingRatio = 0.45f, stiffness = 500f), initialScale = 0.2f) + fadeIn(tween(120))) togetherWith
-    (scaleOut(tween(120), targetScale = 0.2f) + fadeOut(tween(120)))
+private val popSwap = ContentTransform(
+    targetContentEnter = scaleIn(spring(dampingRatio = 0.45f, stiffness = 500f), initialScale = 0.2f) + fadeIn(tween(120)),
+    initialContentExit = scaleOut(tween(120), targetScale = 0.2f) + fadeOut(tween(120)),
+    sizeTransform = SizeTransform(clip = false),
+)
 
 /** The bell rings when turned on and squashes when turned off. */
 @Composable

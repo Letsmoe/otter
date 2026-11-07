@@ -1,11 +1,10 @@
 package com.letsmoe.otter.ui.preview
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.media.RailItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,16 +23,18 @@ object TitlePreview {
     }
 }
 
-/** Tap opens the title; a long press buzzes and opens its preview. */
-@OptIn(ExperimentalFoundationApi::class)
+/**
+ * Tap opens the title; a long press buzzes and opens its preview. Squishes under the finger, so
+ * put it first in the chain (before clip and background).
+ */
 @Composable
 fun Modifier.openOrPreview(item: RailItem, onClick: () -> Unit): Modifier {
     val haptics = LocalHapticFeedback.current
-    return combinedClickable(
-        onClick = onClick,
+    return pressable(
         onLongClick = {
             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             TitlePreview.show(item)
         },
+        onClick = onClick,
     )
 }

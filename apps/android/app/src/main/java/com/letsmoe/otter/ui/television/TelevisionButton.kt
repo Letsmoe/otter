@@ -41,6 +41,10 @@ import com.letsmoe.otter.ui.components.GlassBottomSheet
 import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.popIn
+import com.letsmoe.otter.ui.components.squishOnChange
+import com.letsmoe.otter.ui.components.wiggleOnChange
+import androidx.compose.runtime.mutableIntStateOf
 import com.letsmoe.otter.ui.player.TelevisionPlayback
 import com.letsmoe.otter.ui.player.TelevisionSheetContent
 import com.letsmoe.otter.ui.theme.OtterColors
@@ -50,7 +54,9 @@ import com.letsmoe.otter.ui.theme.OtterColors
 fun TelevisionButton(modifier: Modifier = Modifier, glass: Boolean = false, iconSize: Dp = 22.dp) {
     val target by TelevisionConnection.target.collectAsStateWithLifecycle()
     var pickerOpen by remember { mutableStateOf(false) }
+    var tapCount by remember { mutableIntStateOf(0) }
     val pressableModifier = modifier.pressable {
+        tapCount += 1
         if (target == null) {
             pickerOpen = true
         } else {
@@ -62,7 +68,12 @@ fun TelevisionButton(modifier: Modifier = Modifier, glass: Boolean = false, icon
         shape = pressableModifier.size(40.dp).frostedGlass(CircleShape)
     }
     Box(shape, contentAlignment = Alignment.Center) {
-        Icon(PhosphorIcons.Regular.Screencast, contentDescription = "Play on TV", modifier = Modifier.size(iconSize))
+        // Wiggles on tap; connecting squashes it and pops the green dot in.
+        Icon(
+            PhosphorIcons.Regular.Screencast,
+            contentDescription = "Play on TV",
+            modifier = Modifier.wiggleOnChange(tapCount).squishOnChange(target != null).size(iconSize),
+        )
         if (target != null) {
             ConnectedDot(Modifier.align(Alignment.TopEnd))
         }
@@ -83,6 +94,7 @@ private fun ConnectedDot(modifier: Modifier) {
     Box(
         modifier
             .offset(x = (-6).dp, y = 6.dp)
+            .popIn()
             .size(8.dp)
             .border(2.dp, Color.Black, CircleShape)
             .background(OtterColors.success, CircleShape),

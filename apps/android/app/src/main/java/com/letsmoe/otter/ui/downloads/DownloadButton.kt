@@ -79,7 +79,7 @@ fun DownloadButton(
 @Composable
 private fun LabeledButton(item: DownloadItem?, modifier: Modifier, onClick: () -> Unit) {
     Column(
-        modifier.pressable(onClick = onClick).width(ACTION_BUTTON_WIDTH).clip(CircleShape),
+        modifier.pressable(onClick = onClick).width(ACTION_BUTTON_WIDTH),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {

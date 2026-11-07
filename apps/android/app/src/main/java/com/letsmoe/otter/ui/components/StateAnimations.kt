@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -25,7 +26,8 @@ private const val BOUNCE_STIFFNESS = 420f
 private const val SQUASH_MILLISECONDS = 90
 private const val JUMP_UP_MILLISECONDS = 170
 private const val RING_MILLISECONDS = 850
-private val jumpHeight = 14.dp
+private const val WIGGLE_MILLISECONDS = 420
+private val defaultJumpHeight = 14.dp
 
 /**
  * Runs [animation] each time [state] changes after the first composition, so a button only
@@ -87,10 +89,38 @@ fun Modifier.ringOnChange(ringing: Boolean): Modifier {
     }
 }
 
+/** Wiggles side to side around its centre whenever [state] changes (e.g. a tap counter). */
+@Composable
+fun Modifier.wiggleOnChange(state: Any?): Modifier {
+    val angle = remember { Animatable(0f) }
+    OnStateChange(state) {
+        angle.snapTo(0f)
+        angle.animateTo(0f, keyframes {
+            durationMillis = WIGGLE_MILLISECONDS
+            -16f at 70
+            13f at 160
+            -8f at 250
+            4f at 330
+        })
+    }
+    return graphicsLayer { rotationZ = angle.value }
+}
+
+/** Grows in from nothing with an overshoot the first time it's shown (status dots). */
+@Composable
+fun Modifier.popIn(): Modifier {
+    val scale = remember { Animatable(0f) }
+    LaunchedEffect(Unit) { scale.animateTo(1f, spring(BOUNCE_DAMPING, BOUNCE_STIFFNESS)) }
+    return graphicsLayer {
+        scaleX = scale.value
+        scaleY = scale.value
+    }
+}
+
 /** Jumps up with a little tilt and lands with a bounce when [state] changes to a non-null value. */
 @Composable
-fun Modifier.jumpOnChange(state: Any?): Modifier {
-    val heightPixels = with(LocalDensity.current) { jumpHeight.toPx() }
+fun Modifier.jumpOnChange(state: Any?, height: Dp = defaultJumpHeight): Modifier {
+    val heightPixels = with(LocalDensity.current) { height.toPx() }
     val lift = remember { Animatable(0f) }
     val tilt = remember { Animatable(0f) }
     OnStateChange(state) { current ->

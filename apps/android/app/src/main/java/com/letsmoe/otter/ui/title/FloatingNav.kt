@@ -10,6 +10,11 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.letsmoe.otter.ui.components.wiggleOnChange
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -41,7 +46,12 @@ fun FloatingNav(onBack: () -> Unit, onSearch: () -> Unit, modifier: Modifier = M
 
 @Composable
 fun GlassIconButton(icon: ImageVector, description: String, onClick: () -> Unit) {
-    Box(Modifier.pressable(onClick = onClick).size(40.dp).frostedGlass(CircleShape),contentAlignment = Alignment.Center) {
-        Icon(icon, contentDescription = description, modifier = Modifier.size(20.dp))
+    var tapCount by remember { mutableIntStateOf(0) }
+    val tap = {
+        tapCount += 1
+        onClick()
+    }
+    Box(Modifier.pressable(onClick = tap).size(40.dp).frostedGlass(CircleShape), contentAlignment = Alignment.Center) {
+        Icon(icon, contentDescription = description, modifier = Modifier.wiggleOnChange(tapCount).size(20.dp))
     }
 }

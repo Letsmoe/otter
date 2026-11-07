@@ -10,6 +10,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,7 +54,12 @@ fun RowScope.SharedHeaderActions(onSearch: (() -> Unit)?) {
     if (onSearch == null) {
         return
     }
-    Box(Modifier.pressable(onClick = onSearch).size(44.dp).clip(CircleShape), contentAlignment = Alignment.Center) {
-        Icon(PhosphorIcons.Regular.MagnifyingGlass, contentDescription = "Search", modifier = Modifier.size(26.dp))
+    var tapCount by remember { mutableIntStateOf(0) }
+    val openSearch = {
+        tapCount += 1
+        onSearch()
+    }
+    Box(Modifier.pressable(onClick = openSearch).size(44.dp).clip(CircleShape), contentAlignment = Alignment.Center) {
+        Icon(PhosphorIcons.Regular.MagnifyingGlass, contentDescription = "Search", modifier = Modifier.wiggleOnChange(tapCount).size(26.dp))
     }
 }

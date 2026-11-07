@@ -2,7 +2,13 @@ package com.letsmoe.otter.ui.together
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import com.letsmoe.otter.ui.components.jumpOnChange
+import com.letsmoe.otter.ui.components.popIn
 import com.letsmoe.otter.ui.components.pressable
+import com.letsmoe.otter.ui.components.squishOnChange
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
@@ -28,18 +34,28 @@ import com.letsmoe.otter.ui.components.frostedGlass
 @Composable
 fun TogetherButton(modifier: Modifier = Modifier, glass: Boolean = false, iconSize: Dp = 22.dp) {
     val room by TogetherSession.room.collectAsStateWithLifecycle()
-    val pressableModifier = modifier.pressable { TogetherSession.openSheet() }
+    var tapCount by remember { mutableIntStateOf(0) }
+    val pressableModifier = modifier.pressable {
+        tapCount += 1
+        TogetherSession.openSheet()
+    }
     var shape = pressableModifier.size(40.dp).clip(CircleShape)
     if (glass) {
         shape = pressableModifier.size(40.dp).frostedGlass(CircleShape)
     }
     Box(shape, contentAlignment = Alignment.Center) {
-        Icon(PhosphorIcons.Regular.UsersThree, contentDescription = "Watch Together", modifier = Modifier.size(iconSize))
+        // Hops on tap (small enough to stay inside the round button); opening a room squashes it.
+        Icon(
+            PhosphorIcons.Regular.UsersThree,
+            contentDescription = "Watch Together",
+            modifier = Modifier.jumpOnChange(tapCount, height = 6.dp).squishOnChange(room.isOpen()).size(iconSize),
+        )
         if (room.isOpen()) {
             Box(
                 Modifier
                     .align(Alignment.TopEnd)
                     .offset(x = (-6).dp, y = 6.dp)
+                    .popIn()
                     .size(8.dp)
                     .border(2.dp, Color.Black, CircleShape)
                     .background(Color(0xFF4ADE80), CircleShape),

@@ -53,10 +53,10 @@ private fun WideCard(item: RailItem, onClick: () -> Unit, modifier: Modifier) {
     val fade = Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.85f))
     Box(
         modifier
+            .openOrPreview(item, onClick)
             .aspectRatio(16f / 9f)
             .clip(wideCardShape)
-            .background(Color.White.copy(alpha = 0.05f))
-            .openOrPreview(item, onClick),
+            .background(Color.White.copy(alpha = 0.05f)),
     ) {
         AsyncImage(cardImage(item), contentDescription = item.title, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(fade).padding(start = 10.dp, end = 10.dp, top = 24.dp, bottom = 8.dp)) {

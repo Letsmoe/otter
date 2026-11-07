@@ -5,6 +5,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -32,9 +33,26 @@ private val releaseSpring = spring<Float>(dampingRatio = Spring.DampingRatioMedi
  * Put it first in the chain so the button's background and frame scale with it.
  */
 @Composable
-fun Modifier.pressable(enabled: Boolean = true, pressedScale: Float = PRESSED_SCALE, onClick: () -> Unit): Modifier {
+fun Modifier.pressable(
+    enabled: Boolean = true,
+    pressedScale: Float = PRESSED_SCALE,
+    onLongClick: (() -> Unit)? = null,
+    onClick: () -> Unit,
+): Modifier {
     val scale = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
+    val interactionSource = remember { MutableInteractionSource() }
+    var clickHandling = Modifier.clickable(interactionSource = interactionSource, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
+    if (onLongClick != null) {
+        clickHandling = Modifier.combinedClickable(
+            interactionSource = interactionSource,
+            indication = null,
+            enabled = enabled,
+            role = Role.Button,
+            onLongClick = onLongClick,
+            onClick = onClick,
+        )
+    }
     return this
         .graphicsLayer {
             scaleX = scale.value
@@ -51,7 +69,7 @@ fun Modifier.pressable(enabled: Boolean = true, pressedScale: Float = PRESSED_SC
                 scope.launch { springBack(scale, pressedScale) }
             }
         }
-        .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
+        .then(clickHandling)
 }
 
 // A tap shorter than the dip still shows it whole before bouncing back.

@@ -3,6 +3,7 @@ package com.letsmoe.otter.ui.downloads
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -89,9 +90,9 @@ private fun AnimatedContentTransitionScope<DownloadVisual>.downloadTransition():
     if (initialState == DownloadVisual.NONE && targetState == DownloadVisual.PROGRESS) {
         // The arrow falls into the ring that grows where it was.
         val arrowDrops = slideOutVertically(tween(220)) { height -> height / 2 } + scaleOut(tween(220), targetScale = 0.4f) + fadeOut(tween(200))
-        return ringGrows togetherWith arrowDrops
+        return ringGrows togetherWith arrowDrops using SizeTransform(clip = false)
     }
-    return ringGrows togetherWith (scaleOut(tween(140), targetScale = 0.3f) + fadeOut(tween(140)))
+    return ringGrows togetherWith (scaleOut(tween(140), targetScale = 0.3f) + fadeOut(tween(140))) using SizeTransform(clip = false)
 }
 
 @Composable
