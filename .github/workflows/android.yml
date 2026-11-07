@@ -81,7 +81,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: otter-android-${{ github.sha }}
-          path: apps/android/app/build/outputs/apk/debug/*.apk
+          path: apps/android/app/build/outputs/apk/release/*.apk
           retention-days: 30
 
       - name: Attach APK to the release
@@ -90,5 +90,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.release.tag_name }}
         run: |
-          cp apps/android/app/build/outputs/apk/debug/*.apk "otter-${TAG}.apk"
+          cp apps/android/app/build/outputs/apk/release/*.apk "otter-${TAG}.apk"
           gh release upload "$TAG" "otter-${TAG}.apk" --clobber

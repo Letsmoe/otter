@@ -129,7 +129,7 @@ NAS: `docker build -f apps/backend/Dockerfile -t otter-backend .` from the repo 
 
 Android: `cd apps/mobile && bun run apk` (web as static SPA + backend for `GOOS=android GOARCH=arm64` + plugin bundles as assets).
 
-Native Android: `cd apps/android && bun run apk` (backend + plugin bundles, then `./gradlew assembleDebug`); `bun run android` installs and starts it over adb. Don't name a Kotlin package `data`: the root `.gitignore` drops every `data/` folder.
+Native Android: `cd apps/android && bun run apk` (backend + plugin bundles, then `./gradlew assembleRelease`: R8-minified, what CI attaches to releases); `bun run android` installs and starts a debug build over adb. Don't name a Kotlin package `data`: the root `.gitignore` drops every `data/` folder.
 
 ## s.to plugin (`plugins/s-to/`)
 
