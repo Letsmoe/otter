@@ -1,5 +1,6 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Letsmoe/otter/main/.github/assets/logo-black.svg" alt="Otter" width="320">
+  <img src="https://raw.githubusercontent.com/Letsmoe/otter/main/.github/assets/logo-black.svg#gh-light-mode-only" alt="Otter" width="320">
+  <img src="https://raw.githubusercontent.com/Letsmoe/otter/main/.github/assets/logo-white.svg#gh-dark-mode-only" alt="Otter" width="320">
 </p>
 
 <h3 align="center">Find something to watch. Press play. That's it.</h3>
