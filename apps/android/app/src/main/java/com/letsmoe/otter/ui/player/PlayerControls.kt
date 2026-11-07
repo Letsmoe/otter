@@ -124,7 +124,7 @@ fun PlayerControlsLayer(
 private fun LockedControls(onUnlock: () -> Unit) {
     Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(bottom = 24.dp), contentAlignment = Alignment.BottomCenter) {
         Row(
-            Modifier.size(width = 120.dp, height = 44.dp).playerGlass(CircleShape).clickableWithoutRipple(onClick = onUnlock),
+            Modifier.pressable(onClick = onUnlock).size(width = 120.dp, height = 44.dp).playerGlass(CircleShape),
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {

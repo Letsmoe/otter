@@ -30,6 +30,8 @@ import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.ArrowClockwise
 import com.adamglin.phosphoricons.regular.Check
 import com.letsmoe.otter.ui.components.OtterSwitch
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
+import com.letsmoe.otter.ui.components.pressable
 
 @Composable
 fun SpeedSheetContent(speed: Float, onChange: (Float) -> Unit) {
@@ -87,7 +89,7 @@ private fun SourceSearchStatus(searching: Boolean, foundSome: Boolean, onSearchA
         return
     }
     Row(
-        Modifier.clickableWithoutRipple(onClick = onSearchAgain).padding(vertical = 14.dp),
+        Modifier.pressable(onClick = onSearchAgain).padding(vertical = 14.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -118,7 +120,7 @@ private fun SourceRow(source: PlayerSource, current: Boolean, modifier: Modifier
         weight = FontWeight.Bold
     }
     Row(
-        modifier.fillMaxWidth().clickableWithoutRipple(onClick = onClick).padding(vertical = 10.dp),
+        modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onClick).fillMaxWidth().padding(vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -206,7 +208,7 @@ private fun TrackRow(label: String, selected: Boolean, onClick: () -> Unit) {
         weight = FontWeight.Bold
     }
     Row(
-        Modifier.fillMaxWidth().clickableWithoutRipple(onClick = onClick).padding(vertical = 10.dp),
+        Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onClick).fillMaxWidth().padding(vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

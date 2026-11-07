@@ -1,7 +1,6 @@
 package com.letsmoe.otter.ui.downloads
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +51,7 @@ import com.letsmoe.otter.graphql.fragment.ProfileFields
 import com.letsmoe.otter.graphql.type.DownloadStatus
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.profiles.avatarImage
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.TabHeader
 import com.letsmoe.otter.ui.components.frostedGlass
 import com.letsmoe.otter.ui.components.pressable
@@ -114,11 +114,12 @@ private fun DownloadsHeader(profile: ProfileFields, editing: Boolean, onToggleEd
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         AsyncImage(avatarImage(profile.avatarUrl, profile.name), contentDescription = null, modifier = Modifier.size(32.dp).clip(RoundedCornerShape(6.dp)))
         Text(profile.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-        var buttonModifier = Modifier.size(40.dp).clip(CircleShape)
+        val pressableButton = Modifier.pressable(onClick = onToggleEditing)
+        var buttonModifier = pressableButton.size(40.dp).clip(CircleShape)
         if (editing) {
-            buttonModifier = Modifier.size(40.dp).frostedGlass(CircleShape)
+            buttonModifier = pressableButton.size(40.dp).frostedGlass(CircleShape)
         }
-        Box(buttonModifier.clickable(onClick = onToggleEditing), contentAlignment = Alignment.Center) {
+        Box(buttonModifier, contentAlignment = Alignment.Center) {
             Icon(PhosphorIcons.Regular.PencilSimple, contentDescription = "Edit downloads", modifier = Modifier.size(22.dp))
         }
     }
@@ -127,7 +128,7 @@ private fun DownloadsHeader(profile: ProfileFields, editing: Boolean, onToggleEd
 @Composable
 private fun SeriesGroupRow(group: DownloadGroup, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick),
+        Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onClick).fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

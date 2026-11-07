@@ -1,6 +1,5 @@
 package com.letsmoe.otter.ui.search
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -34,6 +33,7 @@ import com.adamglin.phosphoricons.fill.XCircle
 import com.adamglin.phosphoricons.regular.ArrowLeft
 import com.adamglin.phosphoricons.regular.MagnifyingGlass
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.theme.OtterColors
 
 /** Back button and a glass search field that takes focus on open. */
@@ -42,7 +42,7 @@ fun SearchField(query: String, onQueryChange: (String) -> Unit, onClear: () -> U
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
     Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        Box(Modifier.size(44.dp).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
+        Box(Modifier.pressable(onClick = onBack).size(44.dp), contentAlignment = Alignment.Center) {
             Icon(PhosphorIcons.Regular.ArrowLeft, contentDescription = "Back", modifier = Modifier.size(24.dp))
         }
         Row(
@@ -56,7 +56,7 @@ fun SearchField(query: String, onQueryChange: (String) -> Unit, onClear: () -> U
                 Icon(
                     PhosphorIcons.Fill.XCircle,
                     contentDescription = "Clear",
-                    modifier = Modifier.size(22.dp).alpha(0.7f).clickable(onClick = onClear),
+                    modifier = Modifier.pressable(onClick = onClear).size(22.dp).alpha(0.7f),
                 )
             }
         }

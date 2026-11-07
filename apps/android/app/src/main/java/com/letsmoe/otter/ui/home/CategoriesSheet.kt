@@ -1,6 +1,5 @@
 package com.letsmoe.otter.ui.home
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -26,6 +25,8 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.Check
 import com.letsmoe.otter.ui.components.GlassBottomSheet
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.media.MediaRepository
 
 /** Glass sheet listing the genres; picking one opens that genre's page. */
@@ -60,7 +61,7 @@ private fun ColumnScope.GenreList(genres: List<String>, selectedGenre: String?, 
 @Composable
 private fun GenreRow(genre: String, isSelected: Boolean, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 14.dp),
+        Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onClick).fillMaxWidth().padding(vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {

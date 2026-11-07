@@ -1,7 +1,6 @@
 package com.letsmoe.otter.ui.title
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +31,9 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Fill
 import com.adamglin.phosphoricons.fill.Play
 import com.letsmoe.otter.api.tmdbImageUrl
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.theme.OtterColors
 
 private val stillShape = RoundedCornerShape(6.dp)
@@ -64,7 +65,7 @@ private fun EpisodeRow(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             EpisodeStill(episode, onClick = { onPlay(episode) })
-            Column(Modifier.weight(1f).clickable { onPlay(episode) }) {
+            Column(Modifier.weight(1f).pressable(pressedScale = PRESSED_SCALE_LARGE) { onPlay(episode) }) {
                 Text("${episode.episodeNumber}. ${episode.displayName}", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 val runtime = formatRuntime(episode.runtime)
                 if (runtime != null) {
@@ -81,7 +82,7 @@ private fun EpisodeRow(
 
 @Composable
 private fun EpisodeStill(episode: SeasonEpisode, onClick: () -> Unit) {
-    Box(Modifier.width(128.dp).aspectRatio(16f / 9f).clip(stillShape).background(Color.White.copy(alpha = 0.05f)).clickable(onClick = onClick)) {
+    Box(Modifier.pressable(onClick = onClick).width(128.dp).aspectRatio(16f / 9f).clip(stillShape).background(Color.White.copy(alpha = 0.05f))) {
         val stillUrl = tmdbImageUrl(episode.stillPath, "w780")
         if (stillUrl != null) {
             AsyncImage(stillUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())

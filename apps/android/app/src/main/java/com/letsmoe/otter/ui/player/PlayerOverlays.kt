@@ -125,7 +125,7 @@ fun HoldingNotice(state: PlayerUiState, onStartWithoutWaiting: () -> Unit, modif
         }
         Text(waitingText(state), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
         Box(
-            Modifier.height(32.dp).background(Color.White.copy(alpha = 0.1f), CircleShape).clickableWithoutRipple(onClick = onStartWithoutWaiting).padding(horizontal = 16.dp),
+            Modifier.pressable(onClick = onStartWithoutWaiting).height(32.dp).background(Color.White.copy(alpha = 0.1f), CircleShape).padding(horizontal = 16.dp),
             contentAlignment = Alignment.Center,
         ) {
             Text("Start without them", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)

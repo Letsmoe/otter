@@ -32,7 +32,9 @@ import coil3.compose.AsyncImage
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Fill
 import com.adamglin.phosphoricons.fill.Play
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.pressable
 
 /** "Trailers & More": the trailer's thumbnail, playing inline on tap. */
 @Composable
@@ -63,7 +65,7 @@ fun TrailerTab(trailerKey: String?, title: String, modifier: Modifier = Modifier
 
 @Composable
 private fun TrailerThumbnail(trailerKey: String, onPlay: () -> Unit) {
-    Box(Modifier.fillMaxSize().clickable(onClick = onPlay)) {
+    Box(Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onPlay).fillMaxSize()) {
         AsyncImage("https://img.youtube.com/vi/$trailerKey/hqdefault.jpg", contentDescription = "Play trailer", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         Box(Modifier.align(Alignment.Center).size(56.dp).frostedGlass(CircleShape), contentAlignment = Alignment.Center) {
             Icon(PhosphorIcons.Fill.Play, contentDescription = null, modifier = Modifier.size(24.dp))

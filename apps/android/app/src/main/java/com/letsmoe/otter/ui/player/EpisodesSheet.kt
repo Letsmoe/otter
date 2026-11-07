@@ -112,7 +112,7 @@ private fun EpisodeRow(episodes: List<PlayerEpisode>, currentEpisodeId: String, 
 
 @Composable
 private fun EpisodeCard(episode: PlayerEpisode, current: Boolean, onClick: () -> Unit) {
-    Column(Modifier.width(224.dp).clickableWithoutRipple(onClick = onClick), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.pressable(onClick = onClick).width(224.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         EpisodeStill(episode, current)
         Text(
             "${episode.episodeNumber}. ${episodeName(episode.name, episode.episodeNumber)}",

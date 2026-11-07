@@ -2,7 +2,6 @@ package com.letsmoe.otter.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +36,7 @@ import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.fill.Play
 import com.adamglin.phosphoricons.regular.Check
 import com.adamglin.phosphoricons.regular.Plus
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.media.FeaturedItem
 
@@ -67,7 +67,7 @@ fun FeaturedPreview(
             model = featured.item.posterUrl,
             contentDescription = featured.item.title,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize().clickable(onClick = onOpen),
+            modifier = Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onOpen).fillMaxSize(),
         )
         FeaturedFooter(featured, inMyList, onPlay, onToggleMyList, Modifier.align(Alignment.BottomCenter))
     }

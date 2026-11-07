@@ -1,7 +1,6 @@
 package com.letsmoe.otter.ui.downloads
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +33,8 @@ import com.adamglin.phosphoricons.Fill
 import com.adamglin.phosphoricons.fill.SealCheck
 import com.adamglin.phosphoricons.fill.Sparkle
 import com.letsmoe.otter.ui.components.GlassBottomSheet
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.player.SourceStream
 import com.letsmoe.otter.ui.player.followSourceStreams
 import com.letsmoe.otter.ui.theme.OtterColors
@@ -75,7 +76,7 @@ fun SourcePickerSheet(mediaId: String, title: String, onPick: (String?) -> Unit,
 @Composable
 private fun BestAvailableRow(onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 14.dp),
+        Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onClick).fillMaxWidth().padding(vertical = 14.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -92,7 +93,7 @@ private fun BestAvailableRow(onClick: () -> Unit) {
 @Composable
 private fun StreamRow(stream: SourceStream, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 12.dp),
+        Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onClick).fillMaxWidth().padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

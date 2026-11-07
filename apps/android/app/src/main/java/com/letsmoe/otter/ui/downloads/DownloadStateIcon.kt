@@ -1,11 +1,22 @@
 package com.letsmoe.otter.ui.downloads
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -17,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
@@ -31,23 +41,57 @@ import com.adamglin.phosphoricons.regular.DownloadSimple
 import com.adamglin.phosphoricons.regular.WarningCircle
 import com.letsmoe.otter.downloads.DownloadItem
 import com.letsmoe.otter.graphql.type.DownloadStatus
+import com.letsmoe.otter.ui.components.squishOnChange
 import com.letsmoe.otter.ui.theme.OtterColors
+
+/** What the icon shows; changes between these animate, progress within one doesn't. */
+private enum class DownloadVisual { NONE, PROGRESS, DONE, FAILED }
 
 /**
  * Icon for a download's state: arrow (none), waiting ring, progress ring, phone with check (done)
- * or warning (failed). Mirrors DownloadState.svelte.
+ * or warning (failed). Starting a download drops the arrow into a growing ring; finishing pops the
+ * check in. Mirrors DownloadState.svelte.
  */
 @Composable
 fun DownloadStateIcon(item: DownloadItem?, size: Dp = 26.dp) {
+    val visual = visualOf(item)
+    AnimatedContent(
+        visual,
+        modifier = Modifier.squishOnChange(visual),
+        transitionSpec = { downloadTransition() },
+        contentAlignment = Alignment.Center,
+        label = "downloadState",
+    ) { shown ->
+        when (shown) {
+            DownloadVisual.NONE -> Icon(PhosphorIcons.Regular.DownloadSimple, contentDescription = "Download", modifier = Modifier.size(size))
+            DownloadVisual.PROGRESS -> ProgressRing(item, size)
+            DownloadVisual.DONE -> DownloadedIcon(size)
+            DownloadVisual.FAILED -> Icon(PhosphorIcons.Regular.WarningCircle, "Download failed", tint = OtterColors.error, modifier = Modifier.size(size))
+        }
+    }
+}
+
+private fun visualOf(item: DownloadItem?): DownloadVisual {
     if (item == null) {
-        Icon(PhosphorIcons.Regular.DownloadSimple, contentDescription = "Download", modifier = Modifier.size(size))
-        return
+        return DownloadVisual.NONE
     }
-    when (item.status) {
-        DownloadStatus.DONE -> DownloadedIcon(size)
-        DownloadStatus.FAILED -> Icon(PhosphorIcons.Regular.WarningCircle, "Download failed", tint = OtterColors.error, modifier = Modifier.size(size))
-        else -> ProgressRing(item, size)
+    return when (item.status) {
+        DownloadStatus.DONE -> DownloadVisual.DONE
+        DownloadStatus.FAILED -> DownloadVisual.FAILED
+        else -> DownloadVisual.PROGRESS
     }
+}
+
+private val bouncyGrow = spring<Float>(dampingRatio = 0.45f, stiffness = 450f)
+
+private fun AnimatedContentTransitionScope<DownloadVisual>.downloadTransition(): ContentTransform {
+    val ringGrows = scaleIn(bouncyGrow, initialScale = 0.3f) + fadeIn(tween(150))
+    if (initialState == DownloadVisual.NONE && targetState == DownloadVisual.PROGRESS) {
+        // The arrow falls into the ring that grows where it was.
+        val arrowDrops = slideOutVertically(tween(220)) { height -> height / 2 } + scaleOut(tween(220), targetScale = 0.4f) + fadeOut(tween(200))
+        return ringGrows togetherWith arrowDrops
+    }
+    return ringGrows togetherWith (scaleOut(tween(140), targetScale = 0.3f) + fadeOut(tween(140)))
 }
 
 @Composable
@@ -58,10 +102,17 @@ private fun DownloadedIcon(size: Dp) {
     }
 }
 
+// Also shown while leaving for another state, when the item may already be gone.
 @Composable
-private fun ProgressRing(item: DownloadItem, size: Dp) {
+private fun ProgressRing(item: DownloadItem?, size: Dp) {
     val color = LocalContentColor.current
-    val waiting = item.status == DownloadStatus.QUEUED
+    var waiting = false
+    var progress = 0f
+    if (item != null) {
+        waiting = item.status == DownloadStatus.QUEUED
+        progress = item.progress.toFloat().coerceIn(0f, 1f)
+    }
+    val shownProgress by animateFloatAsState(progress, tween(450), label = "downloadProgress")
     val spin by rememberInfiniteTransition(label = "downloadSpin").animateFloat(
         initialValue = 0f,
         targetValue = 360f,
@@ -78,7 +129,6 @@ private fun ProgressRing(item: DownloadItem, size: Dp) {
             drawArc(color, spin - 90f, 100f, false, Offset(inset, inset), arcSize, style = stroke)
             return@Canvas
         }
-        val sweep = 360f * item.progress.toFloat().coerceIn(0f, 1f)
-        drawArc(color, -90f, sweep, false, Offset(inset, inset), arcSize, style = stroke)
+        drawArc(color, -90f, 360f * shownProgress, false, Offset(inset, inset), arcSize, style = stroke)
     }
 }

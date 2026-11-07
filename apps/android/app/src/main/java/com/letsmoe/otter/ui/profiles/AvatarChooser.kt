@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -37,7 +36,9 @@ import coil3.compose.AsyncImage
 import com.letsmoe.otter.profiles.AVATAR_SETS
 import com.letsmoe.otter.profiles.AvatarSet
 import com.letsmoe.otter.profiles.avatarImage
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.ScreenHeader
+import com.letsmoe.otter.ui.components.pressable
 
 private const val COLUMNS = 4
 private val tileShape = RoundedCornerShape(16.dp)
@@ -102,7 +103,7 @@ private fun AvatarSetSection(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(horizontal = 4.dp),
+            modifier = Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onToggle).fillMaxWidth().padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(set.label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
@@ -132,13 +133,13 @@ private fun AvatarRows(avatarIds: List<String>, selected: String, onSelect: (Str
 
 @Composable
 private fun AvatarTile(avatarId: String, isSelected: Boolean, onSelect: (String) -> Unit, modifier: Modifier) {
-    var tileModifier = modifier.aspectRatio(1f)
+    var tileModifier = modifier.pressable { onSelect(avatarId) }.aspectRatio(1f)
     if (isSelected) {
         tileModifier = tileModifier.border(2.dp, Color.White, tileShape).padding(4.dp)
     }
     AsyncImage(
         model = avatarImage(avatarId, ""),
         contentDescription = avatarId,
-        modifier = tileModifier.clip(tileShape).clickable { onSelect(avatarId) },
+        modifier = tileModifier.clip(tileShape),
     )
 }

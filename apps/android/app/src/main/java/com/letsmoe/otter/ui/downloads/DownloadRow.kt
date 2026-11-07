@@ -1,7 +1,6 @@
 package com.letsmoe.otter.ui.downloads
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +37,7 @@ import com.letsmoe.otter.toasts.ToastKind
 import com.letsmoe.otter.toasts.Toasts
 import com.letsmoe.otter.graphql.type.DownloadStatus
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.theme.OtterColors
 
 /** A movie or episode in the download list. Mirrors DownloadRow.svelte. */
@@ -57,11 +57,12 @@ fun DownloadRow(
             Text(statusLine(item), fontSize = 12.sp, color = statusColor(item), maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
         if (editing) {
-            Box(Modifier.size(36.dp).frostedGlass(CircleShape).clickable { onDelete(item) }, contentAlignment = Alignment.Center) {
+            Box(Modifier.pressable { onDelete(item) }.size(36.dp).frostedGlass(CircleShape), contentAlignment = Alignment.Center) {
                 Icon(PhosphorIcons.Bold.X, contentDescription = "Delete download", modifier = Modifier.size(16.dp))
             }
         } else {
-            Box(Modifier.size(40.dp).clip(CircleShape).clickable { if (item.status == DownloadStatus.FAILED) onRetry(item) }, contentAlignment = Alignment.Center) {
+            // Only a failed download reacts: tapping it retries.
+            Box(Modifier.pressable(enabled = item.status == DownloadStatus.FAILED) { onRetry(item) }.size(40.dp).clip(CircleShape), contentAlignment = Alignment.Center) {
                 DownloadStateIcon(item, 24.dp)
             }
         }
@@ -72,11 +73,11 @@ fun DownloadRow(
 fun DownloadThumbnail(imageUrl: String?, playable: Boolean, onClick: () -> Unit) {
     Box(
         Modifier
+            .pressable(enabled = playable, onClick = onClick)
             .width(144.dp)
             .aspectRatio(16f / 9f)
             .clip(RoundedCornerShape(6.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .clickable(enabled = playable, onClick = onClick),
+            .background(Color.White.copy(alpha = 0.05f)),
     ) {
         if (imageUrl != null) {
             AsyncImage(imageUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())

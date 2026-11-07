@@ -1,7 +1,6 @@
 package com.letsmoe.otter.ui.components
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
@@ -58,9 +57,9 @@ fun <Value> FilterSelect(
     Box(modifier) {
         Row(
             Modifier
+                .pressable { open = true }
                 .height(36.dp)
                 .frostedGlass(CircleShape)
-                .clickable { open = true }
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

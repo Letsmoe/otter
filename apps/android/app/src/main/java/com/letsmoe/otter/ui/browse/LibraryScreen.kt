@@ -1,6 +1,5 @@
 package com.letsmoe.otter.ui.browse
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.letsmoe.otter.ui.components.PosterRail
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.navigation.bottomBarClearance
 
@@ -59,7 +59,7 @@ private fun SeeAllRail(title: String, seeAllLabel: String, items: List<RailItem>
             seeAllLabel,
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.clickable(onClick = onSeeAll).padding(horizontal = 12.dp, vertical = 4.dp),
+            modifier = Modifier.pressable(onClick = onSeeAll).padding(horizontal = 12.dp, vertical = 4.dp),
         )
     }
 }

@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.letsmoe.otter.together.TogetherSession
 import com.letsmoe.otter.together.formatRoomCode
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.together.isOpen
 import com.letsmoe.otter.ui.together.PeerAvatar
 import com.letsmoe.otter.ui.together.TogetherChat
@@ -80,7 +81,7 @@ private fun ViewSwitch(view: TogetherView, code: String, onClick: () -> Unit) {
         label = formatRoomCode(code)
     }
     Box(
-        Modifier.height(32.dp).background(Color.White.copy(alpha = 0.08f), CircleShape).clickableWithoutRipple(onClick = onClick).padding(horizontal = 12.dp),
+        Modifier.pressable(onClick = onClick).height(32.dp).background(Color.White.copy(alpha = 0.08f), CircleShape).padding(horizontal = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, fontFamily = FontFamily.Monospace, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)

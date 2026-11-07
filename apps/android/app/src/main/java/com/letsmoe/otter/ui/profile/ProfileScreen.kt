@@ -2,7 +2,6 @@ package com.letsmoe.otter.ui.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,10 +53,12 @@ import com.letsmoe.otter.graphql.fragment.ProfileFields
 import com.letsmoe.otter.notifications.NotificationItem
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.profiles.avatarImage
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.PosterRail
 import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.navigation.bottomBarClearance
 import com.letsmoe.otter.ui.components.TabHeader
+import com.letsmoe.otter.ui.components.pressable
 
 private const val DOWNLOAD_PREVIEW_COUNT = 4
 
@@ -107,7 +108,7 @@ fun ProfileScreen(navigation: ProfileNavigation, viewModel: ProfileViewModel = v
 @Composable
 private fun ProfileIdentity(profile: ProfileFields) {
     Column(
-        Modifier.fillMaxWidth().clickable(onClick = ProfileSession::logout).padding(top = 8.dp, bottom = 8.dp),
+        Modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = ProfileSession::logout).fillMaxWidth().padding(top = 8.dp, bottom = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -150,7 +151,7 @@ private fun DownloadsCard(groups: List<DownloadGroup>, navigation: ProfileNaviga
 
 @Composable
 private fun DownloadPoster(group: DownloadGroup, onClick: () -> Unit) {
-    Column(Modifier.width(112.dp).clip(RoundedCornerShape(16.dp)).background(Color.Black.copy(alpha = 0.4f)).clickable(onClick = onClick)) {
+    Column(Modifier.pressable(onClick = onClick).width(112.dp).clip(RoundedCornerShape(16.dp)).background(Color.Black.copy(alpha = 0.4f))) {
         Box(Modifier.fillMaxWidth().aspectRatio(2f / 3f).background(Color.White.copy(alpha = 0.05f))) {
             if (group.posterUrl != null) {
                 AsyncImage(group.posterUrl, contentDescription = group.titleName, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
@@ -173,11 +174,12 @@ private fun downloadCaption(group: DownloadGroup): String {
 // Alone, the tile gets a fixed height; next to posters it matches them.
 @Composable
 private fun FindDownloadsTile(compact: Boolean, onClick: () -> Unit) {
-    var tile = Modifier.widthIn(min = 160.dp).heightIn(min = 160.dp)
+    val pressableTile = Modifier.pressable(onClick = onClick)
+    var tile = pressableTile.widthIn(min = 160.dp).heightIn(min = 160.dp)
     if (compact) {
-        tile = Modifier.widthIn(min = 160.dp).height(190.dp)
+        tile = pressableTile.widthIn(min = 160.dp).height(190.dp)
     }
-    tile = tile.clip(RoundedCornerShape(16.dp)).background(Color.Black.copy(alpha = 0.4f)).clickable(onClick = onClick)
+    tile = tile.clip(RoundedCornerShape(16.dp)).background(Color.Black.copy(alpha = 0.4f))
     Column(
         tile.padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

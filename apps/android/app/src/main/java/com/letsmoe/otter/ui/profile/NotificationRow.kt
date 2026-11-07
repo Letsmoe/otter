@@ -1,7 +1,6 @@
 package com.letsmoe.otter.ui.profile
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,13 +28,15 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.letsmoe.otter.notifications.NotificationItem
 import com.letsmoe.otter.notifications.notificationAge
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.theme.OtterColors
 
 /** One notification: still or backdrop, a red dot while unread, heading, body and age. Mirrors NotificationRow.svelte. */
 @Composable
 fun NotificationRow(notification: NotificationItem, onOpen: () -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier.fillMaxWidth().clickable(onClick = onOpen).padding(start = 12.dp, top = 6.dp, bottom = 6.dp),
+        modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onOpen).fillMaxWidth().padding(start = 12.dp, top = 6.dp, bottom = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

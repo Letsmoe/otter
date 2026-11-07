@@ -29,6 +29,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.letsmoe.otter.ui.components.pressable
 import kotlin.math.roundToInt
 
 val playbackSpeeds = listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f)
@@ -70,7 +71,7 @@ private fun SpeedLabel(speed: Float, selected: Boolean, onClick: () -> Unit) {
         color = Color.White
         weight = FontWeight.Bold
     }
-    Column(Modifier.width(48.dp).clickableWithoutRipple(onClick = onClick), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.pressable(onClick = onClick).width(48.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text("${formatSpeed(speed)}x", fontSize = 12.sp, color = color, fontWeight = weight)
         if (speed == 1f) {
             Text("Normal", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))

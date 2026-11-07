@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -82,7 +81,7 @@ private fun ToastPill(toast: Toast) {
                 PhosphorIcons.Regular.X,
                 contentDescription = "Dismiss",
                 tint = Color.White.copy(alpha = 0.5f),
-                modifier = Modifier.size(24.dp).clickable { Toasts.dismiss(toast.id) }.padding(5.dp),
+                modifier = Modifier.pressable { Toasts.dismiss(toast.id) }.size(24.dp).padding(5.dp),
             )
         }
     }

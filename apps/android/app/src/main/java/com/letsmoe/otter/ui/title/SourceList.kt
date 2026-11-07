@@ -1,7 +1,6 @@
 package com.letsmoe.otter.ui.title
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +31,7 @@ import com.adamglin.phosphoricons.fill.Play
 import com.adamglin.phosphoricons.fill.SealCheck
 import com.adamglin.phosphoricons.regular.ArrowClockwise
 import com.letsmoe.otter.graphql.fragment.StreamLink
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.theme.OtterColors
 
@@ -106,10 +106,10 @@ private const val BROKEN_SOURCE_ALPHA = 0.4f
 private fun SourceRow(stream: StreamLink, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier
+            .pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onClick)
             .fillMaxWidth()
             .clip(RoundedCornerShape(6.dp))
             .background(Color.White.copy(alpha = 0.08f))
-            .clickable(onClick = onClick)
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,

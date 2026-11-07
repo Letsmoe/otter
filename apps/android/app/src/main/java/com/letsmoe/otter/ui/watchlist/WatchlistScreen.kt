@@ -1,6 +1,5 @@
 package com.letsmoe.otter.ui.watchlist
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +47,7 @@ import com.letsmoe.otter.ui.components.SegmentedBar
 import com.letsmoe.otter.ui.components.TabHeader
 import com.letsmoe.otter.ui.components.WithoutBackdrop
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.media.ListOrder
 import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.media.onlyKind
@@ -125,11 +125,12 @@ private fun ListControls(
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         FilterSelect("Sort", orderOptions, order, onOrderChange)
         if (canEdit) {
-            var buttonModifier = Modifier.size(40.dp).clip(CircleShape)
+            val pressableButton = Modifier.pressable(onClick = onToggleEditing)
+            var buttonModifier = pressableButton.size(40.dp).clip(CircleShape)
             if (editing) {
-                buttonModifier = Modifier.size(40.dp).frostedGlass(CircleShape)
+                buttonModifier = pressableButton.size(40.dp).frostedGlass(CircleShape)
             }
-            Box(buttonModifier.clickable(onClick = onToggleEditing), contentAlignment = Alignment.Center) {
+            Box(buttonModifier, contentAlignment = Alignment.Center) {
                 Icon(PhosphorIcons.Regular.PencilSimple, contentDescription = "Edit My List", modifier = Modifier.size(22.dp))
             }
         }
@@ -145,9 +146,9 @@ private fun EditablePoster(item: RailItem, editing: Boolean, onOpen: () -> Unit,
                 Modifier
                     .align(Alignment.TopEnd)
                     .padding(6.dp)
+                    .pressable(onClick = onRemove)
                     .size(32.dp)
-                    .frostedGlass(CircleShape)
-                    .clickable(onClick = onRemove),
+                    .frostedGlass(CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(PhosphorIcons.Bold.X, contentDescription = "Remove ${item.title} from My List", modifier = Modifier.size(14.dp))

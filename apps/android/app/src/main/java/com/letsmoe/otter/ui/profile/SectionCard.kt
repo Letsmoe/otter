@@ -1,6 +1,5 @@
 package com.letsmoe.otter.ui.profile
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,7 +21,9 @@ import androidx.compose.ui.unit.sp
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.CaretRight
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.pressable
 
 private val cardShape = RoundedCornerShape(24.dp)
 
@@ -30,7 +31,7 @@ private val cardShape = RoundedCornerShape(24.dp)
 @Composable
 fun SectionCard(title: String, icon: ImageVector, onOpen: () -> Unit, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Column(
-        modifier.fillMaxWidth().frostedGlass(cardShape).clip(cardShape).clickable(onClick = onOpen).padding(16.dp),
+        modifier.pressable(pressedScale = PRESSED_SCALE_LARGE, onClick = onOpen).fillMaxWidth().frostedGlass(cardShape).clip(cardShape).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Row(

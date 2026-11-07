@@ -1,6 +1,5 @@
 package com.letsmoe.otter.ui.plugins
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,8 +40,10 @@ import com.letsmoe.otter.graphql.fragment.PluginFields
 import com.letsmoe.otter.ui.FailedMessage
 import com.letsmoe.otter.ui.LoadState
 import com.letsmoe.otter.ui.components.OtterSwitch
+import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.ScreenHeader
 import com.letsmoe.otter.ui.components.frostedGlass
+import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.navigation.bottomBarClearance
 import com.letsmoe.otter.ui.theme.OtterColors
 
@@ -103,7 +104,7 @@ private fun PluginRow(plugin: PluginFields, viewModel: PluginsViewModel) {
     }
     Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         Row(
-            Modifier.weight(1f).alpha(rowAlpha).clickable { viewModel.openName = plugin.name },
+            Modifier.weight(1f).pressable(pressedScale = PRESSED_SCALE_LARGE) { viewModel.openName = plugin.name }.alpha(rowAlpha),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
