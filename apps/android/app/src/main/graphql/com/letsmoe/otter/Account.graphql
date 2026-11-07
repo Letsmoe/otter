@@ -110,6 +110,17 @@ mutation SetPluginEnabled($name: String!, $enabled: Boolean!) {
   }
 }
 
+mutation UpdatePlugins {
+  updatePlugins {
+    updated {
+      name
+      fromVersion
+      toVersion
+    }
+    failed
+  }
+}
+
 mutation SetPluginSettings($name: String!, $values: [PluginSettingInput!]!) {
   setPluginSettings(name: $name, values: $values) {
     ...PluginFields

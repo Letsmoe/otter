@@ -51,13 +51,20 @@ import com.letsmoe.otter.ui.theme.OtterColors
 fun PluginsScreen(onBack: () -> Unit, viewModel: PluginsViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
-        ScreenHeader("Plugins", onBack)
+        ScreenHeader("Plugins", onBack, actionLabel = updateLabel(viewModel.checkingUpdates), onAction = viewModel::checkForUpdates)
         when (val current = state) {
             is LoadState.Loading -> Box(Modifier.fillMaxWidth().padding(top = 64.dp), contentAlignment = Alignment.TopCenter) { CircularProgressIndicator() }
             is LoadState.Failed -> FailedMessage(current.message, onRetry = viewModel::load)
             is LoadState.Loaded -> PluginList(current.value, viewModel)
         }
     }
+}
+
+private fun updateLabel(checking: Boolean): String {
+    if (checking) {
+        return "Checking…"
+    }
+    return "Update"
 }
 
 @Composable

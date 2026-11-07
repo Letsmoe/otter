@@ -172,6 +172,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	go downloadService.Run(ctx)
 	go notify.NewWatcher(notificationStore, database, libraryService).Run(ctx)
 
+	pluginStore := startPluginStore(ctx, cfg.pluginDir)
 	resolver := gqlapi.NewResolver(gqlapi.Services{
 		Library:        libraryService,
 		Profiles:       profiles.NewService(database, cacheClient, hookRunner),
@@ -181,6 +182,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 		Recommender:    recommend.New(database),
 		Settings:       settingsService,
 		Plugins:        registry,
+		PluginStore:    pluginStore,
 		StreamResolver: streamResolver,
 		StreamProxy:    streamProxy,
 		TMDB:           tmdbClient,
@@ -223,11 +225,18 @@ func loadPlugins(ctx context.Context, cfg config, settingsService *settings.Serv
 		return nil, nil, err
 	}
 	registry.RestoreDisabled(settingsService.Cached().DisabledPlugins)
-	// Newer npm releases replace the installed bundles; the registry hot-reloads them.
-	if pluginstore.Enabled() {
-		go pluginstore.New(cfg.pluginDir).Run(ctx)
-	}
 	return registry, runner, nil
+}
+
+// startPluginStore swaps in newer npm releases of the installed bundles
+// (the registry hot-reloads them); nil while PLUGIN_AUTO_UPDATE=false.
+func startPluginStore(ctx context.Context, pluginDir string) *pluginstore.Service {
+	if !pluginstore.Enabled() {
+		return nil
+	}
+	store := pluginstore.New(pluginDir)
+	go store.Run(ctx)
+	return store
 }
 
 // togetherService meets peers on TOGETHER_RELAYS (comma-separated wss:// URLs)

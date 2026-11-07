@@ -102,8 +102,11 @@ func TestUpdatesToNewerRelease(t *testing.T) {
 	pluginDir := t.TempDir()
 	folder := installPlugin(t, pluginDir, `{"name":"`+testPackage+`","version":"0.1.0","main":"plugin.js"}`)
 
-	newTestService(pluginDir, registry).UpdateAll(context.Background())
+	report := newTestService(pluginDir, registry).UpdateAll(context.Background())
 
+	if len(report.Updated) != 1 || report.Updated[0].FromVersion != "0.1.0" || report.Updated[0].ToVersion != "0.2.0" {
+		t.Fatalf("report = %+v", report)
+	}
 	if got := readFile(t, filepath.Join(folder, "plugin.js")); got != "module.exports = 'v0.2.0'" {
 		t.Fatalf("plugin.js = %q", got)
 	}

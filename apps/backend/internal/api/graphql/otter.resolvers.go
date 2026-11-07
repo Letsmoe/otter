@@ -393,6 +393,22 @@ func (r *mutationResolver) SetPluginSettings(ctx context.Context, name string, v
 	return r.pluginByName(name)
 }
 
+// UpdatePlugins is the resolver for the updatePlugins field.
+func (r *mutationResolver) UpdatePlugins(ctx context.Context) (*model.PluginUpdateReport, error) {
+	if r.PluginStore == nil {
+		return nil, fmt.Errorf("plugin updates are turned off (PLUGIN_AUTO_UPDATE=false)")
+	}
+	report := r.PluginStore.UpdateAll(ctx)
+	result := &model.PluginUpdateReport{Updated: []*model.PluginUpdate{}, Failed: report.Failed}
+	if result.Failed == nil {
+		result.Failed = []string{}
+	}
+	for _, update := range report.Updated {
+		result.Updated = append(result.Updated, r.reloadUpdatedPlugin(update))
+	}
+	return result, nil
+}
+
 // Filmography is the resolver for the filmography field.
 func (r *personResolver) Filmography(ctx context.Context, obj *model.Person, job *string) ([]*model.Title, error) {
 	titles, err := r.Library.Store.Filmography(ctx, obj.TmdbID, valueOr(job, ""))

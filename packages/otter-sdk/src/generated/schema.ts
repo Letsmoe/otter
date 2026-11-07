@@ -494,7 +494,24 @@ export interface Mutation {
     updateSettings: Settings
     setPluginEnabled: Plugin
     setPluginSettings: Plugin
+    /** Check npm for newer plugin releases now and install them (local builds stay). Fails when PLUGIN_AUTO_UPDATE=false. */
+    updatePlugins: PluginUpdateReport
     __typename: 'Mutation'
+}
+
+export interface PluginUpdate {
+    /** The plugin's name, as in Plugin.name */
+    name: Scalars['String']
+    fromVersion: Scalars['String']
+    toVersion: Scalars['String']
+    __typename: 'PluginUpdate'
+}
+
+export interface PluginUpdateReport {
+    updated: PluginUpdate[]
+    /** Plugin folders whose check, download or install failed */
+    failed: Scalars['String'][]
+    __typename: 'PluginUpdateReport'
 }
 
 export interface Subscription {
@@ -1009,6 +1026,25 @@ export interface MutationGenqlSelection{
     updateSettings?: (SettingsGenqlSelection & { __args: {input: SettingsInput} })
     setPluginEnabled?: (PluginGenqlSelection & { __args: {name: Scalars['String'], enabled: Scalars['Boolean']} })
     setPluginSettings?: (PluginGenqlSelection & { __args: {name: Scalars['String'], values: PluginSettingInput[]} })
+    /** Check npm for newer plugin releases now and install them (local builds stay). Fails when PLUGIN_AUTO_UPDATE=false. */
+    updatePlugins?: PluginUpdateReportGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface PluginUpdateGenqlSelection{
+    /** The plugin's name, as in Plugin.name */
+    name?: boolean | number
+    fromVersion?: boolean | number
+    toVersion?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface PluginUpdateReportGenqlSelection{
+    updated?: PluginUpdateGenqlSelection
+    /** Plugin folders whose check, download or install failed */
+    failed?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1275,6 +1311,22 @@ export interface SubscriptionGenqlSelection{
     export const isMutation = (obj?: { __typename?: any } | null): obj is Mutation => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isMutation"')
       return Mutation_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const PluginUpdate_possibleTypes: string[] = ['PluginUpdate']
+    export const isPluginUpdate = (obj?: { __typename?: any } | null): obj is PluginUpdate => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isPluginUpdate"')
+      return PluginUpdate_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const PluginUpdateReport_possibleTypes: string[] = ['PluginUpdateReport']
+    export const isPluginUpdateReport = (obj?: { __typename?: any } | null): obj is PluginUpdateReport => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isPluginUpdateReport"')
+      return PluginUpdateReport_possibleTypes.includes(obj.__typename)
     }
     
 

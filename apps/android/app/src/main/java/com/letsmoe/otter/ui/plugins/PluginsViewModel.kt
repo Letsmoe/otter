@@ -10,6 +10,7 @@ import com.letsmoe.otter.api.dataOrThrow
 import com.letsmoe.otter.graphql.PluginsQuery
 import com.letsmoe.otter.graphql.SetPluginEnabledMutation
 import com.letsmoe.otter.graphql.SetPluginSettingsMutation
+import com.letsmoe.otter.graphql.UpdatePluginsMutation
 import com.letsmoe.otter.graphql.fragment.PluginFields
 import com.letsmoe.otter.graphql.type.PluginSettingInput
 import com.letsmoe.otter.toasts.ToastKind
@@ -37,6 +38,9 @@ class PluginsViewModel : ViewModel() {
     var savingSettings by mutableStateOf(false)
         private set
 
+    var checkingUpdates by mutableStateOf(false)
+        private set
+
     init {
         load()
     }
@@ -46,14 +50,53 @@ class PluginsViewModel : ViewModel() {
         viewModelScope.launch {
             OtterApi.awaitBackend()
             try {
-                val data = OtterApi.client.query(PluginsQuery()).execute().dataOrThrow()
-                mutableState.value = LoadState.Loaded(data.plugins.map { plugin -> plugin.pluginFields })
+                mutableState.value = LoadState.Loaded(fetchPlugins())
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Exception) {
                 mutableState.value = LoadState.Failed(error.message.orEmpty())
             }
         }
+    }
+
+    /** Asks the backend to install newer plugin releases now, then shows the new versions. */
+    fun checkForUpdates() {
+        if (checkingUpdates) {
+            return
+        }
+        checkingUpdates = true
+        viewModelScope.launch {
+            try {
+                val report = OtterApi.client.mutation(UpdatePluginsMutation()).execute().dataOrThrow().updatePlugins
+                mutableState.value = LoadState.Loaded(fetchPlugins())
+                announceUpdates(report)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Exception) {
+                Toasts.push(error.message ?: "Could not check for updates", ToastKind.ERROR)
+            } finally {
+                checkingUpdates = false
+            }
+        }
+    }
+
+    private suspend fun fetchPlugins(): List<PluginFields> {
+        val data = OtterApi.client.query(PluginsQuery()).execute().dataOrThrow()
+        return data.plugins.map { plugin -> plugin.pluginFields }
+    }
+
+    private fun announceUpdates(report: UpdatePluginsMutation.UpdatePlugins) {
+        if (report.failed.isNotEmpty()) {
+            Toasts.push("Could not update ${report.failed.joinToString()}", ToastKind.ERROR)
+        }
+        if (report.updated.isEmpty()) {
+            if (report.failed.isEmpty()) {
+                Toasts.push("All plugins are up to date", ToastKind.SUCCESS)
+            }
+            return
+        }
+        val names = report.updated.joinToString { update -> "${update.name} ${update.toVersion}" }
+        Toasts.push("Updated $names", ToastKind.SUCCESS)
     }
 
     fun toggle(plugin: PluginFields) {

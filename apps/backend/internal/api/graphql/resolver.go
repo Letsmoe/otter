@@ -5,6 +5,7 @@ import (
 	"github.com/Letsmoe/otter/internal/library"
 	"github.com/Letsmoe/otter/internal/notify"
 	"github.com/Letsmoe/otter/internal/plugins"
+	"github.com/Letsmoe/otter/internal/pluginstore"
 	"github.com/Letsmoe/otter/internal/profiles"
 	"github.com/Letsmoe/otter/internal/recommend"
 	"github.com/Letsmoe/otter/internal/resolve"
@@ -18,14 +19,16 @@ import (
 
 // Services is everything the API reads from or acts on.
 type Services struct {
-	Library        *library.Service
-	Profiles       *profiles.Service
-	Notifications  *notify.Store
-	Downloads      *downloads.Service
-	Subtitles      *subtitles.Service
-	Recommender    *recommend.Engine
-	Settings       *settings.Service
-	Plugins        *plugins.Registry
+	Library       *library.Service
+	Profiles      *profiles.Service
+	Notifications *notify.Store
+	Downloads     *downloads.Service
+	Subtitles     *subtitles.Service
+	Recommender   *recommend.Engine
+	Settings      *settings.Service
+	Plugins       *plugins.Registry
+	// PluginStore is nil while plugin updates are turned off.
+	PluginStore    *pluginstore.Service
 	StreamResolver *resolve.Service
 	StreamProxy    *stream.Proxy
 	TMDB           *tmdb.Client

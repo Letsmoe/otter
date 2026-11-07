@@ -277,6 +277,22 @@ func (r *Registry) loadDir(dir string) error {
 	return nil
 }
 
+// ReloadDir loads a plugin folder again right away instead of waiting for
+// the file watcher, so a caller that just replaced the bundle sees it.
+func (r *Registry) ReloadDir(dir string) (*Plugin, error) {
+	if err := r.loadDir(dir); err != nil {
+		return nil, err
+	}
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for _, plugin := range r.plugins {
+		if filepath.Clean(plugin.Dir) == filepath.Clean(dir) {
+			return plugin, nil
+		}
+	}
+	return nil, fmt.Errorf("no plugin in %s", dir)
+}
+
 func (r *Registry) unloadDir(dir string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()

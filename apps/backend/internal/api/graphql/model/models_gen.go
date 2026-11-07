@@ -156,6 +156,19 @@ type PluginSettingInput struct {
 	Value string `json:"value"`
 }
 
+type PluginUpdate struct {
+	// The plugin's name, as in Plugin.name
+	Name        string `json:"name"`
+	FromVersion string `json:"fromVersion"`
+	ToVersion   string `json:"toVersion"`
+}
+
+type PluginUpdateReport struct {
+	Updated []*PluginUpdate `json:"updated"`
+	// Plugin folders whose check, download or install failed
+	Failed []string `json:"failed"`
+}
+
 type Profile struct {
 	ID        string  `json:"id"`
 	Name      string  `json:"name"`

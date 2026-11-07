@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -46,6 +47,7 @@ type Service struct {
 	pluginDir   string
 	registryURL string
 	client      *http.Client
+	checking    sync.Mutex
 }
 
 func New(pluginDir string) *Service {
@@ -71,48 +73,76 @@ func (s *Service) Run(ctx context.Context) {
 	}
 }
 
+// Update is one plugin folder swapped to a newer release.
+type Update struct {
+	Folder      string
+	Package     string
+	FromVersion string
+	ToVersion   string
+}
+
+// Report is what one update check did.
+type Report struct {
+	Updated []Update
+	// Failed names the folders whose check, download or install failed.
+	Failed []string
+}
+
 // UpdateAll updates every npm-installed plugin that has a newer release.
-func (s *Service) UpdateAll(ctx context.Context) {
+// Concurrent calls (a manual check during the periodic one) run one after the other.
+func (s *Service) UpdateAll(ctx context.Context) Report {
+	s.checking.Lock()
+	defer s.checking.Unlock()
+	report := Report{}
 	entries, err := os.ReadDir(s.pluginDir)
 	if err != nil {
 		log.Printf("pluginstore: reading %s: %v", s.pluginDir, err)
-		return
+		return report
 	}
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
 		}
-		if err := s.updateFolder(ctx, filepath.Join(s.pluginDir, entry.Name())); err != nil {
+		update, err := s.updateFolder(ctx, filepath.Join(s.pluginDir, entry.Name()))
+		if err != nil {
 			log.Printf("pluginstore: %s: %v", entry.Name(), err)
+			report.Failed = append(report.Failed, entry.Name())
+			continue
+		}
+		if update != nil {
+			report.Updated = append(report.Updated, *update)
 		}
 	}
+	return report
 }
 
-func (s *Service) updateFolder(ctx context.Context, folder string) error {
+// updateFolder returns the update it installed, or nil when the folder is current.
+func (s *Service) updateFolder(ctx context.Context, folder string) (*Update, error) {
 	installed, found, err := readInstalledPackage(folder)
 	if err != nil || !found {
-		return err
+		return nil, err
 	}
 	// Dev builds from this checkout are never replaced.
 	if installed.LocalBuild || installed.Name == "" {
-		return nil
+		return nil, nil
 	}
 	latest, err := s.latestRelease(ctx, installed.Name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if !isNewer(latest.Version, installed.Version) {
-		return nil
+		return nil, nil
 	}
 	files, err := s.downloadRelease(ctx, latest)
 	if err != nil {
-		return fmt.Errorf("%s@%s: %w", installed.Name, latest.Version, err)
+		return nil, fmt.Errorf("%s@%s: %w", installed.Name, latest.Version, err)
 	}
 	if err := install(folder, files); err != nil {
-		return err
+		return nil, err
 	}
 	log.Printf("pluginstore: updated %s %s → %s", installed.Name, installed.Version, latest.Version)
-	return nil
+	update := Update{Folder: folder, Package: installed.Name, FromVersion: installed.Version, ToVersion: latest.Version}
+	return &update, nil
 }
 
 func readInstalledPackage(folder string) (installedPackage, bool, error) {

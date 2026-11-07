@@ -7,6 +7,7 @@ import (
 
 	"github.com/Letsmoe/otter/internal/api/graphql/model"
 	"github.com/Letsmoe/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/pluginstore"
 	"github.com/Letsmoe/otter/internal/settings"
 )
 
@@ -17,6 +18,19 @@ func (r *Resolver) pluginByName(name string) (*model.Plugin, error) {
 	}
 	values := r.Settings.Cached().PluginSettings[name]
 	return pluginModel(plugin, r.Plugins, values), nil
+}
+
+// reloadUpdatedPlugin loads a freshly installed bundle now, so the apps'
+// next plugin list shows the new version, and names it by its plugin name.
+func (r *Resolver) reloadUpdatedPlugin(update pluginstore.Update) *model.PluginUpdate {
+	result := &model.PluginUpdate{Name: update.Package, FromVersion: update.FromVersion, ToVersion: update.ToVersion}
+	plugin, err := r.Plugins.ReloadDir(update.Folder)
+	if err != nil {
+		log.Printf("plugins: reloading %s after an update: %v", update.Folder, err)
+		return result
+	}
+	result.Name = plugin.Meta.Name
+	return result
 }
 
 // saveDisabledPlugins persists the registry's user-disabled plugins.

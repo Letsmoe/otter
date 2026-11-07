@@ -1470,6 +1470,34 @@ export default {
                     ]
                 }
             ],
+            "updatePlugins": [
+                49
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "PluginUpdate": {
+            "name": [
+                4
+            ],
+            "fromVersion": [
+                4
+            ],
+            "toVersion": [
+                4
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "PluginUpdateReport": {
+            "updated": [
+                48
+            ],
+            "failed": [
+                4
+            ],
             "__typename": [
                 4
             ]

@@ -644,6 +644,25 @@ type Mutation {
   updateSettings(input: SettingsInput!): Settings!
   setPluginEnabled(name: String!, enabled: Boolean!): Plugin!
   setPluginSettings(name: String!, values: [PluginSettingInput!]!): Plugin!
+
+  """
+  Check npm for newer plugin releases now and install them (local builds stay). Fails when PLUGIN_AUTO_UPDATE=false.
+  """
+  updatePlugins: PluginUpdateReport!
+}
+
+type PluginUpdate {
+  """The plugin's name, as in Plugin.name"""
+  name: String!
+  fromVersion: String!
+  toVersion: String!
+}
+
+type PluginUpdateReport {
+  updated: [PluginUpdate!]!
+
+  """Plugin folders whose check, download or install failed"""
+  failed: [String!]!
 }
 
 type Subscription {
