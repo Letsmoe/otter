@@ -1,5 +1,6 @@
 package com.letsmoe.otter.ui.player
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +43,7 @@ import com.letsmoe.otter.cast.DlnaRenderer
 import com.letsmoe.otter.cast.TelevisionConnection
 import com.letsmoe.otter.cast.TelevisionTarget
 import com.letsmoe.otter.cast.discoverRenderers
+import com.letsmoe.otter.cast.phoneVpnActive
 import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.SubtleFill
 import com.letsmoe.otter.ui.components.pressable
@@ -128,9 +130,17 @@ private fun SearchStatus(searching: Boolean, nothingFound: Boolean, onSearchAgai
         return
     }
     if (nothingFound) {
-        Text("No TV found. Is it on and on the same Wi-Fi?", fontSize = 13.sp, color = Color.White.copy(alpha = 0.6f))
+        Text(nothingFoundMessage(LocalContext.current), fontSize = 13.sp, color = Color.White.copy(alpha = 0.6f))
     }
     SearchAgainLink(onSearchAgain)
+}
+
+// Some VPNs send even local traffic into their tunnel, which hides the TV.
+private fun nothingFoundMessage(context: Context): String {
+    if (phoneVpnActive(context)) {
+        return "No TV found. Your VPN may be hiding it: allow LAN connections in the VPN's settings, or pause it."
+    }
+    return "No TV found. Is it on and on the same Wi-Fi?"
 }
 
 // A small link, not a button: searching again is the exception, picking a TV the point.

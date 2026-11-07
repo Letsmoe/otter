@@ -29,6 +29,16 @@ fun localNetwork(context: Context): Network? {
     }
 }
 
+/** Whether the phone runs a VPN right now. */
+@Suppress("DEPRECATION")
+fun phoneVpnActive(context: Context): Boolean {
+    val connectivity = context.getSystemService(ConnectivityManager::class.java)
+    return connectivity.allNetworks.any { network ->
+        val capabilities = connectivity.getNetworkCapabilities(network)
+        capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+    }
+}
+
 private fun localNetworkAddress(context: Context): String? {
     val network = localNetwork(context) ?: return null
     val connectivity = context.getSystemService(ConnectivityManager::class.java)

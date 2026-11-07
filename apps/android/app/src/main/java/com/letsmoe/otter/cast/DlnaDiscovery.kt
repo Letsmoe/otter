@@ -89,6 +89,7 @@ private fun searchLocations(wifiInterface: NetworkInterface?): Set<String> {
     ).joinToString("\r\n").toByteArray()
     val locations = mutableSetOf<String>()
     MulticastSocket().use { socket ->
+        LocalNetworkRouting.bind(socket)
         if (wifiInterface != null) {
             socket.networkInterface = wifiInterface
         }
@@ -177,13 +178,9 @@ private fun childText(element: Element, tagName: String): String? {
     return matches.item(0).textContent.trim()
 }
 
-/**
- * HTTP to the TV. Plain routing: VPNs with LAN access (NordVPN: Local network
- * discovery) send private addresses over Wi-Fi; without it the TV couldn't
- * reach the phone's stream port either.
- */
+/** HTTP to the TV, over Wi-Fi even while a VPN is up (see [LocalNetworkRouting]). */
 fun openHttp(url: URL): HttpURLConnection {
-    val connection = url.openConnection()
+    val connection = LocalNetworkRouting.openConnection(url)
     connection.connectTimeout = HTTP_TIMEOUT_MILLISECONDS
     connection.readTimeout = HTTP_TIMEOUT_MILLISECONDS
     return connection as HttpURLConnection
