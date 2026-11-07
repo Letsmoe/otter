@@ -34,6 +34,7 @@ import com.letsmoe.otter.ui.components.PosterRail
 import com.letsmoe.otter.ui.components.PosterSize
 import com.letsmoe.otter.ui.components.PosterTile
 import com.letsmoe.otter.ui.components.SegmentedBar
+import com.letsmoe.otter.ui.components.TabHeader
 import com.letsmoe.otter.ui.components.WithoutBackdrop
 import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.media.onlyKind
@@ -51,6 +52,7 @@ fun SearchScreen(onOpenItem: (RailItem) -> Unit, onBack: () -> Unit, viewModel: 
     WithoutBackdrop {
         Column(Modifier.fillMaxSize().statusBarsPadding(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Column(Modifier.padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                TabHeader("Search", onSearch = null, Modifier.padding(start = 8.dp))
                 SearchField(state.query, viewModel::onQueryChange, viewModel::clearQuery, onBack)
                 SegmentedBar(typeOptions, state.type, onSelect = viewModel::selectType)
             }

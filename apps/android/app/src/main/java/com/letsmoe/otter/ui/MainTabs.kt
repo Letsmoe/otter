@@ -60,12 +60,8 @@ private fun TabPage(tab: Tab, navController: NavHostController, openTab: (Tab) -
             onPlayItem = { item -> scope.launch { playItem(navController, item, onOpenItem) } },
             onOpenPerson = { personId -> navController.navigate(Routes.person(personId)) },
             onSearch = { navController.navigate(Routes.SEARCH) },
-            headerActions = {
-                TelevisionButton(iconSize = 26.dp)
-                TogetherButton(iconSize = 26.dp)
-            },
         )
-        Tab.MY_LIST -> WatchlistScreen(onOpenItem = onOpenItem)
+        Tab.MY_LIST -> WatchlistScreen(onOpenItem = onOpenItem, onSearch = { navController.navigate(Routes.SEARCH) })
         Tab.DOWNLOADS -> WithoutBackdrop {
             DownloadsScreen(
                 onPlay = { item -> navController.play(PlayerRequest(item.mediaId, downloadId = item.id)) },

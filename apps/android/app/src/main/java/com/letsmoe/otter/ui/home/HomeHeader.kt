@@ -34,11 +34,11 @@ import androidx.compose.ui.unit.sp
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.MagnifyingGlass
-import com.letsmoe.otter.ui.components.pressable
+import com.letsmoe.otter.ui.components.TabHeader
 
 
 /**
- * Home header: "For <profile>", the Watch Together slot and search.
+ * Home header: "For <profile>" with the shared actions (see [TabHeader]).
  * Transparent over the ambient gradient; takes a dark tint of [ambientColor] once the page
  * is [scrolled].
  */
@@ -49,7 +49,6 @@ fun HomeHeader(
     scrolled: Boolean,
     onSearch: () -> Unit,
     modifier: Modifier = Modifier,
-    trailingActions: @Composable RowScope.() -> Unit = {},
 ) {
     var targetBackground = Color.Transparent
     if (scrolled) {
@@ -64,24 +63,6 @@ fun HomeHeader(
             .padding(start = 20.dp, end = 12.dp, bottom = 4.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        HeaderTitleRow(profileName, onSearch, trailingActions)
-    }
-}
-
-@Composable
-private fun HeaderTitleRow(profileName: String, onSearch: () -> Unit, trailingActions: @Composable RowScope.() -> Unit) {
-    Row(Modifier.fillMaxWidth().height(52.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            "For $profileName",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
-        trailingActions()
-        Box(Modifier.pressable(onClick = onSearch).size(44.dp).clip(CircleShape), contentAlignment = Alignment.Center) {
-            Icon(PhosphorIcons.Regular.MagnifyingGlass, contentDescription = "Search", modifier = Modifier.size(26.dp))
-        }
+        TabHeader("For $profileName", onSearch)
     }
 }

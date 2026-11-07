@@ -45,6 +45,7 @@ import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.ui.components.FilterSelect
 import com.letsmoe.otter.ui.components.PosterTile
 import com.letsmoe.otter.ui.components.SegmentedBar
+import com.letsmoe.otter.ui.components.TabHeader
 import com.letsmoe.otter.ui.components.WithoutBackdrop
 import com.letsmoe.otter.ui.components.frostedGlass
 import com.letsmoe.otter.ui.media.ListOrder
@@ -64,12 +65,12 @@ private val orderOptions = ListOrder.entries.map { order -> order to order.label
 
 /** My List: poster grid with a type switch, a sort choice and an edit mode to remove titles. */
 @Composable
-fun WatchlistScreen(onOpenItem: (RailItem) -> Unit, viewModel: WatchlistViewModel = viewModel()) {
-    WithoutBackdrop { WatchlistGrid(onOpenItem, viewModel) }
+fun WatchlistScreen(onOpenItem: (RailItem) -> Unit, onSearch: () -> Unit, viewModel: WatchlistViewModel = viewModel()) {
+    WithoutBackdrop { WatchlistGrid(onOpenItem, onSearch, viewModel) }
 }
 
 @Composable
-private fun WatchlistGrid(onOpenItem: (RailItem) -> Unit, viewModel: WatchlistViewModel) {
+private fun WatchlistGrid(onOpenItem: (RailItem) -> Unit, onSearch: () -> Unit, viewModel: WatchlistViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var listType by rememberSaveable { mutableStateOf(ListType.ALL) }
     var order by rememberSaveable { mutableStateOf(ListOrder.ADDED) }
@@ -79,10 +80,11 @@ private fun WatchlistGrid(onOpenItem: (RailItem) -> Unit, viewModel: WatchlistVi
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
         modifier = Modifier.fillMaxSize().statusBarsPadding(),
-        contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 12.dp, bottom = bottomBarClearance()),
+        contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = bottomBarClearance()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        fullWidthItem("header") { TabHeader("My List", onSearch, Modifier.padding(start = 8.dp)) }
         fullWidthItem("type") { SegmentedBar(typeOptions, listType, onSelect = { chosen -> listType = chosen }) }
         fullWidthItem("controls") {
             ListControls(order, { chosen -> order = chosen }, state.items.isNotEmpty(), editing, { editing = !editing })

@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import com.letsmoe.otter.profiles.ProfileSession
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -34,7 +33,6 @@ enum class HomeCategory(val label: String) {
 /**
  * Home: the "For <profile>" header floating over the page, which starts with the category chips
  * and the featured card on a gradient tinted by the card's poster.
- * [headerActions] is the slot for the Watch Together button left of search.
  */
 @Composable
 fun HomeScreen(
@@ -43,7 +41,6 @@ fun HomeScreen(
     onOpenPerson: (String) -> Unit,
     onSearch: () -> Unit,
     modifier: Modifier = Modifier,
-    headerActions: @Composable RowScope.() -> Unit = {},
 ) {
     var category by rememberSaveable { mutableStateOf(HomeCategory.MOVIES) }
     val moviesListState = rememberLazyListState()
@@ -91,7 +88,6 @@ fun HomeScreen(
                     headerHeight = with(density) { size.height.toDp() }
                 }
             },
-            trailingActions = headerActions,
         )
     }
     if (categoriesOpen) {

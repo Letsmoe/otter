@@ -47,7 +47,6 @@ import com.adamglin.phosphoricons.fill.Bell
 import com.adamglin.phosphoricons.fill.DownloadSimple as DownloadSimpleFill
 import com.adamglin.phosphoricons.regular.CaretDown
 import com.adamglin.phosphoricons.regular.DownloadSimple
-import com.adamglin.phosphoricons.regular.MagnifyingGlass
 import com.letsmoe.otter.downloads.DownloadGroup
 import com.letsmoe.otter.downloads.DownloadsRepository
 import com.letsmoe.otter.downloads.groupDownloads
@@ -58,7 +57,7 @@ import com.letsmoe.otter.profiles.avatarImage
 import com.letsmoe.otter.ui.components.PosterRail
 import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.navigation.bottomBarClearance
-import com.letsmoe.otter.ui.together.TogetherButton
+import com.letsmoe.otter.ui.components.TabHeader
 
 private const val DOWNLOAD_PREVIEW_COUNT = 4
 
@@ -85,8 +84,7 @@ fun ProfileScreen(navigation: ProfileNavigation, viewModel: ProfileViewModel = v
     val downloadItems by DownloadsRepository.items.collectAsStateWithLifecycle()
     val profile = activeProfile ?: return
     LaunchedEffect(profile.id) { viewModel.load(profile.id) }
-    val menuActions = ProfileMenuActions(
-        onNotifications = navigation.onNotifications,
+    val linkActions = ProfileLinkActions(
         onHistory = navigation.onHistory,
         onPlugins = navigation.onPlugins,
         onSettings = navigation.onSettings,
@@ -97,23 +95,12 @@ fun ProfileScreen(navigation: ProfileNavigation, viewModel: ProfileViewModel = v
         contentPadding = PaddingValues(bottom = bottomBarClearance()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        item { ProfileHeader(navigation.onSearch, menuActions) }
+        item { TabHeader("My Otter", navigation.onSearch, Modifier.padding(start = 20.dp, end = 12.dp)) }
         item { ProfileIdentity(profile) }
         item { NotificationsCard(page, navigation) }
         item { DownloadsCard(groupDownloads(downloadItems).take(DOWNLOAD_PREVIEW_COUNT), navigation) }
+        item { ProfileLinks(linkActions, Modifier.padding(horizontal = 12.dp)) }
         item { RailsSection(page, navigation.onOpenItem) }
-    }
-}
-
-@Composable
-private fun ProfileHeader(onSearch: () -> Unit, menuActions: ProfileMenuActions) {
-    Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("My Otter", fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-        TogetherButton(iconSize = 24.dp)
-        Box(Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onSearch), contentAlignment = Alignment.Center) {
-            Icon(PhosphorIcons.Regular.MagnifyingGlass, contentDescription = "Search", modifier = Modifier.size(24.dp))
-        }
-        ProfileMenu(menuActions)
     }
 }
 

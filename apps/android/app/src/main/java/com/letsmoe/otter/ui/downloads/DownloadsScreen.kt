@@ -52,6 +52,7 @@ import com.letsmoe.otter.graphql.fragment.ProfileFields
 import com.letsmoe.otter.graphql.type.DownloadStatus
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.profiles.avatarImage
+import com.letsmoe.otter.ui.components.TabHeader
 import com.letsmoe.otter.ui.components.frostedGlass
 import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.navigation.bottomBarClearance
@@ -75,9 +76,10 @@ fun DownloadsScreen(
     val scope = rememberCoroutineScope()
     LazyColumn(
         modifier = Modifier.fillMaxSize().statusBarsPadding(),
-        contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 16.dp, bottom = bottomBarClearance()),
+        contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = bottomBarClearance()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        item { TabHeader("Downloads", onSearch, Modifier.padding(start = 8.dp)) }
         val profile = activeProfile
         if (profile != null && items.isNotEmpty()) {
             item { DownloadsHeader(profile, editing) { editing = !editing } }
