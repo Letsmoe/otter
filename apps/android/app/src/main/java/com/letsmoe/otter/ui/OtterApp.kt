@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.foundation.pager.PagerState
@@ -58,6 +59,7 @@ import androidx.compose.foundation.layout.padding
 import com.letsmoe.otter.ui.navigation.bottomBarClearance
 import com.letsmoe.otter.ui.navigation.play
 import com.letsmoe.otter.ui.player.PlayerRequest
+import com.letsmoe.otter.ui.setup.TmdbConnectionOverlay
 import com.letsmoe.otter.ui.setup.TmdbSetupOverlay
 import com.letsmoe.otter.ui.television.TelevisionNowPlayingBar
 import com.letsmoe.otter.ui.television.TelevisionRemoteHost
@@ -76,6 +78,7 @@ fun OtterApp() {
             }
             CompositionLocalProvider(LocalGlassBackdrop provides rootBackdrop) {
                 UpdateBanner()
+                TmdbConnectionOverlay()
                 TmdbSetupOverlay()
             }
         }
@@ -86,7 +89,10 @@ fun OtterApp() {
 private fun ProfileGateOrShell() {
     val activeProfile by ProfileSession.activeProfile.collectAsStateWithLifecycle()
     if (activeProfile != null) {
-        AppShell()
+        val shellReload by ShellReloads.latest.collectAsStateWithLifecycle()
+        key(shellReload.generation) {
+            AppShell(shellReload.startTab)
+        }
         return
     }
     val gateBackdrop = rememberHazeState()
@@ -101,13 +107,13 @@ private fun ProfileGateOrShell() {
 
 /** The pages with the glass tab bar floating over them. */
 @Composable
-private fun AppShell() {
+private fun AppShell(startTab: Tab) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val glassBackdrop = rememberHazeState()
     val sheetHost = remember { SheetHostState() }
-    val pagerState = rememberPagerState { Tab.entries.size }
+    val pagerState = rememberPagerState(initialPage = startTab.ordinal) { Tab.entries.size }
     val scope = rememberCoroutineScope()
     val openTab: (Tab) -> Unit = { tab -> navController.showTab(tab, pagerState, scope) }
     CompositionLocalProvider(LocalGlassBackdrop provides glassBackdrop, LocalSheetHost provides sheetHost) {

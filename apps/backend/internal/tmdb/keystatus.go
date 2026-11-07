@@ -83,6 +83,7 @@ func (c *Client) CheckKey(ctx context.Context, key string) (bool, error) {
 		return false, err
 	}
 	resp, err := c.httpClient.Do(req)
+	c.reachability.record(err)
 	if err != nil {
 		return false, fmt.Errorf("tmdb: check key: %w", err)
 	}

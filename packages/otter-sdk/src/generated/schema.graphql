@@ -372,6 +372,11 @@ type Plugin {
 
 type Status {
   tmdbConfigured: Boolean!
+
+  """
+  False while the last TMDB request got no answer (offline, or a VPN or DNS filter blocks it).
+  """
+  tmdbReachable: Boolean!
   vpnConnected: Boolean!
   requireVpn: Boolean!
 }
@@ -648,6 +653,8 @@ type Mutation {
 
   """Send a JSON payload to everyone else in the room."""
   sendTogether(payload: String!): Boolean!
+
+  """The first profile's top language also becomes the TMDB language."""
   createProfile(name: String!, avatarUrl: String, pin: String, isChild: Boolean = false, languages: [String!]): Profile!
 
   """
@@ -657,6 +664,11 @@ type Mutation {
   deleteProfile(id: ID!): Boolean!
   verifyPin(profileId: ID!, pin: String!): PinCheck!
   updateSettings(input: SettingsInput!): Settings!
+
+  """
+  Asks TMDB right now whether it answers; also updates Status.tmdbReachable.
+  """
+  checkTmdbConnection: Boolean!
   setPluginEnabled(name: String!, enabled: Boolean!): Plugin!
   setPluginSettings(name: String!, values: [PluginSettingInput!]!): Plugin!
 

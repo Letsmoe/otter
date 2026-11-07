@@ -75,6 +75,16 @@ mutation SaveTmdbSetup($input: SettingsInput!) {
   }
 }
 
+mutation CheckTmdbConnection {
+  checkTmdbConnection
+}
+
+query TmdbReachable {
+  status {
+    tmdbReachable
+  }
+}
+
 query VpnStatus {
   status {
     vpnConnected

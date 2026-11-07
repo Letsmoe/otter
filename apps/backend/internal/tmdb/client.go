@@ -20,11 +20,12 @@ const (
 type ConfigSource func() (apiKey string, language string)
 
 type Client struct {
-	config     ConfigSource
-	httpClient *http.Client
-	baseURL    string
-	genres     genreCache
-	rejected   rejectedKeys
+	config       ConfigSource
+	httpClient   *http.Client
+	baseURL      string
+	genres       genreCache
+	rejected     rejectedKeys
+	reachability reachability
 }
 
 func NewClient(config ConfigSource) *Client {
@@ -77,6 +78,7 @@ func (c *Client) get(ctx context.Context, path string, params map[string]string,
 		return err
 	}
 	resp, err := c.httpClient.Do(req)
+	c.reachability.record(err)
 	if err != nil {
 		return fmt.Errorf("tmdb %s: %w", path, err)
 	}

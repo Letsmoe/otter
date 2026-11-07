@@ -256,8 +256,10 @@ type SkipSegment struct {
 
 type Status struct {
 	TmdbConfigured bool `json:"tmdbConfigured"`
-	VpnConnected   bool `json:"vpnConnected"`
-	RequireVpn     bool `json:"requireVpn"`
+	// False while the last TMDB request got no answer (offline, or a VPN or DNS filter blocks it).
+	TmdbReachable bool `json:"tmdbReachable"`
+	VpnConnected  bool `json:"vpnConnected"`
+	RequireVpn    bool `json:"requireVpn"`
 }
 
 type Stream struct {

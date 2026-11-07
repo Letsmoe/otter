@@ -53,7 +53,15 @@ fun TmdbSetupOverlay(setup: TmdbSetupViewModel = viewModel()) {
         return
     }
     BackHandler(enabled = setup.step == SetupStep.OWN_KEY && setup.builtInKeyAvailable, onBack = setup::backToChoice)
-    // The scrim swallows taps so the app underneath stays untouched until setup is done.
+    SetupCard {
+        SetupStepContent(setup)
+        TmdbAttribution()
+    }
+}
+
+/** A glass card with the wordmark over a scrim; the scrim swallows taps so the app underneath stays untouched. */
+@Composable
+internal fun SetupCard(content: @Composable () -> Unit) {
     Box(
         Modifier
             .fillMaxSize()
@@ -72,8 +80,7 @@ fun TmdbSetupOverlay(setup: TmdbSetupViewModel = viewModel()) {
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             Image(painterResource(R.drawable.otter_wordmark), contentDescription = "Otter", modifier = Modifier.size(width = 102.dp, height = 24.dp))
-            SetupStepContent(setup)
-            TmdbAttribution()
+            content()
         }
     }
 }
@@ -128,7 +135,7 @@ private fun OwnKeyForm(setup: TmdbSetupViewModel) {
 }
 
 @Composable
-private fun SetupHeading(title: String, description: String) {
+internal fun SetupHeading(title: String, description: String) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(title, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
         Text(description, fontSize = 14.sp, color = Color.White.copy(alpha = 0.6f))

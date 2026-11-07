@@ -112,6 +112,7 @@ type ComplexityRoot struct {
 		AddToWatchlist        func(childComplexity int, profileID string, mediaID string) int
 		AdoptStream           func(childComplexity int, mediaID string, url string, plugin string, label *string) int
 		CheckNotifications    func(childComplexity int) int
+		CheckTmdbConnection   func(childComplexity int) int
 		ClearRating           func(childComplexity int, profileID string, mediaID string) int
 		CreateProfile         func(childComplexity int, name string, avatarURL *string, pin *string, isChild *bool, languages []string) int
 		DeleteDownload        func(childComplexity int, id string) int
@@ -299,6 +300,7 @@ type ComplexityRoot struct {
 	Status struct {
 		RequireVpn     func(childComplexity int) int
 		TmdbConfigured func(childComplexity int) int
+		TmdbReachable  func(childComplexity int) int
 		VpnConnected   func(childComplexity int) int
 	}
 
@@ -436,6 +438,7 @@ type MutationResolver interface {
 	DeleteProfile(ctx context.Context, id string) (bool, error)
 	VerifyPin(ctx context.Context, profileID string, pin string) (*model.PinCheck, error)
 	UpdateSettings(ctx context.Context, input model.SettingsInput) (*model.Settings, error)
+	CheckTmdbConnection(ctx context.Context) (bool, error)
 	SetPluginEnabled(ctx context.Context, name string, enabled bool) (*model.Plugin, error)
 	SetPluginSettings(ctx context.Context, name string, values []*model.PluginSettingInput) (*model.Plugin, error)
 	UpdatePlugins(ctx context.Context) (*model.PluginUpdateReport, error)
@@ -809,6 +812,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CheckNotifications(childComplexity), true
+	case "Mutation.checkTmdbConnection":
+		if e.ComplexityRoot.Mutation.CheckTmdbConnection == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Mutation.CheckTmdbConnection(childComplexity), true
 	case "Mutation.clearRating":
 		if e.ComplexityRoot.Mutation.ClearRating == nil {
 			break
@@ -1895,6 +1904,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Status.TmdbConfigured(childComplexity), true
+	case "Status.tmdbReachable":
+		if e.ComplexityRoot.Status.TmdbReachable == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Status.TmdbReachable(childComplexity), true
 	case "Status.vpnConnected":
 		if e.ComplexityRoot.Status.VpnConnected == nil {
 			break
@@ -2786,6 +2801,8 @@ type Plugin {
 
 type Status {
   tmdbConfigured: Boolean!
+  "False while the last TMDB request got no answer (offline, or a VPN or DNS filter blocks it)."
+  tmdbReachable: Boolean!
   vpnConnected: Boolean!
   requireVpn: Boolean!
 }
@@ -2986,6 +3003,7 @@ type Mutation {
   "Send a JSON payload to everyone else in the room."
   sendTogether(payload: String!): Boolean!
 
+  "The first profile's top language also becomes the TMDB language."
   createProfile(name: String!, avatarUrl: String, pin: String, isChild: Boolean = false, languages: [String!]): Profile!
   "Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it."
   updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, voiceBoost: Boolean): Profile!
@@ -2993,6 +3011,8 @@ type Mutation {
   verifyPin(profileId: ID!, pin: String!): PinCheck!
 
   updateSettings(input: SettingsInput!): Settings!
+  "Asks TMDB right now whether it answers; also updates Status.tmdbReachable."
+  checkTmdbConnection: Boolean!
   setPluginEnabled(name: String!, enabled: Boolean!): Plugin!
   setPluginSettings(name: String!, values: [PluginSettingInput!]!): Plugin!
   "Check npm for newer plugin releases now and install them (local builds stay). Fails when PLUGIN_AUTO_UPDATE=false."
@@ -3414,6 +3434,8 @@ func (ec *executionContext) childFields_Status(ctx context.Context, field graphq
 	switch field.Name {
 	case "tmdbConfigured":
 		return ec.fieldContext_Status_tmdbConfigured(ctx, field)
+	case "tmdbReachable":
+		return ec.fieldContext_Status_tmdbReachable(ctx, field)
 	case "vpnConnected":
 		return ec.fieldContext_Status_vpnConnected(ctx, field)
 	case "requireVpn":
@@ -7213,6 +7235,29 @@ func (ec *executionContext) fieldContext_Mutation_updateSettings(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_checkTmdbConnection(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_checkTmdbConnection(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Mutation().CheckTmdbConnection(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_checkTmdbConnection(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Mutation", field, true, true, errors.New("field of type Boolean does not have child fields"))
+}
+
 func (ec *executionContext) _Mutation_setPluginEnabled(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -10682,6 +10727,29 @@ func (ec *executionContext) _Status_tmdbConfigured(ctx context.Context, field gr
 	)
 }
 func (ec *executionContext) fieldContext_Status_tmdbConfigured(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Status", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _Status_tmdbReachable(ctx context.Context, field graphql.CollectedField, obj *model.Status) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Status_tmdbReachable(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TmdbReachable, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Status_tmdbReachable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Status", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
@@ -14574,6 +14642,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "checkTmdbConnection":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_checkTmdbConnection(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "setPluginEnabled":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_setPluginEnabled(ctx, field)
@@ -16269,6 +16344,11 @@ func (ec *executionContext) _Status(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = graphql.MarshalString("Status")
 		case "tmdbConfigured":
 			out.Values[i] = ec._Status_tmdbConfigured(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "tmdbReachable":
+			out.Values[i] = ec._Status_tmdbReachable(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

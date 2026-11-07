@@ -313,6 +313,8 @@ export interface Plugin {
 
 export interface Status {
     tmdbConfigured: Scalars['Boolean']
+    /** False while the last TMDB request got no answer (offline, or a VPN or DNS filter blocks it). */
+    tmdbReachable: Scalars['Boolean']
     vpnConnected: Scalars['Boolean']
     requireVpn: Scalars['Boolean']
     __typename: 'Status'
@@ -492,12 +494,15 @@ export interface Mutation {
     adoptStream: Stream
     /** Send a JSON payload to everyone else in the room. */
     sendTogether: Scalars['Boolean']
+    /** The first profile's top language also becomes the TMDB language. */
     createProfile: Profile
     /** Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it. */
     updateProfile: Profile
     deleteProfile: Scalars['Boolean']
     verifyPin: PinCheck
     updateSettings: Settings
+    /** Asks TMDB right now whether it answers; also updates Status.tmdbReachable. */
+    checkTmdbConnection: Scalars['Boolean']
     setPluginEnabled: Plugin
     setPluginSettings: Plugin
     /** Check npm for newer plugin releases now and install them (local builds stay). Fails when PLUGIN_AUTO_UPDATE=false. */
@@ -854,6 +859,8 @@ export interface PluginGenqlSelection{
 
 export interface StatusGenqlSelection{
     tmdbConfigured?: boolean | number
+    /** False while the last TMDB request got no answer (offline, or a VPN or DNS filter blocks it). */
+    tmdbReachable?: boolean | number
     vpnConnected?: boolean | number
     requireVpn?: boolean | number
     __typename?: boolean | number
@@ -1030,12 +1037,15 @@ export interface MutationGenqlSelection{
     adoptStream?: (StreamGenqlSelection & { __args: {mediaId: Scalars['ID'], url: Scalars['String'], plugin: Scalars['String'], label?: (Scalars['String'] | null)} })
     /** Send a JSON payload to everyone else in the room. */
     sendTogether?: { __args: {payload: Scalars['String']} }
+    /** The first profile's top language also becomes the TMDB language. */
     createProfile?: (ProfileGenqlSelection & { __args: {name: Scalars['String'], avatarUrl?: (Scalars['String'] | null), pin?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), languages?: (Scalars['String'][] | null)} })
     /** Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it. */
     updateProfile?: (ProfileGenqlSelection & { __args: {id: Scalars['ID'], name?: (Scalars['String'] | null), avatarUrl?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), pin?: (Scalars['String'] | null), languages?: (Scalars['String'][] | null), subtitlesEnabled?: (Scalars['Boolean'] | null), subtitleLanguage?: (Scalars['String'] | null), subtitleSize?: (SubtitleSize | null), voiceBoost?: (Scalars['Boolean'] | null)} })
     deleteProfile?: { __args: {id: Scalars['ID']} }
     verifyPin?: (PinCheckGenqlSelection & { __args: {profileId: Scalars['ID'], pin: Scalars['String']} })
     updateSettings?: (SettingsGenqlSelection & { __args: {input: SettingsInput} })
+    /** Asks TMDB right now whether it answers; also updates Status.tmdbReachable. */
+    checkTmdbConnection?: boolean | number
     setPluginEnabled?: (PluginGenqlSelection & { __args: {name: Scalars['String'], enabled: Scalars['Boolean']} })
     setPluginSettings?: (PluginGenqlSelection & { __args: {name: Scalars['String'], values: PluginSettingInput[]} })
     /** Check npm for newer plugin releases now and install them (local builds stay). Fails when PLUGIN_AUTO_UPDATE=false. */

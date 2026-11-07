@@ -713,6 +713,9 @@ export default {
             "tmdbConfigured": [
                 6
             ],
+            "tmdbReachable": [
+                6
+            ],
             "vpnConnected": [
                 6
             ],
@@ -1472,6 +1475,9 @@ export default {
                         "SettingsInput!"
                     ]
                 }
+            ],
+            "checkTmdbConnection": [
+                6
             ],
             "setPluginEnabled": [
                 32,

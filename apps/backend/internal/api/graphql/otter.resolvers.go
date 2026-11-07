@@ -298,16 +298,24 @@ func (r *mutationResolver) SendTogether(ctx context.Context, payload string) (bo
 
 // CreateProfile is the resolver for the createProfile field.
 func (r *mutationResolver) CreateProfile(ctx context.Context, name string, avatarURL *string, pin *string, isChild *bool, languages []string) (*model.Profile, error) {
+	isFirst, err := r.isFirstProfile(ctx)
+	if err != nil {
+		return nil, err
+	}
 	profile, err := r.Profiles.Create(ctx, name, valueOr(avatarURL, ""), valueOr(pin, ""), valueOr(isChild, false))
 	if err != nil {
 		return nil, err
 	}
-	if languages == nil {
-		return profileModel(*profile), nil
+	if languages != nil {
+		profile, err = r.Profiles.Update(ctx, profile.ID, profiles.Update{Languages: &languages})
+		if err != nil {
+			return nil, err
+		}
 	}
-	profile, err = r.Profiles.Update(ctx, profile.ID, profiles.Update{Languages: &languages})
-	if err != nil {
-		return nil, err
+	if isFirst {
+		if err := r.adoptProfileLanguage(ctx, *profile); err != nil {
+			return nil, err
+		}
 	}
 	return profileModel(*profile), nil
 }
@@ -359,8 +367,7 @@ func (r *mutationResolver) VerifyPin(ctx context.Context, profileID string, pin 
 
 // UpdateSettings is the resolver for the updateSettings field.
 func (r *mutationResolver) UpdateSettings(ctx context.Context, input model.SettingsInput) (*model.Settings, error) {
-	previousLanguage := r.Settings.Cached().TMDBLanguage
-	updated, err := r.Settings.Apply(ctx, settings.Update{
+	updated, err := r.applySettings(ctx, settings.Update{
 		TMDBApiKey: input.TmdbAPIKey, TMDBLanguage: input.TmdbLanguage, RequireVpn: input.RequireVpn,
 		TMDBKeyPromptSeen: input.TmdbKeyPromptSeen,
 	})
@@ -370,12 +377,12 @@ func (r *mutationResolver) UpdateSettings(ctx context.Context, input model.Setti
 	if input.TmdbAPIKey != nil {
 		r.TMDB.VerifyKey(ctx)
 	}
-	if updated.TMDBLanguage != previousLanguage {
-		if err := r.Library.Store.ExpireAllDetails(ctx); err != nil {
-			log.Printf("settings: expiring details after a language change: %v", err)
-		}
-	}
 	return r.settingsModel(updated), nil
+}
+
+// CheckTmdbConnection is the resolver for the checkTmdbConnection field.
+func (r *mutationResolver) CheckTmdbConnection(ctx context.Context) (bool, error) {
+	return r.TMDB.CheckConnection(ctx), nil
 }
 
 // SetPluginEnabled is the resolver for the setPluginEnabled field.
@@ -841,6 +848,7 @@ func (r *queryResolver) Plugins(ctx context.Context) ([]*model.Plugin, error) {
 func (r *queryResolver) Status(ctx context.Context) (*model.Status, error) {
 	return &model.Status{
 		TmdbConfigured: r.TMDB.Configured(),
+		TmdbReachable:  r.TMDB.Reachable(),
 		VpnConnected:   r.VpnConnected(),
 		RequireVpn:     r.Services.Settings.Cached().RequireVpn,
 	}, nil

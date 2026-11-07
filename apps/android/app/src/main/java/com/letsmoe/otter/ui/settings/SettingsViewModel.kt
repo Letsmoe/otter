@@ -13,6 +13,8 @@ import com.letsmoe.otter.graphql.UpdateAppSettingsMutation
 import com.letsmoe.otter.graphql.type.SettingsInput
 import com.letsmoe.otter.toasts.ToastKind
 import com.letsmoe.otter.toasts.Toasts
+import com.letsmoe.otter.ui.ShellReloads
+import com.letsmoe.otter.ui.navigation.Tab
 import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -41,6 +43,7 @@ class SettingsViewModel : ViewModel() {
         private set
 
     private var savedApiKey = ""
+    private var loadedLanguage = ""
 
     init {
         load()
@@ -54,6 +57,7 @@ class SettingsViewModel : ViewModel() {
                 tmdbApiKey = settings.tmdbApiKey
                 savedApiKey = settings.tmdbApiKey
                 tmdbLanguage = settings.tmdbLanguage
+                loadedLanguage = settings.tmdbLanguage
                 requireVpn = settings.requireVpn
                 hasBuiltInKey = settings.hasDefaultTmdbKey
                 usesBuiltInKey = settings.usesDefaultTmdbKey
@@ -103,6 +107,13 @@ class SettingsViewModel : ViewModel() {
     fun changeRequireVpn(value: Boolean) {
         requireVpn = value
         save(SettingsInput(requireVpn = Optional.present(value)))
+    }
+
+    // Pages opened before keep titles in the old language: rebuild them once Settings closes.
+    override fun onCleared() {
+        if (loadedLanguage.isNotEmpty() && tmdbLanguage != loadedLanguage) {
+            ShellReloads.request(Tab.PROFILE)
+        }
     }
 
     private fun save(input: SettingsInput) {
