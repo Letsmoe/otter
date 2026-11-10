@@ -287,20 +287,39 @@ private fun TransportRow(state: PlayerUiState, viewModel: PlayerViewModel) {
         RoundIconButton(playIcon, playLabel, 76, filled = true, onClick = viewModel::togglePlay)
         RoundIconButton(PhosphorIcons.Regular.ArrowClockwise, "Forward $SKIP_SECONDS seconds", 56) { viewModel.skip(SKIP_SECONDS) }
     }
-    if (state.hasNextEpisode) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            Row(
-                Modifier
-                    .pressable(onClick = viewModel::playNext)
-                    .background(Color.White.copy(alpha = 0.08f), CircleShape)
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(PhosphorIcons.Regular.SkipForward, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text("Next episode", fontSize = 14.sp)
-            }
+    JumpRow(state, viewModel)
+}
+
+// "Skip Intro" / "Skip Recap" while one plays on the TV, and the next episode.
+@Composable
+private fun JumpRow(state: PlayerUiState, viewModel: PlayerViewModel) {
+    val skipJump by viewModel.skipButton.collectAsStateWithLifecycle()
+    val jump = skipJump
+    if (jump == null && !state.hasNextEpisode) {
+        return
+    }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
+        if (jump != null) {
+            JumpPill(jump.label, onClick = viewModel::skipSegment)
         }
+        if (state.hasNextEpisode) {
+            JumpPill("Next episode", onClick = viewModel::playNext)
+        }
+    }
+}
+
+@Composable
+private fun JumpPill(label: String, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .pressable(onClick = onClick)
+            .background(Color.White.copy(alpha = 0.08f), CircleShape)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(PhosphorIcons.Regular.SkipForward, contentDescription = null, modifier = Modifier.size(18.dp))
+        Text(label, fontSize = 14.sp)
     }
 }
 
