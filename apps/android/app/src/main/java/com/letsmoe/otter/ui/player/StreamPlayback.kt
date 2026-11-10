@@ -113,6 +113,8 @@ class StreamPlayback(private val scope: CoroutineScope) {
 
     private var mediaId: String? = null
     private var autoplayAttempted = false
+    // A link picked before the stream list arrived (e.g. handed over to the TV); it plays once listed.
+    private var pendingSourceId: String? = null
     // Links that failed for this title; autoplay and fallbacks skip them.
     private val failedIds = mutableSetOf<String>()
     private var subscriptionJob: Job? = null
@@ -124,8 +126,9 @@ class StreamPlayback(private val scope: CoroutineScope) {
         mediaId = newMediaId
         mutableState.value = StreamPlaybackState()
         autoplayAttempted = false
+        pendingSourceId = null
         failedIds.clear()
-        subscriptionJob = scope.launch { collectStreams(newMediaId) }
+        subscriptionJob =scope.launch { collectStreams(newMediaId) }
     }
 
     fun stop() {
@@ -148,6 +151,7 @@ class StreamPlayback(private val scope: CoroutineScope) {
             throw cancellation
         } catch (error: Exception) {
             mutableState.update { current -> current.copy(searching = false) }
+            autoplay()
         }
     }
 
@@ -164,11 +168,12 @@ class StreamPlayback(private val scope: CoroutineScope) {
         play()
     }
 
-    /** Plays one chosen link. */
+    /** Plays one chosen link, as soon as the stream list holds it. */
     fun playSource(streamId: String) {
         mutableState.update { current -> current.copy(playing = null, error = null) }
-        autoplayAttempted = true
-        switchSource(streamId)
+        autoplayAttempted = false
+        pendingSourceId = streamId
+        autoplay()
     }
 
     /** A link that is already playable, e.g. a downloaded file. */
@@ -274,17 +279,43 @@ class StreamPlayback(private val scope: CoroutineScope) {
         if (current.playing != null || autoplayAttempted) {
             return
         }
-        if (current.streams.isNotEmpty()) {
+        if (playPendingSource(current)) {
+            return
+        }
+        if (current.streams.any { stream -> stream.id !in failedIds }) {
             playBest()
             return
         }
         if (!current.searching) {
-            mutableState.update { it.copy(error = "No sources found.") }
+            mutableState.update { it.copy(error = noSourceMessage(current)) }
         }
     }
 
+    // True while the picked link is played or still awaited; the best link plays when the lookup ends without it.
+    private fun playPendingSource(current: StreamPlaybackState): Boolean {
+        val sourceId = pendingSourceId ?: return false
+        val stream = current.streams.firstOrNull { candidate -> candidate.id == sourceId }
+        if (stream == null && current.searching) {
+            return true
+        }
+        pendingSourceId = null
+        if (stream == null) {
+            return false
+        }
+        autoplayAttempted = true
+        switchSource(stream.id)
+        return true
+    }
+
+    private fun noSourceMessage(current: StreamPlaybackState): String {
+        if (current.streams.isEmpty()) {
+            return "No sources found."
+        }
+        return "No source could be played."
+    }
+
     // Races the links group by group (best language first, known-broken last); only a link
-    // the backend saw deliver video wins.
+    // the backend saw deliver video wins. When all fail, links that arrived meanwhile get their turn.
     private fun playBest() {
         autoplayAttempted = true
         playJob?.cancel()
@@ -296,7 +327,8 @@ class StreamPlayback(private val scope: CoroutineScope) {
                 }
                 failedIds.addAll(group.map { stream -> stream.id })
             }
-            mutableState.update { current -> current.copy(error = "No source could be played.") }
+            autoplayAttempted = false
+            autoplay()
         }
     }
 
