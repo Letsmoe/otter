@@ -127,18 +127,19 @@ private fun RailResults(state: SearchState, onOpenItem: (RailItem) -> Unit) {
         ) + state.relatedRows.map { row -> row.items },
     )
     LazyColumn(contentPadding = PaddingValues(top = 8.dp, bottom = bottomBarClearance()), verticalArrangement = Arrangement.spacedBy(24.dp)) {
-        railItem("Top Results", rails[0], onOpenItem, PosterSize.LARGE)
-        railItem("More Movies", rails[1], onOpenItem)
-        railItem("More TV Shows", rails[2], onOpenItem)
-        state.relatedRows.forEachIndexed { index, row -> railItem(row.title, rails[3 + index], onOpenItem) }
+        railItem("top", "Top Results", rails[0], onOpenItem, PosterSize.LARGE)
+        railItem("movies", "More Movies", rails[1], onOpenItem)
+        railItem("series", "More TV Shows", rails[2], onOpenItem)
+        state.relatedRows.forEachIndexed { index, row -> railItem("related-$index", row.title, rails[3 + index], onOpenItem) }
     }
 }
 
-private fun LazyListScope.railItem(title: String, items: List<RailItem>, onOpenItem: (RailItem) -> Unit, size: PosterSize = PosterSize.REGULAR) {
+// Keyed by position, not title: two related rows can share a title (two titles named "Bosch").
+private fun LazyListScope.railItem(key: String, title: String, items: List<RailItem>, onOpenItem: (RailItem) -> Unit, size: PosterSize = PosterSize.REGULAR) {
     if (items.isEmpty()) {
         return
     }
-    item(key = title) { PosterRail(title, items, onOpenItem, size = size) }
+    item(key = key) { PosterRail(title, items, onOpenItem, size = size) }
 }
 
 @Composable
