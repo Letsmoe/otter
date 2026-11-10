@@ -1,6 +1,9 @@
 package com.letsmoe.otter.ui.title
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +20,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +44,7 @@ import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.theme.OtterColors
 
 private val stillShape = RoundedCornerShape(6.dp)
+private const val OVERVIEW_COLLAPSED_LINES = 3
 
 /**
  * Netflix's episode rows: still with a play badge and progress, "1. Name", runtime and a
@@ -75,9 +83,30 @@ private fun EpisodeRow(
             downloadButton(episode.id, "${episode.code} ${episode.displayName}")
         }
         if (!episode.overview.isNullOrEmpty()) {
-            Text(episode.overview, fontSize = 12.sp, lineHeight = 19.sp, color = Color.White.copy(alpha = 0.6f), maxLines = 3, overflow = TextOverflow.Ellipsis)
+            EpisodeOverview(episode.overview)
         }
     }
+}
+
+// Tapping the description shows all of it, tapping again folds it back.
+@Composable
+private fun EpisodeOverview(overview: String) {
+    var expanded by remember(overview) { mutableStateOf(false) }
+    var maxLines = OVERVIEW_COLLAPSED_LINES
+    if (expanded) {
+        maxLines = Int.MAX_VALUE
+    }
+    Text(
+        overview,
+        fontSize = 12.sp,
+        lineHeight = 19.sp,
+        color = Color.White.copy(alpha = 0.6f),
+        maxLines = maxLines,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier
+            .animateContentSize()
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { expanded = !expanded },
+    )
 }
 
 @Composable
