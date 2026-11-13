@@ -56,6 +56,9 @@ type Service struct {
 	acceptGrant func(client *libneoworks.Client, grant, ownerIdentity json.RawMessage) error
 	// afterSignIn starts the first sync; tests that only sign in skip it.
 	afterSignIn func(ctx context.Context)
+	// householdSettings and restoreDisabled come from SetSettings; nil skips settings.
+	householdSettings HouseholdSettings
+	restoreDisabled   func(names []string)
 
 	mutex   sync.Mutex
 	pending map[string]pendingSignIn

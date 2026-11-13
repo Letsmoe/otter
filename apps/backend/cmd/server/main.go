@@ -163,6 +163,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 		return serverHandlers{}, err
 	}
 	neoworksService := neoworks.NewService(database, box, cfg.dataDir, neoworksInstallName(), neoworks.Production)
+	neoworksService.SetSettings(settingsService, registry.RestoreDisabled)
 	neoworksService.Start(ctx)
 	hookRunner := hooks.New(cfg.hooksDir, []string{"OTTER_URL=" + cfg.publicURL})
 	tmdbClient := tmdb.NewClient(settingsService.TMDB)
