@@ -139,6 +139,19 @@ type Plugin struct {
 	// False when the plugin needs something missing here (e.g. FlareSolverr).
 	Available bool                  `json:"available"`
 	Settings  []*PluginSettingField `json:"settings"`
+	// Set when the plugin's site needs the user's account.
+	Account *PluginAccount `json:"account,omitempty"`
+}
+
+// A plugin's login on its site. The password is never returned.
+type PluginAccount struct {
+	// Where users without an account can make one.
+	SignupURL *string `json:"signupUrl,omitempty"`
+	// Null while no account is saved.
+	Username *string `json:"username,omitempty"`
+	LoggedIn bool    `json:"loggedIn"`
+	// Why the last login failed.
+	Error *string `json:"error,omitempty"`
 }
 
 type PluginSettingField struct {

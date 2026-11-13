@@ -3,7 +3,9 @@
 	import GearSixIcon from 'phosphor-svelte/lib/GearSixIcon';
 	import WarningIcon from 'phosphor-svelte/lib/WarningIcon';
 	import XIcon from 'phosphor-svelte/lib/XIcon';
+	import UserIcon from 'phosphor-svelte/lib/UserIcon';
 	import Toggle from '$lib/components/Toggle.svelte';
+	import PluginAccountDialog from '$lib/components/PluginAccountDialog.svelte';
 	import { setPluginEnabled, savePluginSettings, type PluginInfo } from '@letsmoe/otter-app/plugins';
 
 	let { data } = $props();
@@ -18,6 +20,13 @@
 	let savingSettings = $state(false);
 
 	let editingPlugin = $derived(plugins.find((plugin) => plugin.name === editingSettings));
+
+	let accountName = $state<string | null>(null);
+	let accountPlugin = $derived(plugins.find((plugin) => plugin.name === accountName));
+
+	function needsLogin(plugin: PluginInfo): boolean {
+		return plugin.account !== null && !plugin.account.loggedIn;
+	}
 
 	// Soft context tones for capability pills.
 	const capTones: Record<string, string> = {
@@ -112,6 +121,10 @@
 			{toast.msg}
 		</div>
 	</div>
+{/if}
+
+{#if accountPlugin}
+	<PluginAccountDialog plugin={accountPlugin} onclose={() => (accountName = null)} onchange={replacePlugin} />
 {/if}
 
 <!-- Settings modal -->
@@ -280,6 +293,19 @@
 
 					<!-- Actions -->
 					<div class="mt-auto flex gap-2 pt-1">
+						{#if plugin.account}
+							<button
+								class="flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors {needsLogin(
+									plugin
+								)
+									? 'bg-[#fbbf24]/15 text-[#fbbf24] hover:bg-[#fbbf24]/25'
+									: 'text-base-content/70 hover:bg-base-300'}"
+								onclick={() => (accountName = plugin.name)}
+							>
+								<UserIcon size={14} />
+								{#if needsLogin(plugin)}Log in{:else}Account{/if}
+							</button>
+						{/if}
 						{#if plugin.settings.length > 0}
 							<button
 								class="flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors {hasRequiredMissing(

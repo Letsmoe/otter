@@ -24,6 +24,8 @@ import { resolveWithTiming } from "./timing.ts";
 import type {
   Capability,
   Download,
+  LoginArgs,
+  LoginResult,
   PluginMeta,
   ResolveResult,
   StreamsArgs,
@@ -41,6 +43,8 @@ export interface PluginHandlers {
   resolve?: (url: string) => Promise<ResolveResult>;
   /** Lists caption files for a TMDB-known movie or episode. */
   subtitles?: (args: SubtitlesArgs) => Promise<SubtitlesResult>;
+  /** Logs in to the site and returns a session. */
+  login?: (credentials: LoginArgs) => Promise<LoginResult>;
 }
 
 export function isPluginDefinition(plugin: PluginHandlers | PluginDefinition): plugin is PluginDefinition {
@@ -54,7 +58,13 @@ function capabilitiesOf(definition: PluginDefinition): Capability[] {
   if (definition.streams) capabilities.push("streams");
   if (definition.sources) capabilities.push("resolve");
   if (definition.subtitles) capabilities.push("subtitles");
+  if (definition.account) capabilities.push("login");
   return capabilities;
+}
+
+function accountRequirementOf(definition: PluginDefinition): PluginMeta["account"] {
+  if (!definition.account) return undefined;
+  return { signup_url: definition.account.signup_url };
 }
 
 function domainsOf(definition: PluginDefinition): string[] | undefined {
@@ -78,6 +88,7 @@ export function metaOf(definition: PluginDefinition): PluginMeta {
     base_url: definition.base_url,
     languages: definition.languages,
     media: definition.media,
+    account: accountRequirementOf(definition),
   };
 }
 
@@ -229,6 +240,12 @@ export class PluginRuntime {
     if (!capability) throw new Error("resolve not implemented");
     return completeSource(await capability.retrieve(params, this.ctx));
   }
+
+  async login(credentials: LoginArgs): Promise<LoginResult> {
+    const capability = this.definition.account;
+    if (!capability) throw new Error("login not implemented");
+    return capability.login(credentials, this.ctx);
+  }
 }
 
 /** The v1 handlers of a v2 definition, so one dispatcher serves both kinds of plugin. */
@@ -249,6 +266,9 @@ export function handlersOf(definition: PluginDefinition, options: ContextOptions
   }
   if (definition.sources) {
     handlers.resolve = (url) => resolveWithTiming(async () => toResolveResult(await runtime.retrieveSource({ url })));
+  }
+  if (definition.account) {
+    handlers.login = (credentials) => runtime.login(credentials);
   }
   return handlers;
 }

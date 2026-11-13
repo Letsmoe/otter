@@ -8,11 +8,11 @@ export default {
         6,
         25,
         27,
-        34,
-        36,
-        38,
-        43,
-        44
+        35,
+        37,
+        39,
+        44,
+        45
     ],
     "types": {
         "MediaType": {},
@@ -711,6 +711,26 @@ export default {
             "settings": [
                 30
             ],
+            "account": [
+                33
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "PluginAccount": {
+            "signupUrl": [
+                4
+            ],
+            "username": [
+                4
+            ],
+            "loggedIn": [
+                6
+            ],
+            "error": [
+                4
+            ],
             "__typename": [
                 4
             ]
@@ -738,7 +758,7 @@ export default {
                 2
             ],
             "kind": [
-                34
+                35
             ],
             "heading": [
                 4
@@ -768,7 +788,7 @@ export default {
                 2
             ],
             "status": [
-                36
+                37
             ],
             "progress": [
                 5
@@ -821,13 +841,13 @@ export default {
                 6
             ],
             "status": [
-                38
+                39
             ],
             "self": [
-                39
+                40
             ],
             "peers": [
-                39
+                40
             ],
             "__typename": [
                 4
@@ -835,7 +855,7 @@ export default {
         },
         "TogetherMessage": {
             "from": [
-                39
+                40
             ],
             "payload": [
                 4
@@ -846,10 +866,10 @@ export default {
         },
         "TogetherUpdate": {
             "room": [
-                40
+                41
             ],
             "message": [
-                41
+                42
             ],
             "__typename": [
                 4
@@ -989,7 +1009,7 @@ export default {
                         "MediaType!"
                     ],
                     "sort": [
-                        43
+                        44
                     ]
                 }
             ],
@@ -1001,13 +1021,13 @@ export default {
                         "MediaType!"
                     ],
                     "theme": [
-                        44,
+                        45,
                         "CatalogTheme!"
                     ]
                 }
             ],
             "catalogRows": [
-                45,
+                46,
                 {
                     "mediaType": [
                         0,
@@ -1104,7 +1124,7 @@ export default {
                 }
             ],
             "notifications": [
-                35,
+                36,
                 {
                     "profileId": [
                         2,
@@ -1125,7 +1145,7 @@ export default {
                 }
             ],
             "downloads": [
-                37,
+                38,
                 {
                     "profileId": [
                         2,
@@ -1137,7 +1157,7 @@ export default {
                 4
             ],
             "togetherRoom": [
-                40
+                41
             ],
             "subtitles": [
                 24,
@@ -1170,7 +1190,7 @@ export default {
                 32
             ],
             "status": [
-                33
+                34
             ],
             "__typename": [
                 4
@@ -1311,7 +1331,7 @@ export default {
                 6
             ],
             "startDownload": [
-                37,
+                38,
                 {
                     "profileId": [
                         2,
@@ -1339,7 +1359,7 @@ export default {
                 6
             ],
             "hostTogether": [
-                40,
+                41,
                 {
                     "profileId": [
                         2,
@@ -1348,7 +1368,7 @@ export default {
                 }
             ],
             "joinTogether": [
-                40,
+                41,
                 {
                     "profileId": [
                         2,
@@ -1511,8 +1531,34 @@ export default {
                     ]
                 }
             ],
+            "loginPlugin": [
+                32,
+                {
+                    "name": [
+                        4,
+                        "String!"
+                    ],
+                    "username": [
+                        4,
+                        "String!"
+                    ],
+                    "password": [
+                        4,
+                        "String!"
+                    ]
+                }
+            ],
+            "logoutPlugin": [
+                32,
+                {
+                    "name": [
+                        4,
+                        "String!"
+                    ]
+                }
+            ],
             "updatePlugins": [
-                49
+                50
             ],
             "__typename": [
                 4
@@ -1534,7 +1580,7 @@ export default {
         },
         "PluginUpdateReport": {
             "updated": [
-                48
+                49
             ],
             "failed": [
                 4
@@ -1554,7 +1600,7 @@ export default {
                 }
             ],
             "together": [
-                42
+                43
             ],
             "__typename": [
                 4
