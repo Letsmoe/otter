@@ -88,6 +88,29 @@ func (box *Box) Seal(plaintext string) (string, error) {
 	return base64.StdEncoding.EncodeToString(sealed), nil
 }
 
+// SealBytes encrypts plaintext bound to label: OpenBytes refuses it under any
+// other label. The nonce is in front.
+func (box *Box) SealBytes(plaintext, label []byte) ([]byte, error) {
+	nonce := make([]byte, box.aead.NonceSize())
+	if _, err := rand.Read(nonce); err != nil {
+		return nil, err
+	}
+	return box.aead.Seal(nonce, nonce, plaintext, label), nil
+}
+
+// OpenBytes decrypts what SealBytes returned for the same label.
+func (box *Box) OpenBytes(sealed, label []byte) ([]byte, error) {
+	nonceSize := box.aead.NonceSize()
+	if len(sealed) < nonceSize {
+		return nil, errors.New("open secret: too short")
+	}
+	plaintext, err := box.aead.Open(nil, sealed[:nonceSize], sealed[nonceSize:], label)
+	if err != nil {
+		return nil, fmt.Errorf("open secret: %w", err)
+	}
+	return plaintext, nil
+}
+
 // Open decrypts what Seal returned; a changed key or value is an error.
 func (box *Box) Open(sealed string) (string, error) {
 	if sealed == "" {

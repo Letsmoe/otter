@@ -19,6 +19,9 @@ RUN mkdir -p node_modules/@letsmoe \
  && cd apps/backend && bun scripts/bundle-plugins.ts --release --out /plugins
 
 FROM golang:1.26-alpine AS server
+# libneoworks (Neoworks sync) compiles C and C++ through cgo; libstdc++ and
+# libgcc are linked statically, so the runtime image needs nothing extra.
+RUN apk add --no-cache build-base
 WORKDIR /src
 COPY apps/backend/go.mod apps/backend/go.sum ./
 RUN go mod download
@@ -26,7 +29,7 @@ COPY apps/backend/cmd cmd
 COPY apps/backend/internal internal
 RUN --mount=type=secret,id=tmdb_api_key \
     key="$(cat /run/secrets/tmdb_api_key 2>/dev/null || true)" \
- && CGO_ENABLED=0 go build -trimpath \
+ && CGO_ENABLED=1 go build -trimpath \
     -ldflags="-s -w -X github.com/Letsmoe/otter/internal/settings.DefaultTMDBApiKey=${key}" \
     -o /otter ./cmd/server
 

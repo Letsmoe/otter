@@ -27,6 +27,8 @@ import (
 	"github.com/Letsmoe/otter/internal/errorreport"
 	"github.com/Letsmoe/otter/internal/hooks"
 	"github.com/Letsmoe/otter/internal/library"
+	// Links libneoworks (cgo) into every build already; Neoworks sign-in wires it up next.
+	_ "github.com/Letsmoe/otter/internal/neoworks"
 	"github.com/Letsmoe/otter/internal/netdns"
 	"github.com/Letsmoe/otter/internal/notify"
 	"github.com/Letsmoe/otter/internal/plugins"
