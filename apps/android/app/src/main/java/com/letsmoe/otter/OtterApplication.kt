@@ -12,6 +12,7 @@ import com.letsmoe.otter.ui.player.TelevisionPlayback
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.reporting.ErrorReporting
 import com.letsmoe.otter.settings.PlaybackSettings
+import com.letsmoe.otter.updates.UpdateSettings
 import com.letsmoe.otter.vpn.VpnStatusStore
 
 /** Starts the on-device backend and restores the active profile once per app process, before any activity. */
@@ -24,6 +25,7 @@ class OtterApplication : Application() {
         EmbeddedBackend(this).start()
         ServerSettings.initialize(this)
         PlaybackSettings.initialize(this)
+        UpdateSettings.initialize(this)
         ProfileSession.initialize(this)
         LocalNetworkRouting.initialize(this)
         VpnStatusStore.initialize(this)

@@ -20,13 +20,27 @@ import java.net.URL
 import kotlin.coroutines.cancellation.CancellationException
 
 private const val TAG = "OtterUpdater"
-private const val LATEST_RELEASE_URL = "https://api.github.com/repos/${BuildConfig.UPDATE_REPOSITORY}/releases/latest"
+private const val REPOSITORY_API = "https://api.github.com/repos/${BuildConfig.UPDATE_REPOSITORY}"
 private const val TIMEOUT_MILLISECONDS = 15_000
 private const val UPDATES_DIRECTORY = "updates"
 private const val APK_FILE = "otter-update.apk"
 
-/** A published release with an APK attached. */
-data class AppRelease(val version: String, val apkUrl: String, val apkSize: Long)
+/** A published release with an APK attached; [build] is the APK's versionCode when its name tells it. */
+data class AppRelease(
+    val version: String,
+    val build: Int?,
+    val apkUrl: String,
+    val apkSize: Long,
+    val channel: UpdateChannel,
+) {
+    /** "0.0.4" for releases, "debug build 61" for debug builds. */
+    fun displayName(): String {
+        if (channel == UpdateChannel.DEBUG && build != null) {
+            return "debug build $build"
+        }
+        return version.removePrefix("v")
+    }
+}
 
 sealed interface UpdateState {
     data object None : UpdateState
@@ -37,7 +51,7 @@ sealed interface UpdateState {
 }
 
 /**
- * Installs new versions from the repository's GitHub releases: checks the latest release once per
+ * Installs new versions from the repository's GitHub releases: checks the chosen channel once per
  * start, downloads its APK on request and hands it to Android's package installer.
  */
 object AppUpdater {
@@ -53,11 +67,31 @@ object AppUpdater {
         }
         checked = true
         AppScope.launch {
-            val release = fetchLatestRelease() ?: return@launch
-            if (!isNewerVersion(release.version, BuildConfig.VERSION_NAME)) {
+            val release = fetchNewest(UpdateSettings.channel) ?: return@launch
+            if (!isNewerThanInstalled(release, BuildConfig.VERSION_CODE, BuildConfig.VERSION_NAME)) {
                 return@launch
             }
             mutableState.value = UpdateState.Available(release)
+        }
+    }
+
+    /** The newest build on [channel]; null when there is none or GitHub can't be reached. */
+    suspend fun fetchNewest(channel: UpdateChannel): AppRelease? = withContext(Dispatchers.IO) {
+        try {
+            val connection = openConnection("$REPOSITORY_API/${channel.releasePath}")
+            connection.setRequestProperty("Accept", "application/vnd.github+json")
+            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                connection.disconnect()
+                return@withContext null
+            }
+            val body = connection.inputStream.bufferedReader().use { reader -> reader.readText() }
+            connection.disconnect()
+            parseRelease(JSONObject(body), channel)
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Exception) {
+            Log.w(TAG, "update check failed", error)
+            null
         }
     }
 
@@ -97,23 +131,6 @@ object AppUpdater {
             .setDataAndType(apkUri, "application/vnd.android.package-archive")
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(installer)
-    }
-
-    private suspend fun fetchLatestRelease(): AppRelease? = withContext(Dispatchers.IO) {
-        try {
-            val connection = openConnection(LATEST_RELEASE_URL)
-            connection.setRequestProperty("Accept", "application/vnd.github+json")
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                connection.disconnect()
-                return@withContext null
-            }
-            val body = connection.inputStream.bufferedReader().use { reader -> reader.readText() }
-            connection.disconnect()
-            parseRelease(JSONObject(body))
-        } catch (error: Exception) {
-            Log.w(TAG, "update check failed", error)
-            null
-        }
     }
 
     private suspend fun downloadApk(context: Context, release: AppRelease): File = withContext(Dispatchers.IO) {
@@ -173,12 +190,19 @@ object AppUpdater {
 }
 
 /** The release's tag and first .apk asset; null for releases without an APK. */
-private fun parseRelease(release: JSONObject): AppRelease? {
+private fun parseRelease(release: JSONObject, channel: UpdateChannel): AppRelease? {
     val assets = release.optJSONArray("assets") ?: return null
     for (index in 0 until assets.length()) {
         val asset = assets.getJSONObject(index)
-        if (asset.optString("name").endsWith(".apk")) {
-            return AppRelease(release.getString("tag_name"), asset.getString("browser_download_url"), asset.optLong("size"))
+        val name = asset.optString("name")
+        if (name.endsWith(".apk")) {
+            return AppRelease(
+                version = release.getString("tag_name"),
+                build = buildNumberOf(name),
+                apkUrl = asset.getString("browser_download_url"),
+                apkSize = asset.optLong("size"),
+                channel = channel,
+            )
         }
     }
     return null
