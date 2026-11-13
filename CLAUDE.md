@@ -6,6 +6,10 @@ An easy way to find and stream movies and series. One Go binary (SQLite + files 
 
 You're allowed to use git. Every time you make a big change, commit the current worktree if it's dirty before changing anything, then write your changes, choose a short to-the-point commit message, and push to the remote repository. If you are unsure about what to write in the commit message, ask for help. Write an explanation of the change in the body of the commit message if it is not obvious from the title. Always mention that a commit was made by you and not an actual human. Never add a `Co-Authored-By` trailer to commits.
 
+## Releases
+
+Always show the release notes to the user for review before publishing a release, every time, even when asked to "do the release". Publish only after they approve the notes.
+
 ## Data Structure
 
 When returning results from a fetch never return the full RecordId structure ({ Table: ..., ID: ... }) only ever return it as ...\_id: string
