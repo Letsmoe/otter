@@ -57,6 +57,20 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="otter" android:host="together" />
             </intent-filter>
+            <!--
+                Shared titles: https://otter.letsmoe.com/movie/603-the-matrix, /tv/1396-breaking-bad[/s1e1].
+                Android opens them in Otter without asking once the site's
+                /.well-known/assetlinks.json names this app's signing key.
+            -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+                <data android:host="otter.letsmoe.com" />
+                <data android:pathPrefix="/movie/" />
+                <data android:pathPrefix="/tv/" />
+            </intent-filter>
         </activity>
     </application>
 </manifest>

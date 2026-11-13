@@ -61,6 +61,7 @@ import com.adamglin.phosphoricons.regular.Plus
 import com.adamglin.phosphoricons.regular.ShareNetwork
 import com.adamglin.phosphoricons.regular.ThumbsDown
 import com.adamglin.phosphoricons.regular.ThumbsUp
+import com.letsmoe.otter.links.shareText
 import com.letsmoe.otter.ui.components.frostedGlass
 import com.letsmoe.otter.ui.components.jumpOnChange
 import com.letsmoe.otter.ui.components.pressable
@@ -275,11 +276,12 @@ private fun RateMenuItem(option: RatingOption, index: Int, selected: Boolean, on
     }
 }
 
-private fun share(context: Context, title: String, url: String) {
+/** Opens Android's share sheet with "[label] on Otter: [url]". */
+fun share(context: Context, label: String, url: String) {
     val send = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
-        putExtra(Intent.EXTRA_SUBJECT, title)
-        putExtra(Intent.EXTRA_TEXT, url)
+        putExtra(Intent.EXTRA_SUBJECT, label)
+        putExtra(Intent.EXTRA_TEXT, shareText(label, url))
     }
-    context.startActivity(Intent.createChooser(send, title))
+    context.startActivity(Intent.createChooser(send, label))
 }

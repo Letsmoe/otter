@@ -9,7 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import com.letsmoe.otter.notifications.NotificationLinks
+import com.letsmoe.otter.links.IncomingLinks
 import com.letsmoe.otter.together.INVITE_LINK_PREFIX
 import com.letsmoe.otter.together.TogetherSession
 import com.letsmoe.otter.together.roomCodeFromText
@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun openLink(intent: Intent?) {
-        if (NotificationLinks.handle(intent)) {
+        if (IncomingLinks.handle(intent)) {
             return
         }
         openInvite(intent)

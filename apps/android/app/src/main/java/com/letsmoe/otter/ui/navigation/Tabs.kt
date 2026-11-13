@@ -19,7 +19,7 @@ object Routes {
     const val MY_LIST = "my-list"
     const val DOWNLOADS = "downloads"
     const val PROFILE = "profile"
-    const val TITLE = "title/{titleId}?season={season}&episode={episodeId}"
+    const val TITLE = "title/{titleId}?season={season}&episode={episodeId}&number={episodeNumber}"
     const val SEARCH = "search"
     const val BROWSE = "browse/{kind}"
     const val LIBRARY = "library"
@@ -38,6 +38,11 @@ object Routes {
             route += "?season=$seasonNumber&episode=${android.net.Uri.encode(episodeId)}"
         }
         return route
+    }
+
+    /** A series page open on one episode known by its numbers, e.g. from a shared link. */
+    fun titleAtEpisodeNumber(titleId: String, seasonNumber: Int, episodeNumber: Int): String {
+        return "title/${android.net.Uri.encode(titleId)}?season=$seasonNumber&number=$episodeNumber"
     }
 
     fun browse(kind: String) = "browse/$kind"
