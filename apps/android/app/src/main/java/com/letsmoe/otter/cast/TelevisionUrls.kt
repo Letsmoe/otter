@@ -74,6 +74,11 @@ object TelevisionUrls {
         return result
     }
 
+    /** Tags the TV's requests with the cast, so backend traces and the phone's TV log join up. */
+    fun withCast(path: String, castId: String): String {
+        return withParameter(path, "cast", castId)
+    }
+
     private fun withParameter(path: String, name: String, value: String): String {
         var separator = "?"
         if (path.contains("?")) {

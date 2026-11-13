@@ -18,6 +18,8 @@ import (
 	"time"
 
 	"github.com/posthog/posthog-go"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // ProjectToken is the public ingest key of the Otter PostHog project; builds
@@ -65,9 +67,20 @@ func Start(ctx context.Context, store KeyValueStore, enabled func() bool) {
 		log.Printf("error reporting: %v", err)
 		return
 	}
+	keepRecentLogs()
 	mutex.Lock()
 	current = &reporter{client: client, installID: installID(ctx, store), enabled: enabled}
 	mutex.Unlock()
+}
+
+// InstallID is this install's random ID; empty until Start ran.
+func InstallID() string {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	if current == nil {
+		return ""
+	}
+	return current.installID
 }
 
 // Close sends what is still queued.
@@ -105,33 +118,45 @@ func activeReporter() *reporter {
 
 // Capture reports err; kind names where it happened (e.g. "plugin.streams")
 // and becomes the issue title, properties add what helps to reproduce it.
-func Capture(err error, kind string, properties map[string]any) {
+// The span in ctx is marked failed, so its whole trace is sent too.
+func Capture(ctx context.Context, err error, kind string, properties map[string]any) {
+	if err == nil {
+		return
+	}
+	span := trace.SpanFromContext(ctx)
+	span.RecordError(err)
+	span.SetStatus(codes.Error, err.Error())
 	active := activeReporter()
-	if active == nil || err == nil {
+	if active == nil {
 		return
 	}
 	exception := posthog.NewDefaultException(time.Now(), active.installID, kind, err.Error())
-	exception.Properties = eventProperties(kind, properties)
+	exception.Properties = eventProperties(kind, span.SpanContext(), properties)
 	if enqueueErr := active.client.Enqueue(exception); enqueueErr != nil {
 		log.Printf("error reporting: %v", enqueueErr)
 	}
 }
 
-func eventProperties(kind string, properties map[string]any) posthog.Properties {
+func eventProperties(kind string, spanContext trace.SpanContext, properties map[string]any) posthog.Properties {
 	result := posthog.NewProperties().
 		Set("kind", kind).
 		Set("$os", runtime.GOOS).
 		Set("arch", runtime.GOARCH).
-		Set("revision", buildRevision()).
+		Set("revision", BuildRevision()).
+		Set("recent_logs", recentLogs.text()).
 		Set("$process_person_profile", false)
+	if spanContext.IsValid() {
+		result.Set("trace_id", spanContext.TraceID().String())
+		result.Set("span_id", spanContext.SpanID().String())
+	}
 	for name, value := range properties {
 		result.Set(name, value)
 	}
 	return result
 }
 
-// buildRevision is the git commit the binary was built from, when Go recorded it.
-func buildRevision() string {
+// BuildRevision is the git commit the binary was built from, when Go recorded it.
+func BuildRevision() string {
 	info, found := debug.ReadBuildInfo()
 	if !found {
 		return ""
@@ -145,8 +170,8 @@ func buildRevision() string {
 }
 
 // CapturePanic reports a recovered panic value.
-func CapturePanic(recovered any, kind string, properties map[string]any) {
-	Capture(fmt.Errorf("panic: %v", recovered), kind, properties)
+func CapturePanic(ctx context.Context, recovered any, kind string, properties map[string]any) {
+	Capture(ctx, fmt.Errorf("panic: %v", recovered), kind, properties)
 }
 
 // Recover reports panics in HTTP handlers, then panics again so net/http
@@ -160,7 +185,7 @@ func Recover(next http.Handler) http.Handler {
 			}
 			// ErrAbortHandler is how handlers end a response on purpose.
 			if recovered != http.ErrAbortHandler {
-				CapturePanic(recovered, "http.panic", map[string]any{"method": request.Method, "path": request.URL.Path})
+				CapturePanic(request.Context(), recovered, "http.panic", map[string]any{"method": request.Method, "path": request.URL.Path})
 			}
 			panic(recovered)
 		}()

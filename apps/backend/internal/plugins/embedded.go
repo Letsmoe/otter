@@ -16,6 +16,9 @@ import (
 	"github.com/dop251/goja_nodejs/buffer"
 	"github.com/dop251/goja_nodejs/require"
 	"github.com/dop251/goja_nodejs/url"
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/Letsmoe/otter/internal/tracing"
 )
 
 // embeddedExecutor runs plugins in goja, an in-process JS engine, for hosts
@@ -253,8 +256,14 @@ func (s *session) writeSync(fd int, data string) int {
 		s.stdout.WriteString(data)
 		return len(data)
 	}
-	log.Printf("plugin %q: %s", s.pluginName, strings.TrimRight(data, "\n"))
+	s.logLine(strings.TrimRight(data, "\n"))
 	return len(data)
+}
+
+// logLine goes to the backend log and, as an event, to the plugin call's span.
+func (s *session) logLine(line string) {
+	log.Printf("plugin %q: %s", s.pluginName, line)
+	trace.SpanFromContext(s.ctx).AddEvent("console", trace.WithAttributes(tracing.Text("message", line)))
 }
 
 // console logs every level to the backend log.
@@ -265,7 +274,7 @@ func (s *session) console() *goja.Object {
 		for i, argument := range call.Arguments {
 			parts[i] = argument.String()
 		}
-		log.Printf("plugin %q: %s", s.pluginName, strings.Join(parts, " "))
+		s.logLine(strings.Join(parts, " "))
 		return goja.Undefined()
 	}
 	for _, level := range []string{"log", "info", "warn", "error", "debug"} {

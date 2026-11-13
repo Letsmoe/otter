@@ -124,7 +124,7 @@ func (p *Proxy) serveContinuous(w http.ResponseWriter, r *http.Request) {
 	if err := p.writeContinuous(r.Context(), w, playlist.initURL, segments, headers); err != nil && r.Context().Err() == nil {
 		// Headers are out already; ending the body early tells the TV.
 		log.Printf("continuous stream: %v", err)
-		errorreport.Capture(err, "stream.continuous", map[string]any{"manifest": manifestURL, "start": start, "user_agent": r.UserAgent()})
+		errorreport.Capture(r.Context(), err, "stream.continuous", map[string]any{"manifest": manifestURL, "start": start, "user_agent": r.UserAgent()})
 	}
 }
 

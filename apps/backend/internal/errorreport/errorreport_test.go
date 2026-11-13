@@ -1,14 +1,17 @@
 package errorreport
 
 import (
+	"context"
 	"errors"
+	"log"
+	"strings"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
 func TestCaptureWithoutStartDoesNothing(t *testing.T) {
-	Capture(errors.New("boom"), "test", map[string]any{"key": "value"})
+	Capture(context.Background(), errors.New("boom"), "test", map[string]any{"key": "value"})
 	Close()
 }
 
@@ -32,5 +35,20 @@ func TestErrorReportingEnvironmentSwitch(t *testing.T) {
 	t.Setenv("ERROR_REPORTING", "")
 	if !Enabled() {
 		t.Fatal("reporting should be on by default")
+	}
+}
+
+func TestRecentLogsKeepTheLastLines(t *testing.T) {
+	recent := &recentLog{}
+	logger := log.New(recent, "", 0)
+	for line := 0; line < recentLogLines+5; line++ {
+		logger.Printf("line %d", line)
+	}
+	lines := strings.Split(recent.text(), "\n")
+	if len(lines) != recentLogLines {
+		t.Fatalf("kept %d lines, want %d", len(lines), recentLogLines)
+	}
+	if lines[0] != "line 5" || lines[len(lines)-1] != "line 204" {
+		t.Fatalf("kept %q … %q, want the last lines", lines[0], lines[len(lines)-1])
 	}
 }

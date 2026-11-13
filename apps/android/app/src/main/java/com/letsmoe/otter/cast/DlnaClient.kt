@@ -38,8 +38,8 @@ class TelevisionRefusedException(message: String) : IOException(message)
 /** The backend couldn't open the stream, e.g. because the link's token expired. */
 class StreamUnavailableException(message: String) : IOException(message)
 
-/** Sends AVTransport SOAP actions to one renderer. */
-class DlnaClient(private val renderer: DlnaRenderer) {
+/** Sends AVTransport SOAP actions to one renderer; [journal] records every exchange. */
+class DlnaClient(private val renderer: DlnaRenderer, private val journal: CastJournal? = null) {
 
     suspend fun load(media: TelevisionMedia) {
         val arguments = "$INSTANCE<CurrentURI>${escapeXml(media.url)}</CurrentURI><CurrentURIMetaData>${escapeXml(didl(media))}</CurrentURIMetaData>"
@@ -115,6 +115,21 @@ class DlnaClient(private val renderer: DlnaRenderer) {
         val envelope = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
             "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">" +
             "<s:Body><u:$action xmlns:u=\"${service.serviceType}\">$arguments</u:$action></s:Body></s:Envelope>"
+        val startedAt = System.currentTimeMillis()
+        val answer = try {
+            send(service, action, envelope, readTimeoutMilliseconds)
+        } catch (error: IOException) {
+            record(action, envelope, SoapAnswer(null, "", error.toString()), startedAt)
+            throw error
+        }
+        record(action, envelope, answer, startedAt)
+        if (answer.status != 200) {
+            throw DlnaException("$action failed: HTTP ${answer.status} ${tagValue(answer.body, "errorDescription")}")
+        }
+        answer.body
+    }
+
+    private fun send(service: DlnaService, action: String, envelope: String, readTimeoutMilliseconds: Int): SoapAnswer {
         val connection = openHttp(URL(service.controlUrl))
         connection.readTimeout = readTimeoutMilliseconds
         connection.requestMethod = "POST"
@@ -123,16 +138,24 @@ class DlnaClient(private val renderer: DlnaRenderer) {
         connection.setRequestProperty("SOAPACTION", "\"${service.serviceType}#$action\"")
         try {
             connection.outputStream.use { output -> output.write(envelope.toByteArray()) }
-            if (connection.responseCode != 200) {
-                val fault = connection.errorStream?.bufferedReader()?.readText().orEmpty()
-                throw DlnaException("$action failed: HTTP ${connection.responseCode} ${tagValue(fault, "errorDescription")}")
+            val status = connection.responseCode
+            if (status != 200) {
+                return SoapAnswer(status, connection.errorStream?.bufferedReader()?.readText().orEmpty(), null)
             }
-            connection.inputStream.bufferedReader().readText()
+            return SoapAnswer(status, connection.inputStream.bufferedReader().readText(), null)
         } finally {
             connection.disconnect()
         }
     }
+
+    private fun record(action: String, envelope: String, answer: SoapAnswer, startedAt: Long) {
+        val duration = System.currentTimeMillis() - startedAt
+        journal?.record(SoapExchange(action, envelope, answer.status, answer.body, answer.error, duration))
+    }
 }
+
+/** The TV's answer to a SOAP call; [status] is null when none came ([error] says why). */
+private data class SoapAnswer(val status: Int?, val body: String, val error: String?)
 
 private fun didl(media: TelevisionMedia): String {
     var operations = "DLNA.ORG_OP=00"

@@ -29,6 +29,7 @@ import (
 	"github.com/Letsmoe/otter/internal/cache"
 	"github.com/Letsmoe/otter/internal/plugins"
 	"github.com/Letsmoe/otter/internal/storage"
+	"github.com/Letsmoe/otter/internal/tracing"
 )
 
 const (
@@ -224,12 +225,12 @@ func (s *CacheService) cache(
 // Body reads are bounded by the caller's context (job ctx or 2-hour background ctx).
 // A Client.Timeout that covers the body read would kill large MP4 downloads.
 var httpClient = &http.Client{
-	Transport: &http.Transport{
+	Transport: tracing.Transport(&http.Transport{
 		DialContext:           (&net.Dialer{Timeout: 30 * time.Second}).DialContext,
 		TLSHandshakeTimeout:   15 * time.Second,
 		ResponseHeaderTimeout: 30 * time.Second,
 		DisableCompression:    true, // don't deflate streams
-	},
+	}),
 	CheckRedirect: keepOriginalReferer,
 }
 
