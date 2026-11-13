@@ -50,15 +50,9 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Watch Together invite links: otter://together/CODE -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="otter" android:host="together" />
-            </intent-filter>
             <!--
-                Shared titles: https://otter.letsmoe.com/movie/603-the-matrix, /tv/1396-breaking-bad[/s1e1].
+                Shared titles: https://otter.letsmoe.com/movie/603-the-matrix, /tv/1396-breaking-bad[/s1e1],
+                and Watch Together invites: /together/K7QD9MZA.
                 Android opens them in Otter without asking once the site's
                 /.well-known/assetlinks.json names this app's signing key.
             -->
@@ -70,6 +64,7 @@
                 <data android:host="otter.letsmoe.com" />
                 <data android:pathPrefix="/movie/" />
                 <data android:pathPrefix="/tv/" />
+                <data android:pathPrefix="/together/" />
             </intent-filter>
         </activity>
     </application>

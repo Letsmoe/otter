@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, mock, test } from 'bun:test';
 import worker, { assetLinks, type Environment } from './index';
-import { parseSharePath, tmdbLanguage } from './links';
+import { parseInvitePath, parseSharePath, tmdbLanguage } from './links';
 import { escapeHtml, openInAppUrl } from './page';
 
 const fingerprint = 'B2:B9:10:ED:ED:C1:EC:13:B5:F7:E8:70:F2:FF:C3:82:78:E3:8A:6B:D4:13:51:CE:7C:67:64:33:90:3E:12:2E';
@@ -100,6 +100,26 @@ describe('the share page', () => {
 		expect(openInAppUrl(new URL('https://otter.letsmoe.com/movie/603-the-matrix'))).toStartWith(
 			'intent://otter.letsmoe.com/movie/603-the-matrix#Intent;scheme=https;package=com.letsmoe.otter;',
 		);
+	});
+});
+
+describe('Watch Together invites', () => {
+	test('read the room code the apps put in the link', () => {
+		expect(parseInvitePath('/together/K7QD9MZA')).toBe('K7QD9MZA');
+		expect(parseInvitePath('/together/k7qd-9mza')).toBe('K7QD9MZA');
+		expect(parseInvitePath('/together/O0I1O0I1')).toBeNull();
+		expect(parseInvitePath('/together/K7QD9MZA/extra')).toBeNull();
+	});
+
+	test('show the code without asking TMDB', async () => {
+		const requestedUrls = fakeTmdb({});
+		const response = await visit('/together/K7QD9MZA');
+		const page = await response.text();
+		expect(response.status).toBe(200);
+		expect(page).toContain('K7QD-9MZA');
+		expect(page).toContain('<meta property="og:title" content="Watch together on Otter">');
+		expect(page).toContain('intent://otter.letsmoe.com/together/K7QD9MZA#Intent;');
+		expect(requestedUrls).toEqual([]);
 	});
 });
 

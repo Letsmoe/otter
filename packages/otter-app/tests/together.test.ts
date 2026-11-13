@@ -16,7 +16,7 @@ describe('roomCodeFromText', () => {
 	test('reads typed codes, links and invite texts', () => {
 		expect(roomCodeFromText('k7qd-9mza')).toBe('K7QD9MZA');
 		expect(roomCodeFromText('K7QD 9MZA')).toBe('K7QD9MZA');
-		expect(roomCodeFromText('otter://together/K7QD9MZA')).toBe('K7QD9MZA');
+		expect(roomCodeFromText('https://otter.letsmoe.com/together/K7QD9MZA')).toBe('K7QD9MZA');
 		expect(roomCodeFromText(inviteText('K7QD9MZA'))).toBe('K7QD9MZA');
 	});
 

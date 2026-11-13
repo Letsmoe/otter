@@ -97,7 +97,8 @@ const TOGETHER_SUBSCRIPTION = `
 	}
 `;
 
-export const INVITE_LINK_PREFIX = 'otter://together/';
+/** Opens Otter on Android (App Links) and otter.letsmoe.com's invite page elsewhere. */
+export const INVITE_LINK_PREFIX = 'https://otter.letsmoe.com/together/';
 
 const CODE_PATTERN = /([A-HJ-NP-Z2-9]{4})[-\s]?([A-HJ-NP-Z2-9]{4})/i;
 

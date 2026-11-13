@@ -11,7 +11,8 @@ const val ROOM_CODE_LENGTH = 8
 private const val ROOM_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 private val roomCodePattern = Regex("([A-HJ-NP-Z2-9]{4})[-\\s]?([A-HJ-NP-Z2-9]{4})", RegexOption.IGNORE_CASE)
 
-const val INVITE_LINK_PREFIX = "otter://together/"
+/** Opens Otter (App Links) and otter.letsmoe.com's invite page without it. */
+const val INVITE_LINK_PREFIX = "https://otter.letsmoe.com/together/"
 
 // Beyond this much drift the player jumps; below it, it catches up by playing slightly faster or slower.
 private const val SEEK_DRIFT_SECONDS = 1.0
@@ -37,6 +38,14 @@ fun formatRoomCode(code: String): String {
 fun roomCodeFromText(text: String): String? {
     val match = roomCodePattern.find(text) ?: return null
     return (match.groupValues[1] + match.groupValues[2]).uppercase()
+}
+
+/** The room code of an invite link; null for any other link. */
+fun roomCodeFromInviteLink(link: String): String? {
+    if (!link.startsWith(INVITE_LINK_PREFIX)) {
+        return null
+    }
+    return roomCodeFromText(link.removePrefix(INVITE_LINK_PREFIX))
 }
 
 fun inviteLink(code: String): String = "$INVITE_LINK_PREFIX$code"

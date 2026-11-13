@@ -1,5 +1,5 @@
-import { parseSharePath, tmdbLanguage } from './links';
-import { renderNotFoundPage, renderSharePage } from './page';
+import { parseInvitePath, parseSharePath, tmdbLanguage } from './links';
+import { renderInvitePage, renderNotFoundPage, renderSharePage } from './page';
 import { fetchSharedTitle } from './tmdb';
 
 /** Worker secrets, from apps/share/.env (`wrangler secret bulk .env`; CI writes it from GitHub secrets). */
@@ -42,6 +42,10 @@ export default {
 		}
 		if (request.method !== 'GET' && request.method !== 'HEAD') {
 			return new Response('Method not allowed', { status: 405 });
+		}
+		const roomCode = parseInvitePath(url.pathname);
+		if (roomCode) {
+			return html(renderInvitePage(roomCode, url), 200);
 		}
 		const target = parseSharePath(url.pathname);
 		if (!target) {

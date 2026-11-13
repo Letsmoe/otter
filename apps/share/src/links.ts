@@ -6,6 +6,21 @@ export type SharedTarget =
 	| { kind: 'episode'; tmdbId: number; seasonNumber: number; episodeNumber: number };
 
 const episodePattern = /^s(\d+)e(\d+)$/;
+// Watch Together room codes: 8 characters without I, O, 0 or 1 (packages/otter-app/src/together.ts).
+const roomCodePattern = /^([A-HJ-NP-Z2-9]{4})-?([A-HJ-NP-Z2-9]{4})$/i;
+
+/** The room code of /together/K7QD9MZA (or K7QD-9MZA), upper-cased; null for other paths. */
+export function parseInvitePath(path: string): string | null {
+	const segments = path.split('/').filter((segment) => segment.length > 0);
+	if (segments.length !== 2 || segments[0] !== 'together') {
+		return null;
+	}
+	const match = roomCodePattern.exec(segments[1]);
+	if (!match) {
+		return null;
+	}
+	return `${match[1]}${match[2]}`.toUpperCase();
+}
 const leadingNumber = /^(\d+)/;
 
 export function parseSharePath(path: string): SharedTarget | null {

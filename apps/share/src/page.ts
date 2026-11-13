@@ -63,6 +63,39 @@ export function renderSharePage(title: SharedTitle, pageUrl: URL): string {
 	);
 }
 
+/** A Watch Together invite for someone without Otter, or whose browser opened the link. */
+export function renderInvitePage(roomCode: string, pageUrl: URL): string {
+	const formattedCode = `${roomCode.slice(0, 4)}-${roomCode.slice(4)}`;
+	const description = `Join room ${formattedCode} and watch in sync, with chat and reactions.`;
+	const metaTags = [
+		meta('property', 'og:type', 'website'),
+		meta('property', 'og:site_name', 'Otter'),
+		meta('property', 'og:title', 'Watch together on Otter'),
+		meta('property', 'og:description', description),
+		meta('property', 'og:url', pageUrl.toString()),
+		meta('name', 'twitter:card', 'summary'),
+		meta('name', 'robots', 'noindex'),
+	].join('\n\t\t');
+	return layout(
+		'Watch together',
+		metaTags,
+		`<main>
+			<article>
+				<div class="details">
+					<p class="eyebrow">You're invited</p>
+					<h1>Watch together on Otter</h1>
+					<p class="overview">${escapeHtml(description)} Without the link, enter the code under Watch Together in Otter.</p>
+					<p class="room-code">${escapeHtml(formattedCode)}</p>
+					<div class="actions">
+						<a class="button primary" href="${escapeHtml(openInAppUrl(pageUrl))}">Join in Otter</a>
+						<a class="button" href="${downloadUrl}">Get Otter for Android</a>
+					</div>
+				</div>
+			</article>
+		</main>`,
+	);
+}
+
 export function renderNotFoundPage(): string {
 	return layout(
 		'Not found',
@@ -125,6 +158,7 @@ const styles = `
 	h1 { margin: 0; font-size: 30px; line-height: 1.15; }
 	.subheading { margin: 0; font-size: 18px; color: rgba(255, 255, 255, 0.8); }
 	.overview { margin: 4px 0 0; font-size: 15px; line-height: 1.55; color: rgba(255, 255, 255, 0.75); }
+	.room-code { margin: 8px 0 0; font-size: 34px; font-weight: 700; letter-spacing: 0.12em; font-variant-numeric: tabular-nums; }
 	.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 	.button { padding: 12px 22px; border-radius: 999px; font-size: 15px; font-weight: 600; text-decoration: none;
 		color: #fff; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.18); }
