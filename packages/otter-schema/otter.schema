@@ -1,0 +1,124 @@
+// otter.schema — the @letsmoe/otter collection: what Otter keeps in sync between a
+// household's devices. One Neoworks account is one household; its Otter profiles are
+// rows, and each profile's history, list and ratings belong to it, so deleting a
+// profile deletes them everywhere.
+//
+// Titles are named by their TMDB id, the same on every install. Rows can't be unique
+// by field, so two devices may each create a row for the same profile and title before
+// they sync; Otter merges such rows when it reads them (the newest `updatedAt` wins)
+// and deletes the others.
+//
+// Not synced: downloads, cached streams and links, TV and cast state, plugin account
+// logins and per-device privacy choices.
+
+namespace letsmoe.otter
+
+@neoworks.table
+model Profile {
+  @neoworks.title @minLength(1) @maxLength(40)
+  1 name: string
+  /// One of Otter's avatar images, or an image URL.
+  2 avatar: string?
+  /// Hash of the profile's PIN; absent when the profile has none.
+  3 pinHash: string?
+  /// Child profiles only see titles rated for children.
+  4 isChild: bool
+  /// Audio languages, ISO 639-1, most preferred first.
+  @minItems(1)
+  5 languages: [string]
+  6 captions: Captions
+  /// Lifts dialogue over music and effects on the phone (not while casting).
+  7 voiceBoost: bool
+  8 createdAt: timestamp
+  9 updatedAt: timestamp
+}
+
+/// How a profile wants captions shown.
+model Captions {
+  /// Captions are on when playback starts.
+  1 enabled: bool
+  /// ISO 639-1; absent means the profile's first audio language.
+  2 language: string?
+  3 size: CaptionSize
+}
+
+enum CaptionSize {
+  1 small
+  2 medium
+  3 large
+}
+
+/// What a TMDB id names. Watch progress is kept for movies and episodes; lists and
+/// ratings hold movies and series.
+enum MediaType {
+  1 movie
+  2 series
+  3 episode
+}
+
+/// How far a profile got in a movie or an episode. Continue Watching is the newest
+/// unfinished ones.
+@neoworks.table
+@neoworks.index(fields: ["profile", "updatedAt"])
+@neoworks.index(fields: ["profile", "tmdbId"])
+model WatchProgress {
+  @belongsTo
+  1 profile: ref<Profile>
+  2 mediaType: MediaType
+  3 tmdbId: i64
+  4 position: duration
+  5 runtime: duration
+  /// Watched to the end. A later, shorter position from another device doesn't undo it.
+  6 completed: bool
+  7 startedAt: timestamp
+  8 updatedAt: timestamp
+}
+
+/// A title on a profile's My List. Taking it off the list deletes the row.
+@neoworks.table
+@neoworks.index(fields: ["profile", "tmdbId"])
+model WatchlistEntry {
+  @belongsTo
+  1 profile: ref<Profile>
+  2 mediaType: MediaType
+  3 tmdbId: i64
+  4 addedAt: timestamp
+}
+
+/// A profile's rating of a title, on Otter's 1–10 scale: 2 is "Not for me", 7.5 "I
+/// like this" and 10 "Love this!", the profile's favourites. Clearing it deletes the row.
+@neoworks.table
+@neoworks.index(fields: ["profile", "tmdbId"])
+model Rating {
+  @belongsTo
+  1 profile: ref<Profile>
+  2 mediaType: MediaType
+  3 tmdbId: i64
+  @minValue(1) @maxValue(10)
+  4 value: f64
+  5 ratedAt: timestamp
+}
+
+/// The household's settings: one row, the newest `updatedAt` wins.
+@neoworks.table
+model Settings {
+  /// TMDB's language for titles and descriptions, e.g. "de-DE".
+  1 tmdbLanguage: string
+  /// No stream lookups or playback without a VPN.
+  2 requireVpn: bool
+  /// Plugins switched off, by plugin name.
+  3 disabledPlugins: [string]
+  /// Settings of the plugins that have any, e.g. a changed domain.
+  4 pluginSettings: [PluginSettings]
+  /// The household's own TMDB key; absent uses the built-in one. A facet of its own,
+  /// so the settings can be shared without it.
+  @neoworks.facet("Credentials")
+  5 tmdbApiKey: string?
+  6 updatedAt: timestamp
+}
+
+/// One plugin's settings: values by setting key, e.g. "OTTER_BASE_URL".
+model PluginSettings {
+  1 plugin: string
+  2 values: {string: string}
+}
