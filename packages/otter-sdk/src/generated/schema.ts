@@ -564,6 +564,8 @@ export interface Mutation {
     signOutOfNeoworks: NeoworksAccount
     /** Syncs with Neoworks now; returns when done, with the result in lastSync. */
     syncNeoworks: NeoworksAccount
+    /** Starts a sync in the background and returns at once; the apps call it when they open. */
+    syncNeoworksSoon: Scalars['Boolean']
     __typename: 'Mutation'
 }
 
@@ -1167,6 +1169,8 @@ export interface MutationGenqlSelection{
     signOutOfNeoworks?: NeoworksAccountGenqlSelection
     /** Syncs with Neoworks now; returns when done, with the result in lastSync. */
     syncNeoworks?: NeoworksAccountGenqlSelection
+    /** Starts a sync in the background and returns at once; the apps call it when they open. */
+    syncNeoworksSoon?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }

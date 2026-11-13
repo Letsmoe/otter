@@ -139,6 +139,7 @@ type ComplexityRoot struct {
 		StartDownload          func(childComplexity int, profileID string, mediaID string, streamID *string) int
 		StartNeoworksSignIn    func(childComplexity int, returnTo *string) int
 		SyncNeoworks           func(childComplexity int) int
+		SyncNeoworksSoon       func(childComplexity int) int
 		UpdatePlugins          func(childComplexity int) int
 		UpdateProfile          func(childComplexity int, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, voiceBoost *bool) int
 		UpdateSettings         func(childComplexity int, input model.SettingsInput) int
@@ -480,6 +481,7 @@ type MutationResolver interface {
 	CompleteNeoworksSignIn(ctx context.Context, code string, state string) (*model.NeoworksAccount, error)
 	SignOutOfNeoworks(ctx context.Context) (*model.NeoworksAccount, error)
 	SyncNeoworks(ctx context.Context) (*model.NeoworksAccount, error)
+	SyncNeoworksSoon(ctx context.Context) (bool, error)
 }
 type PersonResolver interface {
 	Filmography(ctx context.Context, obj *model.Person, job *string) ([]*model.Title, error)
@@ -1123,6 +1125,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.SyncNeoworks(childComplexity), true
+	case "Mutation.syncNeoworksSoon":
+		if e.ComplexityRoot.Mutation.SyncNeoworksSoon == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Mutation.SyncNeoworksSoon(childComplexity), true
 	case "Mutation.updatePlugins":
 		if e.ComplexityRoot.Mutation.UpdatePlugins == nil {
 			break
@@ -3273,6 +3281,8 @@ type Mutation {
   signOutOfNeoworks: NeoworksAccount!
   "Syncs with Neoworks now; returns when done, with the result in lastSync."
   syncNeoworks: NeoworksAccount!
+  "Starts a sync in the background and returns at once; the apps call it when they open."
+  syncNeoworksSoon: Boolean!
 }
 
 type PluginUpdate {
@@ -8002,6 +8012,29 @@ func (ec *executionContext) fieldContext_Mutation_syncNeoworks(_ context.Context
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_syncNeoworksSoon(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_syncNeoworksSoon(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Mutation().SyncNeoworksSoon(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_syncNeoworksSoon(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Mutation", field, true, true, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _NeoworksAccount_signedIn(ctx context.Context, field graphql.CollectedField, obj *model.NeoworksAccount) (ret graphql.Marshaler) {
@@ -15766,6 +15799,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "syncNeoworks":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_syncNeoworks(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "syncNeoworksSoon":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_syncNeoworksSoon(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

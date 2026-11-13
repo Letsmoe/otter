@@ -1633,6 +1633,9 @@ export default {
             "syncNeoworks": [
                 48
             ],
+            "syncNeoworksSoon": [
+                6
+            ],
             "__typename": [
                 4
             ]
