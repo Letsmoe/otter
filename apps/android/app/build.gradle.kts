@@ -19,6 +19,8 @@ android {
         versionName = providers.environmentVariable("OTTER_VERSION_NAME").orElse("0.0.0").get()
         // The CI run that built this APK; the updater compares it with the build number in APK names.
         buildConfigField("int", "BUILD_NUMBER", providers.environmentVariable("OTTER_BUILD_NUMBER").orElse("0").get())
+        // "release" or "nightly": the update channel this APK was published on (CI sets it).
+        buildConfigField("String", "UPDATE_CHANNEL", "\"${providers.environmentVariable("OTTER_UPDATE_CHANNEL").orElse("release").get()}\"")
         // Not 47832 (Capacitor app): both may run at once.
         buildConfigField("int", "BACKEND_PORT", "47833")
         // Stream-only port on the Wi-Fi interface, read by Chromecasts.

@@ -12,6 +12,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.letsmoe.otter.vpn.VpnStatusStore
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,14 +52,15 @@ fun SeriesPage(
 ) {
     var tab by rememberSaveable { mutableStateOf(SeriesTab.EPISODES) }
     val upNext = episodes.upNext
+    val vpn by VpnStatusStore.status.collectAsStateWithLifecycle()
     TitlePage(
         detail = detail,
         facts = seriesFacts(detail),
         playButton = PlayButtonState(
-            label = seriesPlayLabel(upNext),
+            label = seriesPlayLabel(upNext, vpn.blocksStreaming),
             busy = !episodes.loaded,
-            ready = episodes.loaded && upNext != null,
-            disabled = episodes.loaded && upNext == null,
+            ready = episodes.loaded && upNext != null && !vpn.blocksStreaming,
+            disabled = (episodes.loaded && upNext == null) || vpn.blocksStreaming,
             onClick = { upNext?.let { next -> onPlay(PlayRequest(next.episode.id)) } },
         ),
         creditLines = seriesCreditLines(detail),
@@ -141,7 +144,10 @@ private fun upNextDownload(detail: TitleDetail, upNext: UpNext?): DownloadTarget
     return DownloadTarget(upNext.episode.id, "${detail.title} ${upNext.episode.code} ${upNext.episode.displayName}")
 }
 
-private fun seriesPlayLabel(upNext: UpNext?): String {
+private fun seriesPlayLabel(upNext: UpNext?, vpnBlocked: Boolean): String {
+    if (vpnBlocked) {
+        return "Connect to a VPN to watch"
+    }
     if (upNext == null) {
         return "Play"
     }

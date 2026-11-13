@@ -7,7 +7,7 @@ import com.letsmoe.otter.BuildConfig
 
 /**
  * Where updates come from. Release: the latest GitHub release. Nightly: the rolling "nightly"
- * pre-release, a debug build CI makes on every push to main.
+ * pre-release CI builds on every push to main.
  */
 enum class UpdateChannel(val label: String, val releasePath: String) {
     RELEASE("Release", "releases/latest"),
@@ -37,7 +37,7 @@ object UpdateSettings {
         }
 
     fun installedChannel(): UpdateChannel {
-        if (BuildConfig.DEBUG) {
+        if (BuildConfig.UPDATE_CHANNEL == "nightly") {
             return UpdateChannel.NIGHTLY
         }
         return UpdateChannel.RELEASE
