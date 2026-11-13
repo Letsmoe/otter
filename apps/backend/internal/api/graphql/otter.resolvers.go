@@ -370,6 +370,7 @@ func (r *mutationResolver) UpdateSettings(ctx context.Context, input model.Setti
 	updated, err := r.applySettings(ctx, settings.Update{
 		TMDBApiKey: input.TmdbAPIKey, TMDBLanguage: input.TmdbLanguage, RequireVpn: input.RequireVpn,
 		TMDBKeyPromptSeen: input.TmdbKeyPromptSeen, ErrorReporting: input.ErrorReporting,
+		CastLogs: input.CastLogs,
 	})
 	if err != nil {
 		return nil, err

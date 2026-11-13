@@ -11,8 +11,8 @@ import (
 )
 
 // Middleware starts a span per request. server names the listener ("api",
-// "lan"); keepAll sends every trace of it, failed or not (TV requests).
-func Middleware(server string, keepAll bool, next http.Handler) http.Handler {
+// "lan"); while keepAll returns true every trace of it is sent, failed or not (TV requests).
+func Middleware(server string, keepAll func() bool, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		// A websocket lives as long as the app: its operations become their own traces.
 		if request.Header.Get("Upgrade") != "" {
@@ -21,7 +21,7 @@ func Middleware(server string, keepAll bool, next http.Handler) http.Handler {
 		}
 		ctx, span := tracer.Start(request.Context(), request.Method+" "+request.URL.Path,
 			trace.WithSpanKind(trace.SpanKindServer),
-			trace.WithAttributes(requestAttributes(server, keepAll, request)...),
+			trace.WithAttributes(requestAttributes(server, keepAll(), request)...),
 		)
 		recorder := &responseRecorder{ResponseWriter: writer, status: http.StatusOK}
 		defer func() {

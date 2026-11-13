@@ -332,6 +332,11 @@ type Settings {
 
   """Whether errors are sent to the developers (PostHog error tracking)."""
   errorReporting: Boolean!
+
+  """
+  Whether every TV cast is logged in detail, not only failed ones (opt-in).
+  """
+  castLogs: Boolean!
   disabledPlugins: [String!]!
 }
 
@@ -341,6 +346,7 @@ input SettingsInput {
   tmdbKeyPromptSeen: Boolean
   requireVpn: Boolean
   errorReporting: Boolean
+  castLogs: Boolean
 }
 
 type PluginSettingField {

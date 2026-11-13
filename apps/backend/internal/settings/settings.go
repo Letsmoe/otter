@@ -31,7 +31,9 @@ type Settings struct {
 	// RequireVpn blocks stream lookups and playback while no VPN interface is up.
 	RequireVpn bool `json:"requireVpn"`
 	// ErrorReporting sends errors to the developers (PostHog); on by default.
-	ErrorReporting  bool                         `json:"errorReporting"`
+	ErrorReporting bool `json:"errorReporting"`
+	// CastLogs also sends every TV cast's full trace, failed or not; off by default.
+	CastLogs        bool                         `json:"castLogs"`
 	DisabledPlugins []string                     `json:"disabledPlugins"`
 	PluginSettings  map[string]map[string]string `json:"pluginSettings"`
 }
@@ -43,6 +45,7 @@ type Update struct {
 	TMDBKeyPromptSeen *bool
 	RequireVpn        *bool
 	ErrorReporting    *bool
+	CastLogs          *bool
 	DisabledPlugins   []string
 	// PluginSettings replaces the settings of the plugins it names.
 	PluginSettings map[string]map[string]string
@@ -139,6 +142,9 @@ func applyUpdate(settings *Settings, update Update) {
 	}
 	if update.ErrorReporting != nil {
 		settings.ErrorReporting = *update.ErrorReporting
+	}
+	if update.CastLogs != nil {
+		settings.CastLogs = *update.CastLogs
 	}
 	if update.DisabledPlugins != nil {
 		settings.DisabledPlugins = update.DisabledPlugins

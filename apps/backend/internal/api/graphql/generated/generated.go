@@ -291,6 +291,7 @@ type ComplexityRoot struct {
 	}
 
 	Settings struct {
+		CastLogs           func(childComplexity int) int
 		DisabledPlugins    func(childComplexity int) int
 		ErrorReporting     func(childComplexity int) int
 		HasDefaultTmdbKey  func(childComplexity int) int
@@ -1890,6 +1891,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Season.SeasonNumber(childComplexity), true
 
+	case "Settings.castLogs":
+		if e.ComplexityRoot.Settings.CastLogs == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Settings.CastLogs(childComplexity), true
 	case "Settings.disabledPlugins":
 		if e.ComplexityRoot.Settings.DisabledPlugins == nil {
 			break
@@ -2835,6 +2842,8 @@ type Settings {
   requireVpn: Boolean!
   "Whether errors are sent to the developers (PostHog error tracking)."
   errorReporting: Boolean!
+  "Whether every TV cast is logged in detail, not only failed ones (opt-in)."
+  castLogs: Boolean!
   disabledPlugins: [String!]!
 }
 
@@ -2844,6 +2853,7 @@ input SettingsInput {
   tmdbKeyPromptSeen: Boolean
   requireVpn: Boolean
   errorReporting: Boolean
+  castLogs: Boolean
 }
 
 type PluginSettingField {
@@ -3522,6 +3532,8 @@ func (ec *executionContext) childFields_Settings(ctx context.Context, field grap
 		return ec.fieldContext_Settings_requireVpn(ctx, field)
 	case "errorReporting":
 		return ec.fieldContext_Settings_errorReporting(ctx, field)
+	case "castLogs":
+		return ec.fieldContext_Settings_castLogs(ctx, field)
 	case "disabledPlugins":
 		return ec.fieldContext_Settings_disabledPlugins(ctx, field)
 	}
@@ -11004,6 +11016,29 @@ func (ec *executionContext) fieldContext_Settings_errorReporting(_ context.Conte
 	return graphql.NewScalarFieldContext("Settings", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
+func (ec *executionContext) _Settings_castLogs(ctx context.Context, field graphql.CollectedField, obj *model.Settings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Settings_castLogs(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CastLogs, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Settings_castLogs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Settings", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
 func (ec *executionContext) _Settings_disabledPlugins(ctx context.Context, field graphql.CollectedField, obj *model.Settings) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -14144,7 +14179,7 @@ func (ec *executionContext) unmarshalInputSettingsInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"tmdbApiKey", "tmdbLanguage", "tmdbKeyPromptSeen", "requireVpn", "errorReporting"}
+	fieldsInOrder := [...]string{"tmdbApiKey", "tmdbLanguage", "tmdbKeyPromptSeen", "requireVpn", "errorReporting", "castLogs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -14186,6 +14221,13 @@ func (ec *executionContext) unmarshalInputSettingsInput(ctx context.Context, obj
 				return it, err
 			}
 			it.ErrorReporting = data
+		case "castLogs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("castLogs"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CastLogs = data
 		}
 	}
 	return it, nil
@@ -16716,6 +16758,11 @@ func (ec *executionContext) _Settings(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "errorReporting":
 			out.Values[i] = ec._Settings_errorReporting(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "castLogs":
+			out.Values[i] = ec._Settings_castLogs(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

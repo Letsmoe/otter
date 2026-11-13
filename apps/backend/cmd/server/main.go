@@ -143,6 +143,8 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	reportingEnabled := func() bool { return settingsService.Cached().ErrorReporting }
 	errorreport.Start(ctx, cacheClient, reportingEnabled)
 	tracing.Start(ctx, reportingEnabled)
+	castLogsEnabled := func() bool { return settingsService.Cached().CastLogs }
+	never := func() bool { return false }
 	store, err := storage.New(filepath.Join(cfg.dataDir, "blobs"), cfg.publicURL)
 	if err != nil {
 		return serverHandlers{}, err
@@ -227,8 +229,8 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	lanMux.Handle(subtitles.RoutePrefix, subtitleService.Handler())
 	// Every request on the LAN port comes from a TV or Chromecast, so all of them are traced.
 	return serverHandlers{
-		api:        tracing.Middleware("api", false, errorreport.Recover(corsMiddleware(mux))),
-		lanStreams: tracing.Middleware("lan", true, errorreport.Recover(privateNetworkOnly(dlnaHeaders(corsMiddleware(lanMux))))),
+		api:        tracing.Middleware("api", never, errorreport.Recover(corsMiddleware(mux))),
+		lanStreams: tracing.Middleware("lan", castLogsEnabled, errorreport.Recover(privateNetworkOnly(dlnaHeaders(corsMiddleware(lanMux))))),
 	}, nil
 }
 
