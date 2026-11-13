@@ -27,8 +27,7 @@ import (
 	"github.com/Letsmoe/otter/internal/errorreport"
 	"github.com/Letsmoe/otter/internal/hooks"
 	"github.com/Letsmoe/otter/internal/library"
-	// Links libneoworks (cgo) into every build already; Neoworks sign-in wires it up next.
-	_ "github.com/Letsmoe/otter/internal/neoworks"
+	"github.com/Letsmoe/otter/internal/neoworks"
 	"github.com/Letsmoe/otter/internal/netdns"
 	"github.com/Letsmoe/otter/internal/notify"
 	"github.com/Letsmoe/otter/internal/plugins"
@@ -155,10 +154,15 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	if err != nil {
 		return serverHandlers{}, err
 	}
-	accountService, err := pluginAccounts(ctx, cfg, database, runner)
+	box, err := secrets.Load(cfg.dataDir)
 	if err != nil {
 		return serverHandlers{}, err
 	}
+	accountService, err := pluginAccounts(ctx, database, box, runner)
+	if err != nil {
+		return serverHandlers{}, err
+	}
+	neoworksService := neoworks.NewService(database, box, cfg.dataDir, neoworksInstallName(), neoworks.Production)
 	hookRunner := hooks.New(cfg.hooksDir, []string{"OTTER_URL=" + cfg.publicURL})
 	tmdbClient := tmdb.NewClient(settingsService.TMDB)
 	// Find out early whether the key works, so the apps can ask for a new one.
@@ -208,6 +212,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 		Skips:               skips.New(cacheClient),
 		Together:            togetherService(),
 		VpnStatus:           vpn.Check,
+		Neoworks:            neoworksService,
 	})
 	graphqlHandler, err := gqlapi.NewHandler(resolver)
 	if err != nil {
@@ -250,12 +255,21 @@ func loadPlugins(ctx context.Context, cfg config, settingsService *settings.Serv
 	return registry, runner, nil
 }
 
-// pluginAccounts loads the saved site logins and hands them to plugin calls.
-func pluginAccounts(ctx context.Context, cfg config, database *db.DB, runner *plugins.Runner) (*accounts.Service, error) {
-	box, err := secrets.Load(cfg.dataDir)
-	if err != nil {
-		return nil, err
+// neoworksInstallName is how the Neoworks account lists this backend: the
+// phone's model from the Android app (OTTER_DEVICE_NAME), else the host name.
+func neoworksInstallName() string {
+	device := os.Getenv("OTTER_DEVICE_NAME")
+	if device == "" {
+		device, _ = os.Hostname()
 	}
+	if device == "" {
+		return "Otter"
+	}
+	return "Otter on " + device
+}
+
+// pluginAccounts loads the saved site logins and hands them to plugin calls.
+func pluginAccounts(ctx context.Context, database *db.DB, box *secrets.Box, runner *plugins.Runner) (*accounts.Service, error) {
 	service, err := accounts.NewService(ctx, database, box, runner)
 	if err != nil {
 		return nil, err

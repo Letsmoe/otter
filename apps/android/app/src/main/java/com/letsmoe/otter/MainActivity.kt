@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import com.letsmoe.otter.links.IncomingLinks
+import com.letsmoe.otter.neoworks.NeoworksAccountStore
 import com.letsmoe.otter.together.TogetherSession
 import com.letsmoe.otter.together.roomCodeFromInviteLink
 import com.letsmoe.otter.ui.OtterApp
@@ -39,6 +40,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun openLink(intent: Intent?) {
+        if (NeoworksAccountStore.handleCallback(intent)) {
+            return
+        }
         if (IncomingLinks.handle(intent)) {
             return
         }

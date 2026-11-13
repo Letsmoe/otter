@@ -90,6 +90,13 @@ type MoreWithRow struct {
 type Mutation struct {
 }
 
+type NeoworksAccount struct {
+	SignedIn bool `json:"signedIn"`
+	// Null while signed out, and when Neoworks didn't share it.
+	Email *string `json:"email,omitempty"`
+	Name  *string `json:"name,omitempty"`
+}
+
 type Notification struct {
 	ID   string           `json:"id"`
 	Kind NotificationKind `json:"kind"`

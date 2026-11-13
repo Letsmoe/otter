@@ -4,6 +4,7 @@ import (
 	"github.com/Letsmoe/otter/internal/accounts"
 	"github.com/Letsmoe/otter/internal/downloads"
 	"github.com/Letsmoe/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/neoworks"
 	"github.com/Letsmoe/otter/internal/notify"
 	"github.com/Letsmoe/otter/internal/plugins"
 	"github.com/Letsmoe/otter/internal/pluginstore"
@@ -41,6 +42,8 @@ type Services struct {
 	Together       *together.Service
 	// VpnStatus reports whether the backend's traffic goes through a VPN.
 	VpnStatus func() vpn.Status
+	// Neoworks is the household's Neoworks sign-in for sync.
+	Neoworks *neoworks.Service
 }
 
 // Resolver is the root gqlgen resolver.

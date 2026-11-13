@@ -1201,6 +1201,23 @@ export default {
             "status": [
                 34
             ],
+            "neoworksAccount": [
+                48
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "NeoworksAccount": {
+            "signedIn": [
+                6
+            ],
+            "email": [
+                4
+            ],
+            "name": [
+                4
+            ],
             "__typename": [
                 4
             ]
@@ -1567,7 +1584,31 @@ export default {
                 }
             ],
             "updatePlugins": [
-                50
+                51
+            ],
+            "startNeoworksSignIn": [
+                4,
+                {
+                    "returnTo": [
+                        4
+                    ]
+                }
+            ],
+            "completeNeoworksSignIn": [
+                48,
+                {
+                    "code": [
+                        4,
+                        "String!"
+                    ],
+                    "state": [
+                        4,
+                        "String!"
+                    ]
+                }
+            ],
+            "signOutOfNeoworks": [
+                48
             ],
             "__typename": [
                 4
@@ -1589,7 +1630,7 @@ export default {
         },
         "PluginUpdateReport": {
             "updated": [
-                49
+                50
             ],
             "failed": [
                 4

@@ -1,0 +1,27 @@
+fragment NeoworksAccountFields on NeoworksAccount {
+  signedIn
+  email
+  name
+}
+
+query NeoworksAccount {
+  neoworksAccount {
+    ...NeoworksAccountFields
+  }
+}
+
+mutation StartNeoworksSignIn {
+  startNeoworksSignIn
+}
+
+mutation CompleteNeoworksSignIn($code: String!, $state: String!) {
+  completeNeoworksSignIn(code: $code, state: $state) {
+    ...NeoworksAccountFields
+  }
+}
+
+mutation SignOutOfNeoworks {
+  signOutOfNeoworks {
+    ...NeoworksAccountFields
+  }
+}

@@ -72,6 +72,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenPlugins: () -> Unit, viewModel: Set
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             ServerGroup()
+            SyncGroup()
             MetadataGroup(viewModel)
             StreamingGroup(viewModel)
             PlaybackGroup()
