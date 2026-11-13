@@ -27,7 +27,7 @@ import com.letsmoe.otter.updates.AppUpdater
 import com.letsmoe.otter.updates.UpdateChannel
 import com.letsmoe.otter.updates.UpdateSettings
 import com.letsmoe.otter.updates.UpdateState
-import com.letsmoe.otter.updates.isDowngrade
+import com.letsmoe.otter.updates.isInstalled
 
 /** Release or debug builds, and a button to install the newest build of the chosen one. */
 @Composable
@@ -41,8 +41,8 @@ fun UpdatesGroup() {
         checking = false
     }
     val options = UpdateChannel.entries.map { option -> option to option.label }
-    val footer = "Debug builds are made from every change and can break. Android can't install an " +
-        "older build over a newer one, so switching back waits for the next release."
+    val footer = "Debug builds are made from every change and can break. You can switch back and forth; " +
+        "your data stays."
     SettingsGroup("Updates", footer = footer) {
         Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -72,7 +72,8 @@ private fun InstallRow(newest: AppRelease?, checking: Boolean) {
             return@Row
         }
         val downloading = updateState is UpdateState.Downloading
-        PillButton(installLabel(updateState), Modifier, enabled = canInstall(newest) && !downloading, filled = true) {
+        val installable = !isInstalled(newest, BuildConfig.BUILD_NUMBER)
+        PillButton(installLabel(updateState), Modifier, enabled = installable && !downloading, filled = true) {
             AppUpdater.downloadAndInstall(context, newest)
         }
     }
@@ -80,7 +81,7 @@ private fun InstallRow(newest: AppRelease?, checking: Boolean) {
 
 private fun installedLine(): String {
     val buildType = UpdateSettings.installedChannel().label.lowercase()
-    return "Installed: ${BuildConfig.VERSION_NAME} ($buildType, build ${BuildConfig.VERSION_CODE})"
+    return "Installed: ${BuildConfig.VERSION_NAME} ($buildType, build ${BuildConfig.BUILD_NUMBER})"
 }
 
 private fun newestLine(newest: AppRelease?, checking: Boolean): String {
@@ -97,20 +98,10 @@ private fun installHint(newest: AppRelease?): String {
     if (newest == null) {
         return "Try again when online"
     }
-    if (newest.build == BuildConfig.VERSION_CODE) {
+    if (isInstalled(newest, BuildConfig.BUILD_NUMBER)) {
         return "This build is installed"
     }
-    if (isDowngrade(newest, BuildConfig.VERSION_CODE)) {
-        return "Older than the installed build"
-    }
     return "Installs over this app, keeping your data"
-}
-
-private fun canInstall(newest: AppRelease): Boolean {
-    if (newest.build == BuildConfig.VERSION_CODE) {
-        return false
-    }
-    return !isDowngrade(newest, BuildConfig.VERSION_CODE)
 }
 
 private fun installLabel(state: UpdateState): String {

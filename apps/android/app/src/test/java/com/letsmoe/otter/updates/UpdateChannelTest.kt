@@ -32,10 +32,16 @@ class UpdateChannelTest {
     }
 
     @Test
-    fun aLowerBuildIsADowngrade() {
-        assertTrue(isDowngrade(release("v0.0.4", 50), 57))
-        assertFalse(isDowngrade(release("v0.0.4", 60), 57))
-        assertFalse(isDowngrade(release("v0.0.3", null), 57))
+    fun localBuildsCompareByVersion() {
+        assertTrue(isNewerThanInstalled(release("v0.0.4", 57), 0, "0.0.3"))
+        assertFalse(isNewerThanInstalled(release("v0.0.3", 57), 0, "0.0.3"))
+    }
+
+    @Test
+    fun onlyTheSameBuildCountsAsInstalled() {
+        assertTrue(isInstalled(release("v0.0.4", 57), 57))
+        assertFalse(isInstalled(release("v0.0.4", 50), 57))
+        assertFalse(isInstalled(release("v0.0.3", null), 57))
     }
 
     @Test

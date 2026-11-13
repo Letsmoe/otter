@@ -63,22 +63,30 @@ jobs:
           echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/otter-release.jks"
           echo "OTTER_KEYSTORE_FILE=$RUNNER_TEMP/otter-release.jks" >> "$GITHUB_ENV"
 
-      # The run number is the versionCode of both build types, so every build installs over
-      # any earlier one. Releases are named by their tag (v1.2.0 → 1.2.0), debug builds by
-      # the latest release (1.2.0-debug.61).
+      # The versionCode comes from the release a build is based on (v1.2.3 → 10010203), so a
+      # release and the debug builds after it share it and install over each other both ways;
+      # Android only refuses a lower code. The 10000000 base stays above the run numbers that
+      # were versionCodes up to v0.0.3. The run number goes in as the build number.
+      # Releases are named by their tag (1.2.3), debug builds by the latest release (1.2.3-debug.61).
       - name: Set the version and build type
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.release.tag_name }}
           RUN: ${{ github.run_number }}
         run: |
-          echo "OTTER_VERSION_CODE=$RUN" >> "$GITHUB_ENV"
+          version_code() {
+            IFS=. read -r major minor patch <<< "${1%%-*}"
+            echo $((10000000 + 10#${major:-0} * 10000 + 10#${minor:-0} * 100 + 10#${patch:-0}))
+          }
+          echo "OTTER_BUILD_NUMBER=$RUN" >> "$GITHUB_ENV"
           if [ -n "$TAG" ]; then
+            echo "OTTER_VERSION_CODE=$(version_code "${TAG#v}")" >> "$GITHUB_ENV"
             echo "OTTER_VERSION_NAME=${TAG#v}" >> "$GITHUB_ENV"
             echo "BUILD_TYPE=release" >> "$GITHUB_ENV"
             exit 0
           fi
           latest=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName 2>/dev/null || echo v0.0.0)
+          echo "OTTER_VERSION_CODE=$(version_code "${latest#v}")" >> "$GITHUB_ENV"
           echo "OTTER_VERSION_NAME=${latest#v}-debug.$RUN" >> "$GITHUB_ENV"
           echo "BUILD_TYPE=debug" >> "$GITHUB_ENV"
 
