@@ -501,6 +501,15 @@ type Query {
   checkTmdbKey(key: String!): Boolean!
   plugins: [Plugin!]!
   status: Status!
+  "The household's Neoworks account, which syncs profiles, history, lists, ratings and settings between devices."
+  neoworksAccount: NeoworksAccount!
+}
+
+type NeoworksAccount {
+  signedIn: Boolean!
+  "Null while signed out, and when Neoworks didn't share it."
+  email: String
+  name: String
 }
 
 type Mutation {
@@ -555,6 +564,13 @@ type Mutation {
   logoutPlugin(name: String!): Plugin!
   "Check npm for newer plugin releases now and install them (local builds stay). Fails when PLUGIN_AUTO_UPDATE=false."
   updatePlugins: PluginUpdateReport!
+
+  "Starts signing in to Neoworks and returns the page to open in a browser. returnTo is the web app's origin (e.g. http://nas.local:3000); the Android app leaves it out."
+  startNeoworksSignIn(returnTo: String): String!
+  "Finishes the sign-in with the code and state otter.letsmoe.com/auth/callback received."
+  completeNeoworksSignIn(code: String!, state: String!): NeoworksAccount!
+  "Signs this device out; the household's data stays in Neoworks for its other devices."
+  signOutOfNeoworks: NeoworksAccount!
 }
 
 type PluginUpdate {

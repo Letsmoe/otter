@@ -84,6 +84,8 @@ class EmbeddedBackend(context: Context) {
         // Without cgo the backend can't detect the Android version, which it
         // needs to list network interfaces (WebRTC, VPN check) on Android 11+.
         "ANDROID_SDK_INT" to Build.VERSION.SDK_INT.toString(),
+        // How the household's Neoworks account lists this phone: "Otter on <model>".
+        "OTTER_DEVICE_NAME" to Build.MODEL,
         // Go's os.TempDir defaults to /data/local/tmp, which apps can't write.
         "TMPDIR" to context.cacheDir.absolutePath,
     )

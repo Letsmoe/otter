@@ -109,36 +109,45 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddToWatchlist        func(childComplexity int, profileID string, mediaID string) int
-		AdoptStream           func(childComplexity int, mediaID string, url string, plugin string, label *string) int
-		CheckNotifications    func(childComplexity int) int
-		CheckTmdbConnection   func(childComplexity int) int
-		ClearRating           func(childComplexity int, profileID string, mediaID string) int
-		CreateProfile         func(childComplexity int, name string, avatarURL *string, pin *string, isChild *bool, languages []string) int
-		DeleteDownload        func(childComplexity int, id string) int
-		DeleteProfile         func(childComplexity int, id string) int
-		FindStreams           func(childComplexity int, id string) int
-		HostTogether          func(childComplexity int, profileID string) int
-		JoinTogether          func(childComplexity int, profileID string, code string) int
-		LeaveTogether         func(childComplexity int) int
-		LoginPlugin           func(childComplexity int, name string, username string, password string) int
-		LogoutPlugin          func(childComplexity int, name string) int
-		MarkNotificationsRead func(childComplexity int, profileID string) int
-		OpenDownloadsFolder   func(childComplexity int) int
-		RecordProgress        func(childComplexity int, profileID string, mediaID string, progressSeconds float64, durationSeconds float64) int
-		RemoveFromWatchlist   func(childComplexity int, profileID string, mediaID string) int
-		ResolveBestStream     func(childComplexity int, streamIds []string) int
-		ResolveStream         func(childComplexity int, streamID string) int
-		SendTogether          func(childComplexity int, payload string) int
-		SetNotifying          func(childComplexity int, profileID string, mediaID string, notifying bool) int
-		SetPluginEnabled      func(childComplexity int, name string, enabled bool) int
-		SetPluginSettings     func(childComplexity int, name string, values []*model.PluginSettingInput) int
-		SetRating             func(childComplexity int, profileID string, mediaID string, rating float64) int
-		StartDownload         func(childComplexity int, profileID string, mediaID string, streamID *string) int
-		UpdatePlugins         func(childComplexity int) int
-		UpdateProfile         func(childComplexity int, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, voiceBoost *bool) int
-		UpdateSettings        func(childComplexity int, input model.SettingsInput) int
-		VerifyPin             func(childComplexity int, profileID string, pin string) int
+		AddToWatchlist         func(childComplexity int, profileID string, mediaID string) int
+		AdoptStream            func(childComplexity int, mediaID string, url string, plugin string, label *string) int
+		CheckNotifications     func(childComplexity int) int
+		CheckTmdbConnection    func(childComplexity int) int
+		ClearRating            func(childComplexity int, profileID string, mediaID string) int
+		CompleteNeoworksSignIn func(childComplexity int, code string, state string) int
+		CreateProfile          func(childComplexity int, name string, avatarURL *string, pin *string, isChild *bool, languages []string) int
+		DeleteDownload         func(childComplexity int, id string) int
+		DeleteProfile          func(childComplexity int, id string) int
+		FindStreams            func(childComplexity int, id string) int
+		HostTogether           func(childComplexity int, profileID string) int
+		JoinTogether           func(childComplexity int, profileID string, code string) int
+		LeaveTogether          func(childComplexity int) int
+		LoginPlugin            func(childComplexity int, name string, username string, password string) int
+		LogoutPlugin           func(childComplexity int, name string) int
+		MarkNotificationsRead  func(childComplexity int, profileID string) int
+		OpenDownloadsFolder    func(childComplexity int) int
+		RecordProgress         func(childComplexity int, profileID string, mediaID string, progressSeconds float64, durationSeconds float64) int
+		RemoveFromWatchlist    func(childComplexity int, profileID string, mediaID string) int
+		ResolveBestStream      func(childComplexity int, streamIds []string) int
+		ResolveStream          func(childComplexity int, streamID string) int
+		SendTogether           func(childComplexity int, payload string) int
+		SetNotifying           func(childComplexity int, profileID string, mediaID string, notifying bool) int
+		SetPluginEnabled       func(childComplexity int, name string, enabled bool) int
+		SetPluginSettings      func(childComplexity int, name string, values []*model.PluginSettingInput) int
+		SetRating              func(childComplexity int, profileID string, mediaID string, rating float64) int
+		SignOutOfNeoworks      func(childComplexity int) int
+		StartDownload          func(childComplexity int, profileID string, mediaID string, streamID *string) int
+		StartNeoworksSignIn    func(childComplexity int, returnTo *string) int
+		UpdatePlugins          func(childComplexity int) int
+		UpdateProfile          func(childComplexity int, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, voiceBoost *bool) int
+		UpdateSettings         func(childComplexity int, input model.SettingsInput) int
+		VerifyPin              func(childComplexity int, profileID string, pin string) int
+	}
+
+	NeoworksAccount struct {
+		Email    func(childComplexity int) int
+		Name     func(childComplexity int) int
+		SignedIn func(childComplexity int) int
 	}
 
 	Notification struct {
@@ -240,6 +249,7 @@ type ComplexityRoot struct {
 		History                 func(childComplexity int, profileID string, limit *int) int
 		LikedTitles             func(childComplexity int, profileID string, limit *int) int
 		MoreWith                func(childComplexity int, profileID string, mediaType model.MediaType) int
+		NeoworksAccount         func(childComplexity int) int
 		NewAndComingSoon        func(childComplexity int, mediaType model.MediaType) int
 		Notifications           func(childComplexity int, profileID string, limit *int) int
 		Person                  func(childComplexity int, id string) int
@@ -457,6 +467,9 @@ type MutationResolver interface {
 	LoginPlugin(ctx context.Context, name string, username string, password string) (*model.Plugin, error)
 	LogoutPlugin(ctx context.Context, name string) (*model.Plugin, error)
 	UpdatePlugins(ctx context.Context) (*model.PluginUpdateReport, error)
+	StartNeoworksSignIn(ctx context.Context, returnTo *string) (string, error)
+	CompleteNeoworksSignIn(ctx context.Context, code string, state string) (*model.NeoworksAccount, error)
+	SignOutOfNeoworks(ctx context.Context) (*model.NeoworksAccount, error)
 }
 type PersonResolver interface {
 	Filmography(ctx context.Context, obj *model.Person, job *string) ([]*model.Title, error)
@@ -494,6 +507,7 @@ type QueryResolver interface {
 	CheckTmdbKey(ctx context.Context, key string) (bool, error)
 	Plugins(ctx context.Context) ([]*model.Plugin, error)
 	Status(ctx context.Context) (*model.Status, error)
+	NeoworksAccount(ctx context.Context) (*model.NeoworksAccount, error)
 }
 type SeasonResolver interface {
 	Episodes(ctx context.Context, obj *model.Season) ([]*model.Episode, error)
@@ -844,6 +858,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.ClearRating(childComplexity, args["profileId"].(string), args["mediaId"].(string)), true
+	case "Mutation.completeNeoworksSignIn":
+		if e.ComplexityRoot.Mutation.CompleteNeoworksSignIn == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_completeNeoworksSignIn_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CompleteNeoworksSignIn(childComplexity, args["code"].(string), args["state"].(string)), true
 	case "Mutation.createProfile":
 		if e.ComplexityRoot.Mutation.CreateProfile == nil {
 			break
@@ -1054,6 +1079,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.SetRating(childComplexity, args["profileId"].(string), args["mediaId"].(string), args["rating"].(float64)), true
+	case "Mutation.signOutOfNeoworks":
+		if e.ComplexityRoot.Mutation.SignOutOfNeoworks == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Mutation.SignOutOfNeoworks(childComplexity), true
 	case "Mutation.startDownload":
 		if e.ComplexityRoot.Mutation.StartDownload == nil {
 			break
@@ -1065,6 +1096,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.StartDownload(childComplexity, args["profileId"].(string), args["mediaId"].(string), args["streamId"].(*string)), true
+	case "Mutation.startNeoworksSignIn":
+		if e.ComplexityRoot.Mutation.StartNeoworksSignIn == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_startNeoworksSignIn_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.StartNeoworksSignIn(childComplexity, args["returnTo"].(*string)), true
 	case "Mutation.updatePlugins":
 		if e.ComplexityRoot.Mutation.UpdatePlugins == nil {
 			break
@@ -1104,6 +1146,25 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.VerifyPin(childComplexity, args["profileId"].(string), args["pin"].(string)), true
+
+	case "NeoworksAccount.email":
+		if e.ComplexityRoot.NeoworksAccount.Email == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NeoworksAccount.Email(childComplexity), true
+	case "NeoworksAccount.name":
+		if e.ComplexityRoot.NeoworksAccount.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NeoworksAccount.Name(childComplexity), true
+	case "NeoworksAccount.signedIn":
+		if e.ComplexityRoot.NeoworksAccount.SignedIn == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NeoworksAccount.SignedIn(childComplexity), true
 
 	case "Notification.body":
 		if e.ComplexityRoot.Notification.Body == nil {
@@ -1611,6 +1672,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.MoreWith(childComplexity, args["profileId"].(string), args["mediaType"].(model.MediaType)), true
+	case "Query.neoworksAccount":
+		if e.ComplexityRoot.Query.NeoworksAccount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.NeoworksAccount(childComplexity), true
 	case "Query.newAndComingSoon":
 		if e.ComplexityRoot.Query.NewAndComingSoon == nil {
 			break
@@ -3075,6 +3142,15 @@ type Query {
   checkTmdbKey(key: String!): Boolean!
   plugins: [Plugin!]!
   status: Status!
+  "The household's Neoworks account, which syncs profiles, history, lists, ratings and settings between devices."
+  neoworksAccount: NeoworksAccount!
+}
+
+type NeoworksAccount {
+  signedIn: Boolean!
+  "Null while signed out, and when Neoworks didn't share it."
+  email: String
+  name: String
 }
 
 type Mutation {
@@ -3129,6 +3205,13 @@ type Mutation {
   logoutPlugin(name: String!): Plugin!
   "Check npm for newer plugin releases now and install them (local builds stay). Fails when PLUGIN_AUTO_UPDATE=false."
   updatePlugins: PluginUpdateReport!
+
+  "Starts signing in to Neoworks and returns the page to open in a browser. returnTo is the web app's origin (e.g. http://nas.local:3000); the Android app leaves it out."
+  startNeoworksSignIn(returnTo: String): String!
+  "Finishes the sign-in with the code and state otter.letsmoe.com/auth/callback received."
+  completeNeoworksSignIn(code: String!, state: String!): NeoworksAccount!
+  "Signs this device out; the household's data stays in Neoworks for its other devices."
+  signOutOfNeoworks: NeoworksAccount!
 }
 
 type PluginUpdate {
@@ -3290,6 +3373,18 @@ func (ec *executionContext) childFields_MoreWithRow(ctx context.Context, field g
 		return ec.fieldContext_MoreWithRow_items(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type MoreWithRow", field.Name)
+}
+
+func (ec *executionContext) childFields_NeoworksAccount(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "signedIn":
+		return ec.fieldContext_NeoworksAccount_signedIn(ctx, field)
+	case "email":
+		return ec.fieldContext_NeoworksAccount_email(ctx, field)
+	case "name":
+		return ec.fieldContext_NeoworksAccount_name(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type NeoworksAccount", field.Name)
 }
 
 func (ec *executionContext) childFields_Notification(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -3982,6 +4077,28 @@ func (ec *executionContext) field_Mutation_clearRating_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_completeNeoworksSignIn_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "code",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["code"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "state",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["state"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createProfile_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4397,6 +4514,20 @@ func (ec *executionContext) field_Mutation_startDownload_args(ctx context.Contex
 		return nil, err
 	}
 	args["streamId"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_startNeoworksSignIn_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "returnTo",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["returnTo"] = arg0
 	return args, nil
 }
 
@@ -7644,6 +7775,195 @@ func (ec *executionContext) fieldContext_Mutation_updatePlugins(_ context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_startNeoworksSignIn(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_startNeoworksSignIn(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().StartNeoworksSignIn(ctx, fc.Args["returnTo"].(*string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_startNeoworksSignIn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_startNeoworksSignIn_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_completeNeoworksSignIn(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_completeNeoworksSignIn(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CompleteNeoworksSignIn(ctx, fc.Args["code"].(string), fc.Args["state"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.NeoworksAccount) graphql.Marshaler {
+			return ec.marshalNNeoworksAccount2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNeoworksAccount(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_completeNeoworksSignIn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_NeoworksAccount(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_completeNeoworksSignIn_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_signOutOfNeoworks(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_signOutOfNeoworks(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Mutation().SignOutOfNeoworks(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.NeoworksAccount) graphql.Marshaler {
+			return ec.marshalNNeoworksAccount2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNeoworksAccount(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_signOutOfNeoworks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_NeoworksAccount(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NeoworksAccount_signedIn(ctx context.Context, field graphql.CollectedField, obj *model.NeoworksAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NeoworksAccount_signedIn(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SignedIn, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_NeoworksAccount_signedIn(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("NeoworksAccount", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _NeoworksAccount_email(ctx context.Context, field graphql.CollectedField, obj *model.NeoworksAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NeoworksAccount_email(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Email, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_NeoworksAccount_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("NeoworksAccount", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _NeoworksAccount_name(ctx context.Context, field graphql.CollectedField, obj *model.NeoworksAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NeoworksAccount_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_NeoworksAccount_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("NeoworksAccount", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
 func (ec *executionContext) _Notification_id(ctx context.Context, field graphql.CollectedField, obj *model.Notification) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -10299,6 +10619,38 @@ func (ec *executionContext) fieldContext_Query_status(_ context.Context, field g
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return ec.childFields_Status(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_neoworksAccount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_neoworksAccount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().NeoworksAccount(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.NeoworksAccount) graphql.Marshaler {
+			return ec.marshalNNeoworksAccount2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNeoworksAccount(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_neoworksAccount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_NeoworksAccount(ctx, field)
 		},
 	}
 	return fc, nil
@@ -15157,6 +15509,70 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "startNeoworksSignIn":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_startNeoworksSignIn(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "completeNeoworksSignIn":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_completeNeoworksSignIn(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "signOutOfNeoworks":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_signOutOfNeoworks(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var neoworksAccountImplementors = []string{"NeoworksAccount"}
+
+func (ec *executionContext) _NeoworksAccount(ctx context.Context, sel ast.SelectionSet, obj *model.NeoworksAccount) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, neoworksAccountImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NeoworksAccount")
+		case "signedIn":
+			out.Values[i] = ec._NeoworksAccount_signedIn(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "email":
+			out.Values[i] = ec._NeoworksAccount_email(ctx, field, obj)
+		case "name":
+			out.Values[i] = ec._NeoworksAccount_name(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -16458,6 +16874,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_status(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "neoworksAccount":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_neoworksAccount(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -18454,6 +18892,20 @@ func (ec *executionContext) unmarshalNMediaType2githubᚗcomᚋLetsmoeᚋotter�
 
 func (ec *executionContext) marshalNMediaType2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx context.Context, sel ast.SelectionSet, v model.MediaType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNNeoworksAccount2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNeoworksAccount(ctx context.Context, sel ast.SelectionSet, v model.NeoworksAccount) graphql.Marshaler {
+	return ec._NeoworksAccount(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNNeoworksAccount2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNeoworksAccount(ctx context.Context, sel ast.SelectionSet, v *model.NeoworksAccount) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._NeoworksAccount(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNNotification2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNotificationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Notification) graphql.Marshaler {

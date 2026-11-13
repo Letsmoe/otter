@@ -13,6 +13,7 @@
 		type CaptionPreferenceChange
 	} from '@letsmoe/otter-app/subtitles';
 	import Toggle from '$lib/components/Toggle.svelte';
+	import NeoworksSync from '$lib/components/NeoworksSync.svelte';
 	import GearSixIcon from 'phosphor-svelte/lib/GearSixIcon';
 
 	let { data } = $props();
@@ -184,6 +185,8 @@
 			<Toggle checked={s.requireVpn} onchange={(value) => (s.requireVpn = value)} />
 		</label>
 	</section>
+
+	<NeoworksSync />
 
 	<!-- Privacy -->
 	<section class="border-base-300 bg-base-200 flex flex-col gap-4 rounded-xl border p-5">

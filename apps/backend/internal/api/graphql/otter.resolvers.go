@@ -455,6 +455,32 @@ func (r *mutationResolver) UpdatePlugins(ctx context.Context) (*model.PluginUpda
 	return result, nil
 }
 
+// StartNeoworksSignIn is the resolver for the startNeoworksSignIn field.
+func (r *mutationResolver) StartNeoworksSignIn(ctx context.Context, returnTo *string) (string, error) {
+	returnOrigin, err := signInReturnOrigin(returnTo)
+	if err != nil {
+		return "", err
+	}
+	return r.Neoworks.StartSignIn(ctx, returnOrigin)
+}
+
+// CompleteNeoworksSignIn is the resolver for the completeNeoworksSignIn field.
+func (r *mutationResolver) CompleteNeoworksSignIn(ctx context.Context, code string, state string) (*model.NeoworksAccount, error) {
+	status, err := r.Neoworks.CompleteSignIn(ctx, code, state)
+	if err != nil {
+		return nil, err
+	}
+	return neoworksAccountModel(status), nil
+}
+
+// SignOutOfNeoworks is the resolver for the signOutOfNeoworks field.
+func (r *mutationResolver) SignOutOfNeoworks(ctx context.Context) (*model.NeoworksAccount, error) {
+	if err := r.Neoworks.SignOut(ctx); err != nil {
+		return nil, err
+	}
+	return &model.NeoworksAccount{SignedIn: false}, nil
+}
+
 // Filmography is the resolver for the filmography field.
 func (r *personResolver) Filmography(ctx context.Context, obj *model.Person, job *string) ([]*model.Title, error) {
 	titles, err := r.Library.Store.Filmography(ctx, obj.TmdbID, valueOr(job, ""))
@@ -878,6 +904,15 @@ func (r *queryResolver) Status(ctx context.Context) (*model.Status, error) {
 		VpnBypassed:    vpnStatus.Bypassed,
 		RequireVpn:     r.Services.Settings.Cached().RequireVpn,
 	}, nil
+}
+
+// NeoworksAccount is the resolver for the neoworksAccount field.
+func (r *queryResolver) NeoworksAccount(ctx context.Context) (*model.NeoworksAccount, error) {
+	status, err := r.Neoworks.Status(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return neoworksAccountModel(status), nil
 }
 
 // Episodes is the resolver for the episodes field.

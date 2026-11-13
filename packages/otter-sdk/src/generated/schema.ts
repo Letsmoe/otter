@@ -481,7 +481,17 @@ export interface Query {
     checkTmdbKey: Scalars['Boolean']
     plugins: Plugin[]
     status: Status
+    /** The household's Neoworks account, which syncs profiles, history, lists, ratings and settings between devices. */
+    neoworksAccount: NeoworksAccount
     __typename: 'Query'
+}
+
+export interface NeoworksAccount {
+    signedIn: Scalars['Boolean']
+    /** Null while signed out, and when Neoworks didn't share it. */
+    email: (Scalars['String'] | null)
+    name: (Scalars['String'] | null)
+    __typename: 'NeoworksAccount'
 }
 
 export interface Mutation {
@@ -533,6 +543,12 @@ export interface Mutation {
     logoutPlugin: Plugin
     /** Check npm for newer plugin releases now and install them (local builds stay). Fails when PLUGIN_AUTO_UPDATE=false. */
     updatePlugins: PluginUpdateReport
+    /** Starts signing in to Neoworks and returns the page to open in a browser. returnTo is the web app's origin (e.g. http://nas.local:3000); the Android app leaves it out. */
+    startNeoworksSignIn: Scalars['String']
+    /** Finishes the sign-in with the code and state otter.letsmoe.com/auth/callback received. */
+    completeNeoworksSignIn: NeoworksAccount
+    /** Signs this device out; the household's data stays in Neoworks for its other devices. */
+    signOutOfNeoworks: NeoworksAccount
     __typename: 'Mutation'
 }
 
@@ -1050,6 +1066,17 @@ export interface QueryGenqlSelection{
     checkTmdbKey?: { __args: {key: Scalars['String']} }
     plugins?: PluginGenqlSelection
     status?: StatusGenqlSelection
+    /** The household's Neoworks account, which syncs profiles, history, lists, ratings and settings between devices. */
+    neoworksAccount?: NeoworksAccountGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface NeoworksAccountGenqlSelection{
+    signedIn?: boolean | number
+    /** Null while signed out, and when Neoworks didn't share it. */
+    email?: boolean | number
+    name?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1103,6 +1130,12 @@ export interface MutationGenqlSelection{
     logoutPlugin?: (PluginGenqlSelection & { __args: {name: Scalars['String']} })
     /** Check npm for newer plugin releases now and install them (local builds stay). Fails when PLUGIN_AUTO_UPDATE=false. */
     updatePlugins?: PluginUpdateReportGenqlSelection
+    /** Starts signing in to Neoworks and returns the page to open in a browser. returnTo is the web app's origin (e.g. http://nas.local:3000); the Android app leaves it out. */
+    startNeoworksSignIn?: { __args: {returnTo?: (Scalars['String'] | null)} } | boolean | number
+    /** Finishes the sign-in with the code and state otter.letsmoe.com/auth/callback received. */
+    completeNeoworksSignIn?: (NeoworksAccountGenqlSelection & { __args: {code: Scalars['String'], state: Scalars['String']} })
+    /** Signs this device out; the household's data stays in Neoworks for its other devices. */
+    signOutOfNeoworks?: NeoworksAccountGenqlSelection
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1386,6 +1419,14 @@ export interface SubscriptionGenqlSelection{
     export const isQuery = (obj?: { __typename?: any } | null): obj is Query => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isQuery"')
       return Query_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const NeoworksAccount_possibleTypes: string[] = ['NeoworksAccount']
+    export const isNeoworksAccount = (obj?: { __typename?: any } | null): obj is NeoworksAccount => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isNeoworksAccount"')
+      return NeoworksAccount_possibleTypes.includes(obj.__typename)
     }
     
 
