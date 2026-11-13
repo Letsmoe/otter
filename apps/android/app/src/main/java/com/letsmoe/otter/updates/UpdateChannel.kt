@@ -46,27 +46,27 @@ object UpdateSettings {
 
 private val buildNumberPattern = Regex("-build(\\d+)\\.apk$")
 
-/** CI names APKs "otter-v1.2.0-build57.apk"; the number is the APK's versionCode. Null for older names. */
+/** CI names APKs "otter-v1.2.0-build57.apk"; the number is the CI run that built it. Null for older names. */
 fun buildNumberOf(assetName: String): Int? {
     val match = buildNumberPattern.find(assetName) ?: return null
     return match.groupValues[1].toIntOrNull()
 }
 
-/** Whether [release] is newer than the installed app; by build number when known, else by version. */
+/**
+ * Whether [release] is newer than the installed app: by build number when both are known, else
+ * by version. A local build has build number 0.
+ */
 fun isNewerThanInstalled(release: AppRelease, installedBuild: Int, installedVersion: String): Boolean {
-    if (release.build != null) {
+    if (release.build != null && installedBuild > 0) {
         return release.build > installedBuild
     }
     if (release.channel == UpdateChannel.DEBUG) {
-        return false
+        return release.build != null
     }
     return isNewerVersion(release.version, installedVersion)
 }
 
-/** Android refuses to install a lower versionCode over a higher one without uninstalling first. */
-fun isDowngrade(release: AppRelease, installedBuild: Int): Boolean {
-    if (release.build == null) {
-        return false
-    }
-    return release.build < installedBuild
+/** Whether [release] is the APK already installed, so installing it would change nothing. */
+fun isInstalled(release: AppRelease, installedBuild: Int): Boolean {
+    return release.build != null && release.build == installedBuild
 }

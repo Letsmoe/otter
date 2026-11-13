@@ -13,9 +13,12 @@ android {
         applicationId = "com.letsmoe.otter"
         minSdk = 26
         targetSdk = 36
-        // CI sets both from the release tag; the updater compares versionName with the latest release.
+        // CI derives the versionCode from the latest release, the same for its release and debug
+        // builds, so users can switch between both channels (Android only refuses lower codes).
         versionCode = providers.environmentVariable("OTTER_VERSION_CODE").orElse("1").get().toInt()
         versionName = providers.environmentVariable("OTTER_VERSION_NAME").orElse("0.0.0").get()
+        // The CI run that built this APK; the updater compares it with the build number in APK names.
+        buildConfigField("int", "BUILD_NUMBER", providers.environmentVariable("OTTER_BUILD_NUMBER").orElse("0").get())
         // Not 47832 (Capacitor app): both may run at once.
         buildConfigField("int", "BACKEND_PORT", "47833")
         // Stream-only port on the Wi-Fi interface, read by Chromecasts.

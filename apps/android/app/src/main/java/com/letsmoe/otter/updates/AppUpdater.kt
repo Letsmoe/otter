@@ -68,7 +68,7 @@ object AppUpdater {
         checked = true
         AppScope.launch {
             val release = fetchNewest(UpdateSettings.channel) ?: return@launch
-            if (!isNewerThanInstalled(release, BuildConfig.VERSION_CODE, BuildConfig.VERSION_NAME)) {
+            if (!isNewerThanInstalled(release, BuildConfig.BUILD_NUMBER, BuildConfig.VERSION_NAME)) {
                 return@launch
             }
             mutableState.value = UpdateState.Available(release)
