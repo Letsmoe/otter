@@ -30,7 +30,7 @@ import com.letsmoe.otter.ui.profile.ProfileFlightOverlay
 import com.letsmoe.otter.ui.profile.ProfileNavigation
 import com.letsmoe.otter.ui.settings.SettingsScreen
 import com.letsmoe.otter.ui.title.TitleSlots
-import com.letsmoe.otter.notifications.NotificationLinks
+import com.letsmoe.otter.links.IncomingLinks
 import com.letsmoe.otter.ui.television.TelevisionButton
 import com.letsmoe.otter.ui.together.TogetherButton
 import com.letsmoe.otter.ui.together.TogetherChatSheet
@@ -117,10 +117,10 @@ fun AppServices(navController: NavHostController) {
     val activeProfile by ProfileSession.activeProfile.collectAsStateWithLifecycle()
     LaunchedEffect(activeProfile?.id) { DownloadsRepository.follow(activeProfile?.id) }
     LaunchedEffect(Unit) { TogetherSession.start() }
-    val notificationRoute by NotificationLinks.pendingRoute.collectAsStateWithLifecycle()
-    LaunchedEffect(notificationRoute) {
-        val route = notificationRoute ?: return@LaunchedEffect
-        NotificationLinks.consumed()
+    val linkedRoute by IncomingLinks.pendingRoute.collectAsStateWithLifecycle()
+    LaunchedEffect(linkedRoute) {
+        val route = linkedRoute ?: return@LaunchedEffect
+        IncomingLinks.consumed()
         navController.navigate(route)
     }
     val remoteMedia by TogetherSession.remoteMedia.collectAsStateWithLifecycle()

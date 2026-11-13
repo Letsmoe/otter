@@ -66,6 +66,7 @@ import com.letsmoe.otter.ui.setup.TmdbConnectionOverlay
 import com.letsmoe.otter.ui.setup.TmdbSetupOverlay
 import com.letsmoe.otter.ui.television.TelevisionNowPlayingBar
 import com.letsmoe.otter.ui.television.TelevisionRemoteHost
+import com.letsmoe.otter.ui.title.LinkedEpisode
 import com.letsmoe.otter.ui.title.TitleScreen
 import com.letsmoe.otter.ui.updates.UpdateBanner
 
@@ -238,12 +239,16 @@ private fun OtterNavHost(navController: NavHostController, pagerState: PagerStat
                 navArgument("titleId") { type = NavType.StringType },
                 navArgument("season") { type = NavType.StringType; nullable = true; defaultValue = null },
                 navArgument("episodeId") { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument("episodeNumber") { type = NavType.StringType; nullable = true; defaultValue = null },
             ),
         ) { entry ->
             TitleScreen(
                 titleId = entry.arguments?.getString("titleId").orEmpty(),
-                linkedSeasonNumber = entry.arguments?.getString("season")?.toIntOrNull(),
-                linkedEpisodeId = entry.arguments?.getString("episodeId"),
+                linkedEpisode = LinkedEpisode(
+                    seasonNumber = entry.arguments?.getString("season")?.toIntOrNull(),
+                    episodeId = entry.arguments?.getString("episodeId"),
+                    episodeNumber = entry.arguments?.getString("episodeNumber")?.toIntOrNull(),
+                ),
                 onPlay = { request -> navController.play(PlayerRequest(request.mediaId, request.streamId)) },
                 slots = titleSlots(openTab),
                 onBack = { navController.popBackStack() },

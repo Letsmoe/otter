@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -36,7 +37,9 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Fill
+import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.fill.Play
+import com.adamglin.phosphoricons.regular.ShareNetwork
 import com.letsmoe.otter.api.tmdbImageUrl
 import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.frostedGlass
@@ -54,12 +57,13 @@ private const val OVERVIEW_COLLAPSED_LINES = 3
 fun EpisodeList(
     episodes: List<SeasonEpisode>,
     onPlay: (SeasonEpisode) -> Unit,
+    onShare: (SeasonEpisode) -> Unit,
     modifier: Modifier = Modifier,
     downloadButton: @Composable (mediaId: String, label: String) -> Unit = { _, _ -> },
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(20.dp)) {
         for (episode in episodes) {
-            EpisodeRow(episode, onPlay, downloadButton)
+            EpisodeRow(episode, onPlay, onShare, downloadButton)
         }
     }
 }
@@ -68,6 +72,7 @@ fun EpisodeList(
 private fun EpisodeRow(
     episode: SeasonEpisode,
     onPlay: (SeasonEpisode) -> Unit,
+    onShare: (SeasonEpisode) -> Unit,
     downloadButton: @Composable (mediaId: String, label: String) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -80,6 +85,12 @@ private fun EpisodeRow(
                     Text(runtime, fontSize = 12.sp, color = Color.White.copy(alpha = 0.5f))
                 }
             }
+            Icon(
+                PhosphorIcons.Regular.ShareNetwork,
+                contentDescription = "Share ${episode.code}",
+                tint = Color.White.copy(alpha = 0.7f),
+                modifier = Modifier.pressable { onShare(episode) }.padding(8.dp).size(22.dp),
+            )
             downloadButton(episode.id, "${episode.code} ${episode.displayName}")
         }
         if (!episode.overview.isNullOrEmpty()) {

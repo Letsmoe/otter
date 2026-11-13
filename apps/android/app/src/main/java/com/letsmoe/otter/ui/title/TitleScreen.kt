@@ -20,14 +20,19 @@ import com.letsmoe.otter.ui.LoadState
 import com.letsmoe.otter.ui.media.RailItem
 
 /**
- * A movie or series page, loaded from the id. A series page can open on a given season and
- * episode ([linkedSeasonNumber], [linkedEpisodeId]). [onPlay] receives the link to open in the player.
+ * The episode a series page opens on: by id (Continue Watching, notifications) or by its
+ * numbers (shared links, which can't know this install's episode ids).
+ */
+data class LinkedEpisode(val seasonNumber: Int? = null, val episodeId: String? = null, val episodeNumber: Int? = null)
+
+/**
+ * A movie or series page, loaded from the id. A series page can open on [linkedEpisode].
+ * [onPlay] receives the link to open in the player.
  */
 @Composable
 fun TitleScreen(
     titleId: String,
-    linkedSeasonNumber: Int?,
-    linkedEpisodeId: String?,
+    linkedEpisode: LinkedEpisode,
     onPlay: (PlayRequest) -> Unit,
     onBack: () -> Unit,
     onSearch: () -> Unit,
@@ -41,7 +46,7 @@ fun TitleScreen(
         when (val current = detail) {
             is LoadState.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
             is LoadState.Failed -> FailedMessage(current.message, onRetry = titleViewModel::load)
-            is LoadState.Loaded -> LoadedTitle(current.value, titleViewModel, linkedSeasonNumber, linkedEpisodeId, onPlay, onBack, onSearch, onOpenItem, onOpenPerson, slots)
+            is LoadState.Loaded -> LoadedTitle(current.value, titleViewModel, linkedEpisode, onPlay, onBack, onSearch, onOpenItem, onOpenPerson, slots)
         }
     }
 }
@@ -50,8 +55,7 @@ fun TitleScreen(
 private fun LoadedTitle(
     detail: TitleDetail,
     titleViewModel: TitleViewModel,
-    linkedSeasonNumber: Int?,
-    linkedEpisodeId: String?,
+    linkedEpisode: LinkedEpisode,
     onPlay: (PlayRequest) -> Unit,
     onBack: () -> Unit,
     onSearch: () -> Unit,
@@ -75,7 +79,7 @@ private fun LoadedTitle(
     }
     val actions = TitlePageActions(onBack, onOpenPerson, onSearch, toggleWatchlist, toggleNotifying, titleViewModel::rate)
     if (detail.mediaType == MediaType.SERIES) {
-        SeriesTitle(detail, rails, actions, slots, linkedSeasonNumber, linkedEpisodeId, onPlay, onOpenItem)
+        SeriesTitle(detail, rails, actions, slots, linkedEpisode, onPlay, onOpenItem)
         return
     }
     val streams by titleViewModel.streams.collectAsStateWithLifecycle()
@@ -88,13 +92,12 @@ private fun SeriesTitle(
     rails: RailsState,
     actions: TitlePageActions,
     slots: TitleSlots,
-    linkedSeasonNumber: Int?,
-    linkedEpisodeId: String?,
+    linkedEpisode: LinkedEpisode,
     onPlay: (PlayRequest) -> Unit,
     onOpenItem: (RailItem) -> Unit,
 ) {
-    val seriesViewModel = viewModel(key = "series-${detail.id}-$linkedEpisodeId") {
-        SeriesViewModel(detail.id, linkedSeasonNumber, linkedEpisodeId)
+    val seriesViewModel = viewModel(key = "series-${detail.id}-$linkedEpisode") {
+        SeriesViewModel(detail.id, linkedEpisode)
     }
     val episodes by seriesViewModel.state.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { seriesViewModel.loadEpisodes() }

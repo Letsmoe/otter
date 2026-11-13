@@ -21,8 +21,7 @@ data class EpisodesState(
 /** Episodes, the season switch and Play of the up-next episode for one series page. */
 class SeriesViewModel(
     private val seriesId: String,
-    private val linkedSeasonNumber: Int?,
-    private val linkedEpisodeId: String?,
+    private val linkedEpisode: LinkedEpisode,
 ) : ViewModel() {
 
     private val mutableState = MutableStateFlow(EpisodesState())
@@ -58,9 +57,9 @@ class SeriesViewModel(
         }
     }
 
-    /** A deep link (Continue Watching) picks the episode; otherwise the profile's progress does. */
+    /** A deep link (Continue Watching, a shared link) picks the episode; otherwise the profile's progress does. */
     private fun linkedOrUpNext(episodes: List<SeasonEpisode>): UpNext? {
-        val linked = episodes.firstOrNull { episode -> episode.id == linkedEpisodeId }
+        val linked = findLinkedEpisode(episodes, linkedEpisode)
         if (linked != null) {
             return UpNext(linked, resume = linked.progress != null)
         }
@@ -68,8 +67,8 @@ class SeriesViewModel(
     }
 
     private fun initialSeason(episodes: List<SeasonEpisode>, upNext: UpNext?): Int? {
-        if (episodes.any { episode -> episode.seasonNumber == linkedSeasonNumber }) {
-            return linkedSeasonNumber
+        if (episodes.any { episode -> episode.seasonNumber == linkedEpisode.seasonNumber }) {
+            return linkedEpisode.seasonNumber
         }
         if (upNext != null) {
             return upNext.episode.seasonNumber
@@ -79,5 +78,18 @@ class SeriesViewModel(
 
     fun selectSeason(seasonNumber: Int) {
         mutableState.update { current -> current.copy(shownSeason = seasonNumber) }
+    }
+}
+
+/** The episode [link] names, by id or else by season and episode number; null when it names none. */
+fun findLinkedEpisode(episodes: List<SeasonEpisode>, link: LinkedEpisode): SeasonEpisode? {
+    if (link.episodeId != null) {
+        return episodes.firstOrNull { episode -> episode.id == link.episodeId }
+    }
+    if (link.episodeNumber == null) {
+        return null
+    }
+    return episodes.firstOrNull { episode ->
+        episode.seasonNumber == link.seasonNumber && episode.episodeNumber == link.episodeNumber
     }
 }

@@ -18,6 +18,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import com.letsmoe.otter.links.episodeLink
+import com.letsmoe.otter.links.seriesLink
+import com.letsmoe.otter.links.tmdbIdOf
 import com.letsmoe.otter.ui.components.FilterSelect
 import com.letsmoe.otter.ui.components.SegmentedBar
 import com.letsmoe.otter.ui.media.RailItem
@@ -57,7 +61,7 @@ fun SeriesPage(
             onClick = { upNext?.let { next -> onPlay(PlayRequest(next.episode.id)) } },
         ),
         creditLines = seriesCreditLines(detail),
-        shareUrl = "https://www.themoviedb.org/tv/${detail.id.substringAfter(':')}",
+        shareUrl = seriesLink(tmdbIdOf(detail.id), detail.title),
         actions = actions,
         slots = slots,
         downloadTarget = upNextDownload(detail, upNext),
@@ -87,6 +91,11 @@ private fun UpNextBar(upNext: UpNext?) {
 @Composable
 private fun EpisodesTab(detail: TitleDetail, episodes: EpisodesState, seriesViewModel: SeriesViewModel, slots: TitleSlots, onPlay: (PlayRequest) -> Unit) {
     val shownEpisodes = episodes.episodes.filter { episode -> episode.seasonNumber == episodes.shownSeason }
+    val context = LocalContext.current
+    val shareEpisode = { episode: SeasonEpisode ->
+        val link = episodeLink(tmdbIdOf(detail.id), detail.title, episode.seasonNumber, episode.episodeNumber)
+        share(context, "${detail.title} ${episode.code} “${episode.displayName}”", link)
+    }
     Column(Modifier.padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         if (detail.seasons.size > 1 && episodes.shownSeason != null) {
             val options = detail.seasons.map { season -> season.seasonNumber to seasonLabel(season) }
@@ -95,7 +104,12 @@ private fun EpisodesTab(detail: TitleDetail, episodes: EpisodesState, seriesView
         when {
             !episodes.loaded && episodes.episodes.isEmpty() -> Spinner()
             shownEpisodes.isEmpty() -> Hint("No episodes yet.")
-            else -> EpisodeList(shownEpisodes, onPlay = { episode -> onPlay(PlayRequest(episode.id)) }, downloadButton = slots.episodeDownloadButton)
+            else -> EpisodeList(
+                shownEpisodes,
+                onPlay = { episode -> onPlay(PlayRequest(episode.id)) },
+                onShare = shareEpisode,
+                downloadButton = slots.episodeDownloadButton,
+            )
         }
     }
 }

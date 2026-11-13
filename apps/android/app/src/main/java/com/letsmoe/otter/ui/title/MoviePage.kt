@@ -8,6 +8,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.letsmoe.otter.links.movieLink
+import com.letsmoe.otter.links.tmdbIdOf
 import com.letsmoe.otter.ui.components.SegmentedBar
 import com.letsmoe.otter.ui.media.RailItem
 
@@ -46,7 +48,7 @@ fun MoviePage(
             onClick = { onPlay(PlayRequest(detail.id)) },
         ),
         creditLines = movieCreditLines(detail),
-        shareUrl = "https://www.themoviedb.org/movie/${detail.id.substringAfter(':')}",
+        shareUrl = movieLink(tmdbIdOf(detail.id), detail.title),
         actions = actions,
         slots = slots,
         downloadTarget = DownloadTarget(detail.id, detail.title),
