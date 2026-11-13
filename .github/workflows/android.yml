@@ -1,7 +1,7 @@
 # Builds the native Android app (backend binary + plugin bundles + APK) and
 # keeps the APK as a workflow artifact. Publishing a GitHub release builds the
 # release APK from the release's tag and attaches it, which letsmoe.com/projects/otter
-# links to. Every other run builds a debug APK and puts it on the rolling "nightly"
+# links to. Every other run builds the same kind of APK and puts it on the rolling "nightly"
 # pre-release, the app's nightly update channel. APK names end in -build<run number>,
 # so the app can tell which build is newer across both channels.
 name: Android
@@ -64,11 +64,12 @@ jobs:
           echo "OTTER_KEYSTORE_FILE=$RUNNER_TEMP/otter-release.jks" >> "$GITHUB_ENV"
 
       # The versionCode comes from the release a build is based on (v1.2.3 → 10010203), so a
-      # release and the debug builds after it share it and install over each other both ways;
+      # release and the nightlies after it share it and install over each other both ways;
       # Android only refuses a lower code. The 10000000 base stays above the run numbers that
       # were versionCodes up to v0.0.3. The run number goes in as the build number.
       # Releases are named by their tag (1.2.3), nightly builds by the latest release (1.2.3-nightly.61).
-      - name: Set the version and build type
+      # Both are release builds (R8-minified); OTTER_UPDATE_CHANNEL tells the app which channel it's on.
+      - name: Set the version and channel
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.release.tag_name }}
@@ -82,13 +83,13 @@ jobs:
           if [ -n "$TAG" ]; then
             echo "OTTER_VERSION_CODE=$(version_code "${TAG#v}")" >> "$GITHUB_ENV"
             echo "OTTER_VERSION_NAME=${TAG#v}" >> "$GITHUB_ENV"
-            echo "BUILD_TYPE=release" >> "$GITHUB_ENV"
+            echo "OTTER_UPDATE_CHANNEL=release" >> "$GITHUB_ENV"
             exit 0
           fi
           latest=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName 2>/dev/null || echo v0.0.0)
           echo "OTTER_VERSION_CODE=$(version_code "${latest#v}")" >> "$GITHUB_ENV"
           echo "OTTER_VERSION_NAME=${latest#v}-nightly.$RUN" >> "$GITHUB_ENV"
-          echo "BUILD_TYPE=debug" >> "$GITHUB_ENV"
+          echo "OTTER_UPDATE_CHANNEL=nightly" >> "$GITHUB_ENV"
 
       - name: Build APK
         working-directory: apps/android
@@ -96,21 +97,16 @@ jobs:
           # Optional: bakes in the built-in TMDB key; without it the app asks on first start.
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           OTTER_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-        run: |
-          if [ "$BUILD_TYPE" = release ]; then
-            bun run apk
-          else
-            bun run apk:debug
-          fi
+        run: bun run apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: otter-android-${{ env.BUILD_TYPE }}-${{ github.sha }}
-          path: apps/android/app/build/outputs/apk/${{ env.BUILD_TYPE }}/*.apk
+          name: otter-android-${{ env.OTTER_UPDATE_CHANNEL }}-${{ github.sha }}
+          path: apps/android/app/build/outputs/apk/release/*.apk
           retention-days: 30
 
       - name: Attach APK to the release
-        if: env.BUILD_TYPE == 'release'
+        if: env.OTTER_UPDATE_CHANNEL == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.release.tag_name }}
@@ -121,13 +117,13 @@ jobs:
 
       # A pre-release never counts as "latest", so the release channel doesn't see it.
       - name: Publish the nightly build
-        if: env.BUILD_TYPE == 'debug' && github.ref == 'refs/heads/main'
+        if: env.OTTER_UPDATE_CHANNEL == 'nightly' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
           RUN: ${{ github.run_number }}
         run: |
           apk="otter-nightly-build${RUN}.apk"
-          cp apps/android/app/build/outputs/apk/debug/*.apk "$apk"
+          cp apps/android/app/build/outputs/apk/release/*.apk "$apk"
           git tag -f nightly "$GITHUB_SHA"
           git push -f origin refs/tags/nightly
           if ! gh release view nightly >/dev/null 2>&1; then
