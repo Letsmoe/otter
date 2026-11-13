@@ -64,6 +64,7 @@ import com.letsmoe.otter.ui.navigation.play
 import com.letsmoe.otter.ui.player.PlayerRequest
 import com.letsmoe.otter.ui.setup.TmdbConnectionOverlay
 import com.letsmoe.otter.ui.setup.TmdbSetupOverlay
+import com.letsmoe.otter.ui.setup.WelcomeOverlay
 import com.letsmoe.otter.ui.television.TelevisionNowPlayingBar
 import com.letsmoe.otter.ui.television.TelevisionRemoteHost
 import com.letsmoe.otter.ui.title.LinkedEpisode
@@ -84,6 +85,7 @@ fun OtterApp() {
                 UpdateBanner()
                 TmdbConnectionOverlay()
                 TmdbSetupOverlay()
+                WelcomeOverlay()
             }
         }
     }
