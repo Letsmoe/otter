@@ -19,7 +19,7 @@ export function escapeHtml(text: string): string {
  */
 export function openInAppUrl(pageUrl: URL): string {
 	const fallback = encodeURIComponent(downloadUrl);
-	return `intent://${pageUrl.host}${pageUrl.pathname}#Intent;scheme=https;package=${appPackage};S.browser_fallback_url=${fallback};end`;
+	return `intent://${pageUrl.host}${pageUrl.pathname}${pageUrl.search}#Intent;scheme=https;package=${appPackage};S.browser_fallback_url=${fallback};end`;
 }
 
 /** The page a shared link shows without Otter, with the tags chat apps read for their preview. */

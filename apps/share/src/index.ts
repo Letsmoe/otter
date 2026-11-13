@@ -1,3 +1,4 @@
+import { callbackTarget, relayedCallbackUrl, renderReturnToAppPage } from './auth';
 import { parseInvitePath, parseSharePath, tmdbLanguage } from './links';
 import { renderInvitePage, renderNotFoundPage, renderSharePage } from './page';
 import { fetchSharedTitle } from './tmdb';
@@ -43,6 +44,9 @@ export default {
 		if (request.method !== 'GET' && request.method !== 'HEAD') {
 			return new Response('Method not allowed', { status: 405 });
 		}
+		if (url.pathname === '/auth/callback') {
+			return answerSignInCallback(url);
+		}
 		const roomCode = parseInvitePath(url.pathname);
 		if (roomCode) {
 			return html(renderInvitePage(roomCode, url), 200);
@@ -59,6 +63,23 @@ export default {
 		return html(renderSharePage(title, url), 200);
 	},
 };
+
+/** Neoworks sign-in lands here; the code goes on to the install that started it. */
+function answerSignInCallback(url: URL): Response {
+	const target = callbackTarget(url.searchParams.get('state'));
+	if (!target) {
+		return new Response('This sign-in did not start in Otter.', { status: 400 });
+	}
+	if (target.kind === 'web') {
+		return new Response(null, {
+			status: 302,
+			headers: { Location: relayedCallbackUrl(target.origin, url), 'Cache-Control': 'no-store' },
+		});
+	}
+	return new Response(renderReturnToAppPage(url), {
+		headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+	});
+}
 
 function html(body: string, status: number): Response {
 	return new Response(body, {

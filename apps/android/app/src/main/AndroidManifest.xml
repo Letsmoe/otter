@@ -65,6 +65,8 @@
                 <data android:pathPrefix="/movie/" />
                 <data android:pathPrefix="/tv/" />
                 <data android:pathPrefix="/together/" />
+                <!-- Neoworks sign-in returns here (state app.<nonce>). -->
+                <data android:pathPrefix="/auth/" />
             </intent-filter>
         </activity>
     </application>
