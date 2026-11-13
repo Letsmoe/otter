@@ -6,12 +6,12 @@ import androidx.core.content.edit
 import com.letsmoe.otter.BuildConfig
 
 /**
- * Where updates come from. Release: the latest GitHub release. Debug: the rolling "debug"
- * pre-release CI rebuilds on every push to main.
+ * Where updates come from. Release: the latest GitHub release. Nightly: the rolling "nightly"
+ * pre-release, a debug build CI makes on every push to main.
  */
 enum class UpdateChannel(val label: String, val releasePath: String) {
     RELEASE("Release", "releases/latest"),
-    DEBUG("Debug", "releases/tags/debug"),
+    NIGHTLY("Nightly", "releases/tags/nightly"),
 }
 
 /** The chosen update channel, saved on this device only. */
@@ -38,7 +38,7 @@ object UpdateSettings {
 
     fun installedChannel(): UpdateChannel {
         if (BuildConfig.DEBUG) {
-            return UpdateChannel.DEBUG
+            return UpdateChannel.NIGHTLY
         }
         return UpdateChannel.RELEASE
     }
@@ -60,7 +60,7 @@ fun isNewerThanInstalled(release: AppRelease, installedBuild: Int, installedVers
     if (release.build != null && installedBuild > 0) {
         return release.build > installedBuild
     }
-    if (release.channel == UpdateChannel.DEBUG) {
+    if (release.channel == UpdateChannel.NIGHTLY) {
         return release.build != null
     }
     return isNewerVersion(release.version, installedVersion)

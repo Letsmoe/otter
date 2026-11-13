@@ -29,7 +29,7 @@ import com.letsmoe.otter.updates.UpdateSettings
 import com.letsmoe.otter.updates.UpdateState
 import com.letsmoe.otter.updates.isInstalled
 
-/** Release or debug builds, and a button to install the newest build of the chosen one. */
+/** Release or nightly builds, and a button to install the newest build of the chosen one. */
 @Composable
 fun UpdatesGroup() {
     var channel by remember { mutableStateOf(UpdateSettings.channel) }
@@ -41,7 +41,7 @@ fun UpdatesGroup() {
         checking = false
     }
     val options = UpdateChannel.entries.map { option -> option to option.label }
-    val footer = "Debug builds are made from every change and can break. You can switch back and forth; " +
+    val footer = "Nightly builds are made from every change and can break. You can switch back and forth; " +
         "your data stays."
     SettingsGroup("Updates", footer = footer) {
         Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {

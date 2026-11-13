@@ -15,20 +15,20 @@ class UpdateChannelTest {
     @Test
     fun buildNumbersComeFromTheApkName() {
         assertEquals(57, buildNumberOf("otter-v0.0.4-build57.apk"))
-        assertEquals(61, buildNumberOf("otter-debug-build61.apk"))
+        assertEquals(61, buildNumberOf("otter-nightly-build61.apk"))
         assertNull(buildNumberOf("otter-v0.0.3.apk"))
     }
 
     @Test
     fun knownBuildsCompareByBuildNumber() {
-        assertTrue(isNewerThanInstalled(release("debug", 61, UpdateChannel.DEBUG), 57, "0.0.4"))
+        assertTrue(isNewerThanInstalled(release("nightly", 61, UpdateChannel.NIGHTLY), 57, "0.0.4"))
         assertFalse(isNewerThanInstalled(release("v0.0.5", 50), 57, "0.0.4"))
     }
 
     @Test
     fun olderReleasesWithoutABuildNumberCompareByVersion() {
         assertTrue(isNewerThanInstalled(release("v0.0.4", null), 57, "0.0.3"))
-        assertFalse(isNewerThanInstalled(release("debug", null, UpdateChannel.DEBUG), 57, "0.0.3"))
+        assertFalse(isNewerThanInstalled(release("nightly", null, UpdateChannel.NIGHTLY), 57, "0.0.3"))
     }
 
     @Test
@@ -45,8 +45,8 @@ class UpdateChannelTest {
     }
 
     @Test
-    fun debugBuildsAreNamedByTheirBuild() {
-        assertEquals("debug build 61", release("debug", 61, UpdateChannel.DEBUG).displayName())
+    fun nightlyBuildsAreNamedByTheirBuild() {
+        assertEquals("nightly build 61", release("nightly", 61, UpdateChannel.NIGHTLY).displayName())
         assertEquals("0.0.4", release("v0.0.4", 57).displayName())
     }
 }

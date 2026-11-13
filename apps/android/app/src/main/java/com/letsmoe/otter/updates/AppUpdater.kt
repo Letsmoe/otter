@@ -33,10 +33,10 @@ data class AppRelease(
     val apkSize: Long,
     val channel: UpdateChannel,
 ) {
-    /** "0.0.4" for releases, "debug build 61" for debug builds. */
+    /** "0.0.4" for releases, "nightly build 61" for nightly builds. */
     fun displayName(): String {
-        if (channel == UpdateChannel.DEBUG && build != null) {
-            return "debug build $build"
+        if (channel == UpdateChannel.NIGHTLY && build != null) {
+            return "nightly build $build"
         }
         return version.removePrefix("v")
     }
