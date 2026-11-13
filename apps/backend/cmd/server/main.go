@@ -41,6 +41,7 @@ import (
 	"github.com/Letsmoe/otter/internal/subtitles"
 	"github.com/Letsmoe/otter/internal/tmdb"
 	"github.com/Letsmoe/otter/internal/together"
+	"github.com/Letsmoe/otter/internal/tracing"
 	"github.com/Letsmoe/otter/internal/vpn"
 )
 
@@ -117,6 +118,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer errorreport.Close()
+	defer tracing.Close(context.Background())
 	if cfg.lanStreamPort != "" {
 		go serveLanStreams(ctx, net.JoinHostPort("", cfg.lanStreamPort), handlers.lanStreams)
 	}
@@ -136,7 +138,9 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 		return serverHandlers{}, err
 	}
 	cacheClient := cache.New(ctx, database)
-	errorreport.Start(ctx, cacheClient, func() bool { return settingsService.Cached().ErrorReporting })
+	reportingEnabled := func() bool { return settingsService.Cached().ErrorReporting }
+	errorreport.Start(ctx, cacheClient, reportingEnabled)
+	tracing.Start(ctx, reportingEnabled)
 	store, err := storage.New(filepath.Join(cfg.dataDir, "blobs"), cfg.publicURL)
 	if err != nil {
 		return serverHandlers{}, err
@@ -214,9 +218,10 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	lanMux.Handle("/api/stream/", streamProxy)
 	lanMux.Handle(storage.RoutePrefix, store.Handler())
 	lanMux.Handle(subtitles.RoutePrefix, subtitleService.Handler())
+	// Every request on the LAN port comes from a TV or Chromecast, so all of them are traced.
 	return serverHandlers{
-		api:        errorreport.Recover(corsMiddleware(mux)),
-		lanStreams: errorreport.Recover(privateNetworkOnly(dlnaHeaders(corsMiddleware(lanMux)))),
+		api:        tracing.Middleware("api", false, errorreport.Recover(corsMiddleware(mux))),
+		lanStreams: tracing.Middleware("lan", true, errorreport.Recover(privateNetworkOnly(dlnaHeaders(corsMiddleware(lanMux))))),
 	}, nil
 }
 

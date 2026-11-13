@@ -55,9 +55,10 @@ func NewHandler(resolver *Resolver) (http.Handler, error) {
 
 	// gqlgen recovers resolver panics itself, so they are reported here.
 	srv.SetRecoverFunc(func(ctx context.Context, recovered any) error {
-		errorreport.CapturePanic(recovered, "graphql.panic", nil)
+		errorreport.CapturePanic(ctx, recovered, "graphql.panic", nil)
 		return gqlgen.DefaultRecover(ctx, recovered)
 	})
+	srv.AroundOperations(traceOperation)
 	srv.SetQueryCache(lru.New[*ast.QueryDocument](1000))
 	srv.Use(extension.Introspection{})
 	srv.Use(extension.AutomaticPersistedQuery{Cache: lru.New[string](100)})

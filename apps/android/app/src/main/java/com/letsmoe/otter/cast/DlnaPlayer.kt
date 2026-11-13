@@ -70,7 +70,8 @@ private data class ContinuousProbe(val startSeconds: Double, val durationSeconds
  */
 class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : SimpleBasePlayer(Looper.getMainLooper()) {
 
-    private val client = DlnaClient(renderer)
+    private val journal = CastJournal(renderer)
+    private val client = DlnaClient(renderer, journal)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val heights = TelevisionHeights(context)
 
@@ -193,6 +194,7 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
 
     override fun handleSetMediaItems(mediaItems: MutableList<MediaItem>, startIndex: Int, startPositionMs: Long): ListenableFuture<*> {
         stopWork()
+        journal.startCast()
         var index = startIndex
         if (index == C.INDEX_UNSET) {
             index = 0
@@ -379,8 +381,13 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
     private suspend fun televisionMediaFor(origin: String, path: String, title: String, mimeType: String, seekableBytes: Boolean): TelevisionMedia {
         val format = announcedFormat(mimeType, televisionFormats())
         val formattedPath = TelevisionUrls.withFormat(path, mimeType, format)
-        val url = origin + TelevisionUrls.withSubtitle(formattedPath, subtitleFile?.id)
+        val castPath = TelevisionUrls.withCast(formattedPath, journal.castId)
+        val url = origin + TelevisionUrls.withSubtitle(castPath, subtitleFile?.id)
         val media = TelevisionMedia(url, title, format.mimeType, seekableBytes, televisionSubtitle(origin), format.profile)
+        journal.note(
+            "Casting ${format.mimeType} (stream is $mimeType)",
+            mapOf("media_url" to url, "media_profile" to format.profile, "media_continuous" to !seekableBytes),
+        )
         lastMedia = media
         return media
     }
@@ -398,7 +405,9 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
             Log.w(TAG, "reading the TV's formats failed", error)
             emptyList()
         }
-        Log.i(TAG, "${renderer.name} accepts ${formats.size} formats: ${formats.joinToString { format -> "${format.mimeType} ${format.profile.orEmpty()}" }}")
+        val formatList = formats.joinToString { format -> "${format.mimeType} ${format.profile.orEmpty()}".trim() }
+        Log.i(TAG, "${renderer.name} accepts ${formats.size} formats: $formatList")
+        journal.note("TV accepts ${formats.size} formats", mapOf("tv_accepted_formats" to formatList, "tv_description" to renderer.description))
         acceptedFormats = formats
         return formats
     }
@@ -456,6 +465,8 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
             error,
             "dlna.playback",
             mapOf(
+                "cast_id" to journal.castId,
+                "tv_exchanges" to journal.text(),
                 "tv_name" to renderer.name,
                 "tv_model" to renderer.model,
                 "tv_description" to renderer.description,

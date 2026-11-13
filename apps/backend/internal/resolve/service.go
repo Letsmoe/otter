@@ -117,7 +117,7 @@ func (s *Service) resolvePlugin(ctx context.Context, providerURL string) (*plugi
 					return result, nil
 				}
 				log.Printf("resolve: domain plugin %s failed for %s: %v", p.Meta.Name, providerURL, err)
-				plugins.ReportFailure(err, p, plugins.CapabilityResolve, map[string]any{"url": providerURL})
+				plugins.ReportFailure(ctx, err, p, plugins.CapabilityResolve, map[string]any{"url": providerURL})
 				if plugins.IsDeadLink(err) {
 					return nil, err
 				}

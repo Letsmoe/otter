@@ -6,6 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
+
+	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/Letsmoe/otter/internal/tracing"
 )
 
 // PluginSettingsProvider supplies per-plugin env vars at invocation time.
@@ -109,6 +113,26 @@ func (e *PluginError) Error() string {
 }
 
 func (r *Runner) invoke(ctx context.Context, p *Plugin, cap Capability, args interface{}) (json.RawMessage, error) {
+	ctx, span := tracing.StartSpan(ctx, "plugin "+string(cap)+" "+p.Meta.Name,
+		attribute.String("otter.plugin", p.Meta.Name),
+		attribute.String("otter.plugin_version", p.Meta.Version),
+		tracing.JSON("otter.plugin_args", args),
+	)
+	defer span.End()
+	result, err := r.invokeInSpan(ctx, p, cap, args)
+	if err == nil {
+		tracing.SetJSON(span, "otter.plugin_result", result)
+		return result, nil
+	}
+	span.RecordError(err)
+	// A blocked or offline site is not the plugin's fault and doesn't send the trace.
+	if !IsExpectedFailure(err) {
+		tracing.Fail(span, err)
+	}
+	return nil, err
+}
+
+func (r *Runner) invokeInSpan(ctx context.Context, p *Plugin, cap Capability, args interface{}) (json.RawMessage, error) {
 	stdout, err := r.execute(ctx, p, invocation{Capability: string(cap), Args: args})
 	if err != nil {
 		return nil, err

@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
+
+	"github.com/Letsmoe/otter/internal/tracing"
 )
 
 // timeoutProperty carries AbortSignal.timeout's milliseconds on the signal object.
@@ -26,7 +28,7 @@ type fetcher struct {
 
 // newFetcher creates the clients, sharing one connection pool.
 func newFetcher() *fetcher {
-	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport := tracing.Transport(http.DefaultTransport.(*http.Transport).Clone())
 	return &fetcher{
 		following: &http.Client{Transport: transport},
 		manual: &http.Client{

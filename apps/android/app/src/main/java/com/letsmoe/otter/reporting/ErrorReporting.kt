@@ -37,11 +37,16 @@ object ErrorReporting {
         config.remoteConfig = false
         config.personProfiles = PersonProfiles.NEVER
         config.errorTrackingConfig.autoCapture = true
+        config.logs.serviceName = "otter-android"
         config.optOut = !isEnabled()
         PostHogAndroid.setup(application, config)
     }
 
     fun isEnabled(): Boolean {
+        // Not set up outside the app, e.g. in unit tests.
+        if (!::application.isInitialized) {
+            return false
+        }
         return preferences().getBoolean(ENABLED, true)
     }
 
@@ -60,11 +65,26 @@ object ErrorReporting {
             return
         }
         try {
-            val presentProperties = properties.filterValues { value -> value != null }.mapValues { entry -> entry.value as Any }
-            PostHog.captureException(error, presentProperties + ("kind" to kind))
+            PostHog.captureException(error, presentValues(properties) + ("kind" to kind))
         } catch (reportingError: Exception) {
             Log.w(TAG, "reporting failed", reportingError)
         }
+    }
+
+    /** Sends a log line to PostHog logs, e.g. one exchange with a TV. */
+    fun log(message: String, attributes: Map<String, Any?> = emptyMap()) {
+        if (!isEnabled()) {
+            return
+        }
+        try {
+            PostHog.logger.info(message, presentValues(attributes))
+        } catch (reportingError: Exception) {
+            Log.w(TAG, "logging failed", reportingError)
+        }
+    }
+
+    private fun presentValues(values: Map<String, Any?>): Map<String, Any> {
+        return values.filterValues { value -> value != null }.mapValues { entry -> entry.value as Any }
     }
 
     private fun preferences() = application.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
