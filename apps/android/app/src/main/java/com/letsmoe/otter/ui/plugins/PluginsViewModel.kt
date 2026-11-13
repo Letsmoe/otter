@@ -7,6 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.letsmoe.otter.api.OtterApi
 import com.letsmoe.otter.api.dataOrThrow
+import com.letsmoe.otter.graphql.LoginPluginMutation
+import com.letsmoe.otter.graphql.LogoutPluginMutation
 import com.letsmoe.otter.graphql.PluginsQuery
 import com.letsmoe.otter.graphql.SetPluginEnabledMutation
 import com.letsmoe.otter.graphql.SetPluginSettingsMutation
@@ -131,6 +133,39 @@ class PluginsViewModel : ViewModel() {
                 Toasts.push(error.message ?: "Could not save", ToastKind.ERROR)
             } finally {
                 savingSettings = false
+            }
+        }
+    }
+
+    var loggingIn by mutableStateOf(false)
+        private set
+
+    /** Logs in to the plugin's site; the backend keeps the account only when the site accepts it. */
+    fun login(plugin: PluginFields, username: String, password: String) {
+        loggingIn = true
+        viewModelScope.launch {
+            try {
+                val mutation = LoginPluginMutation(plugin.name, username, password)
+                replace(OtterApi.client.mutation(mutation).execute().dataOrThrow().loginPlugin.pluginFields)
+                Toasts.push("Logged in", ToastKind.SUCCESS)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Exception) {
+                Toasts.push(error.message ?: "Could not log in", ToastKind.ERROR)
+            } finally {
+                loggingIn = false
+            }
+        }
+    }
+
+    fun logout(plugin: PluginFields) {
+        viewModelScope.launch {
+            try {
+                replace(OtterApi.client.mutation(LogoutPluginMutation(plugin.name)).execute().dataOrThrow().logoutPlugin.pluginFields)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Exception) {
+                Toasts.push(error.message ?: "Could not log out", ToastKind.ERROR)
             }
         }
     }

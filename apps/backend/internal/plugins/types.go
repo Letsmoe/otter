@@ -9,11 +9,38 @@ type Capability string
 
 // Otter plugins do exactly three things: find stream links for a title TMDB
 // already identified, turn a hoster link into a playable media URL, and find
-// subtitle files for a title.
+// subtitle files for a title. Plugins whose site needs an account also log in.
 const (
 	CapabilityStreams   Capability = "streams"
 	CapabilityResolve   Capability = "resolve"
 	CapabilitySubtitles Capability = "subtitles"
+	CapabilityLogin     Capability = "login"
+)
+
+// AccountRequirement says the plugin's site needs the user's account.
+type AccountRequirement struct {
+	// SignupURL is where users without an account can make one.
+	SignupURL string `json:"signup_url,omitempty"`
+}
+
+// LoginArgs are a user's credentials for the plugin's site.
+type LoginArgs struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// LoginResult is an opaque session (e.g. the site's cookies) the plugin gets
+// back with every later call, and when it expires if the site says so.
+type LoginResult struct {
+	Session string `json:"session"`
+	// ExpiresAt is RFC 3339; empty when unknown.
+	ExpiresAt string `json:"expires_at,omitempty"`
+}
+
+// Env vars through which a plugin with an account receives it on every call.
+const (
+	AccountUsernameEnvKey = "OTTER_ACCOUNT_USERNAME"
+	AccountSessionEnvKey  = "OTTER_ACCOUNT_SESSION"
 )
 
 type MediaType string
@@ -55,6 +82,8 @@ type PluginMeta struct {
 	Languages []string `json:"languages,omitempty"`
 	// Media lists what the plugin finds streams for: "movie" and/or "episode".
 	Media []MediaType `json:"media,omitempty"`
+	// Account is set when the site only works with the user's login.
+	Account *AccountRequirement `json:"account,omitempty"`
 }
 
 // BaseURLSettingKey is the env var through which a plugin receives the

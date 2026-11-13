@@ -28,6 +28,7 @@ class EmbeddedBackend(context: Context) {
     private val seedDir = File(this.context.filesDir, "plugin-seed")
     private val dnsFile = File(dataDir, "dns-servers")
     private var restarts = 0
+    private var secretKey = ""
 
     /** Prepares the plugin seed and DNS file, then starts the backend on a background thread. */
     fun start() {
@@ -38,6 +39,7 @@ class EmbeddedBackend(context: Context) {
     private fun prepareAndRun() {
         try {
             dataDir.mkdirs()
+            secretKey = SecretKeyStore(context).secretKeyHex()
             refreshPluginSeed()
             watchDnsServers()
         } catch (error: IOException) {
@@ -69,6 +71,8 @@ class EmbeddedBackend(context: Context) {
 
     private fun environment(): Map<String, String> = mapOf(
         "DATA_DIR" to dataDir.absolutePath,
+        // Seals saved plugin logins; kept in the Android Keystore, not in DATA_DIR.
+        "SECRET_KEY" to secretKey,
         "HOST" to "127.0.0.1",
         "PORT" to BuildConfig.BACKEND_PORT.toString(),
         // Streams and blobs only, private-network clients only: what a Chromecast plays.

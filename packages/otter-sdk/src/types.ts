@@ -3,9 +3,33 @@
 //
 // Otter plugins do three things: find stream links for a title TMDB already
 // identified ("streams"), turn a hoster link into a playable media URL
-// ("resolve"), and find subtitle files for a title ("subtitles").
+// ("resolve"), and find subtitle files for a title ("subtitles"). Plugins
+// whose site needs an account also log in ("login").
 
-export type Capability = "meta" | "streams" | "resolve" | "subtitles";
+export type Capability = "meta" | "streams" | "resolve" | "subtitles" | "login";
+
+/** The site needs the user's account. */
+export interface AccountRequirement {
+  /** Where users without an account can make one. */
+  signup_url?: string;
+}
+
+/** Passed to the login capability: the user's credentials for the site. */
+export interface LoginArgs {
+  username: string;
+  password: string;
+}
+
+/** An opaque session (e.g. the site's cookies) the plugin gets back with every later call. */
+export interface LoginResult {
+  session: string;
+  /** RFC 3339; omitted when unknown. */
+  expires_at?: string;
+}
+
+/** Env vars through which a plugin with an account receives it on every call. */
+export const ACCOUNT_USERNAME_ENV_KEY = "OTTER_ACCOUNT_USERNAME";
+export const ACCOUNT_SESSION_ENV_KEY = "OTTER_ACCOUNT_SESSION";
 
 export type MediaType = "movie" | "series" | "episode";
 
@@ -35,6 +59,8 @@ export interface PluginMeta {
   base_url?: string;
   languages?: string[];
   media?: Array<"movie" | "episode">;
+  /** Set when the site only works with the user's login. */
+  account?: AccountRequirement;
 }
 
 /** One playable source: usually a hoster page that still needs resolving. */

@@ -1,5 +1,12 @@
 /** Why a plugin call failed, in terms the backend can act on. */
-export type ErrorCode = "blocked" | "source_offline" | "extraction_failed" | "rate_limited" | "dead_link";
+export type ErrorCode =
+  | "blocked"
+  | "source_offline"
+  | "extraction_failed"
+  | "rate_limited"
+  | "dead_link"
+  | "logged_out"
+  | "login_failed";
 
 export interface OtterErrorOptions {
   code?: ErrorCode;
@@ -50,6 +57,23 @@ export class PluginDeadLinkError extends OtterError {
 export class PluginRateLimitError extends OtterError {
   constructor(message: string, status?: number) {
     super("rate_limit_error", message, { code: "rate_limited", status });
+  }
+}
+
+/**
+ * The site no longer accepts the session (it shows a login form or redirects
+ * to one). The backend logs in again with the saved password and retries once.
+ */
+export class PluginLoggedOutError extends OtterError {
+  constructor(message = "the site asked to log in again", status?: number) {
+    super("logged_out_error", message, { code: "logged_out", status });
+  }
+}
+
+/** The site refused the username or password. The message is shown in the login form. */
+export class PluginLoginFailedError extends OtterError {
+  constructor(message: string, status?: number) {
+    super("login_failed_error", message, { code: "login_failed", status });
   }
 }
 

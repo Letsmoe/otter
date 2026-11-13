@@ -4,6 +4,7 @@ import { hosters } from "./hosters/index.ts";
 import { createHttpClient } from "./http-client.ts";
 import { match } from "./match.ts";
 import type { List } from "./model.ts";
+import { ACCOUNT_SESSION_ENV_KEY, ACCOUNT_USERNAME_ENV_KEY } from "./types.ts";
 
 /** Env var through which the backend passes the user's override of base_url. */
 export const BASE_URL_ENV_KEY = "OTTER_BASE_URL";
@@ -38,6 +39,13 @@ function settingsOf(
   return settings;
 }
 
+/** The login the backend passes along, for plugins that declare an account. */
+function accountOf(env: Record<string, string | undefined>): PluginContext["account"] {
+  const session = env[ACCOUNT_SESSION_ENV_KEY] || "";
+  if (session === "") return undefined;
+  return { username: env[ACCOUNT_USERNAME_ENV_KEY] || "", session };
+}
+
 function describe(data: unknown): string {
   if (data === undefined) return "";
   try {
@@ -64,6 +72,7 @@ export function createContext(definition: PluginDefinition, options: ContextOpti
     extract,
     hosters,
     settings: settingsOf(definition, env),
+    account: accountOf(env),
     log(message: string, data?: unknown): void {
       console.error(`[${definition.id}] ${message}${describe(data)}`);
     },

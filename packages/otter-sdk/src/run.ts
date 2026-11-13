@@ -2,7 +2,16 @@ import { writeSync } from "fs";
 import type { PluginDefinition } from "./definition.ts";
 import { OtterError } from "./errors.ts";
 import { handlersOf, isPluginDefinition, type PluginHandlers } from "./runtime.ts";
-import type { PluginMeta, ResolveResult, StreamsArgs, StreamsResult, SubtitlesArgs, SubtitlesResult } from "./types.ts";
+import type {
+  LoginArgs,
+  LoginResult,
+  PluginMeta,
+  ResolveResult,
+  StreamsArgs,
+  StreamsResult,
+  SubtitlesArgs,
+  SubtitlesResult,
+} from "./types.ts";
 
 export type { PluginHandlers };
 
@@ -49,6 +58,11 @@ async function dispatch(handlers: PluginHandlers, input: Invocation): Promise<ne
     const url = input.args?.url;
     if (!url) fail("args.url required for resolve");
     respond<ResolveResult>(await handlers.resolve(String(url)));
+  }
+
+  if (input.capability === "login") {
+    if (!handlers.login) fail("login not implemented");
+    respond<LoginResult>(await handlers.login(input.args as unknown as LoginArgs));
   }
 
   fail(`unsupported capability: ${input.capability}`);

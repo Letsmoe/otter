@@ -12,7 +12,7 @@ import type {
   SubtitleInput,
   SubtitleListParams,
 } from "./model.ts";
-import type { PluginSettingField } from "./types.ts";
+import type { LoginArgs, LoginResult, PluginSettingField } from "./types.ts";
 
 /** Everything a handler needs, so plugins don't carry their own copies of these helpers. */
 export interface PluginContext {
@@ -30,6 +30,12 @@ export interface PluginContext {
   hosters: HosterRegistry;
   /** Values of the settings the plugin declares (default applied), by key. */
   settings: Record<string, string>;
+  /** The user's login, for plugins that declare `account`; undefined until they logged in. */
+  account?: {
+    username: string;
+    /** Whatever the plugin's `login` returned, e.g. the site's cookies. */
+    session: string;
+  };
   /** Writes to stderr, prefixed with the plugin id. */
   log(message: string, data?: unknown): void;
   list<Item>(items: Item[]): List<Item>;
@@ -53,6 +59,18 @@ export interface SourcesCapability {
   retrieve(params: SourceRetrieveParams, ctx: PluginContext): Promise<SourceInput>;
 }
 
+export interface AccountCapability {
+  /** Where users without an account can make one. */
+  signup_url?: string;
+  /**
+   * Logs in with the user's credentials and returns a session string the
+   * plugin can use later (ctx.account.session). Throw PluginLoginFailedError
+   * when the site refuses them; other handlers throw PluginLoggedOutError
+   * when the site no longer accepts the session.
+   */
+  login(credentials: LoginArgs, ctx: PluginContext): Promise<LoginResult>;
+}
+
 export interface PluginDefinition {
   /** Stable identifier; the settings key and the folder name. */
   id: string;
@@ -73,6 +91,8 @@ export interface PluginDefinition {
   streams?: StreamsCapability;
   sources?: SourcesCapability;
   subtitles?: SubtitlesCapability;
+  /** The site only works with the user's login. */
+  account?: AccountCapability;
 }
 
 /** Declares a plugin. Does nothing else: `runPlugin(plugin)` in the bundle entry runs it. */

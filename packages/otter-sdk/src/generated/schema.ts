@@ -310,7 +310,22 @@ export interface Plugin {
     /** False when the plugin needs something missing here (e.g. FlareSolverr). */
     available: Scalars['Boolean']
     settings: PluginSettingField[]
+    /** Set when the plugin's site needs the user's account. */
+    account: (PluginAccount | null)
     __typename: 'Plugin'
+}
+
+
+/** A plugin's login on its site. The password is never returned. */
+export interface PluginAccount {
+    /** Where users without an account can make one. */
+    signupUrl: (Scalars['String'] | null)
+    /** Null while no account is saved. */
+    username: (Scalars['String'] | null)
+    loggedIn: Scalars['Boolean']
+    /** Why the last login failed. */
+    error: (Scalars['String'] | null)
+    __typename: 'PluginAccount'
 }
 
 export interface Status {
@@ -507,6 +522,10 @@ export interface Mutation {
     checkTmdbConnection: Scalars['Boolean']
     setPluginEnabled: Plugin
     setPluginSettings: Plugin
+    /** Logs in to a plugin's site; the account is saved only when the site accepts it. */
+    loginPlugin: Plugin
+    /** Forgets a plugin's account. */
+    logoutPlugin: Plugin
     /** Check npm for newer plugin releases now and install them (local builds stay). Fails when PLUGIN_AUTO_UPDATE=false. */
     updatePlugins: PluginUpdateReport
     __typename: 'Mutation'
@@ -857,6 +876,22 @@ export interface PluginGenqlSelection{
     /** False when the plugin needs something missing here (e.g. FlareSolverr). */
     available?: boolean | number
     settings?: PluginSettingFieldGenqlSelection
+    /** Set when the plugin's site needs the user's account. */
+    account?: PluginAccountGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** A plugin's login on its site. The password is never returned. */
+export interface PluginAccountGenqlSelection{
+    /** Where users without an account can make one. */
+    signupUrl?: boolean | number
+    /** Null while no account is saved. */
+    username?: boolean | number
+    loggedIn?: boolean | number
+    /** Why the last login failed. */
+    error?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1052,6 +1087,10 @@ export interface MutationGenqlSelection{
     checkTmdbConnection?: boolean | number
     setPluginEnabled?: (PluginGenqlSelection & { __args: {name: Scalars['String'], enabled: Scalars['Boolean']} })
     setPluginSettings?: (PluginGenqlSelection & { __args: {name: Scalars['String'], values: PluginSettingInput[]} })
+    /** Logs in to a plugin's site; the account is saved only when the site accepts it. */
+    loginPlugin?: (PluginGenqlSelection & { __args: {name: Scalars['String'], username: Scalars['String'], password: Scalars['String']} })
+    /** Forgets a plugin's account. */
+    logoutPlugin?: (PluginGenqlSelection & { __args: {name: Scalars['String']} })
     /** Check npm for newer plugin releases now and install them (local builds stay). Fails when PLUGIN_AUTO_UPDATE=false. */
     updatePlugins?: PluginUpdateReportGenqlSelection
     __typename?: boolean | number
@@ -1257,6 +1296,14 @@ export interface SubscriptionGenqlSelection{
     export const isPlugin = (obj?: { __typename?: any } | null): obj is Plugin => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isPlugin"')
       return Plugin_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const PluginAccount_possibleTypes: string[] = ['PluginAccount']
+    export const isPluginAccount = (obj?: { __typename?: any } | null): obj is PluginAccount => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isPluginAccount"')
+      return PluginAccount_possibleTypes.includes(obj.__typename)
     }
     
 

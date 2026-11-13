@@ -36,6 +36,7 @@ import com.letsmoe.otter.ui.theme.OtterColors
 private val capabilityText = mapOf(
     "streams" to "Finds stream links for movies and episodes",
     "resolve" to "Turns hoster links into playable video",
+    "login" to "Uses your account on the site",
 )
 
 /** A plugin's details in a bottom sheet: description, what it does, the on/off switch and its settings. Mirrors PluginSheet.svelte. */
@@ -60,6 +61,9 @@ fun PluginSheet(plugin: PluginFields, viewModel: PluginsViewModel) {
                 for (capability in plugin.capabilities) {
                     CapabilityRow(capabilityLabel(capability))
                 }
+            }
+            if (plugin.account != null) {
+                PluginAccountSection(plugin, plugin.account, viewModel)
             }
             if (plugin.settings.isNotEmpty()) {
                 SettingsFields(plugin, draft)

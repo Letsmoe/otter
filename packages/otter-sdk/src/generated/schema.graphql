@@ -372,6 +372,22 @@ type Plugin {
   """
   available: Boolean!
   settings: [PluginSettingField!]!
+
+  """Set when the plugin's site needs the user's account."""
+  account: PluginAccount
+}
+
+"""A plugin's login on its site. The password is never returned."""
+type PluginAccount {
+  """Where users without an account can make one."""
+  signupUrl: String
+
+  """Null while no account is saved."""
+  username: String
+  loggedIn: Boolean!
+
+  """Why the last login failed."""
+  error: String
 }
 
 type Status {
@@ -675,6 +691,14 @@ type Mutation {
   checkTmdbConnection: Boolean!
   setPluginEnabled(name: String!, enabled: Boolean!): Plugin!
   setPluginSettings(name: String!, values: [PluginSettingInput!]!): Plugin!
+
+  """
+  Logs in to a plugin's site; the account is saved only when the site accepts it.
+  """
+  loginPlugin(name: String!, username: String!, password: String!): Plugin!
+
+  """Forgets a plugin's account."""
+  logoutPlugin(name: String!): Plugin!
 
   """
   Check npm for newer plugin releases now and install them (local builds stay). Fails when PLUGIN_AUTO_UPDATE=false.

@@ -121,6 +121,8 @@ type ComplexityRoot struct {
 		HostTogether          func(childComplexity int, profileID string) int
 		JoinTogether          func(childComplexity int, profileID string, code string) int
 		LeaveTogether         func(childComplexity int) int
+		LoginPlugin           func(childComplexity int, name string, username string, password string) int
+		LogoutPlugin          func(childComplexity int, name string) int
 		MarkNotificationsRead func(childComplexity int, profileID string) int
 		OpenDownloadsFolder   func(childComplexity int) int
 		RecordProgress        func(childComplexity int, profileID string, mediaID string, progressSeconds float64, durationSeconds float64) int
@@ -171,6 +173,7 @@ type ComplexityRoot struct {
 	}
 
 	Plugin struct {
+		Account      func(childComplexity int) int
 		Available    func(childComplexity int) int
 		Capabilities func(childComplexity int) int
 		Description  func(childComplexity int) int
@@ -180,6 +183,13 @@ type ComplexityRoot struct {
 		Name         func(childComplexity int) int
 		Settings     func(childComplexity int) int
 		Version      func(childComplexity int) int
+	}
+
+	PluginAccount struct {
+		Error     func(childComplexity int) int
+		LoggedIn  func(childComplexity int) int
+		SignupURL func(childComplexity int) int
+		Username  func(childComplexity int) int
 	}
 
 	PluginSettingField struct {
@@ -442,6 +452,8 @@ type MutationResolver interface {
 	CheckTmdbConnection(ctx context.Context) (bool, error)
 	SetPluginEnabled(ctx context.Context, name string, enabled bool) (*model.Plugin, error)
 	SetPluginSettings(ctx context.Context, name string, values []*model.PluginSettingInput) (*model.Plugin, error)
+	LoginPlugin(ctx context.Context, name string, username string, password string) (*model.Plugin, error)
+	LogoutPlugin(ctx context.Context, name string) (*model.Plugin, error)
 	UpdatePlugins(ctx context.Context) (*model.PluginUpdateReport, error)
 }
 type PersonResolver interface {
@@ -902,6 +914,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.LeaveTogether(childComplexity), true
+	case "Mutation.loginPlugin":
+		if e.ComplexityRoot.Mutation.LoginPlugin == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_loginPlugin_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.LoginPlugin(childComplexity, args["name"].(string), args["username"].(string), args["password"].(string)), true
+	case "Mutation.logoutPlugin":
+		if e.ComplexityRoot.Mutation.LogoutPlugin == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_logoutPlugin_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.LogoutPlugin(childComplexity, args["name"].(string)), true
 	case "Mutation.markNotificationsRead":
 		if e.ComplexityRoot.Mutation.MarkNotificationsRead == nil {
 			break
@@ -1219,6 +1253,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.PinCheck.WaitSeconds(childComplexity), true
 
+	case "Plugin.account":
+		if e.ComplexityRoot.Plugin.Account == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Plugin.Account(childComplexity), true
 	case "Plugin.available":
 		if e.ComplexityRoot.Plugin.Available == nil {
 			break
@@ -1273,6 +1313,31 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Plugin.Version(childComplexity), true
+
+	case "PluginAccount.error":
+		if e.ComplexityRoot.PluginAccount.Error == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PluginAccount.Error(childComplexity), true
+	case "PluginAccount.loggedIn":
+		if e.ComplexityRoot.PluginAccount.LoggedIn == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PluginAccount.LoggedIn(childComplexity), true
+	case "PluginAccount.signupUrl":
+		if e.ComplexityRoot.PluginAccount.SignupURL == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PluginAccount.SignupURL(childComplexity), true
+	case "PluginAccount.username":
+		if e.ComplexityRoot.PluginAccount.Username == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PluginAccount.Username(childComplexity), true
 
 	case "PluginSettingField.default":
 		if e.ComplexityRoot.PluginSettingField.Default == nil {
@@ -2807,6 +2872,19 @@ type Plugin {
   "False when the plugin needs something missing here (e.g. FlareSolverr)."
   available: Boolean!
   settings: [PluginSettingField!]!
+  "Set when the plugin's site needs the user's account."
+  account: PluginAccount
+}
+
+"A plugin's login on its site. The password is never returned."
+type PluginAccount {
+  "Where users without an account can make one."
+  signupUrl: String
+  "Null while no account is saved."
+  username: String
+  loggedIn: Boolean!
+  "Why the last login failed."
+  error: String
 }
 
 type Status {
@@ -3025,6 +3103,10 @@ type Mutation {
   checkTmdbConnection: Boolean!
   setPluginEnabled(name: String!, enabled: Boolean!): Plugin!
   setPluginSettings(name: String!, values: [PluginSettingInput!]!): Plugin!
+  "Logs in to a plugin's site; the account is saved only when the site accepts it."
+  loginPlugin(name: String!, username: String!, password: String!): Plugin!
+  "Forgets a plugin's account."
+  logoutPlugin(name: String!): Plugin!
   "Check npm for newer plugin releases now and install them (local builds stay). Fails when PLUGIN_AUTO_UPDATE=false."
   updatePlugins: PluginUpdateReport!
 }
@@ -3272,8 +3354,24 @@ func (ec *executionContext) childFields_Plugin(ctx context.Context, field graphq
 		return ec.fieldContext_Plugin_available(ctx, field)
 	case "settings":
 		return ec.fieldContext_Plugin_settings(ctx, field)
+	case "account":
+		return ec.fieldContext_Plugin_account(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Plugin", field.Name)
+}
+
+func (ec *executionContext) childFields_PluginAccount(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "signupUrl":
+		return ec.fieldContext_PluginAccount_signupUrl(ctx, field)
+	case "username":
+		return ec.fieldContext_PluginAccount_username(ctx, field)
+	case "loggedIn":
+		return ec.fieldContext_PluginAccount_loggedIn(ctx, field)
+	case "error":
+		return ec.fieldContext_PluginAccount_error(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type PluginAccount", field.Name)
 }
 
 func (ec *executionContext) childFields_PluginSettingField(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -3981,6 +4079,50 @@ func (ec *executionContext) field_Mutation_joinTogether_args(ctx context.Context
 		return nil, err
 	}
 	args["code"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_loginPlugin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "name",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["name"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "username",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["username"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "password",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_logoutPlugin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "name",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["name"] = arg0
 	return args, nil
 }
 
@@ -7358,6 +7500,94 @@ func (ec *executionContext) fieldContext_Mutation_setPluginSettings(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_loginPlugin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_loginPlugin(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().LoginPlugin(ctx, fc.Args["name"].(string), fc.Args["username"].(string), fc.Args["password"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Plugin) graphql.Marshaler {
+			return ec.marshalNPlugin2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPlugin(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_loginPlugin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Plugin(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_loginPlugin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_logoutPlugin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_logoutPlugin(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().LogoutPlugin(ctx, fc.Args["name"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Plugin) graphql.Marshaler {
+			return ec.marshalNPlugin2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPlugin(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_logoutPlugin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Plugin(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_logoutPlugin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_updatePlugins(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -8191,6 +8421,130 @@ func (ec *executionContext) fieldContext_Plugin_settings(_ context.Context, fiel
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _Plugin_account(ctx context.Context, field graphql.CollectedField, obj *model.Plugin) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Plugin_account(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Account, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.PluginAccount) graphql.Marshaler {
+			return ec.marshalOPluginAccount2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginAccount(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Plugin_account(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Plugin",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_PluginAccount(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PluginAccount_signupUrl(ctx context.Context, field graphql.CollectedField, obj *model.PluginAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PluginAccount_signupUrl(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SignupURL, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_PluginAccount_signupUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("PluginAccount", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _PluginAccount_username(ctx context.Context, field graphql.CollectedField, obj *model.PluginAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PluginAccount_username(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Username, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_PluginAccount_username(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("PluginAccount", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _PluginAccount_loggedIn(ctx context.Context, field graphql.CollectedField, obj *model.PluginAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PluginAccount_loggedIn(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LoggedIn, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_PluginAccount_loggedIn(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("PluginAccount", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _PluginAccount_error(ctx context.Context, field graphql.CollectedField, obj *model.PluginAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PluginAccount_error(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Error, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_PluginAccount_error(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("PluginAccount", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _PluginSettingField_key(ctx context.Context, field graphql.CollectedField, obj *model.PluginSettingField) (ret graphql.Marshaler) {
@@ -14705,6 +15059,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "loginPlugin":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_loginPlugin(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "logoutPlugin":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_logoutPlugin(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "updatePlugins":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updatePlugins(ctx, field)
@@ -15063,6 +15431,53 @@ func (ec *executionContext) _Plugin(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "account":
+			out.Values[i] = ec._Plugin_account(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var pluginAccountImplementors = []string{"PluginAccount"}
+
+func (ec *executionContext) _PluginAccount(ctx context.Context, sel ast.SelectionSet, obj *model.PluginAccount) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pluginAccountImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PluginAccount")
+		case "signupUrl":
+			out.Values[i] = ec._PluginAccount_signupUrl(ctx, field, obj)
+		case "username":
+			out.Values[i] = ec._PluginAccount_username(ctx, field, obj)
+		case "loggedIn":
+			out.Values[i] = ec._PluginAccount_loggedIn(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "error":
+			out.Values[i] = ec._PluginAccount_error(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -18846,6 +19261,13 @@ func (ec *executionContext) marshalOPerson2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋi
 		return graphql.Null
 	}
 	return ec._Person(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOPluginAccount2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPluginAccount(ctx context.Context, sel ast.SelectionSet, v *model.PluginAccount) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PluginAccount(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {

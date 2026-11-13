@@ -1,6 +1,7 @@
 package graphql
 
 import (
+	"github.com/Letsmoe/otter/internal/accounts"
 	"github.com/Letsmoe/otter/internal/downloads"
 	"github.com/Letsmoe/otter/internal/library"
 	"github.com/Letsmoe/otter/internal/notify"
@@ -28,6 +29,8 @@ type Services struct {
 	Recommender         *recommend.Engine
 	Settings            *settings.Service
 	Plugins             *plugins.Registry
+	// Accounts are the user's logins for plugins whose site needs one.
+	Accounts *accounts.Service
 	// PluginStore is nil while plugin updates are turned off.
 	PluginStore    *pluginstore.Service
 	StreamResolver *resolve.Service

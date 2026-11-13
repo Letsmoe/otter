@@ -18,6 +18,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Letsmoe/otter/internal/accounts"
 	gqlapi "github.com/Letsmoe/otter/internal/api/graphql"
 	imgapi "github.com/Letsmoe/otter/internal/api/imgcache"
 	"github.com/Letsmoe/otter/internal/blobcache"
@@ -34,6 +35,7 @@ import (
 	"github.com/Letsmoe/otter/internal/profiles"
 	"github.com/Letsmoe/otter/internal/recommend"
 	"github.com/Letsmoe/otter/internal/resolve"
+	"github.com/Letsmoe/otter/internal/secrets"
 	"github.com/Letsmoe/otter/internal/settings"
 	"github.com/Letsmoe/otter/internal/skips"
 	"github.com/Letsmoe/otter/internal/storage"
@@ -150,6 +152,10 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	if err != nil {
 		return serverHandlers{}, err
 	}
+	accountService, err := pluginAccounts(ctx, cfg, database, runner)
+	if err != nil {
+		return serverHandlers{}, err
+	}
 	hookRunner := hooks.New(cfg.hooksDir, []string{"OTTER_URL=" + cfg.publicURL})
 	tmdbClient := tmdb.NewClient(settingsService.TMDB)
 	// Find out early whether the key works, so the apps can ask for a new one.
@@ -191,6 +197,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 		Recommender:         recommend.New(database),
 		Settings:            settingsService,
 		Plugins:             registry,
+		Accounts:            accountService,
 		PluginStore:         pluginStore,
 		StreamResolver:      streamResolver,
 		StreamProxy:         streamProxy,
@@ -239,6 +246,20 @@ func loadPlugins(ctx context.Context, cfg config, settingsService *settings.Serv
 	}
 	registry.RestoreDisabled(settingsService.Cached().DisabledPlugins)
 	return registry, runner, nil
+}
+
+// pluginAccounts loads the saved site logins and hands them to plugin calls.
+func pluginAccounts(ctx context.Context, cfg config, database *db.DB, runner *plugins.Runner) (*accounts.Service, error) {
+	box, err := secrets.Load(cfg.dataDir)
+	if err != nil {
+		return nil, err
+	}
+	service, err := accounts.NewService(ctx, database, box, runner)
+	if err != nil {
+		return nil, err
+	}
+	runner.SetAccountProvider(service)
+	return service, nil
 }
 
 // startPluginStore swaps in newer npm releases of the installed bundles

@@ -110,6 +110,24 @@ fragment PluginFields on Plugin {
     default
     value
   }
+  account {
+    signupUrl
+    username
+    loggedIn
+    error
+  }
+}
+
+mutation LoginPlugin($name: String!, $username: String!, $password: String!) {
+  loginPlugin(name: $name, username: $username, password: $password) {
+    ...PluginFields
+  }
+}
+
+mutation LogoutPlugin($name: String!) {
+  logoutPlugin(name: $name) {
+    ...PluginFields
+  }
 }
 
 query Plugins {

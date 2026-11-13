@@ -31,6 +31,21 @@ type Runner struct {
 	executor         executor
 	envVars          []string // global env vars passed to every plugin invocation
 	settingsProvider PluginSettingsProvider
+	accountProvider  AccountProvider
+}
+
+// AccountProvider keeps the logins of plugins whose site needs an account.
+type AccountProvider interface {
+	HasAccount(pluginName string) bool
+	// AccountEnv is the username and session, as env entries.
+	AccountEnv(pluginName string) []string
+	// Relogin logs in again with the saved password after the session expired.
+	Relogin(ctx context.Context, p *Plugin) error
+}
+
+// SetAccountProvider wires in the saved plugin logins.
+func (r *Runner) SetAccountProvider(p AccountProvider) {
+	r.accountProvider = p
 }
 
 // NewEmbeddedRunner runs pre-bundled plugins in an in-process JS engine, for
@@ -72,7 +87,21 @@ const (
 	// ErrorCodeDeadLink: the hoster says the video is gone; the link never
 	// plays again.
 	ErrorCodeDeadLink = "dead_link"
+	// ErrorCodeLoggedOut: the site no longer accepts the session (or there is
+	// none); the backend logs in again and retries once.
+	ErrorCodeLoggedOut = "logged_out"
+	// ErrorCodeLoginFailed: the site refused the username or password.
+	ErrorCodeLoginFailed = "login_failed"
 )
+
+// IsLoggedOut reports whether err is a plugin saying its session is gone.
+func IsLoggedOut(err error) bool {
+	var pluginError *PluginError
+	if !errors.As(err, &pluginError) {
+		return false
+	}
+	return pluginError.Code == ErrorCodeLoggedOut
+}
 
 // IsDeadLink reports whether err is a resolver saying the link's video is gone.
 func IsDeadLink(err error) bool {
@@ -94,7 +123,8 @@ func IsExpectedFailure(err error) bool {
 		return false
 	}
 	switch pluginError.Code {
-	case ErrorCodeBlocked, ErrorCodeSourceOffline, ErrorCodeRateLimited, ErrorCodeDeadLink:
+	case ErrorCodeBlocked, ErrorCodeSourceOffline, ErrorCodeRateLimited, ErrorCodeDeadLink,
+		ErrorCodeLoggedOut, ErrorCodeLoginFailed:
 		return true
 	}
 	return false
@@ -116,12 +146,15 @@ func (r *Runner) invoke(ctx context.Context, p *Plugin, cap Capability, args int
 	ctx, span := tracing.StartSpan(ctx, "plugin "+string(cap)+" "+p.Meta.Name,
 		attribute.String("otter.plugin", p.Meta.Name),
 		attribute.String("otter.plugin_version", p.Meta.Version),
-		tracing.JSON("otter.plugin_args", args),
+		tracing.JSON("otter.plugin_args", traceableArgs(cap, args)),
 	)
 	defer span.End()
 	result, err := r.invokeInSpan(ctx, p, cap, args)
-	if err == nil {
+	// A login's result is the session: it stays out of traces like the password.
+	if err == nil && cap != CapabilityLogin {
 		tracing.SetJSON(span, "otter.plugin_result", result)
+	}
+	if err == nil {
 		return result, nil
 	}
 	span.RecordError(err)
@@ -130,6 +163,18 @@ func (r *Runner) invoke(ctx context.Context, p *Plugin, cap Capability, args int
 		tracing.Fail(span, err)
 	}
 	return nil, err
+}
+
+// traceableArgs is what a span may show of a call's arguments: a login's password is hidden.
+func traceableArgs(cap Capability, args interface{}) interface{} {
+	if cap != CapabilityLogin {
+		return args
+	}
+	login, isLogin := args.(LoginArgs)
+	if !isLogin {
+		return "[hidden]"
+	}
+	return map[string]string{"username": login.Username, "password": "[hidden]"}
 }
 
 func (r *Runner) invokeInSpan(ctx context.Context, p *Plugin, cap Capability, args interface{}) (json.RawMessage, error) {
@@ -171,7 +216,48 @@ func (r *Runner) execute(ctx context.Context, p *Plugin, call invocation) ([]byt
 	if r.settingsProvider != nil {
 		env = append(env, r.settingsProvider.PluginEnv(p.Meta.Name)...)
 	}
+	if r.accountProvider != nil && p.Meta.Account != nil {
+		env = append(env, r.accountProvider.AccountEnv(p.Meta.Name)...)
+	}
 	return r.executor.run(ctx, p, payload, env)
+}
+
+// invokeWithAccount runs a call of a plugin that needs an account: without
+// one it fails right away, and an expired session is renewed once.
+func (r *Runner) invokeWithAccount(ctx context.Context, p *Plugin, cap Capability, args interface{}) (json.RawMessage, error) {
+	if p.Meta.Account == nil || r.accountProvider == nil {
+		return r.invoke(ctx, p, cap, args)
+	}
+	if !r.accountProvider.HasAccount(p.Meta.Name) {
+		return nil, &PluginError{Plugin: p.Meta.Name, Message: "log in to this site in the plugin's settings", Code: ErrorCodeLoggedOut}
+	}
+	result, err := r.invoke(ctx, p, cap, args)
+	if !IsLoggedOut(err) {
+		return result, err
+	}
+	if err := r.accountProvider.Relogin(ctx, p); err != nil {
+		return nil, err
+	}
+	return r.invoke(ctx, p, cap, args)
+}
+
+// Login hands the user's credentials to the plugin, which returns a session.
+func (r *Runner) Login(ctx context.Context, p *Plugin, args LoginArgs) (*LoginResult, error) {
+	if !p.Meta.Has(CapabilityLogin) {
+		return nil, fmt.Errorf("plugin %q has no login", p.Meta.Name)
+	}
+	raw, err := r.invoke(ctx, p, CapabilityLogin, args)
+	if err != nil {
+		return nil, err
+	}
+	var result LoginResult
+	if err := json.Unmarshal(raw, &result); err != nil {
+		return nil, err
+	}
+	if result.Session == "" {
+		return nil, fmt.Errorf("plugin %q returned no session", p.Meta.Name)
+	}
+	return &result, nil
 }
 
 // install fetches the plugin's dependencies inside its directory.
@@ -184,7 +270,7 @@ func (r *Runner) Streams(ctx context.Context, p *Plugin, args StreamsArgs) (*Str
 	if !p.Meta.Has(CapabilityStreams) {
 		return nil, fmt.Errorf("plugin %q does not support streams", p.Meta.Name)
 	}
-	raw, err := r.invoke(ctx, p, CapabilityStreams, args)
+	raw, err := r.invokeWithAccount(ctx, p, CapabilityStreams, args)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +283,7 @@ func (r *Runner) Subtitles(ctx context.Context, p *Plugin, args SubtitlesArgs) (
 	if !p.Meta.Has(CapabilitySubtitles) {
 		return nil, fmt.Errorf("plugin %q does not support subtitles", p.Meta.Name)
 	}
-	raw, err := r.invoke(ctx, p, CapabilitySubtitles, args)
+	raw, err := r.invokeWithAccount(ctx, p, CapabilitySubtitles, args)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +296,7 @@ func (r *Runner) Resolve(ctx context.Context, p *Plugin, url string) (*ResolveRe
 	if !p.Meta.Has(CapabilityResolve) {
 		return nil, fmt.Errorf("plugin %q does not support resolve", p.Meta.Name)
 	}
-	raw, err := r.invoke(ctx, p, CapabilityResolve, ResolveArgs{URL: url})
+	raw, err := r.invokeWithAccount(ctx, p, CapabilityResolve, ResolveArgs{URL: url})
 	if err != nil {
 		return nil, err
 	}

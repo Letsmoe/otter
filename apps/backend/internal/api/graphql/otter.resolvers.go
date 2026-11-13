@@ -415,6 +415,29 @@ func (r *mutationResolver) SetPluginSettings(ctx context.Context, name string, v
 	return r.pluginByName(name)
 }
 
+// LoginPlugin is the resolver for the loginPlugin field.
+func (r *mutationResolver) LoginPlugin(ctx context.Context, name string, username string, password string) (*model.Plugin, error) {
+	plugin, err := r.pluginToLogIn(name)
+	if err != nil {
+		return nil, err
+	}
+	if err := r.Accounts.Login(ctx, plugin, strings.TrimSpace(username), password); err != nil {
+		return nil, loginErrorMessage(err)
+	}
+	return r.pluginByName(name)
+}
+
+// LogoutPlugin is the resolver for the logoutPlugin field.
+func (r *mutationResolver) LogoutPlugin(ctx context.Context, name string) (*model.Plugin, error) {
+	if _, err := r.pluginToLogIn(name); err != nil {
+		return nil, err
+	}
+	if err := r.Accounts.Logout(ctx, name); err != nil {
+		return nil, err
+	}
+	return r.pluginByName(name)
+}
+
 // UpdatePlugins is the resolver for the updatePlugins field.
 func (r *mutationResolver) UpdatePlugins(ctx context.Context) (*model.PluginUpdateReport, error) {
 	if r.PluginStore == nil {
@@ -838,7 +861,7 @@ func (r *queryResolver) Plugins(ctx context.Context) ([]*model.Plugin, error) {
 	pluginSettings := r.Services.Settings.Cached().PluginSettings
 	models := []*model.Plugin{}
 	for _, plugin := range r.Services.Plugins.All() {
-		models = append(models, pluginModel(plugin, r.Services.Plugins, pluginSettings[plugin.Meta.Name]))
+		models = append(models, r.pluginWithAccount(plugin, pluginSettings[plugin.Meta.Name]))
 	}
 	slices.SortFunc(models, func(left, right *model.Plugin) int { return strings.Compare(left.Name, right.Name) })
 	return models, nil

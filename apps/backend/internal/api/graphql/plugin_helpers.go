@@ -2,11 +2,13 @@ package graphql
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/Letsmoe/otter/internal/api/graphql/model"
 	"github.com/Letsmoe/otter/internal/library"
+	"github.com/Letsmoe/otter/internal/plugins"
 	"github.com/Letsmoe/otter/internal/pluginstore"
 	"github.com/Letsmoe/otter/internal/settings"
 )
@@ -17,7 +19,45 @@ func (r *Resolver) pluginByName(name string) (*model.Plugin, error) {
 		return nil, fmt.Errorf("plugin %q is not installed", name)
 	}
 	values := r.Settings.Cached().PluginSettings[name]
-	return pluginModel(plugin, r.Plugins, values), nil
+	return r.pluginWithAccount(plugin, values), nil
+}
+
+// pluginWithAccount is the plugin's model with its login, for plugins whose site needs one.
+func (r *Resolver) pluginWithAccount(plugin *plugins.Plugin, values map[string]string) *model.Plugin {
+	pluginModel := pluginModel(plugin, r.Plugins, values)
+	if plugin.Meta.Account == nil {
+		return pluginModel
+	}
+	pluginModel.Account = &model.PluginAccount{SignupURL: optional(plugin.Meta.Account.SignupURL)}
+	status := r.Accounts.Status(plugin.Meta.Name)
+	if status == nil {
+		return pluginModel
+	}
+	pluginModel.Account.Username = optional(status.Username)
+	pluginModel.Account.LoggedIn = status.LoggedIn
+	pluginModel.Account.Error = optional(status.Error)
+	return pluginModel
+}
+
+// loginErrorMessage is what the login form shows: the site's own words when it refused the credentials.
+func loginErrorMessage(err error) error {
+	var pluginError *plugins.PluginError
+	if errors.As(err, &pluginError) {
+		return errors.New(pluginError.Message)
+	}
+	return fmt.Errorf("logging in failed: %w", err)
+}
+
+// pluginToLogIn is an installed plugin whose site needs an account.
+func (r *Resolver) pluginToLogIn(name string) (*plugins.Plugin, error) {
+	plugin, found := r.Plugins.Get(name)
+	if !found {
+		return nil, fmt.Errorf("plugin %q is not installed", name)
+	}
+	if plugin.Meta.Account == nil {
+		return nil, fmt.Errorf("plugin %q needs no account", name)
+	}
+	return plugin, nil
 }
 
 // reloadUpdatedPlugin loads a freshly installed bundle now, so the apps'
