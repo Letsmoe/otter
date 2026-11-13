@@ -96,7 +96,7 @@ func (mirror profileMirror) pull(ctx context.Context) (int, error) {
 	for _, row := range mirrored {
 		byRowID[row.RowID] = row
 	}
-	if err := mirror.addVanishedRows(remote, deletedRowIDs, mirrored); err != nil {
+	if err := addVanishedRows(mirror.store, remote, deletedRowIDs, mirrored); err != nil {
 		return 0, err
 	}
 	applied := 0
@@ -125,8 +125,8 @@ func (mirror profileMirror) pull(ctx context.Context) (int, error) {
 // addVanishedRows counts mirrored rows the store no longer has as deleted: a row
 // deleted before it was ever pushed leaves no deletion mark. Only while the store
 // holds the collection's root, so a wiped or unready store never deletes profiles.
-func (mirror profileMirror) addVanishedRows(remote map[string]map[string]any, deletedRowIDs map[string]bool, mirrored []mirroredRow) error {
-	present, err := mirror.store.hasRoot()
+func addVanishedRows(store rowStore, remote map[string]map[string]any, deletedRowIDs map[string]bool, mirrored []mirroredRow) error {
+	present, err := store.hasRoot()
 	if err != nil || !present {
 		return err
 	}

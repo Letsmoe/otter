@@ -57,7 +57,7 @@ private fun WelcomeContent(account: NeoworksAccountState) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("Welcome to Otter", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
             Text(
-                "Sign in with Neoworks to keep your profiles in sync across your devices, end-to-end encrypted. " +
+                "Sign in with Neoworks to keep your profiles, watch history and My List in sync across your devices, end-to-end encrypted. " +
                     "Or continue as a guest; you can sign in later in Settings.",
                 fontSize = 14.sp,
                 color = Color.White.copy(alpha = 0.7f),

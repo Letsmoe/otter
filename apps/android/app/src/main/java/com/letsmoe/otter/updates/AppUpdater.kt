@@ -62,7 +62,8 @@ object AppUpdater {
     private var checked = false
 
     fun checkForUpdate() {
-        if (checked) {
+        // A local build (no CI build number) is signed with the debug key; no published APK installs over it.
+        if (checked || BuildConfig.BUILD_NUMBER == 0) {
             return
         }
         checked = true

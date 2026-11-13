@@ -27,13 +27,13 @@ import java.time.format.DateTimeFormatter
 
 private val syncTimeFormat = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault())
 
-/** The household's Neoworks account, which syncs profiles between devices. */
+/** The household's Neoworks account, which syncs profiles and what they watched between devices. */
 @Composable
 fun SyncGroup() {
     LaunchedEffect(Unit) { NeoworksAccountStore.refresh() }
     val account by NeoworksAccountStore.state.collectAsStateWithLifecycle()
-    val footer = "One Neoworks account per household, end-to-end encrypted. Profiles sync between its devices " +
-        "now; watch history, My List, ratings and settings follow in a later update."
+    val footer = "One Neoworks account per household, end-to-end encrypted. Profiles, watch history, My List, " +
+        "ratings and settings sync between its devices."
     SettingsGroup("Sync", footer = footer) {
         AccountRow(account)
         if (account.signedIn) {

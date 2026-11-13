@@ -91,20 +91,87 @@ func (s *Service) runSync(ctx context.Context) (SyncResult, error) {
 	if err := ensureRoot(store, client); err != nil {
 		return SyncResult{}, err
 	}
-	mirror := profileMirror{database: s.database, store: store}
-	received, err := mirror.pull(ctx)
-	if err != nil {
-		return SyncResult{Received: received}, fmt.Errorf("apply profiles: %w", err)
-	}
-	sent, err := mirror.push(ctx)
-	if err != nil {
-		return SyncResult{Received: received, Sent: sent}, fmt.Errorf("write profiles: %w", err)
-	}
-	result := SyncResult{Received: received, Sent: sent}
-	if sent == 0 {
-		return result, nil
+	result, err := s.mirrorAll(ctx, store)
+	if err != nil || result.Sent == 0 {
+		return result, err
 	}
 	return result, s.exchange(ctx, client)
+}
+
+// mirrorAll applies what other devices changed, then writes what changed here.
+// Profiles go first both ways: history, lists and ratings belong to their rows.
+func (s *Service) mirrorAll(ctx context.Context, store rowStore) (SyncResult, error) {
+	result := SyncResult{}
+	profiles := profileMirror{database: s.database, store: store}
+	received, err := profiles.pull(ctx)
+	result.Received += received
+	if err != nil {
+		return result, fmt.Errorf("apply profiles: %w", err)
+	}
+	received, err = s.pullItems(ctx, store)
+	result.Received += received
+	if err != nil {
+		return result, err
+	}
+	sent, err := profiles.push(ctx)
+	result.Sent += sent
+	if err != nil {
+		return result, fmt.Errorf("write profiles: %w", err)
+	}
+	sent, err = s.pushItems(ctx, store)
+	result.Sent += sent
+	if err != nil || s.householdSettings == nil {
+		return result, err
+	}
+	mirror := settingsMirror{database: s.database, store: store, settings: s.householdSettings, restoreDisabled: s.restoreDisabled}
+	received, sent, err = mirror.sync(ctx)
+	result.Received += received
+	result.Sent += sent
+	if err != nil {
+		return result, fmt.Errorf("settings: %w", err)
+	}
+	return result, nil
+}
+
+// SetSettings lets sync read and change the household's settings;
+// restoreDisabled switches plugins off in the running plugin registry.
+func (s *Service) SetSettings(household HouseholdSettings, restoreDisabled func(names []string)) {
+	s.householdSettings = household
+	s.restoreDisabled = restoreDisabled
+}
+
+// pullItems applies the watch progress, list entries and ratings other devices changed.
+func (s *Service) pullItems(ctx context.Context, store rowStore) (int, error) {
+	profileLinks, err := loadProfileRows(ctx, s.database)
+	if err != nil {
+		return 0, err
+	}
+	received := 0
+	for _, spec := range itemSpecs {
+		count, err := itemMirror{database: s.database, store: store, spec: spec}.pull(ctx, profileLinks)
+		received += count
+		if err != nil {
+			return received, fmt.Errorf("apply %s: %w", spec.table, err)
+		}
+	}
+	return received, nil
+}
+
+// pushItems writes the watch progress, list entries and ratings changed here.
+func (s *Service) pushItems(ctx context.Context, store rowStore) (int, error) {
+	profileLinks, err := loadProfileRows(ctx, s.database)
+	if err != nil {
+		return 0, err
+	}
+	sent := 0
+	for _, spec := range itemSpecs {
+		count, err := itemMirror{database: s.database, store: store, spec: spec}.push(ctx, profileLinks)
+		sent += count
+		if err != nil {
+			return sent, fmt.Errorf("write %s: %w", spec.table, err)
+		}
+	}
+	return sent, nil
 }
 
 // ensureDescriptor registers @letsmoe/otter with the client and has the

@@ -144,7 +144,7 @@
 		<p class="text-xs text-[#f87171]">{error}</p>
 	{/if}
 	<p class="text-xs opacity-50">
-		One Neoworks account per household, end-to-end encrypted. Profiles sync between its devices
-		now; watch history, My List, ratings and settings follow in a later update.
+		One Neoworks account per household, end-to-end encrypted. Profiles, watch history, My List,
+		ratings and settings sync between its devices.
 	</p>
 </section>
