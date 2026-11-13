@@ -1,0 +1,4 @@
+# Worker secrets (TMDB_API_KEY, ANDROID_CERT_FINGERPRINTS); see wrangler.toml.
+.env
+.dev.vars
+.wrangler/

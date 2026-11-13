@@ -1,0 +1,62 @@
+# Deploys otter.letsmoe.com (apps/share), the Cloudflare Worker behind shared Otter links.
+#
+# Secrets (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN       API token with the "Edit Cloudflare Workers" template, letsmoe.com zone included
+#   CLOUDFLARE_ACCOUNT_ID      Cloudflare dashboard → Workers & Pages → Account ID
+#   TMDB_API_KEY               TMDB v3 key (shared with the Android build)
+#   ANDROID_CERT_FINGERPRINT   SHA-256 of the APK signing key, B2:B9:…:2E (apksigner verify --print-certs)
+name: Share site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - apps/share/**
+      - .github/workflows/share.yml
+  workflow_dispatch:
+
+concurrency:
+  group: share
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun install --frozen-lockfile
+
+      - name: Test
+        working-directory: apps/share
+        run: bun test
+
+      # The Worker reads its secrets from .env, the same file `wrangler dev` uses locally.
+      - name: Write the Worker's secrets
+        working-directory: apps/share
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          ANDROID_CERT_FINGERPRINTS: ${{ secrets.ANDROID_CERT_FINGERPRINT }}
+        run: |
+          if [ -z "$TMDB_API_KEY" ] || [ -z "$ANDROID_CERT_FINGERPRINTS" ]; then
+            echo "::error::TMDB_API_KEY and ANDROID_CERT_FINGERPRINT must be set as repository secrets."
+            exit 1
+          fi
+          printf 'TMDB_API_KEY=%s\nANDROID_CERT_FINGERPRINTS=%s\n' "$TMDB_API_KEY" "$ANDROID_CERT_FINGERPRINTS" > .env
+
+      - name: Deploy
+        working-directory: apps/share
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::warning::CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are not set; nothing was deployed."
+            exit 0
+          fi
+          bunx wrangler deploy
+          bunx wrangler secret bulk .env
+          rm .env
