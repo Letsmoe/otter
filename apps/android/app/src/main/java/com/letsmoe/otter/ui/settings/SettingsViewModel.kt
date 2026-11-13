@@ -11,6 +11,7 @@ import com.letsmoe.otter.api.dataOrThrow
 import com.letsmoe.otter.graphql.AppSettingsQuery
 import com.letsmoe.otter.graphql.UpdateAppSettingsMutation
 import com.letsmoe.otter.graphql.type.SettingsInput
+import com.letsmoe.otter.reporting.ErrorReporting
 import com.letsmoe.otter.toasts.ToastKind
 import com.letsmoe.otter.toasts.Toasts
 import com.letsmoe.otter.ui.ShellReloads
@@ -37,6 +38,8 @@ class SettingsViewModel : ViewModel() {
     var tmdbApiKey by mutableStateOf("")
     var tmdbLanguage by mutableStateOf("de-DE")
     var requireVpn by mutableStateOf(false)
+    var errorReporting by mutableStateOf(ErrorReporting.isEnabled())
+        private set
     var hasBuiltInKey by mutableStateOf(false)
         private set
     var usesBuiltInKey by mutableStateOf(false)
@@ -107,6 +110,13 @@ class SettingsViewModel : ViewModel() {
     fun changeRequireVpn(value: Boolean) {
         requireVpn = value
         save(SettingsInput(requireVpn = Optional.present(value)))
+    }
+
+    /** Turns reporting off for the app and for the backend it talks to. */
+    fun changeErrorReporting(value: Boolean) {
+        errorReporting = value
+        ErrorReporting.setEnabled(value)
+        save(SettingsInput(errorReporting = Optional.present(value)))
     }
 
     // Pages opened before keep titles in the old language: rebuild them once Settings closes.

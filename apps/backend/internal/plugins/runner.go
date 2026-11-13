@@ -79,6 +79,23 @@ func IsDeadLink(err error) bool {
 	return pluginError.Code == ErrorCodeDeadLink
 }
 
+// IsExpectedFailure reports whether err is the site's fault rather than the
+// plugin's: blocked, offline, rate limited, a dead link or a timeout.
+func IsExpectedFailure(err error) bool {
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+		return true
+	}
+	var pluginError *PluginError
+	if !errors.As(err, &pluginError) {
+		return false
+	}
+	switch pluginError.Code {
+	case ErrorCodeBlocked, ErrorCodeSourceOffline, ErrorCodeRateLimited, ErrorCodeDeadLink:
+		return true
+	}
+	return false
+}
+
 // PluginError is a failure a plugin reported itself, with the optional code
 // that says why. Callers match it with errors.As.
 type PluginError struct {

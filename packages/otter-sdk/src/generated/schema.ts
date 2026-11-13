@@ -282,6 +282,8 @@ export interface Settings {
     /** Whether the first-run TMDB key dialog was answered. */
     tmdbKeyPromptSeen: Scalars['Boolean']
     requireVpn: Scalars['Boolean']
+    /** Whether errors are sent to the developers (PostHog error tracking). */
+    errorReporting: Scalars['Boolean']
     disabledPlugins: Scalars['String'][]
     __typename: 'Settings'
 }
@@ -821,12 +823,14 @@ export interface SettingsGenqlSelection{
     /** Whether the first-run TMDB key dialog was answered. */
     tmdbKeyPromptSeen?: boolean | number
     requireVpn?: boolean | number
+    /** Whether errors are sent to the developers (PostHog error tracking). */
+    errorReporting?: boolean | number
     disabledPlugins?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
 
-export interface SettingsInput {tmdbApiKey?: (Scalars['String'] | null),tmdbLanguage?: (Scalars['String'] | null),tmdbKeyPromptSeen?: (Scalars['Boolean'] | null),requireVpn?: (Scalars['Boolean'] | null)}
+export interface SettingsInput {tmdbApiKey?: (Scalars['String'] | null),tmdbLanguage?: (Scalars['String'] | null),tmdbKeyPromptSeen?: (Scalars['Boolean'] | null),requireVpn?: (Scalars['Boolean'] | null),errorReporting?: (Scalars['Boolean'] | null)}
 
 export interface PluginSettingFieldGenqlSelection{
     key?: boolean | number

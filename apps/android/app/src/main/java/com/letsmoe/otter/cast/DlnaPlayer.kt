@@ -13,6 +13,7 @@ import androidx.media3.common.SimpleBasePlayer
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.letsmoe.otter.backend.EmbeddedBackend
+import com.letsmoe.otter.reporting.ErrorReporting
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -86,6 +87,8 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
     private var subtitleFile: TelevisionSubtitleFile? = null
     // Asked once per player; null until then.
     private var acceptedFormats: List<TelevisionFormat>? = null
+    // What the TV was last told to play, for error reports.
+    private var lastMedia: TelevisionMedia? = null
 
     private var isContinuous = false
     // Where the TV's 0:00 lies on the title's timeline (continuous streams).
@@ -377,7 +380,9 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         val format = announcedFormat(mimeType, televisionFormats())
         val formattedPath = TelevisionUrls.withFormat(path, mimeType, format)
         val url = origin + TelevisionUrls.withSubtitle(formattedPath, subtitleFile?.id)
-        return TelevisionMedia(url, title, format.mimeType, seekableBytes, televisionSubtitle(origin), format.profile)
+        val media = TelevisionMedia(url, title, format.mimeType, seekableBytes, televisionSubtitle(origin), format.profile)
+        lastMedia = media
+        return media
     }
 
     private suspend fun televisionFormats(): List<TelevisionFormat> {
@@ -424,6 +429,7 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
 
     private fun fail(error: Exception) {
         Log.w(TAG, "TV playback failed", error)
+        reportFailure(error)
         var message = error.message
         if (message == null) {
             message = "The TV could not play this."
@@ -440,6 +446,28 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         televisionPlaying = false
         stopWork()
         invalidateState()
+    }
+
+    // What a TV that refuses to play needs to be reproduced: the TV, what it accepts and what it was sent.
+    private fun reportFailure(error: Exception) {
+        val media = lastMedia
+        val formats = acceptedFormats.orEmpty().joinToString { format -> "${format.mimeType} ${format.profile.orEmpty()}".trim() }
+        ErrorReporting.capture(
+            error,
+            "dlna.playback",
+            mapOf(
+                "tv_name" to renderer.name,
+                "tv_model" to renderer.model,
+                "tv_description" to renderer.description,
+                "tv_accepted_formats" to formats,
+                "media_url" to media?.url,
+                "media_mime_type" to media?.mimeType,
+                "media_profile" to media?.profile,
+                "media_continuous" to isContinuous,
+                "media_height" to streamHeight,
+                "played_before_failing" to hasPlayed,
+            ),
+        )
     }
 
     // Polling ------------------------------------------------------------------

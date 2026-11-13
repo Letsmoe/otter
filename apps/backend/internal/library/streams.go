@@ -152,6 +152,7 @@ func (s *Service) askPlugin(ctx context.Context, plugin *plugins.Plugin, ref Med
 	result, err := s.runner.Streams(pluginContext, plugin, args)
 	if err != nil {
 		log.Printf("library: %s streams for %s %d: %v", plugin.Meta.Name, ref.MediaType, ref.MediaID, err)
+		plugins.ReportFailure(err, plugin, plugins.CapabilityStreams, map[string]any{"query": args})
 		return
 	}
 	if err := s.Store.ReplacePluginStreams(ctx, ref, plugin.Meta.Name, result.Downloads); err != nil {

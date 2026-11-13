@@ -162,6 +162,7 @@ func (s *Service) askPlugin(ctx context.Context, plugin *plugins.Plugin, mediaID
 	result, err := s.runner.Subtitles(pluginContext, plugin, args)
 	if err != nil {
 		log.Printf("subtitles: %s for %s: %v", plugin.Meta.Name, mediaID, err)
+		plugins.ReportFailure(err, plugin, plugins.CapabilitySubtitles, map[string]any{"query": args})
 		return
 	}
 	files := usableFiles(result.Subtitles)

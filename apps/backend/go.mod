@@ -13,6 +13,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/pion/webrtc/v4 v4.2.22
+	github.com/posthog/posthog-go v1.44.1
 	github.com/tetratelabs/wazero v1.12.0
 	github.com/vektah/gqlparser/v2 v2.5.33
 	github.com/wlynxg/anet v0.0.5
@@ -21,6 +22,12 @@ require (
 	golang.org/x/net v0.59.0
 	golang.org/x/sync v0.23.0
 	modernc.org/sqlite v1.59.0
+)
+
+require (
+	github.com/andybalholm/brotli v1.1.1 // indirect
+	github.com/goccy/go-json v0.10.6 // indirect
+	github.com/klauspost/compress v1.17.11 // indirect
 )
 
 require (
@@ -34,7 +41,6 @@ require (
 	github.com/go-sourcemap/sourcemap v2.1.4+incompatible // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
-	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/pprof v0.0.0-20260802141513-ef3492d7dac3 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect

@@ -282,6 +282,7 @@ type ComplexityRoot struct {
 
 	Settings struct {
 		DisabledPlugins    func(childComplexity int) int
+		ErrorReporting     func(childComplexity int) int
 		HasDefaultTmdbKey  func(childComplexity int) int
 		RequireVpn         func(childComplexity int) int
 		TmdbAPIKey         func(childComplexity int) int
@@ -1830,6 +1831,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Settings.DisabledPlugins(childComplexity), true
+	case "Settings.errorReporting":
+		if e.ComplexityRoot.Settings.ErrorReporting == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Settings.ErrorReporting(childComplexity), true
 	case "Settings.hasDefaultTmdbKey":
 		if e.ComplexityRoot.Settings.HasDefaultTmdbKey == nil {
 			break
@@ -2761,6 +2768,8 @@ type Settings {
   "Whether the first-run TMDB key dialog was answered."
   tmdbKeyPromptSeen: Boolean!
   requireVpn: Boolean!
+  "Whether errors are sent to the developers (PostHog error tracking)."
+  errorReporting: Boolean!
   disabledPlugins: [String!]!
 }
 
@@ -2769,6 +2778,7 @@ input SettingsInput {
   tmdbLanguage: String
   tmdbKeyPromptSeen: Boolean
   requireVpn: Boolean
+  errorReporting: Boolean
 }
 
 type PluginSettingField {
@@ -3412,6 +3422,8 @@ func (ec *executionContext) childFields_Settings(ctx context.Context, field grap
 		return ec.fieldContext_Settings_tmdbKeyPromptSeen(ctx, field)
 	case "requireVpn":
 		return ec.fieldContext_Settings_requireVpn(ctx, field)
+	case "errorReporting":
+		return ec.fieldContext_Settings_errorReporting(ctx, field)
 	case "disabledPlugins":
 		return ec.fieldContext_Settings_disabledPlugins(ctx, field)
 	}
@@ -10615,6 +10627,29 @@ func (ec *executionContext) fieldContext_Settings_requireVpn(_ context.Context, 
 	return graphql.NewScalarFieldContext("Settings", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
+func (ec *executionContext) _Settings_errorReporting(ctx context.Context, field graphql.CollectedField, obj *model.Settings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Settings_errorReporting(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ErrorReporting, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Settings_errorReporting(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Settings", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
 func (ec *executionContext) _Settings_disabledPlugins(ctx context.Context, field graphql.CollectedField, obj *model.Settings) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -13755,7 +13790,7 @@ func (ec *executionContext) unmarshalInputSettingsInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"tmdbApiKey", "tmdbLanguage", "tmdbKeyPromptSeen", "requireVpn"}
+	fieldsInOrder := [...]string{"tmdbApiKey", "tmdbLanguage", "tmdbKeyPromptSeen", "requireVpn", "errorReporting"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -13790,6 +13825,13 @@ func (ec *executionContext) unmarshalInputSettingsInput(ctx context.Context, obj
 				return it, err
 			}
 			it.RequireVpn = data
+		case "errorReporting":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorReporting"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ErrorReporting = data
 		}
 	}
 	return it, nil
@@ -16254,6 +16296,11 @@ func (ec *executionContext) _Settings(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "requireVpn":
 			out.Values[i] = ec._Settings_requireVpn(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "errorReporting":
+			out.Values[i] = ec._Settings_errorReporting(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

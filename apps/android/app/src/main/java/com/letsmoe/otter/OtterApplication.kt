@@ -10,6 +10,7 @@ import com.letsmoe.otter.network.ConnectivityStore
 import com.letsmoe.otter.notifications.NotificationCheckWorker
 import com.letsmoe.otter.ui.player.TelevisionPlayback
 import com.letsmoe.otter.profiles.ProfileSession
+import com.letsmoe.otter.reporting.ErrorReporting
 import com.letsmoe.otter.settings.PlaybackSettings
 import com.letsmoe.otter.vpn.VpnStatusStore
 
@@ -18,6 +19,8 @@ class OtterApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // First, so crashes while starting are reported too.
+        ErrorReporting.initialize(this)
         EmbeddedBackend(this).start()
         ServerSettings.initialize(this)
         PlaybackSettings.initialize(this)

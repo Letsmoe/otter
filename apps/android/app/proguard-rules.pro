@@ -8,3 +8,8 @@
 -dontwarn java.beans.**
 -dontwarn javax.script.**
 -dontwarn jdk.dynalink.**
+
+# Error reports (PostHog) show stack traces as they are: keep class names and line numbers readable
+# instead of uploading R8 mapping files. Shrinking and optimizing still apply.
+-dontobfuscate
+-keepattributes SourceFile,LineNumberTable

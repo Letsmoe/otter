@@ -329,6 +329,9 @@ type Settings {
   """Whether the first-run TMDB key dialog was answered."""
   tmdbKeyPromptSeen: Boolean!
   requireVpn: Boolean!
+
+  """Whether errors are sent to the developers (PostHog error tracking)."""
+  errorReporting: Boolean!
   disabledPlugins: [String!]!
 }
 
@@ -337,6 +340,7 @@ input SettingsInput {
   tmdbLanguage: String
   tmdbKeyPromptSeen: Boolean
   requireVpn: Boolean
+  errorReporting: Boolean
 }
 
 type PluginSettingField {

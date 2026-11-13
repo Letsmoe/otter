@@ -37,7 +37,8 @@
 						input: {
 							tmdbApiKey: s.tmdbApiKey,
 							tmdbLanguage: s.tmdbLanguage,
-							requireVpn: s.requireVpn
+							requireVpn: s.requireVpn,
+							errorReporting: s.errorReporting
 						}
 					},
 					tmdbApiKey: true
@@ -181,6 +182,17 @@
 			<span class={labelClass}>Require VPN for stream lookups and playback</span>
 			<Toggle checked={s.requireVpn} onchange={(value) => (s.requireVpn = value)} />
 		</label>
+	</section>
+
+	<!-- Privacy -->
+	<section class="border-base-300 bg-base-200 flex flex-col gap-4 rounded-xl border p-5">
+		<h2 class="text-sm font-semibold">Privacy</h2>
+
+		<label class="flex items-center justify-between gap-4 py-1">
+			<span class={labelClass}>Send error reports to the developers</span>
+			<Toggle checked={s.errorReporting} onchange={(value) => (s.errorReporting = value)} />
+		</label>
+		<p class="text-xs opacity-50">Reports include what failed, e.g. the plugin and the stream link.</p>
 	</section>
 
 	{#if error}
