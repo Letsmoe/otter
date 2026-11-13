@@ -4,3 +4,4 @@ version: 0.1.0
 title: "Otter"
 description: "Otter's profiles with their watch progress, My List and ratings, and the household's settings. History, list and ratings belong to their profile."
 entry: otter.schema
+repository: https://github.com/Letsmoe/otter
