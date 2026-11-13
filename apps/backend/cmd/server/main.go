@@ -20,7 +20,6 @@ import (
 
 	"github.com/Letsmoe/otter/internal/accounts"
 	gqlapi "github.com/Letsmoe/otter/internal/api/graphql"
-	imgapi "github.com/Letsmoe/otter/internal/api/imgcache"
 	"github.com/Letsmoe/otter/internal/blobcache"
 	"github.com/Letsmoe/otter/internal/cache"
 	"github.com/Letsmoe/otter/internal/db"
@@ -163,6 +162,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	// Find out early whether the key works, so the apps can ask for a new one.
 	go tmdbClient.VerifyKey(ctx)
 	streamsAllowed := vpnGate(settingsService)
+	vpn.Require(func() bool { return settingsService.Cached().RequireVpn })
 	libraryService := library.NewService(library.NewStore(database), tmdbClient, registry, runner, hookRunner, streamsAllowed)
 	if err := libraryService.ExpireStreamsIfPluginsChanged(ctx, cacheClient); err != nil {
 		log.Printf("library: expiring streams after a plugin change: %v", err)
@@ -173,7 +173,6 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	streamResolver := resolve.New(registry, runner)
 	streamResolver.SetCache(streamCache)
 	streamProxy := stream.NewProxy(streamCache, cacheClient, cfg.publicURL)
-	imageCache := imgapi.New(store)
 	// Downloads pin their blobs, so they register before eviction starts.
 	downloadService := downloads.NewService(downloads.NewStore(database), libraryService, streamResolver, streamCache)
 	streamCache.SetPinnedURLs(downloadService.Store.PinnedURLs)
@@ -206,7 +205,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 		TMDB:                tmdbClient,
 		Skips:               skips.New(cacheClient),
 		Together:            togetherService(),
-		VpnConnected:        vpnConnected,
+		VpnStatus:           vpn.Check,
 	})
 	graphqlHandler, err := gqlapi.NewHandler(resolver)
 	if err != nil {
@@ -215,7 +214,6 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 
 	mux := http.NewServeMux()
 	mux.Handle("/graphql", graphqlHandler)
-	mux.Handle("/api/img", imageCache)
 	mux.Handle("/api/stream/", streamProxy)
 	mux.Handle(storage.RoutePrefix, store.Handler())
 	mux.Handle(subtitles.RoutePrefix, subtitleService.Handler())
@@ -285,16 +283,12 @@ func togetherService() *together.Service {
 	return together.NewService(together.NostrSignaling{Relays: relays}, together.DefaultICEServers)
 }
 
-func vpnConnected() bool {
-	connected, _ := vpn.IsConnected()
-	return connected
-}
-
-// vpnGate refuses stream lookups while the VPN requirement is on and no VPN
-// interface is up.
+// vpnGate refuses stream lookups while the VPN requirement is on and the
+// backend's traffic doesn't go through a VPN. Connections to streaming sites
+// are checked once more each, by vpn.DialContext.
 func vpnGate(settingsService *settings.Service) func() error {
 	return func() error {
-		if settingsService.Cached().RequireVpn && !vpnConnected() {
+		if settingsService.Cached().RequireVpn && !vpn.IsConnected() {
 			return errVpnRequired
 		}
 		return nil
@@ -306,7 +300,8 @@ var errVpnRequired = errors.New("VPN required: connect a VPN before streaming")
 // startCacheEviction keeps the stream and image caches under CACHE_MAX_BYTES,
 // least recently used first.
 func startCacheEviction(ctx context.Context, store *storage.Client, streamCache *stream.CacheService) {
-	evictor := blobcache.New(store, cacheMaxBytes(), streamCache.EvictionSource(), imgapi.EvictionSource(), subtitles.EvictionSource())
+	// "img-cache/" holds what the removed image proxy stored; it is evicted like any unused file.
+	evictor := blobcache.New(store, cacheMaxBytes(), streamCache.EvictionSource(), blobcache.Files("img-cache/"), subtitles.EvictionSource())
 	store.OnPut(evictor.NoteWrite)
 	go func() {
 		if removed, err := streamCache.Reconcile(ctx); err != nil {

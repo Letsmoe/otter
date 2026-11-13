@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Letsmoe/otter/internal/blobcache"
+	"github.com/Letsmoe/otter/internal/vpn"
 )
 
 const (
@@ -22,7 +23,11 @@ func EvictionSource() blobcache.Source {
 	return blobcache.Files(cacheKeyPrefix)
 }
 
-var downloadClient = &http.Client{Timeout: downloadTimeout}
+// downloadClient fetches subtitle files; while the VPN is required, only through it.
+var downloadClient = &http.Client{
+	Timeout:   downloadTimeout,
+	Transport: &http.Transport{DialContext: vpn.DialContext, Proxy: http.ProxyFromEnvironment, TLSHandshakeTimeout: 10 * time.Second},
+}
 
 func cacheKey(id string) string {
 	return cacheKeyPrefix + id + ".srt"

@@ -313,6 +313,7 @@ type ComplexityRoot struct {
 		RequireVpn     func(childComplexity int) int
 		TmdbConfigured func(childComplexity int) int
 		TmdbReachable  func(childComplexity int) int
+		VpnBypassed    func(childComplexity int) int
 		VpnConnected   func(childComplexity int) int
 	}
 
@@ -1989,6 +1990,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Status.TmdbReachable(childComplexity), true
+	case "Status.vpnBypassed":
+		if e.ComplexityRoot.Status.VpnBypassed == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Status.VpnBypassed(childComplexity), true
 	case "Status.vpnConnected":
 		if e.ComplexityRoot.Status.VpnConnected == nil {
 			break
@@ -2901,7 +2908,10 @@ type Status {
   tmdbConfigured: Boolean!
   "False while the last TMDB request got no answer (offline, or a VPN or DNS filter blocks it)."
   tmdbReachable: Boolean!
+  "Whether the backend's traffic to the internet goes through a VPN."
   vpnConnected: Boolean!
+  "A VPN is up, but Otter's traffic skips it (e.g. Otter is excluded by the VPN's split tunnelling)."
+  vpnBypassed: Boolean!
   requireVpn: Boolean!
 }
 
@@ -3560,6 +3570,8 @@ func (ec *executionContext) childFields_Status(ctx context.Context, field graphq
 		return ec.fieldContext_Status_tmdbReachable(ctx, field)
 	case "vpnConnected":
 		return ec.fieldContext_Status_vpnConnected(ctx, field)
+	case "vpnBypassed":
+		return ec.fieldContext_Status_vpnBypassed(ctx, field)
 	case "requireVpn":
 		return ec.fieldContext_Status_requireVpn(ctx, field)
 	}
@@ -11200,6 +11212,29 @@ func (ec *executionContext) fieldContext_Status_vpnConnected(_ context.Context, 
 	return graphql.NewScalarFieldContext("Status", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
+func (ec *executionContext) _Status_vpnBypassed(ctx context.Context, field graphql.CollectedField, obj *model.Status) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Status_vpnBypassed(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.VpnBypassed, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Status_vpnBypassed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Status", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
 func (ec *executionContext) _Status_requireVpn(ctx context.Context, field graphql.CollectedField, obj *model.Status) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -16863,6 +16898,11 @@ func (ec *executionContext) _Status(ctx context.Context, sel ast.SelectionSet, o
 			}
 		case "vpnConnected":
 			out.Values[i] = ec._Status_vpnConnected(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "vpnBypassed":
+			out.Values[i] = ec._Status_vpnBypassed(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

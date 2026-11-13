@@ -751,6 +751,9 @@ export default {
             "vpnConnected": [
                 6
             ],
+            "vpnBypassed": [
+                6
+            ],
             "requireVpn": [
                 6
             ],

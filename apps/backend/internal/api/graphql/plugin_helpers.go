@@ -82,7 +82,7 @@ func (r *Resolver) saveDisabledPlugins(ctx context.Context) error {
 // requireVpnIfConfigured blocks streaming when the VPN requirement is on
 // and no VPN interface is up.
 func (r *Resolver) requireVpnIfConfigured() error {
-	if r.Settings.Cached().RequireVpn && !r.VpnConnected() {
+	if r.Settings.Cached().RequireVpn && !r.VpnStatus().Connected {
 		return fmt.Errorf("VPN required: connect a VPN before streaming")
 	}
 	return nil

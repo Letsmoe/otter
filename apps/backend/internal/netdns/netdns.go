@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -25,12 +26,30 @@ func Configure(servers, file string) {
 	if len(fixed) == 0 && file == "" {
 		return
 	}
+	configured = func() []string { return currentServers(file, fixed) }
 	net.DefaultResolver = &net.Resolver{
 		PreferGo: true,
 		Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
-			return dialFirst(ctx, network, currentServers(file, fixed))
+			return dialFirst(ctx, network, configured(), nil)
 		},
 	}
+}
+
+// configured lists the servers set by Configure; nil keeps the platform's.
+var configured func() []string
+
+// Control vets a socket before it connects (see net.Dialer.ControlContext).
+type Control func(ctx context.Context, network, address string, raw syscall.RawConn) error
+
+// Dial connects to a DNS server like net.DefaultResolver does, with control
+// checking each socket before it connects. address is the server the Go
+// resolver picked, used when Configure set none.
+func Dial(ctx context.Context, network, address string, control Control) (net.Conn, error) {
+	servers := []string{address}
+	if configured != nil {
+		servers = configured()
+	}
+	return dialFirst(ctx, network, servers, control)
 }
 
 // currentServers returns the servers listed in file, else fixed.
@@ -66,11 +85,11 @@ func parseServers(servers string) []string {
 }
 
 // dialFirst connects to the first server that answers.
-func dialFirst(ctx context.Context, network string, addresses []string) (net.Conn, error) {
+func dialFirst(ctx context.Context, network string, addresses []string, control Control) (net.Conn, error) {
 	if len(addresses) == 0 {
 		return nil, errors.New("no DNS servers configured")
 	}
-	dialer := net.Dialer{Timeout: dialTimeout}
+	dialer := net.Dialer{Timeout: dialTimeout, ControlContext: control}
 	var errs []error
 	for _, address := range addresses {
 		conn, err := dialer.DialContext(ctx, network, address)

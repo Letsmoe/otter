@@ -870,10 +870,12 @@ func (r *queryResolver) Plugins(ctx context.Context) ([]*model.Plugin, error) {
 
 // Status is the resolver for the status field.
 func (r *queryResolver) Status(ctx context.Context) (*model.Status, error) {
+	vpnStatus := r.VpnStatus()
 	return &model.Status{
 		TmdbConfigured: r.TMDB.Configured(),
 		TmdbReachable:  r.TMDB.Reachable(),
-		VpnConnected:   r.VpnConnected(),
+		VpnConnected:   vpnStatus.Connected,
+		VpnBypassed:    vpnStatus.Bypassed,
 		RequireVpn:     r.Services.Settings.Cached().RequireVpn,
 	}, nil
 }
