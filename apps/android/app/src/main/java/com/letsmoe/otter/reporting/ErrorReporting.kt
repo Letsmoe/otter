@@ -11,6 +11,7 @@ import com.posthog.android.PostHogAndroidConfig
 private const val TAG = "OtterErrors"
 private const val PREFERENCES = "error_reporting"
 private const val ENABLED = "enabled"
+private const val CAST_LOGS = "cast_logs"
 
 // Public ingest key of the Otter PostHog project; it can only send events.
 private const val PROJECT_TOKEN = "phc_kWtXWGtB5xAPwYhcu7uphFdBUgLTdhdK3g8NPvSF9EFa"
@@ -71,9 +72,21 @@ object ErrorReporting {
         }
     }
 
-    /** Sends a log line to PostHog logs, e.g. one exchange with a TV. */
-    fun log(message: String, attributes: Map<String, Any?> = emptyMap()) {
-        if (!isEnabled()) {
+    /** Whether every cast is logged in detail; opt-in, as a daily cast sends hundreds of lines. */
+    fun isCastLogging(): Boolean {
+        if (!::application.isInitialized) {
+            return false
+        }
+        return preferences().getBoolean(CAST_LOGS, false)
+    }
+
+    fun setCastLogging(enabled: Boolean) {
+        preferences().edit().putBoolean(CAST_LOGS, enabled).apply()
+    }
+
+    /** Sends a line about a cast (e.g. one exchange with a TV) to PostHog logs, if cast logging is on. */
+    fun logCast(message: String, attributes: Map<String, Any?> = emptyMap()) {
+        if (!isEnabled() || !isCastLogging()) {
             return
         }
         try {

@@ -38,7 +38,8 @@
 							tmdbApiKey: s.tmdbApiKey,
 							tmdbLanguage: s.tmdbLanguage,
 							requireVpn: s.requireVpn,
-							errorReporting: s.errorReporting
+							errorReporting: s.errorReporting,
+							castLogs: s.castLogs
 						}
 					},
 					tmdbApiKey: true
@@ -193,6 +194,11 @@
 			<Toggle checked={s.errorReporting} onchange={(value) => (s.errorReporting = value)} />
 		</label>
 		<p class="text-xs opacity-50">Reports include what failed, e.g. the plugin and the stream link.</p>
+
+		<label class="flex items-center justify-between gap-4 py-1">
+			<span class={labelClass}>Log every TV cast in detail, not only failed ones</span>
+			<Toggle checked={s.castLogs} onchange={(value) => (s.castLogs = value)} />
+		</label>
 	</section>
 
 	{#if error}

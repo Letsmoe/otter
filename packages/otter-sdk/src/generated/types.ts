@@ -619,6 +619,9 @@ export default {
             "errorReporting": [
                 6
             ],
+            "castLogs": [
+                6
+            ],
             "disabledPlugins": [
                 4
             ],
@@ -640,6 +643,9 @@ export default {
                 6
             ],
             "errorReporting": [
+                6
+            ],
+            "castLogs": [
                 6
             ],
             "__typename": [

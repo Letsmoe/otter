@@ -4,13 +4,14 @@ const FALLBACK = {
 	tmdbApiKey: '',
 	tmdbLanguage: 'de-DE',
 	requireVpn: false,
-	errorReporting: true
+	errorReporting: true,
+	castLogs: false
 };
 
 export async function load() {
 	try {
 		const data = await otter.query({
-			settings: { tmdbApiKey: true, tmdbLanguage: true, requireVpn: true, errorReporting: true }
+			settings: { tmdbApiKey: true, tmdbLanguage: true, requireVpn: true, errorReporting: true, castLogs: true }
 		});
 		return { settings: data.settings };
 	} catch {

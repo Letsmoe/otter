@@ -206,6 +206,14 @@ private fun PrivacyGroup(viewModel: SettingsViewModel) {
             }
             OtterSwitch(viewModel.errorReporting, viewModel::changeErrorReporting)
         }
+        SettingsDivider()
+        Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Detailed cast logs", fontSize = 14.sp)
+                Text("Log every TV cast, not only failed ones", fontSize = 12.sp, color = Color.White.copy(alpha = 0.45f))
+            }
+            OtterSwitch(viewModel.castLogs, viewModel::changeCastLogs)
+        }
     }
 }
 

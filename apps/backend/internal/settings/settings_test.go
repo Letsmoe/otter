@@ -88,3 +88,21 @@ func TestErrorReportingIsOnByDefaultAndCanBeTurnedOff(t *testing.T) {
 		t.Fatal("turning error reporting off didn't survive a restart")
 	}
 }
+
+func TestCastLogsAreOptIn(t *testing.T) {
+	ctx := context.Background()
+	service := newTestService(t)
+	if err := service.Init(ctx, ""); err != nil {
+		t.Fatal(err)
+	}
+	if service.Cached().CastLogs {
+		t.Fatal("a fresh install should not log every cast")
+	}
+	castLogs := true
+	if _, err := service.Apply(ctx, Update{CastLogs: &castLogs}); err != nil {
+		t.Fatal(err)
+	}
+	if !service.Cached().CastLogs {
+		t.Fatal("cast logs could not be turned on")
+	}
+}

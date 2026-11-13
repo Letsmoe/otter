@@ -249,7 +249,9 @@ type Settings struct {
 	TmdbKeyPromptSeen bool `json:"tmdbKeyPromptSeen"`
 	RequireVpn        bool `json:"requireVpn"`
 	// Whether errors are sent to the developers (PostHog error tracking).
-	ErrorReporting  bool     `json:"errorReporting"`
+	ErrorReporting bool `json:"errorReporting"`
+	// Whether every TV cast is logged in detail, not only failed ones (opt-in).
+	CastLogs        bool     `json:"castLogs"`
 	DisabledPlugins []string `json:"disabledPlugins"`
 }
 
@@ -259,6 +261,7 @@ type SettingsInput struct {
 	TmdbKeyPromptSeen *bool   `json:"tmdbKeyPromptSeen,omitempty"`
 	RequireVpn        *bool   `json:"requireVpn,omitempty"`
 	ErrorReporting    *bool   `json:"errorReporting,omitempty"`
+	CastLogs          *bool   `json:"castLogs,omitempty"`
 }
 
 // A skippable part of an episode.

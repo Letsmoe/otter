@@ -185,6 +185,7 @@ func (r *Resolver) settingsModel(current settings.Settings) *model.Settings {
 		TmdbKeyPromptSeen:  current.TMDBKeyPromptSeen,
 		RequireVpn:         current.RequireVpn,
 		ErrorReporting:     current.ErrorReporting,
+		CastLogs:           current.CastLogs,
 		DisabledPlugins:    disabled,
 	}
 }

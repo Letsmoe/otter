@@ -19,9 +19,9 @@ data class SoapExchange(
 )
 
 /**
- * Everything said with the TV during one cast. Each call goes to PostHog logs
- * under the cast's ID (polls only when their answer changed), and the last
- * calls go with an error report. The backend tags the TV's stream requests
+ * Everything said with the TV during one cast. The last calls go with an error
+ * report; with cast logging on, each call also goes to PostHog logs under the
+ * cast's ID (polls only when their answer changed). The backend tags the TV's stream requests
  * with the same ID (?cast=).
  */
 class CastJournal(private val renderer: DlnaRenderer) {
@@ -45,14 +45,14 @@ class CastJournal(private val renderer: DlnaRenderer) {
             return
         }
         add(describe(exchange))
-        ErrorReporting.log("TV ${exchange.action}", attributesOf(exchange))
+        ErrorReporting.logCast("TV ${exchange.action}", attributesOf(exchange))
     }
 
     /** A note of the player's own, e.g. what it decided about the formats. */
     @Synchronized
     fun note(message: String, attributes: Map<String, Any?> = emptyMap()) {
         add(message)
-        ErrorReporting.log(message, attributes + baseAttributes())
+        ErrorReporting.logCast(message, attributes + baseAttributes())
     }
 
     @Synchronized

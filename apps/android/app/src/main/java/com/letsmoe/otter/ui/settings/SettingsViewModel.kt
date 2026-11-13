@@ -40,6 +40,8 @@ class SettingsViewModel : ViewModel() {
     var requireVpn by mutableStateOf(false)
     var errorReporting by mutableStateOf(ErrorReporting.isEnabled())
         private set
+    var castLogs by mutableStateOf(ErrorReporting.isCastLogging())
+        private set
     var hasBuiltInKey by mutableStateOf(false)
         private set
     var usesBuiltInKey by mutableStateOf(false)
@@ -117,6 +119,13 @@ class SettingsViewModel : ViewModel() {
         errorReporting = value
         ErrorReporting.setEnabled(value)
         save(SettingsInput(errorReporting = Optional.present(value)))
+    }
+
+    /** Detailed logs of every cast: the app's talk with the TV and the backend's TV request traces. */
+    fun changeCastLogs(value: Boolean) {
+        castLogs = value
+        ErrorReporting.setCastLogging(value)
+        save(SettingsInput(castLogs = Optional.present(value)))
     }
 
     // Pages opened before keep titles in the old language: rebuild them once Settings closes.
