@@ -12,7 +12,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
@@ -35,14 +34,7 @@ func Start(ctx context.Context, enabled func() bool) {
 	if !errorreport.Enabled() {
 		return
 	}
-	exporter, err := otlptracehttp.New(ctx,
-		otlptracehttp.WithEndpointURL(tracesEndpoint),
-		otlptracehttp.WithHeaders(map[string]string{"Authorization": "Bearer " + errorreport.ProjectToken}),
-	)
-	if err != nil {
-		log.Printf("tracing: %v", err)
-		return
-	}
+	exporter := newOTLPExporter(tracesEndpoint, errorreport.ProjectToken)
 	processor := newFailedTraceProcessor(sdktrace.NewBatchSpanProcessor(exporter), enabled)
 	provider := sdktrace.NewTracerProvider(sdktrace.WithResource(serviceResource()), sdktrace.WithSpanProcessor(processor))
 	otel.SetTracerProvider(provider)
