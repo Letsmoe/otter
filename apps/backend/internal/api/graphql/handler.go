@@ -59,6 +59,7 @@ func NewHandler(resolver *Resolver) (http.Handler, error) {
 		return gqlgen.DefaultRecover(ctx, recovered)
 	})
 	srv.AroundOperations(traceOperation)
+	srv.AroundOperations(resolver.syncAfterChanges)
 	srv.SetQueryCache(lru.New[*ast.QueryDocument](1000))
 	srv.Use(extension.Introspection{})
 	srv.Use(extension.AutomaticPersistedQuery{Cache: lru.New[string](100)})

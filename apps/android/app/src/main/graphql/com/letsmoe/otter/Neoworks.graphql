@@ -32,6 +32,10 @@ mutation SignOutOfNeoworks {
   }
 }
 
+mutation SyncNeoworksSoon {
+  syncNeoworksSoon
+}
+
 mutation SyncNeoworks {
   syncNeoworks {
     ...NeoworksAccountFields

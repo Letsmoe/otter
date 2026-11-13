@@ -70,6 +70,9 @@ type Service struct {
 
 	// syncMutex lets one sync run at a time.
 	syncMutex sync.Mutex
+	// changes and wakeups feed syncLoop (NotifyChange, SyncSoon).
+	changes chan struct{}
+	wakeups chan struct{}
 }
 
 // NewService keeps libneoworks' store in dataDir. installName is how the
@@ -87,6 +90,8 @@ func NewService(database *db.DB, box *secrets.Box, dataDir, installName string, 
 			return client.AcceptGrant(grant, ownerIdentity)
 		},
 		pending: map[string]pendingSignIn{},
+		changes: make(chan struct{}, 1),
+		wakeups: make(chan struct{}, 1),
 	}
 	service.afterSignIn = func(ctx context.Context) { go service.syncInBackground(ctx) }
 	return service

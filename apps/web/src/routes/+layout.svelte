@@ -5,6 +5,7 @@
 	import NotificationManager from '$lib/components/NotificationManager.svelte';
 	import ProfilePicker from '$lib/components/ProfilePicker.svelte';
 	import TmdbKeyDialog from '$lib/components/TmdbKeyDialog.svelte';
+	import SyncOnOpen from '$lib/components/SyncOnOpen.svelte';
 	import { goto } from '$app/navigation';
 	import { activeProfile } from '@letsmoe/otter-app/profile';
 	import { downloads } from '$lib/stores/downloads.svelte';
@@ -31,6 +32,7 @@
 <svelte:window onkeydown={onWindowKeydown} />
 
 <TmdbKeyDialog />
+<SyncOnOpen />
 
 {#if $activeProfile === null}
 	<ProfilePicker />

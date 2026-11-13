@@ -486,6 +486,12 @@ func (r *mutationResolver) SyncNeoworks(ctx context.Context) (*model.NeoworksAcc
 	return r.syncNeoworks(ctx)
 }
 
+// SyncNeoworksSoon is the resolver for the syncNeoworksSoon field.
+func (r *mutationResolver) SyncNeoworksSoon(ctx context.Context) (bool, error) {
+	r.Neoworks.SyncSoon()
+	return true, nil
+}
+
 // Filmography is the resolver for the filmography field.
 func (r *personResolver) Filmography(ctx context.Context, obj *model.Person, job *string) ([]*model.Title, error) {
 	titles, err := r.Library.Store.Filmography(ctx, obj.TmdbID, valueOr(job, ""))

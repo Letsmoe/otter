@@ -10,8 +10,14 @@ import (
 	libneoworks "github.com/neoworks-dev/libneoworks-go"
 )
 
-// syncInterval is how often a signed-in backend syncs on its own.
-const syncInterval = 10 * time.Minute
+const (
+	// syncInterval is how often a signed-in backend syncs on its own.
+	syncInterval = 10 * time.Minute
+	// After a local change, sync once changes paused this long, but no later
+	// than changeMaxWait after the first unsynced one (progress saves keep coming while watching).
+	changeQuiet   = 5 * time.Second
+	changeMaxWait = time.Minute
+)
 
 // SyncResult is what the last sync did, for Settings.
 type SyncResult struct {
@@ -23,20 +29,61 @@ type SyncResult struct {
 	Failure string
 }
 
-// Start syncs now and then every syncInterval while signed in, until ctx ends.
+// Start syncs now, every syncInterval, after local changes (NotifyChange) and
+// when an app opens (SyncSoon), until ctx ends.
 func (s *Service) Start(ctx context.Context) {
-	go func() {
-		ticker := time.NewTicker(syncInterval)
-		defer ticker.Stop()
-		for {
-			s.syncInBackground(ctx)
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-			}
+	go s.syncLoop(ctx)
+}
+
+// NotifyChange tells sync that synced data changed here; it syncs shortly.
+func (s *Service) NotifyChange() {
+	select {
+	case s.changes <- struct{}{}:
+	default:
+	}
+}
+
+// SyncSoon syncs right away in the background, e.g. when an app was opened.
+func (s *Service) SyncSoon() {
+	select {
+	case s.wakeups <- struct{}{}:
+	default:
+	}
+}
+
+func (s *Service) syncLoop(ctx context.Context) {
+	s.syncInBackground(ctx)
+	ticker := time.NewTicker(syncInterval)
+	defer ticker.Stop()
+	pending := changeTimers{}
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-s.changes:
+			pending.noteChange()
+			continue
+		case <-ticker.C:
+		case <-s.wakeups:
+		case <-pending.quiet:
+		case <-pending.deadline:
 		}
-	}()
+		pending = changeTimers{}
+		s.syncInBackground(ctx)
+	}
+}
+
+// changeTimers wait for local changes to pause; nil channels never fire.
+type changeTimers struct {
+	quiet    <-chan time.Time
+	deadline <-chan time.Time
+}
+
+func (timers *changeTimers) noteChange() {
+	timers.quiet = time.After(changeQuiet)
+	if timers.deadline == nil {
+		timers.deadline = time.After(changeMaxWait)
+	}
 }
 
 func (s *Service) syncInBackground(ctx context.Context) {

@@ -11,6 +11,7 @@ import com.letsmoe.otter.graphql.NeoworksAccountQuery
 import com.letsmoe.otter.graphql.SignOutOfNeoworksMutation
 import com.letsmoe.otter.graphql.StartNeoworksSignInMutation
 import com.letsmoe.otter.graphql.SyncNeoworksMutation
+import com.letsmoe.otter.graphql.SyncNeoworksSoonMutation
 import com.letsmoe.otter.graphql.fragment.NeoworksAccountFields
 import com.letsmoe.otter.toasts.ToastKind
 import com.letsmoe.otter.toasts.Toasts
@@ -96,6 +97,23 @@ object NeoworksAccountStore {
                 Toasts.push("Signed out of Neoworks", ToastKind.SUCCESS)
             }
             busy(false)
+        }
+    }
+
+    /**
+     * Asks the backend to sync in the background, e.g. when the app comes to the front, so
+     * changes from other devices show up. Quiet: a failed request just waits for the next sync.
+     */
+    fun syncSoon() {
+        AppScope.launch {
+            OtterApi.awaitBackend()
+            try {
+                OtterApi.client.mutation(SyncNeoworksSoonMutation()).execute()
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Exception) {
+                // The backend syncs on its own every few minutes.
+            }
         }
     }
 

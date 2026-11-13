@@ -34,6 +34,12 @@ class MainActivity : ComponentActivity() {
         openLink(intent)
     }
 
+    // Back in front: pick up what other devices changed meanwhile.
+    override fun onStart() {
+        super.onStart()
+        NeoworksAccountStore.syncSoon()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         openLink(intent)
