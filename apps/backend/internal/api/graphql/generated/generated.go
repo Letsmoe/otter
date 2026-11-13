@@ -138,6 +138,7 @@ type ComplexityRoot struct {
 		SignOutOfNeoworks      func(childComplexity int) int
 		StartDownload          func(childComplexity int, profileID string, mediaID string, streamID *string) int
 		StartNeoworksSignIn    func(childComplexity int, returnTo *string) int
+		SyncNeoworks           func(childComplexity int) int
 		UpdatePlugins          func(childComplexity int) int
 		UpdateProfile          func(childComplexity int, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, voiceBoost *bool) int
 		UpdateSettings         func(childComplexity int, input model.SettingsInput) int
@@ -146,8 +147,16 @@ type ComplexityRoot struct {
 
 	NeoworksAccount struct {
 		Email    func(childComplexity int) int
+		LastSync func(childComplexity int) int
 		Name     func(childComplexity int) int
 		SignedIn func(childComplexity int) int
+	}
+
+	NeoworksSync struct {
+		At       func(childComplexity int) int
+		Failure  func(childComplexity int) int
+		Received func(childComplexity int) int
+		Sent     func(childComplexity int) int
 	}
 
 	Notification struct {
@@ -470,6 +479,7 @@ type MutationResolver interface {
 	StartNeoworksSignIn(ctx context.Context, returnTo *string) (string, error)
 	CompleteNeoworksSignIn(ctx context.Context, code string, state string) (*model.NeoworksAccount, error)
 	SignOutOfNeoworks(ctx context.Context) (*model.NeoworksAccount, error)
+	SyncNeoworks(ctx context.Context) (*model.NeoworksAccount, error)
 }
 type PersonResolver interface {
 	Filmography(ctx context.Context, obj *model.Person, job *string) ([]*model.Title, error)
@@ -1107,6 +1117,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.StartNeoworksSignIn(childComplexity, args["returnTo"].(*string)), true
+	case "Mutation.syncNeoworks":
+		if e.ComplexityRoot.Mutation.SyncNeoworks == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Mutation.SyncNeoworks(childComplexity), true
 	case "Mutation.updatePlugins":
 		if e.ComplexityRoot.Mutation.UpdatePlugins == nil {
 			break
@@ -1153,6 +1169,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.NeoworksAccount.Email(childComplexity), true
+	case "NeoworksAccount.lastSync":
+		if e.ComplexityRoot.NeoworksAccount.LastSync == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NeoworksAccount.LastSync(childComplexity), true
 	case "NeoworksAccount.name":
 		if e.ComplexityRoot.NeoworksAccount.Name == nil {
 			break
@@ -1165,6 +1187,31 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.NeoworksAccount.SignedIn(childComplexity), true
+
+	case "NeoworksSync.at":
+		if e.ComplexityRoot.NeoworksSync.At == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NeoworksSync.At(childComplexity), true
+	case "NeoworksSync.failure":
+		if e.ComplexityRoot.NeoworksSync.Failure == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NeoworksSync.Failure(childComplexity), true
+	case "NeoworksSync.received":
+		if e.ComplexityRoot.NeoworksSync.Received == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NeoworksSync.Received(childComplexity), true
+	case "NeoworksSync.sent":
+		if e.ComplexityRoot.NeoworksSync.Sent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.NeoworksSync.Sent(childComplexity), true
 
 	case "Notification.body":
 		if e.ComplexityRoot.Notification.Body == nil {
@@ -3151,6 +3198,18 @@ type NeoworksAccount {
   "Null while signed out, and when Neoworks didn't share it."
   email: String
   name: String
+  "The last sync since the backend started; null before the first."
+  lastSync: NeoworksSync
+}
+
+type NeoworksSync {
+  at: String!
+  "Local records changed by other devices."
+  received: Int!
+  "Rows written from this device."
+  sent: Int!
+  "Why the sync stopped; null when it worked."
+  failure: String
 }
 
 type Mutation {
@@ -3212,6 +3271,8 @@ type Mutation {
   completeNeoworksSignIn(code: String!, state: String!): NeoworksAccount!
   "Signs this device out; the household's data stays in Neoworks for its other devices."
   signOutOfNeoworks: NeoworksAccount!
+  "Syncs with Neoworks now; returns when done, with the result in lastSync."
+  syncNeoworks: NeoworksAccount!
 }
 
 type PluginUpdate {
@@ -3383,8 +3444,24 @@ func (ec *executionContext) childFields_NeoworksAccount(ctx context.Context, fie
 		return ec.fieldContext_NeoworksAccount_email(ctx, field)
 	case "name":
 		return ec.fieldContext_NeoworksAccount_name(ctx, field)
+	case "lastSync":
+		return ec.fieldContext_NeoworksAccount_lastSync(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type NeoworksAccount", field.Name)
+}
+
+func (ec *executionContext) childFields_NeoworksSync(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "at":
+		return ec.fieldContext_NeoworksSync_at(ctx, field)
+	case "received":
+		return ec.fieldContext_NeoworksSync_received(ctx, field)
+	case "sent":
+		return ec.fieldContext_NeoworksSync_sent(ctx, field)
+	case "failure":
+		return ec.fieldContext_NeoworksSync_failure(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type NeoworksSync", field.Name)
 }
 
 func (ec *executionContext) childFields_Notification(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -7895,6 +7972,38 @@ func (ec *executionContext) fieldContext_Mutation_signOutOfNeoworks(_ context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_syncNeoworks(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_syncNeoworks(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Mutation().SyncNeoworks(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.NeoworksAccount) graphql.Marshaler {
+			return ec.marshalNNeoworksAccount2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNeoworksAccount(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_syncNeoworks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_NeoworksAccount(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _NeoworksAccount_signedIn(ctx context.Context, field graphql.CollectedField, obj *model.NeoworksAccount) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -7962,6 +8071,130 @@ func (ec *executionContext) _NeoworksAccount_name(ctx context.Context, field gra
 }
 func (ec *executionContext) fieldContext_NeoworksAccount_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("NeoworksAccount", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _NeoworksAccount_lastSync(ctx context.Context, field graphql.CollectedField, obj *model.NeoworksAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NeoworksAccount_lastSync(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LastSync, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.NeoworksSync) graphql.Marshaler {
+			return ec.marshalONeoworksSync2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNeoworksSync(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_NeoworksAccount_lastSync(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NeoworksAccount",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_NeoworksSync(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NeoworksSync_at(ctx context.Context, field graphql.CollectedField, obj *model.NeoworksSync) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NeoworksSync_at(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.At, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_NeoworksSync_at(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("NeoworksSync", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _NeoworksSync_received(ctx context.Context, field graphql.CollectedField, obj *model.NeoworksSync) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NeoworksSync_received(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Received, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_NeoworksSync_received(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("NeoworksSync", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _NeoworksSync_sent(ctx context.Context, field graphql.CollectedField, obj *model.NeoworksSync) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NeoworksSync_sent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Sent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_NeoworksSync_sent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("NeoworksSync", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _NeoworksSync_failure(ctx context.Context, field graphql.CollectedField, obj *model.NeoworksSync) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_NeoworksSync_failure(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Failure, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_NeoworksSync_failure(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("NeoworksSync", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Notification_id(ctx context.Context, field graphql.CollectedField, obj *model.Notification) (ret graphql.Marshaler) {
@@ -15530,6 +15763,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "syncNeoworks":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_syncNeoworks(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15573,6 +15813,59 @@ func (ec *executionContext) _NeoworksAccount(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._NeoworksAccount_email(ctx, field, obj)
 		case "name":
 			out.Values[i] = ec._NeoworksAccount_name(ctx, field, obj)
+		case "lastSync":
+			out.Values[i] = ec._NeoworksAccount_lastSync(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var neoworksSyncImplementors = []string{"NeoworksSync"}
+
+func (ec *executionContext) _NeoworksSync(ctx context.Context, sel ast.SelectionSet, obj *model.NeoworksSync) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, neoworksSyncImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NeoworksSync")
+		case "at":
+			out.Values[i] = ec._NeoworksSync_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "received":
+			out.Values[i] = ec._NeoworksSync_received(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sent":
+			out.Values[i] = ec._NeoworksSync_sent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "failure":
+			out.Values[i] = ec._NeoworksSync_failure(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -19793,6 +20086,13 @@ func (ec *executionContext) marshalOMoreWithRow2ᚖgithubᚗcomᚋLetsmoeᚋotte
 		return graphql.Null
 	}
 	return ec._MoreWithRow(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalONeoworksSync2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐNeoworksSync(ctx context.Context, sel ast.SelectionSet, v *model.NeoworksSync) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._NeoworksSync(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOPerson2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐPerson(ctx context.Context, sel ast.SelectionSet, v *model.Person) graphql.Marshaler {

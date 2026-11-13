@@ -638,6 +638,22 @@ type NeoworksAccount {
   """Null while signed out, and when Neoworks didn't share it."""
   email: String
   name: String
+
+  """The last sync since the backend started; null before the first."""
+  lastSync: NeoworksSync
+}
+
+type NeoworksSync {
+  at: String!
+
+  """Local records changed by other devices."""
+  received: Int!
+
+  """Rows written from this device."""
+  sent: Int!
+
+  """Why the sync stopped; null when it worked."""
+  failure: String
 }
 
 type Mutation {
@@ -745,6 +761,11 @@ type Mutation {
   Signs this device out; the household's data stays in Neoworks for its other devices.
   """
   signOutOfNeoworks: NeoworksAccount!
+
+  """
+  Syncs with Neoworks now; returns when done, with the result in lastSync.
+  """
+  syncNeoworks: NeoworksAccount!
 }
 
 type PluginUpdate {

@@ -470,7 +470,7 @@ func (r *mutationResolver) CompleteNeoworksSignIn(ctx context.Context, code stri
 	if err != nil {
 		return nil, err
 	}
-	return neoworksAccountModel(status), nil
+	return neoworksAccountModel(status, r.Neoworks.LastSync()), nil
 }
 
 // SignOutOfNeoworks is the resolver for the signOutOfNeoworks field.
@@ -479,6 +479,11 @@ func (r *mutationResolver) SignOutOfNeoworks(ctx context.Context) (*model.Neowor
 		return nil, err
 	}
 	return &model.NeoworksAccount{SignedIn: false}, nil
+}
+
+// SyncNeoworks is the resolver for the syncNeoworks field.
+func (r *mutationResolver) SyncNeoworks(ctx context.Context) (*model.NeoworksAccount, error) {
+	return r.syncNeoworks(ctx)
 }
 
 // Filmography is the resolver for the filmography field.
@@ -912,7 +917,7 @@ func (r *queryResolver) NeoworksAccount(ctx context.Context) (*model.NeoworksAcc
 	if err != nil {
 		return nil, err
 	}
-	return neoworksAccountModel(status), nil
+	return neoworksAccountModel(status, r.Neoworks.LastSync()), nil
 }
 
 // Episodes is the resolver for the episodes field.

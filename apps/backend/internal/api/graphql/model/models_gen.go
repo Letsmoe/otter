@@ -95,6 +95,18 @@ type NeoworksAccount struct {
 	// Null while signed out, and when Neoworks didn't share it.
 	Email *string `json:"email,omitempty"`
 	Name  *string `json:"name,omitempty"`
+	// The last sync since the backend started; null before the first.
+	LastSync *NeoworksSync `json:"lastSync,omitempty"`
+}
+
+type NeoworksSync struct {
+	At string `json:"at"`
+	// Local records changed by other devices.
+	Received int `json:"received"`
+	// Rows written from this device.
+	Sent int `json:"sent"`
+	// Why the sync stopped; null when it worked.
+	Failure *string `json:"failure,omitempty"`
 }
 
 type Notification struct {
