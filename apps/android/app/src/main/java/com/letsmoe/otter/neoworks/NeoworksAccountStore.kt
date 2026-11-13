@@ -10,6 +10,7 @@ import com.letsmoe.otter.graphql.CompleteNeoworksSignInMutation
 import com.letsmoe.otter.graphql.NeoworksAccountQuery
 import com.letsmoe.otter.graphql.SignOutOfNeoworksMutation
 import com.letsmoe.otter.graphql.StartNeoworksSignInMutation
+import com.letsmoe.otter.graphql.SyncNeoworksMutation
 import com.letsmoe.otter.graphql.fragment.NeoworksAccountFields
 import com.letsmoe.otter.toasts.ToastKind
 import com.letsmoe.otter.toasts.Toasts
@@ -23,12 +24,16 @@ import kotlin.coroutines.cancellation.CancellationException
 /** Neoworks returns every sign-in here; App Links bring it to Otter (apps/share/src/auth.ts). */
 private const val CALLBACK_PREFIX = "https://otter.letsmoe.com/auth/callback"
 
+/** What the last sync did; failure is null when it worked. */
+data class NeoworksSyncResult(val at: String, val received: Int, val sent: Int, val failure: String?)
+
 data class NeoworksAccountState(
     val known: Boolean = false,
     val signedIn: Boolean = false,
     val email: String? = null,
     val name: String? = null,
-    /** A sign-in or sign-out is running. */
+    val lastSync: NeoworksSyncResult? = null,
+    /** A sign-in, sign-out or sync is running. */
     val busy: Boolean = false,
 )
 
@@ -94,6 +99,18 @@ object NeoworksAccountStore {
         }
     }
 
+    /** Syncs now; the result shows under Settings, Sync. */
+    fun syncNow() {
+        AppScope.launch {
+            busy(true)
+            runReporting("Sync failed") {
+                val account = OtterApi.client.mutation(SyncNeoworksMutation()).execute().dataOrThrow().syncNeoworks
+                show(account.neoworksAccountFields)
+            }
+            busy(false)
+        }
+    }
+
     private fun completeSignIn(code: String, state: String) {
         AppScope.launch {
             OtterApi.awaitBackend()
@@ -109,7 +126,14 @@ object NeoworksAccountStore {
     }
 
     private fun show(account: NeoworksAccountFields) {
-        mutableState.value = NeoworksAccountState(known = true, signedIn = account.signedIn, email = account.email, name = account.name)
+        val lastSync = account.lastSync?.let { sync -> NeoworksSyncResult(sync.at, sync.received, sync.sent, sync.failure) }
+        mutableState.value = NeoworksAccountState(
+            known = true,
+            signedIn = account.signedIn,
+            email = account.email,
+            name = account.name,
+            lastSync = lastSync,
+        )
     }
 
     private fun busy(running: Boolean) {

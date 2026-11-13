@@ -491,7 +491,20 @@ export interface NeoworksAccount {
     /** Null while signed out, and when Neoworks didn't share it. */
     email: (Scalars['String'] | null)
     name: (Scalars['String'] | null)
+    /** The last sync since the backend started; null before the first. */
+    lastSync: (NeoworksSync | null)
     __typename: 'NeoworksAccount'
+}
+
+export interface NeoworksSync {
+    at: Scalars['String']
+    /** Local records changed by other devices. */
+    received: Scalars['Int']
+    /** Rows written from this device. */
+    sent: Scalars['Int']
+    /** Why the sync stopped; null when it worked. */
+    failure: (Scalars['String'] | null)
+    __typename: 'NeoworksSync'
 }
 
 export interface Mutation {
@@ -549,6 +562,8 @@ export interface Mutation {
     completeNeoworksSignIn: NeoworksAccount
     /** Signs this device out; the household's data stays in Neoworks for its other devices. */
     signOutOfNeoworks: NeoworksAccount
+    /** Syncs with Neoworks now; returns when done, with the result in lastSync. */
+    syncNeoworks: NeoworksAccount
     __typename: 'Mutation'
 }
 
@@ -1077,6 +1092,20 @@ export interface NeoworksAccountGenqlSelection{
     /** Null while signed out, and when Neoworks didn't share it. */
     email?: boolean | number
     name?: boolean | number
+    /** The last sync since the backend started; null before the first. */
+    lastSync?: NeoworksSyncGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface NeoworksSyncGenqlSelection{
+    at?: boolean | number
+    /** Local records changed by other devices. */
+    received?: boolean | number
+    /** Rows written from this device. */
+    sent?: boolean | number
+    /** Why the sync stopped; null when it worked. */
+    failure?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1136,6 +1165,8 @@ export interface MutationGenqlSelection{
     completeNeoworksSignIn?: (NeoworksAccountGenqlSelection & { __args: {code: Scalars['String'], state: Scalars['String']} })
     /** Signs this device out; the household's data stays in Neoworks for its other devices. */
     signOutOfNeoworks?: NeoworksAccountGenqlSelection
+    /** Syncs with Neoworks now; returns when done, with the result in lastSync. */
+    syncNeoworks?: NeoworksAccountGenqlSelection
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1427,6 +1458,14 @@ export interface SubscriptionGenqlSelection{
     export const isNeoworksAccount = (obj?: { __typename?: any } | null): obj is NeoworksAccount => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isNeoworksAccount"')
       return NeoworksAccount_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const NeoworksSync_possibleTypes: string[] = ['NeoworksSync']
+    export const isNeoworksSync = (obj?: { __typename?: any } | null): obj is NeoworksSync => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isNeoworksSync"')
+      return NeoworksSync_possibleTypes.includes(obj.__typename)
     }
     
 

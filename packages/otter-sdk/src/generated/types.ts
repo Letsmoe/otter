@@ -1218,6 +1218,26 @@ export default {
             "name": [
                 4
             ],
+            "lastSync": [
+                49
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "NeoworksSync": {
+            "at": [
+                4
+            ],
+            "received": [
+                3
+            ],
+            "sent": [
+                3
+            ],
+            "failure": [
+                4
+            ],
             "__typename": [
                 4
             ]
@@ -1584,7 +1604,7 @@ export default {
                 }
             ],
             "updatePlugins": [
-                51
+                52
             ],
             "startNeoworksSignIn": [
                 4,
@@ -1610,6 +1630,9 @@ export default {
             "signOutOfNeoworks": [
                 48
             ],
+            "syncNeoworks": [
+                48
+            ],
             "__typename": [
                 4
             ]
@@ -1630,7 +1653,7 @@ export default {
         },
         "PluginUpdateReport": {
             "updated": [
-                50
+                51
             ],
             "failed": [
                 4

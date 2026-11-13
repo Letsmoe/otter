@@ -2,6 +2,12 @@ fragment NeoworksAccountFields on NeoworksAccount {
   signedIn
   email
   name
+  lastSync {
+    at
+    received
+    sent
+    failure
+  }
 }
 
 query NeoworksAccount {
@@ -22,6 +28,12 @@ mutation CompleteNeoworksSignIn($code: String!, $state: String!) {
 
 mutation SignOutOfNeoworks {
   signOutOfNeoworks {
+    ...NeoworksAccountFields
+  }
+}
+
+mutation SyncNeoworks {
+  syncNeoworks {
     ...NeoworksAccountFields
   }
 }

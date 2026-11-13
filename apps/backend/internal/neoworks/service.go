@@ -54,17 +54,25 @@ type Service struct {
 	// acceptGrant hands the grant to libneoworks; tests replace it, since a
 	// real grant needs a real account's signature.
 	acceptGrant func(client *libneoworks.Client, grant, ownerIdentity json.RawMessage) error
+	// afterSignIn starts the first sync; tests that only sign in skip it.
+	afterSignIn func(ctx context.Context)
 
 	mutex   sync.Mutex
 	pending map[string]pendingSignIn
 	install *libneoworks.Install
 	client  *libneoworks.Client
+	// descriptorReady: the registry confirmed @letsmoe/otter for this client.
+	descriptorReady bool
+	lastSync        *SyncResult
+
+	// syncMutex lets one sync run at a time.
+	syncMutex sync.Mutex
 }
 
 // NewService keeps libneoworks' store in dataDir. installName is how the
 // account lists this install, e.g. "Otter on Pixel 8".
 func NewService(database *db.DB, box *secrets.Box, dataDir, installName string, endpoints Endpoints) *Service {
-	return &Service{
+	service := &Service{
 		database:    database,
 		box:         box,
 		keystore:    newKeystore(box),
@@ -77,6 +85,8 @@ func NewService(database *db.DB, box *secrets.Box, dataDir, installName string, 
 		},
 		pending: map[string]pendingSignIn{},
 	}
+	service.afterSignIn = func(ctx context.Context) { go service.syncInBackground(ctx) }
+	return service
 }
 
 func (s *Service) Status(ctx context.Context) (Status, error) {
@@ -132,7 +142,13 @@ func (s *Service) CompleteSignIn(ctx context.Context, code, state string) (Statu
 	if err := s.acceptOwnerGrant(ctx, answer, userID); err != nil {
 		return Status{}, err
 	}
-	return s.saveSignIn(ctx, answer, userID)
+	status, err := s.saveSignIn(ctx, answer, userID)
+	if err != nil {
+		return Status{}, err
+	}
+	// The first sync pulls the account's roots and adopts what this device had.
+	s.afterSignIn(context.WithoutCancel(ctx))
+	return status, nil
 }
 
 func (s *Service) acceptOwnerGrant(ctx context.Context, answer tokens, userID string) error {
@@ -232,10 +248,16 @@ func (s *Service) refreshAccessToken(ctx context.Context, row accountRow) (strin
 // SignOut forgets the account, the install and the local store on this device;
 // the household's data stays in Neoworks for its other devices.
 func (s *Service) SignOut(ctx context.Context) error {
+	s.syncMutex.Lock()
+	defer s.syncMutex.Unlock()
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.closeLocked()
+	s.lastSync = nil
 	if err := forgetAccount(ctx, s.database); err != nil {
+		return err
+	}
+	if err := forgetMirroredRows(ctx, s.database); err != nil {
 		return err
 	}
 	for _, suffix := range []string{"", "-wal", "-shm"} {
@@ -246,14 +268,17 @@ func (s *Service) SignOut(ctx context.Context) error {
 	return nil
 }
 
-// Close frees the libneoworks handles.
+// Close frees the libneoworks handles once a running sync finished.
 func (s *Service) Close() {
+	s.syncMutex.Lock()
+	defer s.syncMutex.Unlock()
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	s.closeLocked()
 }
 
 func (s *Service) closeLocked() {
+	s.descriptorReady = false
 	if s.client != nil {
 		s.client.Close()
 		s.client = nil

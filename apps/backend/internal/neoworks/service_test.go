@@ -48,7 +48,7 @@ func newFakeNeoworks(t *testing.T) *fakeNeoworks {
 }
 
 func (fake *fakeNeoworks) endpoints() Endpoints {
-	return Endpoints{OAuth: fake.server.URL, API: fake.server.URL + "/api/v1"}
+	return Endpoints{OAuth: fake.server.URL, API: fake.server.URL}
 }
 
 func testJWT(subject, marker string) string {
@@ -116,6 +116,7 @@ func newTestService(t *testing.T, fake *fakeNeoworks) (*Service, *[]acceptedGran
 	}
 	service := NewService(database, box, dataDir, "Otter on a test", fake.endpoints())
 	t.Cleanup(service.Close)
+	service.afterSignIn = func(context.Context) {}
 	accepted := []acceptedGrant{}
 	service.acceptGrant = func(_ *libneoworks.Client, grant, identity json.RawMessage) error {
 		accepted = append(accepted, acceptedGrant{grant: grant, identity: identity})

@@ -163,6 +163,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 		return serverHandlers{}, err
 	}
 	neoworksService := neoworks.NewService(database, box, cfg.dataDir, neoworksInstallName(), neoworks.Production)
+	neoworksService.Start(ctx)
 	hookRunner := hooks.New(cfg.hooksDir, []string{"OTTER_URL=" + cfg.publicURL})
 	tmdbClient := tmdb.NewClient(settingsService.TMDB)
 	// Find out early whether the key works, so the apps can ask for a new one.

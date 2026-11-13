@@ -2,13 +2,26 @@
 	import { onMount } from 'svelte';
 	import { otter } from '@letsmoe/otter-app/api';
 
+	interface SyncResult {
+		at: string;
+		received: number;
+		sent: number;
+		failure?: string | null;
+	}
+
 	interface Account {
 		signedIn: boolean;
 		email?: string | null;
 		name?: string | null;
+		lastSync?: SyncResult | null;
 	}
 
-	const accountFields = { signedIn: true, email: true, name: true } as const;
+	const accountFields = {
+		signedIn: true,
+		email: true,
+		name: true,
+		lastSync: { at: true, received: true, sent: true, failure: true }
+	} as const;
 
 	let account = $state<Account | null>(null);
 	let busy = $state(false);
@@ -52,6 +65,25 @@
 		}
 	}
 
+	function syncLine(lastSync: SyncResult | null | undefined): string {
+		if (!lastSync) return 'Not synced yet; syncs every 10 minutes';
+		const time = new Date(lastSync.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+		if (lastSync.failure) return `Sync failed at ${time}: ${lastSync.failure}`;
+		return `Synced at ${time}: ${lastSync.received} received, ${lastSync.sent} sent`;
+	}
+
+	async function syncNow() {
+		busy = true;
+		error = '';
+		try {
+			const data = await otter.mutation({ syncNeoworks: accountFields });
+			account = data.syncNeoworks;
+		} catch (failure) {
+			error = messageOf(failure, 'Sync failed');
+		}
+		busy = false;
+	}
+
 	async function signOut() {
 		busy = true;
 		error = '';
@@ -93,11 +125,26 @@
 			</button>
 		{/if}
 	</div>
+	{#if account?.signedIn}
+		<div class="flex items-center justify-between gap-4 py-1">
+			<span class="text-xs opacity-70">
+				{#if busy}Syncing…{:else}{syncLine(account.lastSync)}{/if}
+			</span>
+			<button
+				type="button"
+				class="rounded-full border border-white/20 px-4 py-1.5 text-sm transition-opacity hover:opacity-80 disabled:opacity-50"
+				onclick={syncNow}
+				disabled={busy}
+			>
+				Sync now
+			</button>
+		</div>
+	{/if}
 	{#if error}
 		<p class="text-xs text-[#f87171]">{error}</p>
 	{/if}
 	<p class="text-xs opacity-50">
-		One Neoworks account per household. Profiles, watch history, My List, ratings and settings
-		will sync between its devices, end-to-end encrypted. Syncing itself comes in a later update.
+		One Neoworks account per household, end-to-end encrypted. Profiles sync between its devices
+		now; watch history, My List, ratings and settings follow in a later update.
 	</p>
 </section>

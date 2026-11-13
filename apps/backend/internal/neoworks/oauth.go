@@ -30,12 +30,13 @@ var scopes = []string{"openid", "profile", "email", collection + ":read", collec
 type Endpoints struct {
 	// OAuth is the authorization server, e.g. https://oauth.neoworks.dev.
 	OAuth string
-	// API is the REST API including its version path, e.g. https://api.neoworks.dev/api/v1.
+	// API is the REST API's origin, e.g. https://api.neoworks.dev; libneoworks'
+	// request paths start with /api/v1 themselves.
 	API string
 }
 
 // Production is neoworks.dev.
-var Production = Endpoints{OAuth: "https://oauth.neoworks.dev", API: "https://api.neoworks.dev/api/v1"}
+var Production = Endpoints{OAuth: "https://oauth.neoworks.dev", API: "https://api.neoworks.dev"}
 
 // tokens is a token response; Grant is set on the authorization-code exchange.
 type tokens struct {
@@ -167,7 +168,7 @@ func fetchUserInfo(ctx context.Context, client *http.Client, endpoints Endpoints
 // pins and checks the grant's signature against.
 func fetchOwnerIdentity(ctx context.Context, client *http.Client, endpoints Endpoints, accessToken, userID string) (json.RawMessage, error) {
 	var identity json.RawMessage
-	address := endpoints.API + "/keys/identity?userId=" + url.QueryEscape(userID)
+	address := endpoints.API + "/api/v1/keys/identity?userId=" + url.QueryEscape(userID)
 	if err := getJSON(ctx, client, address, accessToken, &identity); err != nil {
 		return nil, fmt.Errorf("neoworks identity: %w", err)
 	}
