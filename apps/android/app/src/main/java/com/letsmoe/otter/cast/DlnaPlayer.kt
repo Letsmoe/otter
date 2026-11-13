@@ -84,6 +84,8 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
     private var playbackState = Player.STATE_IDLE
     private var playerError: PlaybackException? = null
     private var subtitleFile: TelevisionSubtitleFile? = null
+    // Asked once per player; null until then.
+    private var acceptedFormats: List<TelevisionFormat>? = null
 
     private var isContinuous = false
     // Where the TV's 0:00 lies on the title's timeline (continuous streams).
@@ -356,7 +358,7 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
             durationSeconds = probe.durationSeconds
             report(probe.startSeconds)
             pendingFileSeekSeconds = null
-            return TelevisionMedia(origin + pathWithSubtitle(path), title, probe.mimeType, seekableBytes = false, subtitle = televisionSubtitle(origin))
+            return televisionMediaFor(origin, path, title, probe.mimeType, seekableBytes = false)
         }
         val path = TelevisionUrls.filePath(playerUrl) ?: throw DlnaException("This source can't be played on a TV.")
         streamHeight = linkHeight
@@ -367,11 +369,33 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         if (mimeType == null) {
             mimeType = MimeTypes.VIDEO_MP4
         }
-        return TelevisionMedia(origin + pathWithSubtitle(path), title, mimeType, seekableBytes = true, subtitle = televisionSubtitle(origin))
+        return televisionMediaFor(origin, path, title, mimeType, seekableBytes = true)
     }
 
-    private fun pathWithSubtitle(path: String): String {
-        return TelevisionUrls.withSubtitle(path, subtitleFile?.id)
+    // The type and profile the TV is told about, and the stream URL that sends the same.
+    private suspend fun televisionMediaFor(origin: String, path: String, title: String, mimeType: String, seekableBytes: Boolean): TelevisionMedia {
+        val format = announcedFormat(mimeType, televisionFormats())
+        val formattedPath = TelevisionUrls.withFormat(path, mimeType, format)
+        val url = origin + TelevisionUrls.withSubtitle(formattedPath, subtitleFile?.id)
+        return TelevisionMedia(url, title, format.mimeType, seekableBytes, televisionSubtitle(origin), format.profile)
+    }
+
+    private suspend fun televisionFormats(): List<TelevisionFormat> {
+        val known = acceptedFormats
+        if (known != null) {
+            return known
+        }
+        val formats = try {
+            client.acceptedFormats()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Exception) {
+            Log.w(TAG, "reading the TV's formats failed", error)
+            emptyList()
+        }
+        Log.i(TAG, "${renderer.name} accepts ${formats.size} formats: ${formats.joinToString { format -> "${format.mimeType} ${format.profile.orEmpty()}" }}")
+        acceptedFormats = formats
+        return formats
     }
 
     private fun televisionSubtitle(origin: String): TelevisionSubtitle? {

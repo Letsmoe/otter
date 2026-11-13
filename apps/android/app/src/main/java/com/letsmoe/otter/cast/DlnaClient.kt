@@ -20,9 +20,12 @@ data class TelevisionMedia(
     val mimeType: String,
     val seekableBytes: Boolean,
     val subtitle: TelevisionSubtitle? = null,
+    /** DLNA.ORG_PN, for TVs that only take named profiles. */
+    val profile: String? = null,
 )
 
 private const val COMMAND_TIMEOUT_MILLISECONDS = 4000
+private const val INSTANCE = "<InstanceID>0</InstanceID>"
 // Philips TVs answer SetAVTransportURI and Play only after reading the start of the stream,
 // which takes a while for a continuous stream fetched over the VPN.
 private const val LOADING_TIMEOUT_MILLISECONDS = 30_000
@@ -39,12 +42,19 @@ class StreamUnavailableException(message: String) : IOException(message)
 class DlnaClient(private val renderer: DlnaRenderer) {
 
     suspend fun load(media: TelevisionMedia) {
-        val arguments = "<CurrentURI>${escapeXml(media.url)}</CurrentURI><CurrentURIMetaData>${escapeXml(didl(media))}</CurrentURIMetaData>"
+        val arguments = "$INSTANCE<CurrentURI>${escapeXml(media.url)}</CurrentURI><CurrentURIMetaData>${escapeXml(didl(media))}</CurrentURIMetaData>"
         call(transportService(), "SetAVTransportURI", arguments, LOADING_TIMEOUT_MILLISECONDS)
     }
 
     suspend fun play() {
-        call(transportService(), "Play", "<Speed>1</Speed>", LOADING_TIMEOUT_MILLISECONDS)
+        call(transportService(), "Play", "$INSTANCE<Speed>1</Speed>", LOADING_TIMEOUT_MILLISECONDS)
+    }
+
+    /** The formats the TV says it plays; empty when it doesn't say. */
+    suspend fun acceptedFormats(): List<TelevisionFormat> {
+        val service = renderer.connectionManager ?: return emptyList()
+        val response = call(service, "GetProtocolInfo", "")
+        return parseSinkProtocolInfo(xmlUnescape(tagValue(response, "Sink")))
     }
 
     suspend fun pause() {
@@ -79,13 +89,13 @@ class DlnaClient(private val renderer: DlnaRenderer) {
     /** The TV's volume, 0 to 100; null when it has no volume control. */
     suspend fun volume(): Int? {
         val service = renderer.volumeControl ?: return null
-        val response = call(service, "GetVolume", "<Channel>Master</Channel>")
+        val response = call(service, "GetVolume", "$INSTANCE<Channel>Master</Channel>")
         return tagValue(response, "CurrentVolume").toIntOrNull()
     }
 
     suspend fun setVolume(volume: Int) {
         val service = renderer.volumeControl ?: return
-        call(service, "SetVolume", "<Channel>Master</Channel><DesiredVolume>${volume.coerceIn(0, 100)}</DesiredVolume>")
+        call(service, "SetVolume", "$INSTANCE<Channel>Master</Channel><DesiredVolume>${volume.coerceIn(0, 100)}</DesiredVolume>")
     }
 
     private fun transportService(): DlnaService {
@@ -93,7 +103,7 @@ class DlnaClient(private val renderer: DlnaRenderer) {
     }
 
     private suspend fun call(action: String, arguments: String): String {
-        return call(transportService(), action, arguments)
+        return call(transportService(), action, INSTANCE + arguments)
     }
 
     private suspend fun call(
@@ -104,7 +114,7 @@ class DlnaClient(private val renderer: DlnaRenderer) {
     ): String = withContext(Dispatchers.IO) {
         val envelope = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
             "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">" +
-            "<s:Body><u:$action xmlns:u=\"${service.serviceType}\"><InstanceID>0</InstanceID>$arguments</u:$action></s:Body></s:Envelope>"
+            "<s:Body><u:$action xmlns:u=\"${service.serviceType}\">$arguments</u:$action></s:Body></s:Envelope>"
         val connection = openHttp(URL(service.controlUrl))
         connection.readTimeout = readTimeoutMilliseconds
         connection.requestMethod = "POST"
@@ -128,6 +138,9 @@ private fun didl(media: TelevisionMedia): String {
     var operations = "DLNA.ORG_OP=00"
     if (media.seekableBytes) {
         operations = "DLNA.ORG_OP=01"
+    }
+    if (media.profile != null) {
+        operations = "DLNA.ORG_PN=${media.profile};$operations"
     }
     val protocolInfo = "http-get:*:${media.mimeType}:$operations;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000"
     val subtitle = media.subtitle
@@ -161,6 +174,10 @@ private fun subtitleElements(subtitle: TelevisionSubtitle?): String {
 
 fun escapeXml(text: String): String {
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
+}
+
+private fun xmlUnescape(text: String): String {
+    return text.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&apos;", "'").replace("&amp;", "&")
 }
 
 private fun tagValue(xml: String, tagName: String): String {

@@ -29,6 +29,8 @@ data class DlnaRenderer(
     val serviceType: String,
     /** RenderingControl (volume); null when the TV doesn't offer it. */
     val volumeControl: DlnaService? = null,
+    /** ConnectionManager (which formats the TV accepts); null when the TV doesn't offer it. */
+    val connectionManager: DlnaService? = null,
 )
 
 /** One UPnP service of a renderer: where its SOAP actions go and its type. */
@@ -148,7 +150,14 @@ private fun describeRenderer(location: String): DlnaRenderer? {
         val transport = serviceOf(root, ":AVTransport:", location) ?: return null
         val name = childText(root, "friendlyName") ?: "TV"
         val id = childText(root, "UDN") ?: transport.controlUrl
-        DlnaRenderer(name, id, transport.controlUrl, transport.serviceType, serviceOf(root, ":RenderingControl:", location))
+        DlnaRenderer(
+            name,
+            id,
+            transport.controlUrl,
+            transport.serviceType,
+            volumeControl = serviceOf(root, ":RenderingControl:", location),
+            connectionManager = serviceOf(root, ":ConnectionManager:", location),
+        )
     } catch (error: Exception) {
         Log.w(TAG, "describing $location failed", error)
         null

@@ -59,10 +59,26 @@ object TelevisionUrls {
         if (subtitleId == null) {
             return path
         }
+        return withParameter(path, "subtitle", subtitleId)
+    }
+
+    /** Asks the stream server to send the type and profile the TV was told about, when they differ from its own. */
+    fun withFormat(path: String, defaultMimeType: String, format: AnnouncedFormat): String {
+        var result = path
+        if (format.mimeType != defaultMimeType) {
+            result = withParameter(result, "dlnaType", format.mimeType)
+        }
+        if (format.profile != null) {
+            result = withParameter(result, "dlnaProfile", format.profile)
+        }
+        return result
+    }
+
+    private fun withParameter(path: String, name: String, value: String): String {
         var separator = "?"
         if (path.contains("?")) {
             separator = "&"
         }
-        return "$path${separator}subtitle=${Uri.encode(subtitleId)}"
+        return "$path$separator$name=${Uri.encode(value)}"
     }
 }
