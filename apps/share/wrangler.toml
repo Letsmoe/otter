@@ -1,0 +1,12 @@
+# otter.letsmoe.com: shared Otter links. CI deploys it (.github/workflows/share.yml).
+# Secrets live in apps/share/.env (gitignored), which `wrangler dev` reads and
+# `wrangler secret bulk .env` uploads:
+#   TMDB_API_KEY=<TMDB v3 key>
+#   ANDROID_CERT_FINGERPRINTS=<SHA-256 of the signing key, B2:B9:…:2E>
+# By hand: `bunx wrangler login && bunx wrangler deploy && bunx wrangler secret bulk .env`.
+name = "otter-share"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+
+# Cloudflare creates the DNS record for the custom domain itself.
+routes = [{ pattern = "otter.letsmoe.com", custom_domain = true }]

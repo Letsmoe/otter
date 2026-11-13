@@ -63,6 +63,7 @@ After having written all your changes, think about if any of these changes requi
 - **Frontend**: SvelteKit in `apps/web`, talks to the backend via GraphQL only (genql client from `packages/otter-sdk`)
 - **Mobile**: Capacitor Android shell in `apps/mobile`; runs the backend binary as `libotter.so` on `127.0.0.1:47832`
 - **Native Android** (in progress, replaces `apps/mobile`): Kotlin + Jetpack Compose in `apps/android` (Apollo Kotlin against the backend schema, Media3 player); app id `com.letsmoe.otter`, backend on `127.0.0.1:47833`
+- **Share links**: Cloudflare Worker in `apps/share` serving `otter.letsmoe.com` (`assetlinks.json` for Android App Links, preview pages for shared titles from TMDB); deployed by `.github/workflows/share.yml`, secrets via `apps/share/.env`
 - **DB**: SQLite (`modernc.org/sqlite`, pure Go, no cgo) at `$DATA_DIR/otter.db`
 - **Files**: plain files under `$DATA_DIR/blobs` (stream + image cache, LRU-evicted)
 - **Cache**: `kv` table in SQLite (no Redis)
