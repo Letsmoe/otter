@@ -49,7 +49,7 @@ private const val TMDB_SIGNUP_PAGE = "https://www.themoviedb.org/signup"
 /** First-run TMDB setup over everything else: built-in key or own key, then the key itself. */
 @Composable
 fun TmdbSetupOverlay(setup: TmdbSetupViewModel = viewModel()) {
-    if (!setup.visible) {
+    if (!setup.visible || welcomeVisible()) {
         return
     }
     BackHandler(enabled = setup.step == SetupStep.OWN_KEY && setup.builtInKeyAvailable, onBack = setup::backToChoice)
