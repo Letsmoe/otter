@@ -24,11 +24,15 @@ const (
 
 // failedTraceProcessor holds every span of a trace until its local root ends,
 // then hands the trace to next only when a span failed or asked to be kept.
+// Traces whose root asks to be kept from the start (TV requests, which can
+// run for hours) skip the buffer: each span goes to next as soon as it ends.
 type failedTraceProcessor struct {
 	next    sdktrace.SpanProcessor
 	enabled func() bool
 	mutex   sync.Mutex
 	traces  map[trace.TraceID]*bufferedTrace
+	// streaming are the traces sent span by span.
+	streaming map[trace.TraceID]bool
 }
 
 type bufferedTrace struct {
@@ -39,12 +43,28 @@ type bufferedTrace struct {
 }
 
 func newFailedTraceProcessor(next sdktrace.SpanProcessor, enabled func() bool) *failedTraceProcessor {
-	return &failedTraceProcessor{next: next, enabled: enabled, traces: map[trace.TraceID]*bufferedTrace{}}
+	return &failedTraceProcessor{
+		next:      next,
+		enabled:   enabled,
+		traces:    map[trace.TraceID]*bufferedTrace{},
+		streaming: map[trace.TraceID]bool{},
+	}
 }
 
-func (processor *failedTraceProcessor) OnStart(context.Context, sdktrace.ReadWriteSpan) {}
+// OnStart notes traces whose root is kept anyway, so they are sent span by span.
+func (processor *failedTraceProcessor) OnStart(_ context.Context, span sdktrace.ReadWriteSpan) {
+	if !isLocalRoot(span) || !hasKeepAttribute(span) {
+		return
+	}
+	processor.mutex.Lock()
+	processor.streaming[span.SpanContext().TraceID()] = true
+	processor.mutex.Unlock()
+}
 
 func (processor *failedTraceProcessor) OnEnd(span sdktrace.ReadOnlySpan) {
+	if processor.sendStreamed(span) {
+		return
+	}
 	buffered := processor.buffer(span)
 	if buffered == nil || !isLocalRoot(span) {
 		return
@@ -55,6 +75,24 @@ func (processor *failedTraceProcessor) OnEnd(span sdktrace.ReadOnlySpan) {
 	for _, bufferedSpan := range buffered.spans() {
 		processor.next.OnEnd(bufferedSpan)
 	}
+}
+
+// sendStreamed passes on a span of a streaming trace right away; false for other traces.
+func (processor *failedTraceProcessor) sendStreamed(span sdktrace.ReadOnlySpan) bool {
+	traceID := span.SpanContext().TraceID()
+	processor.mutex.Lock()
+	streaming := processor.streaming[traceID]
+	if streaming && isLocalRoot(span) {
+		delete(processor.streaming, traceID)
+	}
+	processor.mutex.Unlock()
+	if !streaming {
+		return false
+	}
+	if processor.enabled() {
+		processor.next.OnEnd(span)
+	}
+	return true
 }
 
 // buffer adds span to its trace; for a local root it removes and returns the whole trace.
