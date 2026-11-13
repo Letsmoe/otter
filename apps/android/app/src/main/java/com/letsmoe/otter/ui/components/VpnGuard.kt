@@ -22,10 +22,13 @@ fun VpnGuard(modifier: Modifier = Modifier) {
         Icon(PhosphorIcons.Fill.ShieldCheck, "VPN connected", tint = OtterColors.success, modifier = modifier.size(20.dp))
         return
     }
-    Icon(PhosphorIcons.Fill.ShieldWarning, vpnDisconnectedLabel(status.required), tint = OtterColors.error, modifier = modifier.size(20.dp))
+    Icon(PhosphorIcons.Fill.ShieldWarning, vpnDisconnectedLabel(status.required, status.bypassed), tint = OtterColors.error, modifier = modifier.size(20.dp))
 }
 
-private fun vpnDisconnectedLabel(required: Boolean): String {
+private fun vpnDisconnectedLabel(required: Boolean, bypassed: Boolean): String {
+    if (bypassed) {
+        return "VPN is on, but Otter's traffic skips it"
+    }
     if (required) {
         return "VPN disconnected — streaming is blocked"
     }

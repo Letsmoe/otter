@@ -7,12 +7,16 @@
 	const POLL_INTERVAL_MS = 10000;
 
 	let connected = $state(false);
+	let bypassed = $state(false);
 	let required = $state(false);
 
 	async function refresh() {
 		try {
-			const data = await otter.query({ status: { vpnConnected: true, requireVpn: true } });
+			const data = await otter.query({
+				status: { vpnConnected: true, vpnBypassed: true, requireVpn: true }
+			});
 			connected = data.status.vpnConnected;
+			bypassed = data.status.vpnBypassed;
 			required = data.status.requireVpn;
 		} catch {
 			connected = false;
@@ -27,6 +31,7 @@
 
 	let label = $derived.by(() => {
 		if (connected) return 'VPN connected';
+		if (bypassed) return "VPN is on, but Otter's traffic skips it";
 		if (required) return 'VPN disconnected — streaming is blocked';
 		return 'VPN disconnected';
 	});

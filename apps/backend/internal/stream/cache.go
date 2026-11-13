@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -30,6 +29,7 @@ import (
 	"github.com/Letsmoe/otter/internal/plugins"
 	"github.com/Letsmoe/otter/internal/storage"
 	"github.com/Letsmoe/otter/internal/tracing"
+	"github.com/Letsmoe/otter/internal/vpn"
 )
 
 const (
@@ -224,9 +224,10 @@ func (s *CacheService) cache(
 // httpClient has connection/header timeouts but no body-read timeout.
 // Body reads are bounded by the caller's context (job ctx or 2-hour background ctx).
 // A Client.Timeout that covers the body read would kill large MP4 downloads.
+// Connections only go through the VPN while it is required.
 var httpClient = &http.Client{
 	Transport: tracing.Transport(&http.Transport{
-		DialContext:           (&net.Dialer{Timeout: 30 * time.Second}).DialContext,
+		DialContext:           vpn.DialContext,
 		TLSHandshakeTimeout:   15 * time.Second,
 		ResponseHeaderTimeout: 30 * time.Second,
 		DisableCompression:    true, // don't deflate streams

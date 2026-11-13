@@ -22,6 +22,8 @@ data class VpnStatus(
     val required: Boolean,
     /** False until the first answer, and while the backend is unreachable. */
     val known: Boolean,
+    /** A VPN is up, but Otter's traffic skips it (excluded by the VPN's split tunnelling). */
+    val bypassed: Boolean = false,
 ) {
     /** The backend refuses to search and play: a VPN is required and none is up. */
     val blocksStreaming: Boolean
@@ -80,7 +82,7 @@ object VpnStatusStore {
     private suspend fun fetchStatus(): VpnStatus {
         return try {
             val data = OtterApi.client.query(VpnStatusQuery()).execute().dataOrThrow()
-            VpnStatus(data.status.vpnConnected, data.status.requireVpn, known = true)
+            VpnStatus(data.status.vpnConnected, data.status.requireVpn, known = true, bypassed = data.status.vpnBypassed)
         } catch (error: Exception) {
             unknown
         }

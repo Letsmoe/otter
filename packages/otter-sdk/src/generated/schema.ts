@@ -334,7 +334,10 @@ export interface Status {
     tmdbConfigured: Scalars['Boolean']
     /** False while the last TMDB request got no answer (offline, or a VPN or DNS filter blocks it). */
     tmdbReachable: Scalars['Boolean']
+    /** Whether the backend's traffic to the internet goes through a VPN. */
     vpnConnected: Scalars['Boolean']
+    /** A VPN is up, but Otter's traffic skips it (e.g. Otter is excluded by the VPN's split tunnelling). */
+    vpnBypassed: Scalars['Boolean']
     requireVpn: Scalars['Boolean']
     __typename: 'Status'
 }
@@ -904,7 +907,10 @@ export interface StatusGenqlSelection{
     tmdbConfigured?: boolean | number
     /** False while the last TMDB request got no answer (offline, or a VPN or DNS filter blocks it). */
     tmdbReachable?: boolean | number
+    /** Whether the backend's traffic to the internet goes through a VPN. */
     vpnConnected?: boolean | number
+    /** A VPN is up, but Otter's traffic skips it (e.g. Otter is excluded by the VPN's split tunnelling). */
+    vpnBypassed?: boolean | number
     requireVpn?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number

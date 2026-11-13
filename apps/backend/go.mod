@@ -7,7 +7,6 @@ require (
 	github.com/andybalholm/cascadia v1.3.5
 	github.com/bluenviron/mediacommon/v2 v2.9.7
 	github.com/btcsuite/btcd/btcec/v2 v2.5.0
-	github.com/disintegration/imaging v1.6.2
 	github.com/dop251/goja v0.0.0-20260926152631-39ec2650adc9
 	github.com/dop251/goja_nodejs v0.0.0-20260918173711-b481721df8a2
 	github.com/fsnotify/fsnotify v1.10.1
@@ -23,7 +22,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.47.0
 	go.opentelemetry.io/proto/otlp v1.11.0
 	golang.org/x/crypto v0.57.0
-	golang.org/x/image v0.43.0
 	golang.org/x/net v0.59.0
 	golang.org/x/sync v0.23.0
 	google.golang.org/protobuf v1.36.12

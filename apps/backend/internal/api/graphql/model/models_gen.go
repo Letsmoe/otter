@@ -277,8 +277,11 @@ type Status struct {
 	TmdbConfigured bool `json:"tmdbConfigured"`
 	// False while the last TMDB request got no answer (offline, or a VPN or DNS filter blocks it).
 	TmdbReachable bool `json:"tmdbReachable"`
-	VpnConnected  bool `json:"vpnConnected"`
-	RequireVpn    bool `json:"requireVpn"`
+	// Whether the backend's traffic to the internet goes through a VPN.
+	VpnConnected bool `json:"vpnConnected"`
+	// A VPN is up, but Otter's traffic skips it (e.g. Otter is excluded by the VPN's split tunnelling).
+	VpnBypassed bool `json:"vpnBypassed"`
+	RequireVpn  bool `json:"requireVpn"`
 }
 
 type Stream struct {

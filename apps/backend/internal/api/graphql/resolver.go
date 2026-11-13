@@ -16,6 +16,7 @@ import (
 	"github.com/Letsmoe/otter/internal/subtitles"
 	"github.com/Letsmoe/otter/internal/tmdb"
 	"github.com/Letsmoe/otter/internal/together"
+	"github.com/Letsmoe/otter/internal/vpn"
 )
 
 // Services is everything the API reads from or acts on.
@@ -38,8 +39,8 @@ type Services struct {
 	TMDB           *tmdb.Client
 	Skips          *skips.Client
 	Together       *together.Service
-	// VpnConnected reports whether a VPN interface is up.
-	VpnConnected func() bool
+	// VpnStatus reports whether the backend's traffic goes through a VPN.
+	VpnStatus func() vpn.Status
 }
 
 // Resolver is the root gqlgen resolver.

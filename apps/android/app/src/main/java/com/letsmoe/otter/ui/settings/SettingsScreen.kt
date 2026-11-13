@@ -58,6 +58,7 @@ import com.letsmoe.otter.ui.components.TmdbAttribution
 import com.letsmoe.otter.ui.components.openWebPage
 import com.letsmoe.otter.ui.components.ScreenHeader
 import com.letsmoe.otter.ui.navigation.bottomBarClearance
+import com.letsmoe.otter.vpn.VpnStatus
 import com.letsmoe.otter.vpn.VpnStatusStore
 import kotlinx.coroutines.launch
 
@@ -181,7 +182,9 @@ private fun ApiKeyRow(viewModel: SettingsViewModel) {
 @Composable
 private fun StreamingGroup(viewModel: SettingsViewModel) {
     val vpn by VpnStatusStore.status.collectAsStateWithLifecycle()
-    SettingsGroup("Streaming") {
+    val footer = "For full protection also turn on \"Always-on VPN\" and \"Block connections without VPN\" " +
+        "in Android's VPN settings: then Android itself stops all traffic when the VPN drops."
+    SettingsGroup("Streaming", footer = footer) {
         Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("Require VPN", fontSize = 14.sp)
@@ -192,7 +195,7 @@ private fun StreamingGroup(viewModel: SettingsViewModel) {
         SettingsDivider()
         Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             Text("VPN", fontSize = 14.sp)
-            Text(vpnLine(vpn.known, vpn.connected), fontSize = 14.sp, color = Color.White.copy(alpha = 0.6f))
+            Text(vpnLine(vpn), fontSize = 14.sp, color = Color.White.copy(alpha = 0.6f))
         }
     }
 }
@@ -243,12 +246,15 @@ private fun PlaybackGroup() {
     }
 }
 
-private fun vpnLine(known: Boolean, connected: Boolean): String {
-    if (!known) {
+private fun vpnLine(vpn: VpnStatus): String {
+    if (!vpn.known) {
         return "Checking…"
     }
-    if (connected) {
+    if (vpn.connected) {
         return "Connected"
+    }
+    if (vpn.bypassed) {
+        return "On, but Otter skips it"
     }
     return "Not connected"
 }

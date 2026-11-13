@@ -12,6 +12,7 @@ import (
 	"github.com/dop251/goja"
 
 	"github.com/Letsmoe/otter/internal/tracing"
+	"github.com/Letsmoe/otter/internal/vpn"
 )
 
 // timeoutProperty carries AbortSignal.timeout's milliseconds on the signal object.
@@ -26,9 +27,13 @@ type fetcher struct {
 	manual    *http.Client // redirect: "manual": the 3xx response itself is returned
 }
 
-// newFetcher creates the clients, sharing one connection pool.
+// newFetcher creates the clients, sharing one connection pool. Every request
+// of a plugin goes through the VPN while it is required: a call that started
+// with the VPN up fails instead of going on without it.
 func newFetcher() *fetcher {
-	transport := tracing.Transport(http.DefaultTransport.(*http.Transport).Clone())
+	base := http.DefaultTransport.(*http.Transport).Clone()
+	base.DialContext = vpn.DialContext
+	transport := tracing.Transport(base)
 	return &fetcher{
 		following: &http.Client{Transport: transport},
 		manual: &http.Client{

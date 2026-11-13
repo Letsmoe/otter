@@ -154,6 +154,9 @@ fun BufferingIndicator(state: PlayerUiState, modifier: Modifier = Modifier) {
 
 /** What the search for a link is doing; without the required VPN the backend doesn't search at all. */
 fun sourceStatusText(state: PlayerUiState, vpn: VpnStatus): String {
+    if (vpn.blocksStreaming && vpn.bypassed) {
+        return "Your VPN skips Otter: include it in the VPN app to watch"
+    }
     if (vpn.blocksStreaming) {
         return "Connect to a VPN to watch"
     }

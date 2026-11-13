@@ -334,7 +334,10 @@ type Status {
   tmdbConfigured: Boolean!
   "False while the last TMDB request got no answer (offline, or a VPN or DNS filter blocks it)."
   tmdbReachable: Boolean!
+  "Whether the backend's traffic to the internet goes through a VPN."
   vpnConnected: Boolean!
+  "A VPN is up, but Otter's traffic skips it (e.g. Otter is excluded by the VPN's split tunnelling)."
+  vpnBypassed: Boolean!
   requireVpn: Boolean!
 }
 
