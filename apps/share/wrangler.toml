@@ -10,3 +10,7 @@ compatibility_date = "2026-11-01"
 
 # Cloudflare creates the DNS record for the custom domain itself.
 routes = [{ pattern = "otter.letsmoe.com", custom_domain = true }]
+
+# Request logs (path, status, user agent) under Workers & Pages → otter-share → Logs.
+[observability]
+enabled = true
