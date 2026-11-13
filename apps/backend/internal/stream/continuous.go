@@ -110,8 +110,10 @@ func (p *Proxy) serveContinuous(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	segments, startsAt := playlist.segmentsFrom(start)
+	keys := &keyCache{keys: map[string][]byte{}}
+	initSegment := p.remuxableInit(r.Context(), playlist.initURL, headers, keys)
 
-	w.Header().Set("Content-Type", continuousContentType(playlist))
+	w.Header().Set("Content-Type", continuousContentType(playlist, initSegment))
 	w.Header().Set("X-Otter-Start", strconv.FormatFloat(startsAt, 'f', 3, 64))
 	w.Header().Set("X-Otter-Duration", strconv.FormatFloat(playlist.totalDuration(), 'f', 3, 64))
 	if playlist.variantHeight > 0 {
@@ -121,26 +123,61 @@ func (p *Proxy) serveContinuous(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodHead {
 		return
 	}
-	if err := p.writeContinuous(r.Context(), w, playlist.initURL, segments, headers); err != nil && r.Context().Err() == nil {
+	if err := p.writeContinuous(r.Context(), w, playlist.initURL, initSegment, segments, headers, keys); err != nil && r.Context().Err() == nil {
 		// Headers are out already; ending the body early tells the TV.
 		log.Printf("continuous stream: %v", err)
 		errorreport.Capture(r.Context(), err, "stream.continuous", map[string]any{"manifest": manifestURL, "start": start, "user_agent": r.UserAgent()})
 	}
 }
 
-func continuousContentType(playlist mediaPlaylist) string {
-	if playlist.initURL != "" {
+// continuousContentType is MPEG-TS unless an fMP4 stream can't be repackaged
+// (initSegment is nil then) and goes out as it is.
+func continuousContentType(playlist mediaPlaylist, initSegment []byte) string {
+	if playlist.initURL != "" && initSegment == nil {
 		return "video/mp4"
 	}
 	// What DLNA renderers expect for MPEG-TS.
 	return "video/mpeg"
 }
 
-func (p *Proxy) writeContinuous(ctx context.Context, w http.ResponseWriter, initURL string, segments []mediaSegment, headers map[string]string) error {
+// remuxableInit fetches an fMP4 stream's init segment and returns it when its
+// tracks fit into MPEG-TS; nil for MPEG-TS streams and for fMP4 that doesn't.
+func (p *Proxy) remuxableInit(ctx context.Context, initURL string, headers map[string]string, keys *keyCache) []byte {
+	if initURL == "" {
+		return nil
+	}
+	initSegment, err := p.segmentBody(ctx, mediaSegment{url: initURL}, headers, keys)
+	if err != nil {
+		log.Printf("continuous stream: init segment: %v", err)
+		return nil
+	}
+	if _, err := newTSRemuxer(io.Discard, initSegment); err != nil {
+		log.Printf("continuous stream: sending fMP4 as it is: %v", err)
+		return nil
+	}
+	return initSegment
+}
+
+// segmentWriter writes one fetched segment to the TV.
+type segmentWriter func(body []byte) error
+
+func (p *Proxy) writeContinuous(
+	ctx context.Context,
+	w http.ResponseWriter,
+	initURL string,
+	initSegment []byte,
+	segments []mediaSegment,
+	headers map[string]string,
+	keys *keyCache,
+) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	keys := &keyCache{keys: map[string][]byte{}}
-	if initURL != "" {
+	write, err := continuousWriter(w, initSegment)
+	if err != nil {
+		return err
+	}
+	// fMP4 sent as it is starts with its init segment; a remuxer has read it already.
+	if initURL != "" && initSegment == nil {
 		segments = append([]mediaSegment{{url: initURL}}, segments...)
 	}
 	for pending := range p.prefetchSegments(ctx, segments, headers, keys) {
@@ -148,7 +185,7 @@ func (p *Proxy) writeContinuous(ctx context.Context, w http.ResponseWriter, init
 		if result.err != nil {
 			return result.err
 		}
-		if _, err := w.Write(result.body); err != nil {
+		if err := write(result.body); err != nil {
 			return err
 		}
 		if flusher, ok := w.(http.Flusher); ok {
@@ -156,6 +193,21 @@ func (p *Proxy) writeContinuous(ctx context.Context, w http.ResponseWriter, init
 		}
 	}
 	return ctx.Err()
+}
+
+// continuousWriter copies segments as they are, or repackages fMP4 into MPEG-TS when initSegment is set.
+func continuousWriter(w io.Writer, initSegment []byte) (segmentWriter, error) {
+	if initSegment == nil {
+		return func(body []byte) error {
+			_, err := w.Write(body)
+			return err
+		}, nil
+	}
+	remuxer, err := newTSRemuxer(w, initSegment)
+	if err != nil {
+		return nil, err
+	}
+	return remuxer.writeFragment, nil
 }
 
 type fetchedSegment struct {
