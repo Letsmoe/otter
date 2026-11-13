@@ -16,6 +16,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Letsmoe/otter/internal/errorreport"
 )
 
 // Continuous streams serve an HLS stream as one file for DLNA TVs, which
@@ -122,6 +124,7 @@ func (p *Proxy) serveContinuous(w http.ResponseWriter, r *http.Request) {
 	if err := p.writeContinuous(r.Context(), w, playlist.initURL, segments, headers); err != nil && r.Context().Err() == nil {
 		// Headers are out already; ending the body early tells the TV.
 		log.Printf("continuous stream: %v", err)
+		errorreport.Capture(err, "stream.continuous", map[string]any{"manifest": manifestURL, "start": start, "user_agent": r.UserAgent()})
 	}
 }
 

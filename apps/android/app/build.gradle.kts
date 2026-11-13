@@ -110,6 +110,7 @@ dependencies {
     implementation(libs.media3.ui)
     implementation(libs.media3.ui.compose)
     implementation(libs.media3.cast)
+    implementation(libs.posthog.android)
     implementation(libs.appcompat)
     implementation(libs.newpipe.extractor)
     coreLibraryDesugaring(libs.desugar.jdk.libs)

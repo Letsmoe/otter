@@ -616,6 +616,9 @@ export default {
             "requireVpn": [
                 6
             ],
+            "errorReporting": [
+                6
+            ],
             "disabledPlugins": [
                 4
             ],
@@ -634,6 +637,9 @@ export default {
                 6
             ],
             "requireVpn": [
+                6
+            ],
+            "errorReporting": [
                 6
             ],
             "__typename": [

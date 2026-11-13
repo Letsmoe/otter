@@ -65,3 +65,26 @@ func TestSavedVpnChoiceSurvivesRestart(t *testing.T) {
 		t.Fatal("a saved 'no VPN' choice was overridden by the default")
 	}
 }
+
+func TestErrorReportingIsOnByDefaultAndCanBeTurnedOff(t *testing.T) {
+	ctx := context.Background()
+	service := newTestService(t)
+	if err := service.Init(ctx, ""); err != nil {
+		t.Fatal(err)
+	}
+	if !service.Cached().ErrorReporting {
+		t.Fatal("a fresh install should report errors")
+	}
+	errorReporting := false
+	if _, err := service.Apply(ctx, Update{ErrorReporting: &errorReporting}); err != nil {
+		t.Fatal(err)
+	}
+
+	restarted := NewService(service.database)
+	if err := restarted.Init(ctx, ""); err != nil {
+		t.Fatal(err)
+	}
+	if restarted.Cached().ErrorReporting {
+		t.Fatal("turning error reporting off didn't survive a restart")
+	}
+}

@@ -29,7 +29,9 @@ type Settings struct {
 	// TMDBKeyPromptSeen is set once the first-run key dialog was answered.
 	TMDBKeyPromptSeen bool `json:"tmdbKeyPromptSeen"`
 	// RequireVpn blocks stream lookups and playback while no VPN interface is up.
-	RequireVpn      bool                         `json:"requireVpn"`
+	RequireVpn bool `json:"requireVpn"`
+	// ErrorReporting sends errors to the developers (PostHog); on by default.
+	ErrorReporting  bool                         `json:"errorReporting"`
 	DisabledPlugins []string                     `json:"disabledPlugins"`
 	PluginSettings  map[string]map[string]string `json:"pluginSettings"`
 }
@@ -40,6 +42,7 @@ type Update struct {
 	TMDBLanguage      *string
 	TMDBKeyPromptSeen *bool
 	RequireVpn        *bool
+	ErrorReporting    *bool
 	DisabledPlugins   []string
 	// PluginSettings replaces the settings of the plugins it names.
 	PluginSettings map[string]map[string]string
@@ -134,6 +137,9 @@ func applyUpdate(settings *Settings, update Update) {
 	if update.RequireVpn != nil {
 		settings.RequireVpn = *update.RequireVpn
 	}
+	if update.ErrorReporting != nil {
+		settings.ErrorReporting = *update.ErrorReporting
+	}
 	if update.DisabledPlugins != nil {
 		settings.DisabledPlugins = update.DisabledPlugins
 	}
@@ -144,7 +150,7 @@ func applyUpdate(settings *Settings, update Update) {
 
 func (s *Service) load(ctx context.Context) (Settings, error) {
 	// Defaults for a fresh install; stored settings always carry every field and override them.
-	loaded := Settings{TMDBLanguage: defaultLanguage, RequireVpn: true}
+	loaded := Settings{TMDBLanguage: defaultLanguage, RequireVpn: true, ErrorReporting: true}
 	row, err := s.database.QueryRow(ctx, "SELECT value FROM setting WHERE key = $key", db.Vars{"key": settingsKey})
 	if err != nil {
 		return loaded, fmt.Errorf("load settings: %w", err)

@@ -6,6 +6,7 @@ activityCompose = "1.13.0"
 navigationCompose = "2.10.2"
 lifecycle = "2.11.0"
 media3 = "1.11.1"
+posthog = "3.77.1"
 apollo = "5.2.0"
 coil = "3.6.3"
 haze = "2.0.1"
@@ -32,6 +33,7 @@ media3-exoplayer-hls = { group = "androidx.media3", name = "media3-exoplayer-hls
 media3-ui-compose = { group = "androidx.media3", name = "media3-ui-compose", version.ref = "media3" }
 media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }
 media3-cast = { group = "androidx.media3", name = "media3-cast", version.ref = "media3" }
+posthog-android = { group = "com.posthog", name = "posthog-android", version.ref = "posthog" }
 # Compile-time only for the Chromecast picker dialog; media3-cast ships it anyway.
 appcompat = { group = "androidx.appcompat", name = "appcompat", version = "1.7.1" }
 apollo-runtime = { group = "com.apollographql.apollo", name = "apollo-runtime", version.ref = "apollo" }

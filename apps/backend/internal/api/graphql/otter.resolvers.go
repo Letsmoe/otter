@@ -369,7 +369,7 @@ func (r *mutationResolver) VerifyPin(ctx context.Context, profileID string, pin 
 func (r *mutationResolver) UpdateSettings(ctx context.Context, input model.SettingsInput) (*model.Settings, error) {
 	updated, err := r.applySettings(ctx, settings.Update{
 		TMDBApiKey: input.TmdbAPIKey, TMDBLanguage: input.TmdbLanguage, RequireVpn: input.RequireVpn,
-		TMDBKeyPromptSeen: input.TmdbKeyPromptSeen,
+		TMDBKeyPromptSeen: input.TmdbKeyPromptSeen, ErrorReporting: input.ErrorReporting,
 	})
 	if err != nil {
 		return nil, err

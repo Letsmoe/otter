@@ -24,6 +24,7 @@ import (
 	"github.com/Letsmoe/otter/internal/cache"
 	"github.com/Letsmoe/otter/internal/db"
 	"github.com/Letsmoe/otter/internal/downloads"
+	"github.com/Letsmoe/otter/internal/errorreport"
 	"github.com/Letsmoe/otter/internal/hooks"
 	"github.com/Letsmoe/otter/internal/library"
 	"github.com/Letsmoe/otter/internal/netdns"
@@ -115,6 +116,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer errorreport.Close()
 	if cfg.lanStreamPort != "" {
 		go serveLanStreams(ctx, net.JoinHostPort("", cfg.lanStreamPort), handlers.lanStreams)
 	}
@@ -134,6 +136,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 		return serverHandlers{}, err
 	}
 	cacheClient := cache.New(ctx, database)
+	errorreport.Start(ctx, cacheClient, func() bool { return settingsService.Cached().ErrorReporting })
 	store, err := storage.New(filepath.Join(cfg.dataDir, "blobs"), cfg.publicURL)
 	if err != nil {
 		return serverHandlers{}, err
@@ -211,7 +214,10 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	lanMux.Handle("/api/stream/", streamProxy)
 	lanMux.Handle(storage.RoutePrefix, store.Handler())
 	lanMux.Handle(subtitles.RoutePrefix, subtitleService.Handler())
-	return serverHandlers{api: corsMiddleware(mux), lanStreams: privateNetworkOnly(dlnaHeaders(corsMiddleware(lanMux)))}, nil
+	return serverHandlers{
+		api:        errorreport.Recover(corsMiddleware(mux)),
+		lanStreams: errorreport.Recover(privateNetworkOnly(dlnaHeaders(corsMiddleware(lanMux)))),
+	}, nil
 }
 
 // loadPlugins loads the plugin bundles (scripts/bundle-plugins.ts) into the

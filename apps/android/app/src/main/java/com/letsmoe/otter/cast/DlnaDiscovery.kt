@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.util.Log
+import com.letsmoe.otter.reporting.ErrorReporting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.w3c.dom.Element
@@ -31,6 +32,10 @@ data class DlnaRenderer(
     val volumeControl: DlnaService? = null,
     /** ConnectionManager (which formats the TV accepts); null when the TV doesn't offer it. */
     val connectionManager: DlnaService? = null,
+    /** Manufacturer and model, e.g. "Hisense 55A6K", for error reports. */
+    val model: String = "",
+    /** The device description XML as the TV sent it, for error reports. */
+    val description: String = "",
 )
 
 /** One UPnP service of a renderer: where its SOAP actions go and its type. */
@@ -141,27 +146,43 @@ private fun receiveLocation(socket: DatagramSocket): String? {
 
 /** Reads the device description and finds its AVTransport service. */
 private fun describeRenderer(location: String): DlnaRenderer? {
+    var description = ""
     return try {
         val connection = openHttp(URL(location))
-        val document = connection.inputStream.use { input ->
-            DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(input)
-        }
-        val root = document.documentElement
-        val transport = serviceOf(root, ":AVTransport:", location) ?: return null
-        val name = childText(root, "friendlyName") ?: "TV"
-        val id = childText(root, "UDN") ?: transport.controlUrl
-        DlnaRenderer(
-            name,
-            id,
-            transport.controlUrl,
-            transport.serviceType,
-            volumeControl = serviceOf(root, ":RenderingControl:", location),
-            connectionManager = serviceOf(root, ":ConnectionManager:", location),
-        )
+        description = connection.inputStream.use { input -> input.readBytes().decodeToString() }
+        val root = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+            .parse(description.byteInputStream()).documentElement
+        rendererOf(root, location, description)
+    } catch (unreachable: IOException) {
+        // A remembered TV that is off or got another address.
+        Log.w(TAG, "describing $location failed", unreachable)
+        null
     } catch (error: Exception) {
         Log.w(TAG, "describing $location failed", error)
+        ErrorReporting.capture(error, "dlna.discovery", mapOf("location" to location, "description" to description))
         null
     }
+}
+
+private fun rendererOf(root: Element, location: String, description: String): DlnaRenderer? {
+    val model = listOfNotNull(childText(root, "manufacturer"), childText(root, "modelName")).joinToString(" ")
+    val transport = serviceOf(root, ":AVTransport:", location)
+    if (transport == null) {
+        // It answered as a media renderer, so it should have AVTransport; the description tells why not.
+        val error = DlnaException("Renderer $model has no AVTransport service")
+        ErrorReporting.capture(error, "dlna.discovery", mapOf("location" to location, "description" to description))
+        return null
+    }
+    return DlnaRenderer(
+        name = childText(root, "friendlyName") ?: "TV",
+        id = childText(root, "UDN") ?: transport.controlUrl,
+        controlUrl = transport.controlUrl,
+        serviceType = transport.serviceType,
+        volumeControl = serviceOf(root, ":RenderingControl:", location),
+        connectionManager = serviceOf(root, ":ConnectionManager:", location),
+        model = model,
+        description = description,
+    )
 }
 
 /** The first service whose type contains [typeMarker], e.g. ":AVTransport:". */

@@ -76,6 +76,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenPlugins: () -> Unit, viewModel: Set
             PlaybackGroup()
             NotificationsGroup()
             ProfilesGroup(onOpenPlugins)
+            PrivacyGroup(viewModel)
             TmdbAttribution(Modifier.fillMaxWidth().padding(horizontal = 4.dp), horizontalAlignment = Alignment.CenterHorizontally)
         }
     }
@@ -191,6 +192,19 @@ private fun StreamingGroup(viewModel: SettingsViewModel) {
         Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             Text("VPN", fontSize = 14.sp)
             Text(vpnLine(vpn.known, vpn.connected), fontSize = 14.sp, color = Color.White.copy(alpha = 0.6f))
+        }
+    }
+}
+
+@Composable
+private fun PrivacyGroup(viewModel: SettingsViewModel) {
+    SettingsGroup("Privacy", footer = "Reports include what failed, e.g. the TV model and the stream link.") {
+        Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Send error reports", fontSize = 14.sp)
+                Text("Crashes and failures go to the developers", fontSize = 12.sp, color = Color.White.copy(alpha = 0.45f))
+            }
+            OtterSwitch(viewModel.errorReporting, viewModel::changeErrorReporting)
         }
     }
 }

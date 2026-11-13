@@ -1,9 +1,11 @@
 package graphql
 
 import (
+	"context"
 	"net/http"
 	"time"
 
+	gqlgen "github.com/99designs/gqlgen/graphql"
 	gqlhandler "github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
@@ -12,6 +14,7 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 
 	"github.com/Letsmoe/otter/internal/api/graphql/generated"
+	"github.com/Letsmoe/otter/internal/errorreport"
 )
 
 // SchemaSDL is built from all embedded schema files at startup.
@@ -50,6 +53,11 @@ func NewHandler(resolver *Resolver) (http.Handler, error) {
 	srv.AddTransport(transport.POST{})
 	srv.AddTransport(transport.MultipartForm{})
 
+	// gqlgen recovers resolver panics itself, so they are reported here.
+	srv.SetRecoverFunc(func(ctx context.Context, recovered any) error {
+		errorreport.CapturePanic(recovered, "graphql.panic", nil)
+		return gqlgen.DefaultRecover(ctx, recovered)
+	})
 	srv.SetQueryCache(lru.New[*ast.QueryDocument](1000))
 	srv.Use(extension.Introspection{})
 	srv.Use(extension.AutomaticPersistedQuery{Cache: lru.New[string](100)})

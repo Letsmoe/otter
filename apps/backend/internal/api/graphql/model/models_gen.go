@@ -233,9 +233,11 @@ type Settings struct {
 	// Whether this build has a built-in key to fall back to (in use or not).
 	HasDefaultTmdbKey bool `json:"hasDefaultTmdbKey"`
 	// Whether the first-run TMDB key dialog was answered.
-	TmdbKeyPromptSeen bool     `json:"tmdbKeyPromptSeen"`
-	RequireVpn        bool     `json:"requireVpn"`
-	DisabledPlugins   []string `json:"disabledPlugins"`
+	TmdbKeyPromptSeen bool `json:"tmdbKeyPromptSeen"`
+	RequireVpn        bool `json:"requireVpn"`
+	// Whether errors are sent to the developers (PostHog error tracking).
+	ErrorReporting  bool     `json:"errorReporting"`
+	DisabledPlugins []string `json:"disabledPlugins"`
 }
 
 type SettingsInput struct {
@@ -243,6 +245,7 @@ type SettingsInput struct {
 	TmdbLanguage      *string `json:"tmdbLanguage,omitempty"`
 	TmdbKeyPromptSeen *bool   `json:"tmdbKeyPromptSeen,omitempty"`
 	RequireVpn        *bool   `json:"requireVpn,omitempty"`
+	ErrorReporting    *bool   `json:"errorReporting,omitempty"`
 }
 
 // A skippable part of an episode.

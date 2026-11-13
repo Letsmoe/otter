@@ -184,6 +184,7 @@ func (r *Resolver) settingsModel(current settings.Settings) *model.Settings {
 		HasDefaultTmdbKey:  settings.DefaultTMDBApiKey != "",
 		TmdbKeyPromptSeen:  current.TMDBKeyPromptSeen,
 		RequireVpn:         current.RequireVpn,
+		ErrorReporting:     current.ErrorReporting,
 		DisabledPlugins:    disabled,
 	}
 }
