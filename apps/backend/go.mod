@@ -12,6 +12,7 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
+	github.com/neoworks-dev/libneoworks-go v0.0.0-20261109153521-a5d6929abf80
 	github.com/pion/webrtc/v4 v4.2.22
 	github.com/posthog/posthog-go v1.44.1
 	github.com/tetratelabs/wazero v1.12.0

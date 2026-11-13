@@ -82,6 +82,8 @@ github.com/mattn/go-isatty v0.0.24 h1:tGZZoVgT/KiqK1c8ocVLeDS8BSWMRd47J3Lbz7vsRe
 github.com/mattn/go-isatty v0.0.24/go.mod h1:nMCL3Zebbrt45jsMDgnfIwz6ydEQApk5oEI3HqDio6A=
 github.com/ncruces/go-strftime v1.0.0 h1:HMFp8mLCTPp341M/ZnA4qaf7ZlsbTc+miZjCLOFAw7w=
 github.com/ncruces/go-strftime v1.0.0/go.mod h1:Fwc5htZGVVkseilnfgOVb9mKy6w1naJmn9CehxcKcls=
+github.com/neoworks-dev/libneoworks-go v0.0.0-20261109153521-a5d6929abf80 h1:hKttaFsrHC+cEnQbnb4DZCL4uTxODxWRSEGQiH1leAM=
+github.com/neoworks-dev/libneoworks-go v0.0.0-20261109153521-a5d6929abf80/go.mod h1:W2t9juuKCt7JmzcIs89f0Xu0jiShOzkGlCpwFi/CUG0=
 github.com/orcaman/writerseeker v0.0.0-20200621085525-1d3f536ff85e h1:s2RNOM/IGdY0Y6qfTeUKhDawdHDpK9RGBdx80qN4Ttw=
 github.com/orcaman/writerseeker v0.0.0-20200621085525-1d3f536ff85e/go.mod h1:nBdnFKj15wFbf94Rwfq4m30eAcyY9V/IyKAGQFtqkW0=
 github.com/pion/datachannel v1.6.3 h1:HZAYLpunVI0xi057ZiANl558d0uSpomcWw4UEPz3qXs=
