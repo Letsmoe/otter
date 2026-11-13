@@ -77,6 +77,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenPlugins: () -> Unit, viewModel: Set
             NotificationsGroup()
             ProfilesGroup(onOpenPlugins)
             PrivacyGroup(viewModel)
+            UpdatesGroup()
             TmdbAttribution(Modifier.fillMaxWidth().padding(horizontal = 4.dp), horizontalAlignment = Alignment.CenterHorizontally)
         }
     }

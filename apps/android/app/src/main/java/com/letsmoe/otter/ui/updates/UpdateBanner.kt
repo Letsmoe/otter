@@ -50,15 +50,15 @@ private fun BannerContent(state: UpdateState) {
     val context = LocalContext.current
     when (state) {
         is UpdateState.Available -> {
-            BannerText("Otter ${displayVersion(state.release.version)} is available", "Download it and install over this version.")
+            BannerText("Otter ${state.release.displayName()} is available", "Download it and install over this version.")
             BannerButtons("Update", onPrimary = { AppUpdater.downloadAndInstall(context, state.release) })
         }
         is UpdateState.Downloading -> {
-            BannerText("Downloading Otter ${displayVersion(state.release.version)}", "${(state.progress * 100).toInt()} %")
+            BannerText("Downloading Otter ${state.release.displayName()}", "${(state.progress * 100).toInt()} %")
             LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth())
         }
         is UpdateState.ReadyToInstall -> {
-            BannerText("Otter ${displayVersion(state.release.version)} is ready", "Allow installs from Otter if Android asks.")
+            BannerText("Otter ${state.release.displayName()} is ready", "Allow installs from Otter if Android asks.")
             BannerButtons("Install", onPrimary = { AppUpdater.install(context, state.apk) })
         }
         is UpdateState.Failed -> {
@@ -84,5 +84,3 @@ private fun BannerButtons(primaryLabel: String, onPrimary: () -> Unit) {
         PillButton(primaryLabel, Modifier.weight(1f), enabled = true, filled = true, onClick = onPrimary)
     }
 }
-
-private fun displayVersion(tag: String): String = tag.removePrefix("v")
