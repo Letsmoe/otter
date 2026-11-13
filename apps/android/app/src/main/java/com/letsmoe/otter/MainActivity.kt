@@ -10,9 +10,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import com.letsmoe.otter.links.IncomingLinks
-import com.letsmoe.otter.together.INVITE_LINK_PREFIX
 import com.letsmoe.otter.together.TogetherSession
-import com.letsmoe.otter.together.roomCodeFromText
+import com.letsmoe.otter.together.roomCodeFromInviteLink
 import com.letsmoe.otter.ui.OtterApp
 import com.letsmoe.otter.ui.splash.SplashOverlay
 import com.letsmoe.otter.ui.splash.SplashPlayback
@@ -62,13 +61,10 @@ class MainActivity : ComponentActivity() {
         window.attributes = window.attributes.apply { preferredDisplayModeId = fastest.modeId }
     }
 
-    // Invite links (otter://together/CODE) open the Watch Together sheet.
+    // Invite links (otter.letsmoe.com/together/CODE) open the Watch Together sheet.
     private fun openInvite(intent: Intent?) {
         val link = intent?.dataString ?: return
-        if (!link.startsWith(INVITE_LINK_PREFIX)) {
-            return
-        }
-        val code = roomCodeFromText(link) ?: return
+        val code = roomCodeFromInviteLink(link) ?: return
         TogetherSession.openSheet(code)
     }
 }
