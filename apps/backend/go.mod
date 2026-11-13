@@ -5,6 +5,7 @@ go 1.26.0
 require (
 	github.com/99designs/gqlgen v0.17.90
 	github.com/andybalholm/cascadia v1.3.5
+	github.com/bluenviron/mediacommon/v2 v2.9.7
 	github.com/btcsuite/btcd/btcec/v2 v2.5.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/dop251/goja v0.0.0-20260926152631-39ec2650adc9
@@ -30,7 +31,10 @@ require (
 )
 
 require (
+	github.com/abema/go-mp4 v1.7.3 // indirect
 	github.com/andybalholm/brotli v1.1.1 // indirect
+	github.com/asticode/go-astikit v0.30.0 // indirect
+	github.com/asticode/go-astits v1.16.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
