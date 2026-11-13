@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, mock, test } from 'bun:test';
+import { callbackTarget } from './auth';
 import worker, { assetLinks, type Environment } from './index';
 import { parseInvitePath, parseSharePath, tmdbLanguage } from './links';
 import { escapeHtml, openInAppUrl } from './page';
@@ -120,6 +121,35 @@ describe('Watch Together invites', () => {
 		expect(page).toContain('<meta property="og:title" content="Watch together on Otter">');
 		expect(page).toContain('intent://otter.letsmoe.com/together/K7QD9MZA#Intent;');
 		expect(requestedUrls).toEqual([]);
+	});
+});
+
+describe('the sign-in callback', () => {
+	const nasOrigin = btoa('http://nas.local:3000').replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+
+	test('relays a web sign-in to the address that started it', async () => {
+		const response = await visit(`/auth/callback?code=abc&state=web.${nasOrigin}.n0nce`);
+		expect(response.status).toBe(302);
+		expect(response.headers.get('Location')).toBe(`http://nas.local:3000/auth/callback?code=abc&state=web.${nasOrigin}.n0nce`);
+	});
+
+	test('sends only to the origin, never to a path the state smuggles in', () => {
+		const withPath = btoa('https://evil.example/steal?x=').replaceAll('=', '');
+		expect(callbackTarget(`web.${withPath}.n0nce`)).toEqual({ kind: 'web', origin: 'https://evil.example' });
+		expect(callbackTarget(`web.${btoa('javascript:alert(1)')}.n0nce`)).toBeNull();
+	});
+
+	test('offers the way back into the app with the code', async () => {
+		const response = await visit('/auth/callback?code=abc&state=app.n0nce');
+		const page = await response.text();
+		expect(response.status).toBe(200);
+		expect(page).toContain('intent://otter.letsmoe.com/auth/callback?code=abc&amp;state=app.n0nce#Intent;');
+	});
+
+	test('refuses a state Otter did not make', async () => {
+		expect((await visit('/auth/callback?code=abc&state=other')).status).toBe(400);
+		expect((await visit('/auth/callback?code=abc')).status).toBe(400);
+		expect(callbackTarget('web.%%%.n0nce')).toBeNull();
 	});
 });
 
