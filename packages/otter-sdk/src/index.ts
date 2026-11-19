@@ -6,5 +6,5 @@ export * from "./errors.ts";
 export { match, type Matcher } from "./match.ts";
 export { extract, type Extractor, type ExtractedMedia } from "./extract.ts";
 export type { HttpClient, HttpResponse, PostOptions, RequestOptions } from "./http-client.ts";
-export type { Browser } from "./browser.ts";
+export type { Browser, BrowseOptions } from "./browser.ts";
 export { defineHoster, hosters, HosterRegistry, type HosterDefinition } from "./hosters/index.ts";

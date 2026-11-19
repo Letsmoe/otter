@@ -519,13 +519,17 @@ export interface Challenge {
     domain: Scalars['String']
     /** Show the page to the user: the hidden attempt failed and they are waiting to play. */
     interactive: Scalars['Boolean']
+    /** NAVIGATION: CSS selector of the element to click once the page has loaded, e.g. a link's button. */
+    click: (Scalars['String'] | null)
+    /** NAVIGATION: CSS selector of a form to submit once its captchas are solved; then the first page off the site in any frame after the submit counts. */
+    submit: (Scalars['String'] | null)
     __typename: 'Challenge'
 }
 
 export interface Mutation {
     /** The app passed a bot check: its cookies for the site, the WebView's user agent they are bound to, and for a NAVIGATION the URL it led to. */
     completeChallenge: Scalars['Boolean']
-    /** The app couldn't pass a bot check, e.g. hidden while it wants a click. */
+    /** The app couldn't pass a bot check, e.g. hidden while it wants a click. linkGone: the page lacks the element to click, so the link is dead and nobody is asked to try. */
     failChallenge: Scalars['Boolean']
     /** Ask every streams plugin again for a movie or episode, in the background. */
     findStreams: Scalars['Boolean']
@@ -1143,6 +1147,10 @@ export interface ChallengeGenqlSelection{
     domain?: boolean | number
     /** Show the page to the user: the hidden attempt failed and they are waiting to play. */
     interactive?: boolean | number
+    /** NAVIGATION: CSS selector of the element to click once the page has loaded, e.g. a link's button. */
+    click?: boolean | number
+    /** NAVIGATION: CSS selector of a form to submit once its captchas are solved; then the first page off the site in any frame after the submit counts. */
+    submit?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1150,8 +1158,8 @@ export interface ChallengeGenqlSelection{
 export interface MutationGenqlSelection{
     /** The app passed a bot check: its cookies for the site, the WebView's user agent they are bound to, and for a NAVIGATION the URL it led to. */
     completeChallenge?: { __args: {id: Scalars['ID'], cookies: Scalars['String'], userAgent: Scalars['String'], finalUrl?: (Scalars['String'] | null)} }
-    /** The app couldn't pass a bot check, e.g. hidden while it wants a click. */
-    failChallenge?: { __args: {id: Scalars['ID'], reason: Scalars['String']} }
+    /** The app couldn't pass a bot check, e.g. hidden while it wants a click. linkGone: the page lacks the element to click, so the link is dead and nobody is asked to try. */
+    failChallenge?: { __args: {id: Scalars['ID'], reason: Scalars['String'], linkGone?: (Scalars['Boolean'] | null)} }
     /** Ask every streams plugin again for a movie or episode, in the background. */
     findStreams?: { __args: {id: Scalars['ID']} }
     /** Turn a stored stream into a playable URL; only succeeds when the link really delivers video. */

@@ -23,6 +23,10 @@ type Challenge struct {
 	Domain string `json:"domain"`
 	// Show the page to the user: the hidden attempt failed and they are waiting to play.
 	Interactive bool `json:"interactive"`
+	// NAVIGATION: CSS selector of the element to click once the page has loaded, e.g. a link's button.
+	Click *string `json:"click,omitempty"`
+	// NAVIGATION: CSS selector of a form to submit once its captchas are solved; then the first page off the site in any frame after the submit counts.
+	Submit *string `json:"submit,omitempty"`
 }
 
 type CoStar struct {

@@ -87,8 +87,8 @@ func (r *mutationResolver) CompleteChallenge(ctx context.Context, id string, coo
 }
 
 // FailChallenge is the resolver for the failChallenge field.
-func (r *mutationResolver) FailChallenge(ctx context.Context, id string, reason string) (bool, error) {
-	r.Challenges.Fail(id, reason)
+func (r *mutationResolver) FailChallenge(ctx context.Context, id string, reason string, linkGone *bool) (bool, error) {
+	r.Challenges.Fail(id, reason, valueOr(linkGone, false))
 	return true, nil
 }
 

@@ -72,7 +72,7 @@ func TestFetchPassesBotCheckThroughTheApp(t *testing.T) {
 // browseBundle opens a page through the app and writes where it led, or the error.
 const browseBundle = `
 const { writeSync } = require("fs");
-__otterBrowse("https://s.to/r?t=abc").then(
+__otterBrowse("https://s.to/serie/x/staffel-1/episode-1", { click: "#voe", submit: "#form" }).then(
   (finalUrl) => { writeSync(1, JSON.stringify({ result: finalUrl }) + "\n"); process.exit(0); },
   (error) => { writeSync(1, JSON.stringify({ result: "error: " + error.message }) + "\n"); process.exit(0); },
 );
@@ -85,6 +85,11 @@ func TestBrowseOpensThePageInTheApp(t *testing.T) {
 	requests := service.Subscribe(ctx)
 	go func() {
 		for request := range requests {
+			// The app only leads to the hoster when it got what to click and submit.
+			if request.Navigate != (challenge.NavigateOptions{Click: "#voe", Submit: "#form"}) {
+				service.Fail(request.ID, "options missing", false)
+				continue
+			}
 			_ = service.Complete(request.ID, "", "WebView UA", "https://voe.sx/e/abc")
 		}
 	}()

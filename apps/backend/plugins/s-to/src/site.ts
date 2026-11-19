@@ -1,15 +1,39 @@
 import type { HTMLElement } from "node-html-parser";
-import { domainOf, type PluginContext } from "@letsmoe/otter-sdk";
 
-/** The site under its old and current name; play links on either sit behind its captcha. */
+/** The site under its old and current name; its links are resolved by this plugin. */
 export const SITE_DOMAINS = ["s.to", "serienstream.to"];
 
-/** Whether a URL is on the site itself (or its configured mirror) rather than a hoster. */
-export function isSitePage(url: string, ctx: PluginContext): boolean {
-  const host = domainOf(url);
-  if (SITE_DOMAINS.includes(host)) return true;
-  const mirror = domainOf(ctx.plugin.base_url || "");
-  return mirror !== "" && host === mirror;
+/** Which button of an episode page a stored link stands for. */
+export interface LinkButton {
+  provider: string;
+  languageId: string;
+}
+
+/** The stored link: the episode page, with the button in the fragment ("…/episode-1#provider=VOE&language=1"). */
+export function linkUrl(pageUrl: string, button: LinkButton): string {
+  const fragment = new URLSearchParams({ provider: button.provider, language: button.languageId });
+  return `${pageUrl}#${fragment}`;
+}
+
+/** The episode page and button of a stored link; undefined for anything else (e.g. old "/r?t=" links). */
+export function parseLinkUrl(url: string): { pageUrl: string; button: LinkButton } | undefined {
+  const [pageUrl, fragment] = url.split("#", 2);
+  if (!fragment) return undefined;
+  const params = new URLSearchParams(fragment);
+  const provider = params.get("provider");
+  if (!provider) return undefined;
+  return { pageUrl, button: { provider, languageId: params.get("language") || "" } };
+}
+
+/** The CSS selector of a link's button on the episode page. */
+export function buttonSelector(button: LinkButton): string {
+  const provider = `[data-provider-name="${cssString(button.provider)}"]`;
+  const language = `[data-language-id="${cssString(button.languageId)}"]`;
+  return `button.link-box${provider}${language}`;
+}
+
+function cssString(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
 // s.to numbers stream buttons by language id; unknown ids keep the site's own label.

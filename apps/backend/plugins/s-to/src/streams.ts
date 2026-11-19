@@ -6,7 +6,7 @@ import {
   type StreamInput,
   type StreamListParams,
 } from "@letsmoe/otter-sdk";
-import { episodePath, isSitePage, languageOf, parseSeriesList, type SeriesCandidate } from "./site.ts";
+import { episodePath, languageOf, linkUrl, parseSeriesList, type SeriesCandidate } from "./site.ts";
 
 export async function listStreams({ media }: StreamListParams, ctx: PluginContext) {
   if (media.object !== "episode") return ctx.list([]);
@@ -14,10 +14,12 @@ export async function listStreams({ media }: StreamListParams, ctx: PluginContex
   const series = await findSeries(media, ctx);
   if (!series) return ctx.list([]);
 
-  const episodeRoot = await fetchEpisodePage(episodePath(series.path, media.season_number, media.episode_number), ctx);
+  const pagePath = episodePath(series.path, media.season_number, media.episode_number);
+  const episodeRoot = await fetchEpisodePage(pagePath, ctx);
   if (!episodeRoot) return ctx.list([]);
 
-  const streams = await Promise.all(episodeRoot.querySelectorAll("button.link-box[data-play-url]").map((button) => streamOf(button, ctx)));
+  const pageUrl = ctx.http.absolute(pagePath);
+  const streams = episodeRoot.querySelectorAll("button.link-box[data-play-url]").map((button) => streamOf(button, pageUrl));
   return ctx.list(streams.filter((stream): stream is StreamInput => stream !== null));
 }
 
@@ -37,26 +39,19 @@ async function fetchEpisodePage(path: string, ctx: PluginContext): Promise<HTMLE
 }
 
 /**
- * The play link redirects to the hoster, whose URL is what the backend stores. Behind its
- * captcha it stays on the site: then the play link itself is stored and passed in the app on play
- * (see sources.ts).
+ * A play link ("/r?t=…") only works inside the episode page's player, behind its captcha, and
+ * its token changes with every page load. So the stored link is the episode page plus the
+ * button's provider and language; sources.ts opens the page in the app on play and clicks it.
  */
-async function hosterUrlOrPlayLink(playUrl: string, ctx: PluginContext): Promise<string> {
-  const finalUrl = await ctx.http.finalUrl(playUrl);
-  if (isSitePage(finalUrl, ctx)) return playUrl;
-  return finalUrl;
-}
-
-async function streamOf(button: HTMLElement, ctx: PluginContext): Promise<StreamInput | null> {
-  const playPath = button.getAttribute("data-play-url") || "";
+function streamOf(button: HTMLElement, pageUrl: string): StreamInput | null {
   const provider = button.getAttribute("data-provider-name") || "";
-  if (!playPath || !provider) return null;
+  // A button without a play link leads nowhere, even on the site.
+  if (!provider || !button.getAttribute("data-play-url")) return null;
 
   const languageLabel = button.getAttribute("data-language-label") || "";
   const languageId = button.getAttribute("data-language-id") || "";
-  const url = await hosterUrlOrPlayLink(ctx.http.absolute(playPath), ctx);
   return {
-    url,
+    url: linkUrl(pageUrl, { provider, languageId }),
     label: `${provider} — ${languageLabel}`,
     language: languageOf(languageId, languageLabel),
   };
