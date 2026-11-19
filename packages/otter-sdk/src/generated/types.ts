@@ -12,7 +12,8 @@ export default {
         37,
         39,
         44,
-        45
+        45,
+        50
     ],
     "types": {
         "MediaType": {},
@@ -1242,9 +1243,13 @@ export default {
                 4
             ]
         },
+        "ChallengeKind": {},
         "Challenge": {
             "id": [
                 2
+            ],
+            "kind": [
+                50
             ],
             "url": [
                 4
@@ -1274,6 +1279,9 @@ export default {
                     "userAgent": [
                         4,
                         "String!"
+                    ],
+                    "finalUrl": [
+                        4
                     ]
                 }
             ],
@@ -1651,7 +1659,7 @@ export default {
                 }
             ],
             "updatePlugins": [
-                53
+                54
             ],
             "startNeoworksSignIn": [
                 4,
@@ -1703,7 +1711,7 @@ export default {
         },
         "PluginUpdateReport": {
             "updated": [
-                52
+                53
             ],
             "failed": [
                 4
@@ -1726,7 +1734,7 @@ export default {
                 43
             ],
             "challenges": [
-                50
+                51
             ],
             "__typename": [
                 4

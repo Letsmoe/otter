@@ -182,6 +182,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	streamCache.SetUpstreamGate(streamsAllowed)
 	streamResolver := resolve.New(registry, runner)
 	streamResolver.SetCache(streamCache)
+	streamResolver.SetCheckedHosts(challenges.NeedsSolving)
 	streamProxy := stream.NewProxy(streamCache, cacheClient, cfg.publicURL)
 	// Downloads pin their blobs, so they register before eviction starts.
 	downloadService := downloads.NewService(downloads.NewStore(database), libraryService, streamResolver, streamCache)

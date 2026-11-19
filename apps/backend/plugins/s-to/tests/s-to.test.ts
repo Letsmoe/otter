@@ -27,6 +27,29 @@ describe("s-to (offline)", () => {
     expect(streams.data).toEqual([]);
   });
 
+  test("a play link that stays behind the captcha is stored as is", async () => {
+    const streams = await subject.streams.list({ media: episode({ series: "Dark", tmdb_id: 70523 }, 1, 1) });
+    expect(streams.data.every((stream) => stream.url.startsWith("https://serienstream.to/r?t="))).toBe(true);
+  });
+
+  test("a play link is opened in the app and resolved by the hoster it leads to", async () => {
+    const opened: string[] = [];
+    const browser = {
+      async open(url: string) {
+        opened.push(url);
+        return "https://unknown-hoster.example/e/abc";
+      },
+    };
+    const withApp = testPlugin(plugin, { fetch: fixtures(`${import.meta.dir}/fixtures`), browser });
+    // The hoster isn't in the fixtures: reaching it shows the play link was opened and its target handed on.
+    await expect(withApp.sources.retrieve({ url: "https://serienstream.to/r?t=abc123" })).rejects.toThrow();
+    expect(opened).toEqual(["https://serienstream.to/r?t=abc123"]);
+  });
+
+  test("without the app a play link is blocked, not broken", async () => {
+    await expect(subject.sources.retrieve({ url: "https://serienstream.to/r?t=abc123" })).rejects.toMatchObject({ code: "blocked" });
+  });
+
   test("movies are an empty list (s.to is series-only)", async () => {
     const streams = await subject.streams.list({ media: movie({ title: "Dark", tmdb_id: 1 }) });
     expect(streams.data).toEqual([]);

@@ -1,14 +1,15 @@
 subscription Challenges {
   challenges {
     id
+    kind
     url
     domain
     interactive
   }
 }
 
-mutation CompleteChallenge($id: ID!, $cookies: String!, $userAgent: String!) {
-  completeChallenge(id: $id, cookies: $cookies, userAgent: $userAgent)
+mutation CompleteChallenge($id: ID!, $cookies: String!, $userAgent: String!, $finalUrl: String) {
+  completeChallenge(id: $id, cookies: $cookies, userAgent: $userAgent, finalUrl: $finalUrl)
 }
 
 mutation FailChallenge($id: ID!, $reason: String!) {

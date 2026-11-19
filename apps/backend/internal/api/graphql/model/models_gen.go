@@ -16,7 +16,8 @@ type CatalogRow struct {
 
 // A site's bot check (Cloudflare, Turnstile) the phone app solves in a WebView, like FlareSolverr.
 type Challenge struct {
-	ID string `json:"id"`
+	ID   string        `json:"id"`
+	Kind ChallengeKind `json:"kind"`
 	// The page to open; the check passes on it.
 	URL    string `json:"url"`
 	Domain string `json:"domain"`
@@ -557,6 +558,63 @@ func (e *CatalogTheme) UnmarshalJSON(b []byte) error {
 }
 
 func (e CatalogTheme) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type ChallengeKind string
+
+const (
+	// Pass the check and send back the site's cookies.
+	ChallengeKindClearance ChallengeKind = "CLEARANCE"
+	// Open the page, pass any check, and send back the first URL off the site (e.g. the hoster a link page redirects to).
+	ChallengeKindNavigation ChallengeKind = "NAVIGATION"
+)
+
+var AllChallengeKind = []ChallengeKind{
+	ChallengeKindClearance,
+	ChallengeKindNavigation,
+}
+
+func (e ChallengeKind) IsValid() bool {
+	switch e {
+	case ChallengeKindClearance, ChallengeKindNavigation:
+		return true
+	}
+	return false
+}
+
+func (e ChallengeKind) String() string {
+	return string(e)
+}
+
+func (e *ChallengeKind) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ChallengeKind(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ChallengeKind", str)
+	}
+	return nil
+}
+
+func (e ChallengeKind) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ChallengeKind) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ChallengeKind) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

@@ -3,6 +3,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import type { Browser } from "./browser.ts";
 import type { PluginContext, PluginDefinition } from "./definition.ts";
 import type {
   EpisodeRef,
@@ -23,6 +24,8 @@ export interface TestPluginOptions {
   fetch?: typeof fetch;
   /** The plugin's env: settings values and OTTER_BASE_URL. Empty by default. */
   env?: Record<string, string | undefined>;
+  /** Replaces the Otter app's WebView behind ctx.browser. */
+  browser?: Browser;
 }
 
 export interface TestPlugin {
@@ -34,7 +37,7 @@ export interface TestPlugin {
 
 /** Calls the plugin's handlers the way the backend would, and returns the completed objects. */
 export function testPlugin(definition: PluginDefinition, options: TestPluginOptions = {}): TestPlugin {
-  const runtime = new PluginRuntime(definition, { fetch: options.fetch, env: options.env || {} });
+  const runtime = new PluginRuntime(definition, { fetch: options.fetch, env: options.env || {}, browser: options.browser });
   return {
     ctx: runtime.ctx,
     streams: { list: (params) => runtime.listStreams(params) },

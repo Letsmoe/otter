@@ -88,6 +88,8 @@ Plugins are TypeScript packages in `apps/backend/plugins/<name>/`. `bun scripts/
 
 **Auto-updates:** `.github/workflows/plugins-publish.yml` publishes release bundles to npm (`@letsmoe/otter-plugin-<name>`) whenever a plugin's `version` isn't on npm yet, so bump `version` in its `package.json` to ship a change. `internal/pluginstore` checks npm 30 s after start and every 6 h and swaps newer bundles into `PLUGIN_DIR` (sha512-verified, never a downgrade); local builds (`localBuild: true`) are never replaced. `PLUGIN_AUTO_UPDATE=false` turns it off.
 
+**Bot checks** (`internal/challenge`): the Android app plays FlareSolverr for its embedded backend (same IP and VPN as its WebView; not for a NAS). A plugin `fetch` that hits a Cloudflare check asks the app (`Subscription.challenges`) for the site's cookies, then sends them with the WebView's user agent. `ctx.browser.open(url)` has the app open a captcha-gated link page and returns the first URL off the site (s-to's `/r?t=` links, resolved on play). The app tries hidden first; it shows the page only for resolves someone waits on (`challenge.WithInteractive`, set by `resolveBestStream`). Sites that showed a check race after all other links.
+
 **Capabilities** (`meta.capabilities`):
 
 - `streams` — receives `StreamsArgs` (TMDB-known title: title, original title, year, tmdb/imdb id, season/episode numbers), locates it on the site and returns `{ downloads: Download[] }`
@@ -145,7 +147,7 @@ URL patterns:
 - Season pages: `/serie/<slug>/staffel-<n>` — must fetch each separately; main page only shows S1
 - Episode rows: `tr.episode-row[onclick]` → `.episode-number-cell`, `.episode-title-ger`, `.episode-title-eng`
 - Episode page: `/serie/<slug>/staffel-<n>/episode-<n>` — stream links as `button.link-box[data-play-url][data-provider-name][data-language-label][data-language-id]`
-- Stream URL: `https://s.to/r?t=<token>` — behind Cloudflare turnstile, stored as-is
+- Stream URL: `https://s.to/r?t=<token>` — behind Cloudflare turnstile, stored as-is; the plugin's `sources` opens it with `ctx.browser.open` on play and hands the hoster it leads to to `ctx.hosters`
 - Backdrop image: `meta[property="og:image"]`
 
 ## Code Style

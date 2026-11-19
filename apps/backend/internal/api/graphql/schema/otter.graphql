@@ -524,9 +524,17 @@ type NeoworksSync {
   failure: String
 }
 
+enum ChallengeKind {
+  "Pass the check and send back the site's cookies."
+  CLEARANCE
+  "Open the page, pass any check, and send back the first URL off the site (e.g. the hoster a link page redirects to)."
+  NAVIGATION
+}
+
 "A site's bot check (Cloudflare, Turnstile) the phone app solves in a WebView, like FlareSolverr."
 type Challenge {
   id: ID!
+  kind: ChallengeKind!
   "The page to open; the check passes on it."
   url: String!
   domain: String!
@@ -535,8 +543,8 @@ type Challenge {
 }
 
 type Mutation {
-  "The app passed a bot check: its cookies for the site and the WebView's user agent, which they are bound to."
-  completeChallenge(id: ID!, cookies: String!, userAgent: String!): Boolean!
+  "The app passed a bot check: its cookies for the site, the WebView's user agent they are bound to, and for a NAVIGATION the URL it led to."
+  completeChallenge(id: ID!, cookies: String!, userAgent: String!, finalUrl: String): Boolean!
   "The app couldn't pass a bot check, e.g. hidden while it wants a click."
   failChallenge(id: ID!, reason: String!): Boolean!
   "Ask every streams plugin again for a movie or episode, in the background."

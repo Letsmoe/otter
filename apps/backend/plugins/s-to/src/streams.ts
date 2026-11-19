@@ -6,7 +6,7 @@ import {
   type StreamInput,
   type StreamListParams,
 } from "@letsmoe/otter-sdk";
-import { episodePath, languageOf, parseSeriesList, type SeriesCandidate } from "./site.ts";
+import { episodePath, isSitePage, languageOf, parseSeriesList, type SeriesCandidate } from "./site.ts";
 
 export async function listStreams({ media }: StreamListParams, ctx: PluginContext) {
   if (media.object !== "episode") return ctx.list([]);
@@ -36,6 +36,17 @@ async function fetchEpisodePage(path: string, ctx: PluginContext): Promise<HTMLE
   }
 }
 
+/**
+ * The play link redirects to the hoster, whose URL is what the backend stores. Behind its
+ * captcha it stays on the site: then the play link itself is stored and passed in the app on play
+ * (see sources.ts).
+ */
+async function hosterUrlOrPlayLink(playUrl: string, ctx: PluginContext): Promise<string> {
+  const finalUrl = await ctx.http.finalUrl(playUrl);
+  if (isSitePage(finalUrl, ctx)) return playUrl;
+  return finalUrl;
+}
+
 async function streamOf(button: HTMLElement, ctx: PluginContext): Promise<StreamInput | null> {
   const playPath = button.getAttribute("data-play-url") || "";
   const provider = button.getAttribute("data-provider-name") || "";
@@ -43,8 +54,7 @@ async function streamOf(button: HTMLElement, ctx: PluginContext): Promise<Stream
 
   const languageLabel = button.getAttribute("data-language-label") || "";
   const languageId = button.getAttribute("data-language-id") || "";
-  // The play link redirects to the hoster; the final URL is what the backend stores.
-  const url = await ctx.http.finalUrl(ctx.http.absolute(playPath));
+  const url = await hosterUrlOrPlayLink(ctx.http.absolute(playPath), ctx);
   return {
     url,
     label: `${provider} — ${languageLabel}`,

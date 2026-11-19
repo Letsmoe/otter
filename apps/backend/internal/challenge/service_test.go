@@ -90,7 +90,7 @@ func TestSolveWaitsForTheAppAndStoresTheClearance(t *testing.T) {
 	if request.Interactive {
 		t.Fatal("the first attempt should be hidden")
 	}
-	if err := service.Complete(request.ID, "cf_clearance=abc", "WebView UA"); err != nil {
+	if err := service.Complete(request.ID, "cf_clearance=abc", "WebView UA", ""); err != nil {
 		t.Fatalf("complete: %v", err)
 	}
 	if err := <-result; err != nil {
@@ -105,8 +105,8 @@ func TestSolveWaitsForTheAppAndStoresTheClearance(t *testing.T) {
 func TestOneAttemptPerSiteAtATime(t *testing.T) {
 	service := newTestService(t)
 	requests := subscribe(t, service)
-	first := service.enqueue("https://example.org/a", false)
-	second := service.enqueue("https://www.example.org/b", false)
+	first := service.enqueue(KindClearance, "https://example.org/a", false)
+	second := service.enqueue(KindClearance, "https://www.example.org/b", false)
 	if first != second {
 		t.Fatal("a second check of the same site started another attempt")
 	}
@@ -115,6 +115,33 @@ func TestOneAttemptPerSiteAtATime(t *testing.T) {
 	case extra := <-requests:
 		t.Fatalf("the app was asked twice: %+v", extra)
 	default:
+	}
+}
+
+func TestNavigateReturnsWhereThePageLed(t *testing.T) {
+	service := newTestService(t)
+	requests := subscribe(t, service)
+	result := make(chan string, 1)
+	go func() {
+		finalURL, _ := service.Navigate(context.Background(), "https://s.to/r?t=one")
+		result <- finalURL
+	}()
+	request := receive(t, requests)
+	if request.Kind != KindNavigation || request.URL != "https://s.to/r?t=one" {
+		t.Fatalf("request = %+v", request)
+	}
+	if err := service.Complete(request.ID, "", "WebView UA", ""); err == nil {
+		t.Fatal("a navigation completed without the URL it led to")
+	}
+	if err := service.Complete(request.ID, "", "WebView UA", "https://voe.sx/e/abc"); err != nil {
+		t.Fatalf("complete: %v", err)
+	}
+	if finalURL := <-result; finalURL != "https://voe.sx/e/abc" {
+		t.Fatalf("final URL = %q", finalURL)
+	}
+	// Each link page leads elsewhere: two pages of one site are two attempts.
+	if service.enqueue(KindNavigation, "https://s.to/r?t=two", false) == service.enqueue(KindNavigation, "https://s.to/r?t=three", false) {
+		t.Fatal("two link pages shared one navigation")
 	}
 }
 
@@ -132,17 +159,22 @@ func TestFailedHiddenAttemptIsShownOnlyToSomeoneWaiting(t *testing.T) {
 		t.Fatalf("background err = %v, want ErrUnsolved", err)
 	}
 
+	// Another background request doesn't bother the app again so soon.
+	if _, err := service.Solve(context.Background(), "https://example.org/b"); !errors.Is(err, ErrUnsolved) {
+		t.Fatalf("background retry err = %v, want ErrUnsolved at once", err)
+	}
+
+	// Someone playing goes straight to the shown check.
 	playing := make(chan error, 1)
 	go func() {
 		_, err := service.Solve(WithInteractive(context.Background()), "https://example.org/a")
 		playing <- err
 	}()
-	service.Fail(receive(t, requests).ID, "wants a click")
 	shown := receive(t, requests)
 	if !shown.Interactive {
-		t.Fatal("the second attempt for someone playing should be shown")
+		t.Fatal("after a failed hidden attempt, someone playing should see the check")
 	}
-	if err := service.Complete(shown.ID, "cf_clearance=xyz", "WebView UA"); err != nil {
+	if err := service.Complete(shown.ID, "cf_clearance=xyz", "WebView UA", ""); err != nil {
 		t.Fatalf("complete: %v", err)
 	}
 	if err := <-playing; err != nil {

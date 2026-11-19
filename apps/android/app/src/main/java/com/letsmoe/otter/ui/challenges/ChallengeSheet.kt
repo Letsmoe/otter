@@ -23,10 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.letsmoe.otter.challenges.ChallengePage
 import com.letsmoe.otter.challenges.ChallengeSolver
 import com.letsmoe.otter.challenges.SiteChallenge
-import com.letsmoe.otter.challenges.awaitClearance
-import com.letsmoe.otter.challenges.createChallengeWebView
 import com.letsmoe.otter.ui.components.GlassBottomSheet
 
 /** The site's check the app couldn't pass hidden, for the user to tap through; closes itself once passed. */
@@ -42,17 +41,17 @@ fun ChallengeSheetHost() {
 @Composable
 private fun ChallengeSheet(challenge: SiteChallenge) {
     val context = LocalContext.current
-    val webView = remember { createChallengeWebView(context) }
-    DisposableEffect(webView) {
-        webView.loadUrl(challenge.url)
-        onDispose { webView.destroy() }
+    val page = remember { ChallengePage(context, challenge) }
+    DisposableEffect(page) {
+        page.load()
+        onDispose { page.destroy() }
     }
-    LaunchedEffect(webView) {
-        val clearance = awaitClearance(webView, challenge.url)
-        ChallengeSolver.onShownSolved(challenge, clearance)
+    LaunchedEffect(page) {
+        val result = page.await()
+        ChallengeSolver.onShownSolved(challenge, result)
     }
     GlassBottomSheet(onDismiss = { ChallengeSolver.onShownDismissed(challenge) }, fullHeight = true) {
-        ChallengeSheetContent(challenge, webView)
+        ChallengeSheetContent(challenge, page.webView)
     }
 }
 

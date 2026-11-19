@@ -1,3 +1,4 @@
+import { type Browser, createBrowser } from "./browser.ts";
 import type { PluginContext, PluginDefinition } from "./definition.ts";
 import { extract } from "./extract.ts";
 import { hosters } from "./hosters/index.ts";
@@ -14,6 +15,8 @@ export interface ContextOptions {
   fetch?: typeof fetch;
   /** Replaces process.env, for tests. */
   env?: Record<string, string | undefined>;
+  /** Replaces the app's WebView, for tests. */
+  browser?: Browser;
 }
 
 /** The user's override of base_url if set, else the declared one; without trailing slash. */
@@ -71,6 +74,7 @@ export function createContext(definition: PluginDefinition, options: ContextOpti
     match,
     extract,
     hosters,
+    browser: options.browser || createBrowser(),
     settings: settingsOf(definition, env),
     account: accountOf(env),
     log(message: string, data?: unknown): void {

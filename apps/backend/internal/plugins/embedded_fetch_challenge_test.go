@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/Letsmoe/otter/internal/cache"
@@ -45,7 +46,7 @@ func solveLikeTheApp(t *testing.T, service *challenge.Service) {
 	requests := service.Subscribe(ctx)
 	go func() {
 		for request := range requests {
-			_ = service.Complete(request.ID, "cf_clearance=earned", "WebView UA")
+			_ = service.Complete(request.ID, "cf_clearance=earned", "WebView UA", "")
 		}
 	}()
 }
@@ -65,6 +66,50 @@ func TestFetchPassesBotCheckThroughTheApp(t *testing.T) {
 	}
 	if response.status != http.StatusOK || string(response.body) != "the page" {
 		t.Fatalf("got %d %q, want the page", response.status, response.body)
+	}
+}
+
+// browseBundle opens a page through the app and writes where it led, or the error.
+const browseBundle = `
+const { writeSync } = require("fs");
+__otterBrowse("https://s.to/r?t=abc").then(
+  (finalUrl) => { writeSync(1, JSON.stringify({ result: finalUrl }) + "\n"); process.exit(0); },
+  (error) => { writeSync(1, JSON.stringify({ result: "error: " + error.message }) + "\n"); process.exit(0); },
+);
+`
+
+func TestBrowseOpensThePageInTheApp(t *testing.T) {
+	service := newChallengeService(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	requests := service.Subscribe(ctx)
+	go func() {
+		for request := range requests {
+			_ = service.Complete(request.ID, "", "WebView UA", "https://voe.sx/e/abc")
+		}
+	}()
+	runner := NewEmbeddedRunner()
+	runner.SetChallenges(service)
+
+	raw, err := runner.invoke(context.Background(), writeBundle(t, browseBundle), "test", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(raw) != `"https://voe.sx/e/abc"` {
+		t.Fatalf("got %s", raw)
+	}
+}
+
+func TestBrowseWithoutAppIsBlocked(t *testing.T) {
+	runner := NewEmbeddedRunner()
+	runner.SetChallenges(newChallengeService(t))
+
+	raw, err := runner.invoke(context.Background(), writeBundle(t, browseBundle), "test", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(string(raw), `"error: blocked: `) {
+		t.Fatalf("got %s, want a blocked error", raw)
 	}
 }
 
