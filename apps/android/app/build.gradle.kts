@@ -4,6 +4,12 @@ plugins {
     alias(libs.plugins.apollo)
 }
 
+// Uploads the R8 mapping to PostHog, so error reports show real class names and lines. Only CI
+// has the key (with POSTHOG_CLI_HOST and POSTHOG_CLI_PROJECT_ID); local builds skip the upload.
+if (providers.environmentVariable("POSTHOG_CLI_API_KEY").isPresent) {
+    apply(plugin = "com.posthog.android")
+}
+
 android {
     namespace = "com.letsmoe.otter"
     compileSdk = 37

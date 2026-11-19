@@ -3,10 +3,14 @@ package com.letsmoe.otter.cast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import java.net.HttpURLConnection
 import java.net.URL
 
 /** UPnP AVTransport transport states, as the TV reports them. */
 enum class TransportState { PLAYING, PAUSED, STOPPED, TRANSITIONING, NO_MEDIA, UNKNOWN }
+
+/** The transport state plus whether the TV flags an error (CurrentTransportStatus ERROR_OCCURRED). */
+data class TransportInfo(val state: TransportState, val errorOccurred: Boolean)
 
 data class TransportPosition(val positionSeconds: Double, val durationSeconds: Double)
 
@@ -30,7 +34,11 @@ private const val INSTANCE = "<InstanceID>0</InstanceID>"
 // which takes a while for a continuous stream fetched over the VPN.
 private const val LOADING_TIMEOUT_MILLISECONDS = 30_000
 
-class DlnaException(message: String) : IOException(message)
+/** [upnpErrorCode] is the TV's UPnP error, e.g. 701 "Transition not available"; null when it sent none. */
+class DlnaException(message: String, val upnpErrorCode: Int? = null) : IOException(message)
+
+/** The TV accepted no connection: switched off, asleep, or at another address. */
+class TelevisionUnreachableException(message: String, cause: IOException? = null) : IOException(message, cause)
 
 /** The TV took the link but never started it, e.g. "resolution not supported": another link may play. */
 class TelevisionRefusedException(message: String) : IOException(message)
@@ -69,9 +77,14 @@ class DlnaClient(private val renderer: DlnaRenderer, private val journal: CastJo
         call("Seek", "<Unit>REL_TIME</Unit><Target>${formatTime(seconds)}</Target>")
     }
 
-    suspend fun transportState(): TransportState {
+    suspend fun transportInfo(): TransportInfo {
         val response = call("GetTransportInfo", "")
-        return when (tagValue(response, "CurrentTransportState")) {
+        val errorOccurred = tagValue(response, "CurrentTransportStatus") == "ERROR_OCCURRED"
+        return TransportInfo(transportStateOf(tagValue(response, "CurrentTransportState")), errorOccurred)
+    }
+
+    private fun transportStateOf(value: String): TransportState {
+        return when (value) {
             "PLAYING" -> TransportState.PLAYING
             "PAUSED_PLAYBACK" -> TransportState.PAUSED
             "STOPPED" -> TransportState.STOPPED
@@ -124,19 +137,25 @@ class DlnaClient(private val renderer: DlnaRenderer, private val journal: CastJo
         }
         record(action, envelope, answer, startedAt)
         if (answer.status != 200) {
-            throw DlnaException("$action failed: HTTP ${answer.status} ${tagValue(answer.body, "errorDescription")}")
+            val upnpErrorCode = tagValue(answer.body, "errorCode").toIntOrNull()
+            throw DlnaException("$action failed: HTTP ${answer.status} ${tagValue(answer.body, "errorDescription")}", upnpErrorCode)
         }
         answer.body
     }
 
-    private fun send(service: DlnaService, action: String, envelope: String, readTimeoutMilliseconds: Int): SoapAnswer {
+    private suspend fun send(service: DlnaService, action: String, envelope: String, readTimeoutMilliseconds: Int): SoapAnswer {
         val connection = openHttp(URL(service.controlUrl))
         connection.readTimeout = readTimeoutMilliseconds
         connection.requestMethod = "POST"
         connection.doOutput = true
         connection.setRequestProperty("Content-Type", "text/xml; charset=\"utf-8\"")
         connection.setRequestProperty("SOAPACTION", "\"${service.serviceType}#$action\"")
+        return disconnectingOnCancel(connection) { exchange(connection, envelope) }
+    }
+
+    private fun exchange(connection: HttpURLConnection, envelope: String): SoapAnswer {
         try {
+            connectOrUnreachable(connection)
             connection.outputStream.use { output -> output.write(envelope.toByteArray()) }
             val status = connection.responseCode
             if (status != 200) {

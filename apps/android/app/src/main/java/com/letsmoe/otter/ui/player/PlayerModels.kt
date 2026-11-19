@@ -49,6 +49,8 @@ data class PlayerUiState(
     /** Plugins are still being asked for links. */
     val searchingSources: Boolean = true,
     val currentSourceId: String? = null,
+    /** The link the user just picked, still resolving; the sources sheet marks it instead of the playing one. */
+    val chosenSourceId: String? = null,
     /** Direct files can show a frame preview while scrubbing; HLS can't. */
     val previewable: Boolean = false,
     val episodes: List<PlayerEpisode> = emptyList(),

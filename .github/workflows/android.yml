@@ -91,12 +91,21 @@ jobs:
           echo "OTTER_VERSION_NAME=${latest#v}-nightly.$RUN" >> "$GITHUB_ENV"
           echo "OTTER_UPDATE_CHANNEL=nightly" >> "$GITHUB_ENV"
 
+      # The PostHog Gradle plugin uploads the R8 mapping through posthog-cli.
+      - name: Install the PostHog CLI
+        run: npm install -g @posthog/cli
+
       - name: Build APK
         working-directory: apps/android
         env:
           # Optional: bakes in the built-in TMDB key; without it the app asks on first start.
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           OTTER_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          # Optional: a personal API key (error tracking write, organization read); with it the
+          # build uploads its R8 mapping so PostHog error reports are readable.
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+          POSTHOG_CLI_HOST: https://eu.posthog.com
+          POSTHOG_CLI_PROJECT_ID: "348630"
         run: bun run apk
 
       - uses: actions/upload-artifact@v4

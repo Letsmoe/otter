@@ -7,6 +7,7 @@ navigationCompose = "2.10.2"
 lifecycle = "2.11.0"
 media3 = "1.11.1"
 posthog = "3.77.1"
+posthogGradle = "1.8.1"
 apollo = "5.2.0"
 coil = "3.6.3"
 haze = "2.0.1"
@@ -51,3 +52,4 @@ phosphor-icons = { group = "com.adamglin", name = "phosphor-icon", version.ref =
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }
+posthog-android = { id = "com.posthog.android", version.ref = "posthogGradle" }

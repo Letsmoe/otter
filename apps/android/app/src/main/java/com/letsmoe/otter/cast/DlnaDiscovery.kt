@@ -5,7 +5,11 @@ import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.util.Log
 import com.letsmoe.otter.reporting.ErrorReporting
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.w3c.dom.Element
 import java.io.IOException
@@ -206,6 +210,35 @@ private fun childText(element: Element, tagName: String): String? {
         return null
     }
     return matches.item(0).textContent.trim()
+}
+
+/**
+ * Runs blocking HTTP on [connection] and disconnects it when the coroutine is cancelled:
+ * a blocked socket read ignores coroutine cancellation, so a superseded request would
+ * otherwise hold on until the TV answers or the read times out.
+ */
+suspend fun <T> disconnectingOnCancel(connection: HttpURLConnection, block: () -> T): T = coroutineScope {
+    val watcher = launch(start = CoroutineStart.UNDISPATCHED) {
+        try {
+            awaitCancellation()
+        } finally {
+            connection.disconnect()
+        }
+    }
+    try {
+        block()
+    } finally {
+        watcher.cancel()
+    }
+}
+
+/** Opens the connection; failing to connect at all means the TV is off, asleep or elsewhere. */
+fun connectOrUnreachable(connection: HttpURLConnection) {
+    try {
+        connection.connect()
+    } catch (error: IOException) {
+        throw TelevisionUnreachableException("The TV isn't answering. Is it switched on?", error)
+    }
 }
 
 /** HTTP to the TV, over Wi-Fi even while a VPN is up (see [LocalNetworkRouting]). */

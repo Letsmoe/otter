@@ -85,7 +85,8 @@ private fun isConnectedTo(connected: TelevisionTarget?, renderer: DlnaRenderer):
     if (connected !is TelevisionTarget.Dlna) {
         return false
     }
-    return connected.renderer.controlUrl == renderer.controlUrl
+    // By UDN: the player may have found the TV again under another address.
+    return connected.renderer.id == renderer.id
 }
 
 /** A TV as a card: icon, name, whether it's connected, and an arrow that says it can be tapped. */
