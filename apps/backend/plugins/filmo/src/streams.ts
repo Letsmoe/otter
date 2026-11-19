@@ -9,6 +9,9 @@ import { chipStreamUrl, providerChipsOf, suggestedTitlesOf, yearOf, type Provide
 // Suggestions per term whose movie pages are read for their year.
 const MAX_CANDIDATES_PER_TERM = 3;
 
+// Providers no resolver plays: Byse's player is a bare JavaScript app without a media URL to find.
+const UNPLAYABLE_PROVIDERS = ["byse"];
+
 interface MoviePage {
   title: string;
   url: string;
@@ -57,6 +60,11 @@ async function pageOf(suggestion: SuggestedTitle, ctx: PluginContext): Promise<M
 /** One stream per provider chip; the link is resolved at play time, when the chip's token can be minted. */
 function streamsOf(page: MoviePage): StreamInput[] {
   return page.chips
-    .filter((chip) => chip.provider !== "")
+    .filter(isPlayable)
     .map((chip) => ({ url: chipStreamUrl(page.url, chip.index), label: chip.provider, language: chip.language }));
+}
+
+function isPlayable(chip: ProviderChip): boolean {
+  if (chip.provider === "") return false;
+  return !UNPLAYABLE_PROVIDERS.includes(chip.provider.trim().toLowerCase());
 }

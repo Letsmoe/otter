@@ -1,4 +1,4 @@
-import { PluginSourceError } from "../errors.ts";
+import { PluginBlockedError, PluginSourceError } from "../errors.ts";
 import type { PluginContext } from "../definition.ts";
 import type { SourceInput } from "../model.ts";
 import {
@@ -70,13 +70,26 @@ async function extractSource(page: PlayerPage, ctx: PluginContext): Promise<Sour
   );
 }
 
+// What every VOE player page carries in some form: the encoded payload, its older variables, or the plain HLS link.
+const PLAYER_PAYLOAD = /<script[^>]+type=["']application\/json["']|\b(?:mkgma|a168c)\b|["']hls["']\s*:|\.m3u8/i;
+
 async function retrieveVoe(url: string, ctx: PluginContext): Promise<SourceInput> {
   const page = await loadPlayerPage(url, ctx);
   const source = await extractSource(page, ctx);
-  if (!source) {
-    throw new PluginSourceError("extraction_failed", `VOE: no stream found on ${page.url}`);
+  if (source) {
+    return { ...source, headers: { Referer: originOf(page.url) + "/" } };
   }
-  return { ...source, headers: { Referer: originOf(page.url) + "/" } };
+  // A page without any player payload is a challenge (VOE domains sit behind DDoS-Guard) or an interstitial, not a changed player.
+  if (!PLAYER_PAYLOAD.test(page.html)) {
+    throw new PluginBlockedError(`VOE: ${page.url} served "${pageTitleOf(page.html)}" instead of the player`);
+  }
+  throw new PluginSourceError("extraction_failed", `VOE: no stream found on ${page.url}`);
+}
+
+function pageTitleOf(html: string): string {
+  const title = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+  if (!title) return "a page without a title";
+  return title[1].trim();
 }
 
 export const voe = defineHoster({ name: "VOE", domains: VOE_DOMAINS, retrieve: retrieveVoe });

@@ -57,9 +57,11 @@ jobs:
         working-directory: apps/backend
         run: bun scripts/bundle-plugins.ts --release --out "$RUNNER_TEMP/plugins"
 
-      # Provenance is attached automatically with trusted publishing.
+      # Provenance is attached automatically with trusted publishing. One package that fails
+      # (e.g. no trusted publisher registered yet) doesn't hold back the others; the step fails at the end.
       - name: Publish new versions
         run: |
+          failed=""
           for folder in "$GITHUB_WORKSPACE/packages/otter-sdk/" "$RUNNER_TEMP"/plugins/*/; do
             name=$(jq -r .name "$folder/package.json")
             version=$(jq -r .version "$folder/package.json")
@@ -68,5 +70,12 @@ jobs:
               continue
             fi
             echo "Publishing $name@$version"
-            (cd "$folder" && npm publish --access public)
+            if ! (cd "$folder" && npm publish --access public); then
+              echo "::error::Publishing $name@$version failed"
+              failed="$failed $name@$version"
+            fi
           done
+          if [ -n "$failed" ]; then
+            echo "Not published:$failed"
+            exit 1
+          fi

@@ -1,4 +1,4 @@
-import { PluginSourceError, type HttpResponse, type PluginContext } from "@letsmoe/otter-sdk";
+import { PluginBlockedError, PluginSourceError, type HttpResponse, type PluginContext } from "@letsmoe/otter-sdk";
 import { isRecord, parseJson, stringField } from "./json.ts";
 import { appendQueryParameter } from "./url.ts";
 import { embedPathOf, lookupUrlOf, type LookupTarget } from "./target.ts";
@@ -68,10 +68,22 @@ async function fetchPlayerConfig(
 ): Promise<{ apiUrl: string; apiToken: string }> {
   const page = await ctx.http.get(playerPageUrl, { referer: embedSourceUrl });
   const config = windowConfigOf(await page.text(), "CONFIG", ctx, "player page");
+  throwIfGated(config);
   return {
     apiUrl: streamApiUrlOf(config, target),
     apiToken: requiredField(config, "apiToken", "player page"),
   };
+}
+
+/**
+ * A gated player page carries no apiToken: its verify endpoint mints one only after a
+ * Turnstile captcha is solved in the page, which a plugin can't do.
+ */
+function throwIfGated(config: Record<string, unknown>): void {
+  const gated = config.turnstile === true || config.cstCaptcha === true;
+  if (!gated) return;
+  if (stringField(config, "apiToken")) return;
+  throw new PluginBlockedError("VidSrc: the player page wants a Turnstile captcha before it hands out a stream");
 }
 
 /** Movie pages name the stream API in "api"; series pages only hold the show's "streamBase", the player appends the episode. */

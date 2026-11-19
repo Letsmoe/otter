@@ -15,6 +15,7 @@ require (
 	github.com/neoworks-dev/libneoworks-go v0.0.0-20261109153521-a5d6929abf80
 	github.com/pion/webrtc/v4 v4.2.22
 	github.com/posthog/posthog-go v1.44.1
+	github.com/refraction-networking/utls v1.8.2
 	github.com/tetratelabs/wazero v1.12.0
 	github.com/vektah/gqlparser/v2 v2.5.33
 	github.com/wlynxg/anet v0.0.5
@@ -22,9 +23,9 @@ require (
 	go.opentelemetry.io/otel/sdk v1.47.0
 	go.opentelemetry.io/otel/trace v1.47.0
 	go.opentelemetry.io/proto/otlp v1.11.0
-	golang.org/x/crypto v0.57.0
-	golang.org/x/net v0.59.0
-	golang.org/x/sync v0.23.0
+	golang.org/x/crypto v0.59.0
+	golang.org/x/net v0.63.0
+	golang.org/x/sync v0.25.0
 	google.golang.org/protobuf v1.36.12
 	modernc.org/sqlite v1.59.0
 )
@@ -77,11 +78,11 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/sosodev/duration v1.4.0 // indirect
 	github.com/urfave/cli/v3 v3.8.0 // indirect
-	golang.org/x/mod v0.41.0 // indirect
-	golang.org/x/sys v0.48.0 // indirect
-	golang.org/x/text v0.42.0
+	golang.org/x/mod v0.42.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
+	golang.org/x/text v0.44.0
 	golang.org/x/time v0.14.0 // indirect
-	golang.org/x/tools v0.49.0 // indirect
+	golang.org/x/tools v0.52.0 // indirect
 	modernc.org/libc v1.75.7 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect

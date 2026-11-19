@@ -82,6 +82,17 @@ describe("vidsrc (offline)", () => {
     expect(source.url).toBe(`${secondServer}?token=${SERVER_TOKEN}`);
   });
 
+  test("a player page gated by Turnstile is blocked, not broken", async () => {
+    const serve = fixtures(fixtureDirectory);
+    const gatedFetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (!String(input).includes("/embed/player/")) return serve(input, init);
+      const gatedConfig = '{"turnstile":true,"turnstileVerify":"/embed/verify.php","apiToken":"","gateTicket":"eyJ"}';
+      return new Response(`<script>window.CONFIG = ${gatedConfig};</script>`, { headers: { "content-type": "text/html" } });
+    }) as typeof fetch;
+    const subject = testPlugin(plugin, { fetch: gatedFetch });
+    await expect(subject.sources.retrieve({ url: MOVIE_LOOKUP })).rejects.toMatchObject({ code: "blocked" });
+  });
+
   test("every server failing is source_offline", async () => {
     const subject = testPlugin(plugin, { fetch: rateLimitedGenerate(3) });
     await expect(subject.sources.retrieve({ url: MOVIE_LOOKUP })).rejects.toMatchObject({ code: "source_offline" });

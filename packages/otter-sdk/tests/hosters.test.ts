@@ -154,10 +154,17 @@ describe("voe", () => {
     expect((await hosters.retrieve("https://voe.sx/e/abc", ctx)).url).toBe("https://cdn.example/a.m3u8");
   });
 
-  test("fails with extraction_failed when the page holds no stream", async () => {
-    const { ctx } = site({ "https://voe.sx/e/abc": "<p>deleted</p>" });
+  test("fails with extraction_failed when the player's payload doesn't decode", async () => {
+    const { ctx } = site({ "https://voe.sx/e/abc": `<script type="application/json">["not a payload"]</script>` });
     const failure = await hosters.retrieve("https://voe.sx/e/abc", ctx).catch((error) => error);
     expect(failure.code).toBe("extraction_failed");
+  });
+
+  test("a page without any player (a challenge) is blocked and names the page", async () => {
+    const { ctx } = site({ "https://voe.sx/e/abc": "<html><head><title>DDoS-Guard</title></head><body>Checking your browser</body></html>" });
+    const failure = await hosters.retrieve("https://voe.sx/e/abc", ctx).catch((error) => error);
+    expect(failure.code).toBe("blocked");
+    expect(failure.message).toContain('"DDoS-Guard"');
   });
 });
 
