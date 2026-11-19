@@ -8,7 +8,8 @@ import (
 // newTestRegistry builds a registry around in-memory plugins, skipping disk
 // loading and the file watcher.
 func newTestRegistry(hasSolver bool, loaded ...PluginMeta) *Registry {
-	registry := &Registry{plugins: map[string]*Plugin{}, disabled: map[string]bool{}, hasSolver: hasSolver}
+	solverAvailable := func() bool { return hasSolver }
+	registry := &Registry{plugins: map[string]*Plugin{}, disabled: map[string]bool{}, hasSolver: solverAvailable}
 	for _, meta := range loaded {
 		registry.plugins[meta.Name] = &Plugin{Meta: meta}
 	}

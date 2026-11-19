@@ -14,6 +14,16 @@ type CatalogRow struct {
 	Items []*Title `json:"items"`
 }
 
+// A site's bot check (Cloudflare, Turnstile) the phone app solves in a WebView, like FlareSolverr.
+type Challenge struct {
+	ID string `json:"id"`
+	// The page to open; the check passes on it.
+	URL    string `json:"url"`
+	Domain string `json:"domain"`
+	// Show the page to the user: the hidden attempt failed and they are waiting to play.
+	Interactive bool `json:"interactive"`
+}
+
 type CoStar struct {
 	Person *Person `json:"person"`
 	// How many of this person's titles they share.

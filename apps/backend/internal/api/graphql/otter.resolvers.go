@@ -78,6 +78,20 @@ func (r *episodeResolver) SkipSegments(ctx context.Context, obj *model.Episode) 
 	return skipSegmentModels(segments), nil
 }
 
+// CompleteChallenge is the resolver for the completeChallenge field.
+func (r *mutationResolver) CompleteChallenge(ctx context.Context, id string, cookies string, userAgent string) (bool, error) {
+	if err := r.Challenges.Complete(id, cookies, userAgent); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// FailChallenge is the resolver for the failChallenge field.
+func (r *mutationResolver) FailChallenge(ctx context.Context, id string, reason string) (bool, error) {
+	r.Challenges.Fail(id, reason)
+	return true, nil
+}
+
 // FindStreams is the resolver for the findStreams field.
 func (r *mutationResolver) FindStreams(ctx context.Context, id string) (bool, error) {
 	ref, err := parseMedia(id, library.MediaTypeMovie, library.MediaTypeEpisode)
@@ -962,6 +976,11 @@ func (r *subscriptionResolver) Streams(ctx context.Context, id string) (<-chan *
 // Together is the resolver for the together field.
 func (r *subscriptionResolver) Together(ctx context.Context) (<-chan *model.TogetherUpdate, error) {
 	return togetherUpdates(ctx, r.Services.Together.Subscribe(ctx)), nil
+}
+
+// Challenges is the resolver for the challenges field.
+func (r *subscriptionResolver) Challenges(ctx context.Context) (<-chan *model.Challenge, error) {
+	return challengeUpdates(ctx, r.Services.Challenges.Subscribe(ctx)), nil
 }
 
 // Credits is the resolver for the credits field.

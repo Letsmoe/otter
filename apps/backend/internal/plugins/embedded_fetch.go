@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/dop251/goja"
 
+	"github.com/Letsmoe/otter/internal/challenge"
 	"github.com/Letsmoe/otter/internal/tracing"
 	"github.com/Letsmoe/otter/internal/vpn"
 )
@@ -25,6 +27,8 @@ const maxResponseBytes = 64 << 20
 type fetcher struct {
 	following *http.Client // redirect: "follow" (the default)
 	manual    *http.Client // redirect: "manual": the 3xx response itself is returned
+	// challenges solves bot checks through the phone app; nil where there is none.
+	challenges *challenge.Service
 }
 
 // newFetcher creates the clients, sharing one connection pool. Every request
@@ -124,27 +128,38 @@ func isSet(value goja.Value) bool {
 	return value != nil && !goja.IsUndefined(value) && !goja.IsNull(value)
 }
 
-// do performs the request and reads the whole body.
+// do performs the request and reads the whole body. A bot check in the way is
+// handed to the app's solver (see package challenge) and the request sent once
+// more with the clearance; waiting for the solver isn't bound by the request's timeout.
 func (f *fetcher) do(ctx context.Context, request fetchRequest) (*fetchResponse, error) {
+	response, err := f.send(ctx, request)
+	if err != nil || !f.blockedByChallenge(response) {
+		return response, err
+	}
+	if _, err := f.challenges.Solve(ctx, request.url); err != nil {
+		log.Printf("fetch: bot check on %s: %v", challenge.DomainOf(request.url), err)
+		return response, nil
+	}
+	return f.send(ctx, request)
+}
+
+func (f *fetcher) blockedByChallenge(response *fetchResponse) bool {
+	if f.challenges == nil {
+		return false
+	}
+	return challenge.IsChallenge(response.status, response.header, response.body)
+}
+
+// send performs one HTTP request with the site's clearance, if there is one.
+func (f *fetcher) send(ctx context.Context, request fetchRequest) (*fetchResponse, error) {
 	if request.timeout > 0 {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, request.timeout)
 		defer cancel()
 	}
-	var body io.Reader
-	if request.body != "" {
-		body = strings.NewReader(request.body)
-	}
-	httpRequest, err := http.NewRequestWithContext(ctx, request.method, request.url, body)
+	httpRequest, err := f.newHTTPRequest(ctx, request)
 	if err != nil {
 		return nil, err
-	}
-	for name, value := range request.headers {
-		// Leave compression to Go's transport, which only decodes what it asked for.
-		if strings.EqualFold(name, "Accept-Encoding") {
-			continue
-		}
-		httpRequest.Header.Set(name, value)
 	}
 
 	client := f.following
@@ -172,6 +187,43 @@ func (f *fetcher) do(ctx context.Context, request fetchRequest) (*fetchResponse,
 		header:     httpResponse.Header,
 		body:       data,
 	}, nil
+}
+
+func (f *fetcher) newHTTPRequest(ctx context.Context, request fetchRequest) (*http.Request, error) {
+	var body io.Reader
+	if request.body != "" {
+		body = strings.NewReader(request.body)
+	}
+	httpRequest, err := http.NewRequestWithContext(ctx, request.method, request.url, body)
+	if err != nil {
+		return nil, err
+	}
+	for name, value := range request.headers {
+		// Leave compression to Go's transport, which only decodes what it asked for.
+		if strings.EqualFold(name, "Accept-Encoding") {
+			continue
+		}
+		httpRequest.Header.Set(name, value)
+	}
+	f.applyClearance(httpRequest)
+	return httpRequest, nil
+}
+
+// applyClearance adds the cookies the app earned for the site and the user agent they are bound to.
+func (f *fetcher) applyClearance(httpRequest *http.Request) {
+	if f.challenges == nil {
+		return
+	}
+	clearance, found := f.challenges.Clearance(httpRequest.URL.String())
+	if !found {
+		return
+	}
+	httpRequest.Header.Set("User-Agent", clearance.UserAgent)
+	cookies := clearance.Cookies
+	if existing := httpRequest.Header.Get("Cookie"); existing != "" {
+		cookies = existing + "; " + cookies
+	}
+	httpRequest.Header.Set("Cookie", cookies)
 }
 
 // responseObject builds the JS Response: status fields, headers, and the

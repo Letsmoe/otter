@@ -656,7 +656,31 @@ type NeoworksSync {
   failure: String
 }
 
+"""
+A site's bot check (Cloudflare, Turnstile) the phone app solves in a WebView, like FlareSolverr.
+"""
+type Challenge {
+  id: ID!
+
+  """The page to open; the check passes on it."""
+  url: String!
+  domain: String!
+
+  """
+  Show the page to the user: the hidden attempt failed and they are waiting to play.
+  """
+  interactive: Boolean!
+}
+
 type Mutation {
+  """
+  The app passed a bot check: its cookies for the site and the WebView's user agent, which they are bound to.
+  """
+  completeChallenge(id: ID!, cookies: String!, userAgent: String!): Boolean!
+
+  """The app couldn't pass a bot check, e.g. hidden while it wants a click."""
+  failChallenge(id: ID!, reason: String!): Boolean!
+
   """
   Ask every streams plugin again for a movie or episode, in the background.
   """
@@ -795,4 +819,9 @@ type Subscription {
 
   """The Watch Together room as it changes, and messages from the others."""
   together: TogetherUpdate!
+
+  """
+  Bot checks to solve, for the phone app; while it listens, plugins that need solving are available.
+  """
+  challenges: Challenge!
 }

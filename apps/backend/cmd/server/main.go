@@ -22,6 +22,7 @@ import (
 	gqlapi "github.com/Letsmoe/otter/internal/api/graphql"
 	"github.com/Letsmoe/otter/internal/blobcache"
 	"github.com/Letsmoe/otter/internal/cache"
+	"github.com/Letsmoe/otter/internal/challenge"
 	"github.com/Letsmoe/otter/internal/db"
 	"github.com/Letsmoe/otter/internal/downloads"
 	"github.com/Letsmoe/otter/internal/errorreport"
@@ -150,7 +151,8 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 		return serverHandlers{}, err
 	}
 
-	registry, runner, err := loadPlugins(ctx, cfg, settingsService)
+	challenges := challenge.New(ctx, cacheClient)
+	registry, runner, err := loadPlugins(ctx, cfg, settingsService, challenges)
 	if err != nil {
 		return serverHandlers{}, err
 	}
@@ -215,6 +217,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 		Together:            togetherService(),
 		VpnStatus:           vpn.Check,
 		Neoworks:            neoworksService,
+		Challenges:          challenges,
 	})
 	graphqlHandler, err := gqlapi.NewHandler(resolver)
 	if err != nil {
@@ -243,13 +246,16 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 
 // loadPlugins loads the plugin bundles (scripts/bundle-plugins.ts) into the
 // embedded JS runtime, hot-reloading them on change.
-func loadPlugins(ctx context.Context, cfg config, settingsService *settings.Service) (*plugins.Registry, *plugins.Runner, error) {
+func loadPlugins(ctx context.Context, cfg config, settingsService *settings.Service, challenges *challenge.Service) (*plugins.Registry, *plugins.Runner, error) {
 	if err := os.MkdirAll(cfg.pluginDir, 0o755); err != nil {
 		return nil, nil, err
 	}
 	runner := plugins.NewEmbeddedRunner()
 	runner.SetSettingsProvider(settingsService)
-	registry, err := plugins.NewRegistry(cfg.pluginDir, runner, plugins.WithSolver(cfg.hasSolver))
+	runner.SetChallenges(challenges)
+	// The phone app solves bot checks while it is connected, like FlareSolverr would.
+	solverAvailable := func() bool { return cfg.hasSolver || challenges.Available() }
+	registry, err := plugins.NewRegistry(cfg.pluginDir, runner, plugins.WithSolver(solverAvailable))
 	if err != nil {
 		return nil, nil, err
 	}

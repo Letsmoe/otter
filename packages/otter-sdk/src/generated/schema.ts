@@ -507,7 +507,23 @@ export interface NeoworksSync {
     __typename: 'NeoworksSync'
 }
 
+
+/** A site's bot check (Cloudflare, Turnstile) the phone app solves in a WebView, like FlareSolverr. */
+export interface Challenge {
+    id: Scalars['ID']
+    /** The page to open; the check passes on it. */
+    url: Scalars['String']
+    domain: Scalars['String']
+    /** Show the page to the user: the hidden attempt failed and they are waiting to play. */
+    interactive: Scalars['Boolean']
+    __typename: 'Challenge'
+}
+
 export interface Mutation {
+    /** The app passed a bot check: its cookies for the site and the WebView's user agent, which they are bound to. */
+    completeChallenge: Scalars['Boolean']
+    /** The app couldn't pass a bot check, e.g. hidden while it wants a click. */
+    failChallenge: Scalars['Boolean']
     /** Ask every streams plugin again for a movie or episode, in the background. */
     findStreams: Scalars['Boolean']
     /** Turn a stored stream into a playable URL; only succeeds when the link really delivers video. */
@@ -589,6 +605,8 @@ export interface Subscription {
     streams: StreamUpdate
     /** The Watch Together room as it changes, and messages from the others. */
     together: TogetherUpdate
+    /** Bot checks to solve, for the phone app; while it listens, plugins that need solving are available. */
+    challenges: Challenge
     __typename: 'Subscription'
 }
 
@@ -1112,7 +1130,24 @@ export interface NeoworksSyncGenqlSelection{
     __scalar?: boolean | number
 }
 
+
+/** A site's bot check (Cloudflare, Turnstile) the phone app solves in a WebView, like FlareSolverr. */
+export interface ChallengeGenqlSelection{
+    id?: boolean | number
+    /** The page to open; the check passes on it. */
+    url?: boolean | number
+    domain?: boolean | number
+    /** Show the page to the user: the hidden attempt failed and they are waiting to play. */
+    interactive?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 export interface MutationGenqlSelection{
+    /** The app passed a bot check: its cookies for the site and the WebView's user agent, which they are bound to. */
+    completeChallenge?: { __args: {id: Scalars['ID'], cookies: Scalars['String'], userAgent: Scalars['String']} }
+    /** The app couldn't pass a bot check, e.g. hidden while it wants a click. */
+    failChallenge?: { __args: {id: Scalars['ID'], reason: Scalars['String']} }
     /** Ask every streams plugin again for a movie or episode, in the background. */
     findStreams?: { __args: {id: Scalars['ID']} }
     /** Turn a stored stream into a playable URL; only succeeds when the link really delivers video. */
@@ -1197,6 +1232,8 @@ export interface SubscriptionGenqlSelection{
     streams?: (StreamUpdateGenqlSelection & { __args: {id: Scalars['ID']} })
     /** The Watch Together room as it changes, and messages from the others. */
     together?: TogetherUpdateGenqlSelection
+    /** Bot checks to solve, for the phone app; while it listens, plugins that need solving are available. */
+    challenges?: ChallengeGenqlSelection
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1470,6 +1507,14 @@ export interface SubscriptionGenqlSelection{
     export const isNeoworksSync = (obj?: { __typename?: any } | null): obj is NeoworksSync => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isNeoworksSync"')
       return NeoworksSync_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const Challenge_possibleTypes: string[] = ['Challenge']
+    export const isChallenge = (obj?: { __typename?: any } | null): obj is Challenge => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isChallenge"')
+      return Challenge_possibleTypes.includes(obj.__typename)
     }
     
 
