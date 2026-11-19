@@ -1242,7 +1242,54 @@ export default {
                 4
             ]
         },
+        "Challenge": {
+            "id": [
+                2
+            ],
+            "url": [
+                4
+            ],
+            "domain": [
+                4
+            ],
+            "interactive": [
+                6
+            ],
+            "__typename": [
+                4
+            ]
+        },
         "Mutation": {
+            "completeChallenge": [
+                6,
+                {
+                    "id": [
+                        2,
+                        "ID!"
+                    ],
+                    "cookies": [
+                        4,
+                        "String!"
+                    ],
+                    "userAgent": [
+                        4,
+                        "String!"
+                    ]
+                }
+            ],
+            "failChallenge": [
+                6,
+                {
+                    "id": [
+                        2,
+                        "ID!"
+                    ],
+                    "reason": [
+                        4,
+                        "String!"
+                    ]
+                }
+            ],
             "findStreams": [
                 6,
                 {
@@ -1604,7 +1651,7 @@ export default {
                 }
             ],
             "updatePlugins": [
-                52
+                53
             ],
             "startNeoworksSignIn": [
                 4,
@@ -1656,7 +1703,7 @@ export default {
         },
         "PluginUpdateReport": {
             "updated": [
-                51
+                52
             ],
             "failed": [
                 4
@@ -1677,6 +1724,9 @@ export default {
             ],
             "together": [
                 43
+            ],
+            "challenges": [
+                50
             ],
             "__typename": [
                 4

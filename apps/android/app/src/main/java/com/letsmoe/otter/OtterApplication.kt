@@ -4,6 +4,7 @@ import android.app.Application
 import com.letsmoe.otter.api.ServerSettings
 import com.letsmoe.otter.backend.EmbeddedBackend
 import com.letsmoe.otter.cast.CastSetup
+import com.letsmoe.otter.challenges.ChallengeSolver
 import com.letsmoe.otter.cast.LocalNetworkRouting
 import com.letsmoe.otter.cast.TelevisionConnection
 import com.letsmoe.otter.network.ConnectivityStore
@@ -31,6 +32,7 @@ class OtterApplication : Application() {
         ProfileSession.initialize(this)
         LocalNetworkRouting.initialize(this)
         VpnStatusStore.initialize(this)
+        ChallengeSolver.initialize(this)
         ConnectivityStore.initialize(this)
         CastSetup.initialize(this)
         TelevisionConnection.initialize(this)

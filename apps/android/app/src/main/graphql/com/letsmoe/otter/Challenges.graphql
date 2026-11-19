@@ -1,0 +1,16 @@
+subscription Challenges {
+  challenges {
+    id
+    url
+    domain
+    interactive
+  }
+}
+
+mutation CompleteChallenge($id: ID!, $cookies: String!, $userAgent: String!) {
+  completeChallenge(id: $id, cookies: $cookies, userAgent: $userAgent)
+}
+
+mutation FailChallenge($id: ID!, $reason: String!) {
+  failChallenge(id: $id, reason: $reason)
+}

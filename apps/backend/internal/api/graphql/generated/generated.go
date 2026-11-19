@@ -46,6 +46,13 @@ type ComplexityRoot struct {
 		Items func(childComplexity int) int
 	}
 
+	Challenge struct {
+		Domain      func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Interactive func(childComplexity int) int
+		URL         func(childComplexity int) int
+	}
+
 	CoStar struct {
 		Person       func(childComplexity int) int
 		SharedTitles func(childComplexity int) int
@@ -114,10 +121,12 @@ type ComplexityRoot struct {
 		CheckNotifications     func(childComplexity int) int
 		CheckTmdbConnection    func(childComplexity int) int
 		ClearRating            func(childComplexity int, profileID string, mediaID string) int
+		CompleteChallenge      func(childComplexity int, id string, cookies string, userAgent string) int
 		CompleteNeoworksSignIn func(childComplexity int, code string, state string) int
 		CreateProfile          func(childComplexity int, name string, avatarURL *string, pin *string, isChild *bool, languages []string) int
 		DeleteDownload         func(childComplexity int, id string) int
 		DeleteProfile          func(childComplexity int, id string) int
+		FailChallenge          func(childComplexity int, id string, reason string) int
 		FindStreams            func(childComplexity int, id string) int
 		HostTogether           func(childComplexity int, profileID string) int
 		JoinTogether           func(childComplexity int, profileID string, code string) int
@@ -357,8 +366,9 @@ type ComplexityRoot struct {
 	}
 
 	Subscription struct {
-		Streams  func(childComplexity int, id string) int
-		Together func(childComplexity int) int
+		Challenges func(childComplexity int) int
+		Streams    func(childComplexity int, id string) int
+		Together   func(childComplexity int) int
 	}
 
 	Subtitle struct {
@@ -447,6 +457,8 @@ type EpisodeResolver interface {
 	SkipSegments(ctx context.Context, obj *model.Episode) ([]*model.SkipSegment, error)
 }
 type MutationResolver interface {
+	CompleteChallenge(ctx context.Context, id string, cookies string, userAgent string) (bool, error)
+	FailChallenge(ctx context.Context, id string, reason string) (bool, error)
 	FindStreams(ctx context.Context, id string) (bool, error)
 	ResolveStream(ctx context.Context, streamID string) (*model.ResolvedStream, error)
 	ResolveBestStream(ctx context.Context, streamIds []string) (*model.ResolvedStream, error)
@@ -527,6 +539,7 @@ type SeasonResolver interface {
 type SubscriptionResolver interface {
 	Streams(ctx context.Context, id string) (<-chan *model.StreamUpdate, error)
 	Together(ctx context.Context) (<-chan *model.TogetherUpdate, error)
+	Challenges(ctx context.Context) (<-chan *model.Challenge, error)
 }
 type TitleResolver interface {
 	Credits(ctx context.Context, obj *model.Title) ([]*model.Credit, error)
@@ -566,6 +579,31 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.CatalogRow.Items(childComplexity), true
+
+	case "Challenge.domain":
+		if e.ComplexityRoot.Challenge.Domain == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Challenge.Domain(childComplexity), true
+	case "Challenge.id":
+		if e.ComplexityRoot.Challenge.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Challenge.ID(childComplexity), true
+	case "Challenge.interactive":
+		if e.ComplexityRoot.Challenge.Interactive == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Challenge.Interactive(childComplexity), true
+	case "Challenge.url":
+		if e.ComplexityRoot.Challenge.URL == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Challenge.URL(childComplexity), true
 
 	case "CoStar.person":
 		if e.ComplexityRoot.CoStar.Person == nil {
@@ -870,6 +908,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.ClearRating(childComplexity, args["profileId"].(string), args["mediaId"].(string)), true
+	case "Mutation.completeChallenge":
+		if e.ComplexityRoot.Mutation.CompleteChallenge == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_completeChallenge_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CompleteChallenge(childComplexity, args["id"].(string), args["cookies"].(string), args["userAgent"].(string)), true
 	case "Mutation.completeNeoworksSignIn":
 		if e.ComplexityRoot.Mutation.CompleteNeoworksSignIn == nil {
 			break
@@ -914,6 +963,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeleteProfile(childComplexity, args["id"].(string)), true
+	case "Mutation.failChallenge":
+		if e.ComplexityRoot.Mutation.FailChallenge == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_failChallenge_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.FailChallenge(childComplexity, args["id"].(string), args["reason"].(string)), true
 	case "Mutation.findStreams":
 		if e.ComplexityRoot.Mutation.FindStreams == nil {
 			break
@@ -2205,6 +2265,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.StreamUpdate.Streams(childComplexity), true
 
+	case "Subscription.challenges":
+		if e.ComplexityRoot.Subscription.Challenges == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Subscription.Challenges(childComplexity), true
 	case "Subscription.streams":
 		if e.ComplexityRoot.Subscription.Streams == nil {
 			break
@@ -3220,7 +3286,21 @@ type NeoworksSync {
   failure: String
 }
 
+"A site's bot check (Cloudflare, Turnstile) the phone app solves in a WebView, like FlareSolverr."
+type Challenge {
+  id: ID!
+  "The page to open; the check passes on it."
+  url: String!
+  domain: String!
+  "Show the page to the user: the hidden attempt failed and they are waiting to play."
+  interactive: Boolean!
+}
+
 type Mutation {
+  "The app passed a bot check: its cookies for the site and the WebView's user agent, which they are bound to."
+  completeChallenge(id: ID!, cookies: String!, userAgent: String!): Boolean!
+  "The app couldn't pass a bot check, e.g. hidden while it wants a click."
+  failChallenge(id: ID!, reason: String!): Boolean!
   "Ask every streams plugin again for a movie or episode, in the background."
   findStreams(id: ID!): Boolean!
   "Turn a stored stream into a playable URL; only succeeds when the link really delivers video."
@@ -3303,6 +3383,8 @@ type Subscription {
   streams(id: ID!): StreamUpdate!
   "The Watch Together room as it changes, and messages from the others."
   together: TogetherUpdate!
+  "Bot checks to solve, for the phone app; while it listens, plugins that need solving are available."
+  challenges: Challenge!
 }
 `, BuiltIn: false},
 }
@@ -3320,6 +3402,20 @@ func (ec *executionContext) childFields_CatalogRow(ctx context.Context, field gr
 		return ec.fieldContext_CatalogRow_items(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type CatalogRow", field.Name)
+}
+
+func (ec *executionContext) childFields_Challenge(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_Challenge_id(ctx, field)
+	case "url":
+		return ec.fieldContext_Challenge_url(ctx, field)
+	case "domain":
+		return ec.fieldContext_Challenge_domain(ctx, field)
+	case "interactive":
+		return ec.fieldContext_Challenge_interactive(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Challenge", field.Name)
 }
 
 func (ec *executionContext) childFields_CoStar(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -4164,6 +4260,36 @@ func (ec *executionContext) field_Mutation_clearRating_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_completeChallenge_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "cookies",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["cookies"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "userAgent",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["userAgent"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_completeNeoworksSignIn_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4257,6 +4383,28 @@ func (ec *executionContext) field_Mutation_deleteProfile_args(ctx context.Contex
 		return nil, err
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_failChallenge_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "reason",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["reason"] = arg1
 	return args, nil
 }
 
@@ -5521,6 +5669,98 @@ func (ec *executionContext) fieldContext_CatalogRow_items(_ context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Challenge_id(ctx context.Context, field graphql.CollectedField, obj *model.Challenge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Challenge_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Challenge_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Challenge", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _Challenge_url(ctx context.Context, field graphql.CollectedField, obj *model.Challenge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Challenge_url(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.URL, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Challenge_url(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Challenge", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Challenge_domain(ctx context.Context, field graphql.CollectedField, obj *model.Challenge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Challenge_domain(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Domain, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Challenge_domain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Challenge", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Challenge_interactive(ctx context.Context, field graphql.CollectedField, obj *model.Challenge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Challenge_interactive(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Interactive, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Challenge_interactive(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Challenge", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
 func (ec *executionContext) _CoStar_person(ctx context.Context, field graphql.CollectedField, obj *model.CoStar) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -6634,6 +6874,94 @@ func (ec *executionContext) fieldContext_MoreWithRow_items(_ context.Context, fi
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return ec.childFields_Title(ctx, field)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_completeChallenge(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_completeChallenge(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CompleteChallenge(ctx, fc.Args["id"].(string), fc.Args["cookies"].(string), fc.Args["userAgent"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_completeChallenge(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_completeChallenge_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_failChallenge(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_failChallenge(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().FailChallenge(ctx, fc.Args["id"].(string), fc.Args["reason"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_failChallenge(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_failChallenge_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -12260,6 +12588,38 @@ func (ec *executionContext) fieldContext_Subscription_together(_ context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Subscription_challenges(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	return graphql.ResolveFieldStream(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Subscription_challenges(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Subscription().Challenges(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Challenge) graphql.Marshaler {
+			return ec.marshalNChallenge2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐChallenge(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Subscription_challenges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Challenge(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Subtitle_id(ctx context.Context, field graphql.CollectedField, obj *model.Subtitle) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -14996,6 +15356,60 @@ func (ec *executionContext) _CatalogRow(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
+var challengeImplementors = []string{"Challenge"}
+
+func (ec *executionContext) _Challenge(ctx context.Context, sel ast.SelectionSet, obj *model.Challenge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, challengeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Challenge")
+		case "id":
+			out.Values[i] = ec._Challenge_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "url":
+			out.Values[i] = ec._Challenge_url(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "domain":
+			out.Values[i] = ec._Challenge_domain(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "interactive":
+			out.Values[i] = ec._Challenge_interactive(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var coStarImplementors = []string{"CoStar"}
 
 func (ec *executionContext) _CoStar(ctx context.Context, sel ast.SelectionSet, obj *model.CoStar) graphql.Marshaler {
@@ -15565,6 +15979,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "completeChallenge":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_completeChallenge(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "failChallenge":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_failChallenge(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "findStreams":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_findStreams(ctx, field)
@@ -17834,6 +18262,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 		return ec._Subscription_streams(ctx, fields[0])
 	case "together":
 		return ec._Subscription_together(ctx, fields[0])
+	case "challenges":
+		return ec._Subscription_challenges(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
@@ -18967,6 +19397,20 @@ func (ec *executionContext) unmarshalNCatalogTheme2githubᚗcomᚋLetsmoeᚋotte
 
 func (ec *executionContext) marshalNCatalogTheme2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogTheme(ctx context.Context, sel ast.SelectionSet, v model.CatalogTheme) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNChallenge2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐChallenge(ctx context.Context, sel ast.SelectionSet, v model.Challenge) graphql.Marshaler {
+	return ec._Challenge(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNChallenge2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐChallenge(ctx context.Context, sel ast.SelectionSet, v *model.Challenge) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Challenge(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNCoStar2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCoStarᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CoStar) graphql.Marshaler {

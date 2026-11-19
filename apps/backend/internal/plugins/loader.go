@@ -29,9 +29,10 @@ type Registry struct {
 	watcher     *fsnotify.Watcher
 	onLoad      func(*Plugin)
 	iconFetcher func(ctx context.Context, name, url string) string
-	// hasSolver reports whether FlareSolverr is configured; plugins with
-	// Meta.RequiresSolver are unavailable without it.
-	hasSolver bool
+	// hasSolver reports whether bot checks can be solved right now (FlareSolverr
+	// configured, or the phone app connected); plugins with Meta.RequiresSolver
+	// are unavailable without it.
+	hasSolver func() bool
 }
 
 // Option configures a Registry.
@@ -42,9 +43,9 @@ func WithOnLoad(fn func(*Plugin)) Option {
 	return func(r *Registry) { r.onLoad = fn }
 }
 
-// WithSolver tells the registry whether a FlareSolverr endpoint is configured.
-func WithSolver(configured bool) Option {
-	return func(r *Registry) { r.hasSolver = configured }
+// WithSolver tells the registry how to find out whether bot checks can be solved.
+func WithSolver(available func() bool) Option {
+	return func(r *Registry) { r.hasSolver = available }
 }
 
 // WithIconFetcher sets a function called on plugin load to cache/proxy icon URLs.
@@ -111,7 +112,10 @@ func (r *Registry) IsActive(name string) bool {
 
 // available reports whether plugin's requirements are met. Callers hold r.mu.
 func (r *Registry) available(plugin *Plugin) bool {
-	return !plugin.Meta.RequiresSolver || r.hasSolver
+	if !plugin.Meta.RequiresSolver {
+		return true
+	}
+	return r.hasSolver != nil && r.hasSolver()
 }
 
 // SetEnabled enables or disables a plugin by name.

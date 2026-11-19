@@ -2,6 +2,7 @@ package graphql
 
 import (
 	"github.com/Letsmoe/otter/internal/accounts"
+	"github.com/Letsmoe/otter/internal/challenge"
 	"github.com/Letsmoe/otter/internal/downloads"
 	"github.com/Letsmoe/otter/internal/library"
 	"github.com/Letsmoe/otter/internal/neoworks"
@@ -44,6 +45,8 @@ type Services struct {
 	VpnStatus func() vpn.Status
 	// Neoworks is the household's Neoworks sign-in for sync.
 	Neoworks *neoworks.Service
+	// Challenges are sites' bot checks the phone app solves in a WebView.
+	Challenges *challenge.Service
 }
 
 // Resolver is the root gqlgen resolver.

@@ -39,6 +39,7 @@ import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.ui.components.LocalGlassBackdrop
+import com.letsmoe.otter.ui.challenges.ChallengeSheetHost
 import com.letsmoe.otter.ui.components.LocalSheetHost
 import com.letsmoe.otter.ui.components.OfflineBar
 import com.letsmoe.otter.ui.components.SheetHostOutlet
@@ -148,6 +149,7 @@ private fun AppShell(startTab: Tab) {
             TelevisionRemoteHost(onContinueOnPhone = { request ->
                 navController.navigate(Routes.player(request.mediaId, request.streamId, startSeconds = request.startSeconds))
             })
+            ChallengeSheetHost()
             SheetHostOutlet(sheetHost)
             AppOverlays()
         }

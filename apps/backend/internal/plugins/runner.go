@@ -9,6 +9,7 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 
+	"github.com/Letsmoe/otter/internal/challenge"
 	"github.com/Letsmoe/otter/internal/tracing"
 )
 
@@ -57,6 +58,14 @@ func NewEmbeddedRunner() *Runner {
 // SetEnv replaces the global env vars forwarded to all plugin subprocesses.
 func (r *Runner) SetEnv(vars []string) {
 	r.envVars = vars
+}
+
+// SetChallenges lets plugin requests pass sites' bot checks through the phone app.
+func (r *Runner) SetChallenges(service *challenge.Service) {
+	embedded, ok := r.executor.(*embeddedExecutor)
+	if ok {
+		embedded.fetcher.challenges = service
+	}
 }
 
 // SetSettingsProvider wires in the per-plugin settings source.

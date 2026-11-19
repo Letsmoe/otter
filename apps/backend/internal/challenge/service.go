@@ -1,0 +1,282 @@
+package challenge
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"log"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/Letsmoe/otter/internal/cache"
+)
+
+// ErrNoSolver means no app is connected that could solve the check.
+var ErrNoSolver = errors.New("no app is connected to solve the site's bot check")
+
+// ErrUnsolved means the app couldn't solve the check in time.
+var ErrUnsolved = errors.New("the site's bot check was not solved")
+
+const (
+	// A JS check passes in a hidden WebView within seconds; longer means it wants a click.
+	hiddenTimeout = 15 * time.Second
+	// The user taps the Turnstile box in the app's sheet.
+	interactiveTimeout = 2 * time.Minute
+	// Clearances are renewed in the background once this old, before sites expire them.
+	renewAfter = 12 * time.Hour
+	clearanceTTL = 24 * time.Hour
+	// A site that needed solving lately: its links race after the others.
+	neededTTL = 7 * 24 * time.Hour
+
+	clearancePrefix = "challenge:clearance:"
+	neededPrefix    = "challenge:needed:"
+)
+
+// Clearance is what the app's WebView earned for one site.
+type Clearance struct {
+	// Cookies is a Cookie header value, e.g. "cf_clearance=…; __cf_bm=…".
+	Cookies string `json:"cookies"`
+	// UserAgent is the WebView's; the clearance only holds with it.
+	UserAgent string    `json:"userAgent"`
+	SolvedAt  time.Time `json:"solvedAt"`
+}
+
+// Request is a check the app is asked to solve.
+type Request struct {
+	ID     string
+	Domain string
+	URL    string
+	// Interactive asks the app to show the page: the hidden attempt failed and the user waits for this link.
+	Interactive bool
+}
+
+type pending struct {
+	request   Request
+	done      chan struct{}
+	clearance Clearance
+	err       error
+}
+
+// Service hands checks to the app and keeps the clearances it sends back.
+type Service struct {
+	cache *cache.Client
+
+	mutex       sync.Mutex
+	nextID      int
+	pendingByID map[string]*pending
+	// Keyed by domain and interactivity: one hidden and one shown attempt per site at a time.
+	pendingByKey map[string]*pending
+	subscribers  map[chan Request]bool
+	clearances   map[string]Clearance
+	needed       map[string]bool
+}
+
+// New loads the stored clearances and the sites that needed solving.
+func New(ctx context.Context, cacheClient *cache.Client) *Service {
+	service := &Service{
+		cache:        cacheClient,
+		pendingByID:  map[string]*pending{},
+		pendingByKey: map[string]*pending{},
+		subscribers:  map[chan Request]bool{},
+		clearances:   map[string]Clearance{},
+		needed:       map[string]bool{},
+	}
+	service.load(ctx)
+	return service
+}
+
+func (s *Service) load(ctx context.Context) {
+	stored, err := s.cache.Entries(ctx, clearancePrefix)
+	if err != nil {
+		log.Printf("challenge: loading clearances: %v", err)
+	}
+	for key, value := range stored {
+		var clearance Clearance
+		if json.Unmarshal([]byte(value), &clearance) == nil {
+			s.clearances[strings.TrimPrefix(key, clearancePrefix)] = clearance
+		}
+	}
+	neededSites, err := s.cache.Entries(ctx, neededPrefix)
+	if err != nil {
+		log.Printf("challenge: loading sites with checks: %v", err)
+	}
+	for key := range neededSites {
+		s.needed[strings.TrimPrefix(key, neededPrefix)] = true
+	}
+}
+
+// Available reports whether an app is connected that solves checks.
+func (s *Service) Available() bool {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	return len(s.subscribers) > 0
+}
+
+// Clearance is the stored clearance of a site; a stale one is renewed in the background.
+func (s *Service) Clearance(pageURL string) (Clearance, bool) {
+	domain := DomainOf(pageURL)
+	s.mutex.Lock()
+	clearance, found := s.clearances[domain]
+	s.mutex.Unlock()
+	if found && time.Since(clearance.SolvedAt) > renewAfter {
+		go s.renew(pageURL)
+	}
+	return clearance, found
+}
+
+func (s *Service) renew(pageURL string) {
+	if _, err := s.await(context.Background(), pageURL, false); err != nil {
+		log.Printf("challenge: renewing %s: %v", DomainOf(pageURL), err)
+	}
+}
+
+// NeedsSolving reports whether a site showed a check lately.
+func (s *Service) NeedsSolving(domain string) bool {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	return s.needed[strings.TrimPrefix(strings.ToLower(domain), "www.")]
+}
+
+// Solve has the app pass the check on pageURL: hidden first, shown to the user
+// only when the hidden attempt fails and ctx comes from someone playing.
+func (s *Service) Solve(ctx context.Context, pageURL string) (Clearance, error) {
+	s.markNeeded(DomainOf(pageURL))
+	if !s.Available() {
+		return Clearance{}, ErrNoSolver
+	}
+	clearance, err := s.await(ctx, pageURL, false)
+	if err == nil || !IsInteractive(ctx) {
+		return clearance, err
+	}
+	return s.await(ctx, pageURL, true)
+}
+
+func (s *Service) markNeeded(domain string) {
+	s.mutex.Lock()
+	known := s.needed[domain]
+	s.needed[domain] = true
+	s.mutex.Unlock()
+	if known {
+		return
+	}
+	if err := s.cache.Set(context.Background(), neededPrefix+domain, "1", neededTTL); err != nil {
+		log.Printf("challenge: remembering %s: %v", domain, err)
+	}
+}
+
+func (s *Service) await(ctx context.Context, pageURL string, interactive bool) (Clearance, error) {
+	attempt := s.enqueue(pageURL, interactive)
+	select {
+	case <-attempt.done:
+		return attempt.clearance, attempt.err
+	case <-ctx.Done():
+		return Clearance{}, ctx.Err()
+	}
+}
+
+// enqueue joins the attempt already running for the site, or starts one and tells the app.
+func (s *Service) enqueue(pageURL string, interactive bool) *pending {
+	domain := DomainOf(pageURL)
+	key := domain + "|" + strconv.FormatBool(interactive)
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	if existing, found := s.pendingByKey[key]; found {
+		return existing
+	}
+	s.nextID++
+	request := Request{ID: strconv.Itoa(s.nextID), Domain: domain, URL: pageURL, Interactive: interactive}
+	attempt := &pending{request: request, done: make(chan struct{})}
+	s.pendingByID[request.ID] = attempt
+	s.pendingByKey[key] = attempt
+	time.AfterFunc(timeoutOf(interactive), func() { s.finish(request.ID, Clearance{}, ErrUnsolved) })
+	s.broadcast(request)
+	return attempt
+}
+
+func timeoutOf(interactive bool) time.Duration {
+	if interactive {
+		return interactiveTimeout
+	}
+	return hiddenTimeout
+}
+
+// broadcast tells every connected app; callers hold s.mutex.
+func (s *Service) broadcast(request Request) {
+	for subscriber := range s.subscribers {
+		s.sendTo(subscriber, request)
+	}
+}
+
+// sendTo never blocks: an app that stopped reading misses the request, which times out.
+func (s *Service) sendTo(subscriber chan Request, request Request) {
+	select {
+	case subscriber <- request:
+	default:
+		log.Printf("challenge: an app is not keeping up; %s not sent", request.Domain)
+	}
+}
+
+// Complete stores the clearance the app earned and wakes everyone waiting for it.
+func (s *Service) Complete(id, cookies, userAgent string) error {
+	s.mutex.Lock()
+	attempt, found := s.pendingByID[id]
+	s.mutex.Unlock()
+	if !found {
+		return fmt.Errorf("challenge %s is not pending", id)
+	}
+	clearance := Clearance{Cookies: cookies, UserAgent: userAgent, SolvedAt: time.Now()}
+	s.store(attempt.request.Domain, clearance)
+	s.finish(id, clearance, nil)
+	return nil
+}
+
+func (s *Service) store(domain string, clearance Clearance) {
+	s.mutex.Lock()
+	s.clearances[domain] = clearance
+	s.mutex.Unlock()
+	encoded, _ := json.Marshal(clearance)
+	if err := s.cache.Set(context.Background(), clearancePrefix+domain, string(encoded), clearanceTTL); err != nil {
+		log.Printf("challenge: storing the clearance of %s: %v", domain, err)
+	}
+}
+
+// Fail ends an attempt the app gave up on, e.g. because the page wants a click.
+func (s *Service) Fail(id, reason string) {
+	s.finish(id, Clearance{}, fmt.Errorf("%w: %s", ErrUnsolved, reason))
+}
+
+func (s *Service) finish(id string, clearance Clearance, err error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	attempt, found := s.pendingByID[id]
+	if !found {
+		return
+	}
+	delete(s.pendingByID, id)
+	delete(s.pendingByKey, attempt.request.Domain+"|"+strconv.FormatBool(attempt.request.Interactive))
+	attempt.clearance = clearance
+	attempt.err = err
+	close(attempt.done)
+}
+
+// Subscribe receives every check to solve until ctx ends, starting with the ones already waiting.
+func (s *Service) Subscribe(ctx context.Context) <-chan Request {
+	requests := make(chan Request, 16)
+	s.mutex.Lock()
+	s.subscribers[requests] = true
+	for _, attempt := range s.pendingByID {
+		s.sendTo(requests, attempt.request)
+	}
+	s.mutex.Unlock()
+	go func() {
+		<-ctx.Done()
+		s.mutex.Lock()
+		delete(s.subscribers, requests)
+		s.mutex.Unlock()
+		close(requests)
+	}()
+	return requests
+}

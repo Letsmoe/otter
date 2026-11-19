@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Letsmoe/otter/internal/api/graphql/model"
+	"github.com/Letsmoe/otter/internal/challenge"
 	"github.com/Letsmoe/otter/internal/library"
 	"github.com/Letsmoe/otter/internal/plugins"
 	"github.com/Letsmoe/otter/internal/resolve"
@@ -31,12 +32,26 @@ func (r *mutationResolver) candidateLinks(ctx context.Context, streamIDs []strin
 		return candidateLinks{}, err
 	}
 	candidates := candidateLinks{idsByURL: map[string]int{}, media: map[library.MediaRef]bool{}}
-	for _, link := range library.RankByHoster(stored, stats) {
+	for _, link := range r.withoutChecksFirst(library.RankByHoster(stored, stats)) {
 		candidates.idsByURL[link.URL] = link.ID
 		candidates.urls = append(candidates.urls, link.URL)
 		candidates.media[library.MediaRef{MediaType: link.MediaType, MediaID: link.MediaID}] = true
 	}
 	return candidates, nil
+}
+
+// withoutChecksFirst keeps the order but moves links on sites that showed a
+// bot check lately to the end: they race only when nothing else plays.
+func (r *mutationResolver) withoutChecksFirst(links []library.Stream) []library.Stream {
+	var free, checked []library.Stream
+	for _, link := range links {
+		if r.Challenges.NeedsSolving(challenge.DomainOf(link.URL)) {
+			checked = append(checked, link)
+			continue
+		}
+		free = append(free, link)
+	}
+	return append(free, checked...)
 }
 
 // storedLinks loads the given streams in order, once per URL.
@@ -72,6 +87,8 @@ func (r *mutationResolver) resolveBest(ctx context.Context, streamIDs []string) 
 	if err != nil {
 		return nil, err
 	}
+	// Someone waits to play: a bot check the app can't pass hidden may be shown to them.
+	ctx = challenge.WithInteractive(ctx)
 	winner, err := r.StreamResolver.ResolveBest(ctx, candidates.urls, r.StreamProxy, r.recordOutcome)
 	// Show the verdicts, speeds and resolutions in the open source lists.
 	for ref := range candidates.media {
