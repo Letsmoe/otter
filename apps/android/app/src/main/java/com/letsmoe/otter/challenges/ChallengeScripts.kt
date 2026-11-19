@@ -57,9 +57,11 @@ fun submitWhenSolvedScript(selector: String): String {
 }
 
 /**
- * Hides everything but the captcha (its form, else the widget) and pins it at the top, so the
- * sheet shows only what to tap instead of the whole site: "isolated", or "waiting" until a captcha is there.
- * Transforms are dropped, or a modal's would move the pinned box off screen.
+ * Removes everything but the captcha (its form, else the widget) from the layout, so the sheet
+ * shows only what to tap instead of the whole site: "isolated", or "waiting" until a captcha is there.
+ * The captcha's ancestors go back into the normal flow (a modal's fixed position or transform would
+ * move it off screen), and the page stays scrollable when the captcha is taller than the sheet.
+ * Popups a captcha adds later (image challenges) are new body children, so they stay visible.
  */
 const val ISOLATE_CAPTCHA_SCRIPT = """
 (function(widgets) {
@@ -70,12 +72,23 @@ const val ISOLATE_CAPTCHA_SCRIPT = """
     var style = document.createElement('style');
     style.id = 'otter-isolate';
     style.textContent =
-      'html, body { overflow: hidden !important; background: #10131a !important; }' +
-      'body * { visibility: hidden !important; transform: none !important; }' +
-      '[data-otter-show], [data-otter-show] * { visibility: visible !important; }' +
-      '[data-otter-show] { position: fixed !important; top: 12px !important; left: 12px !important; right: 12px !important;' +
-      ' margin: 0 !important; z-index: 2147483647 !important; }';
+      'html, body { overflow: auto !important; height: auto !important; background: #10131a !important; }' +
+      '[data-otter-hide] { display: none !important; }' +
+      '[data-otter-path] { position: static !important; transform: none !important; margin: 0 !important;' +
+      ' padding: 0 !important; width: auto !important; height: auto !important; min-height: 0 !important;' +
+      ' max-height: none !important; overflow: visible !important; background: transparent !important; }' +
+      '[data-otter-show] { margin: 12px !important; }';
     document.head.appendChild(style);
+  }
+  function hideSiblingsOf(node) {
+    var siblings = node.parentElement.children;
+    for (var index = 0; index < siblings.length; index++) {
+      if (siblings[index] !== node) siblings[index].setAttribute('data-otter-hide', '');
+    }
+  }
+  for (var node = target; node.parentElement && node !== document.body; node = node.parentElement) {
+    hideSiblingsOf(node);
+    if (node !== target) node.setAttribute('data-otter-path', '');
   }
   target.setAttribute('data-otter-show', '');
   return 'isolated';
