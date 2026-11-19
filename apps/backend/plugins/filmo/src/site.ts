@@ -32,6 +32,15 @@ export function yearOf(root: HTMLElement): number | undefined {
   return Number(label.text.trim());
 }
 
+/** The hoster a "Video öffnen" page links to: its open button, else a meta refresh; undefined when neither is there. */
+export function openLinkOf(root: HTMLElement): string | undefined {
+  const button = root.querySelector("a.open[href]")?.getAttribute("href");
+  if (button) return button;
+  const refresh = root.querySelector('meta[http-equiv="refresh" i]')?.getAttribute("content") || "";
+  const target = /url\s*=\s*['"]?([^'"\s]+)/i.exec(refresh);
+  return target?.[1];
+}
+
 export function csrfTokenOf(root: HTMLElement): string {
   return root.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
 }

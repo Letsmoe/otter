@@ -5,7 +5,7 @@ import {
   type SourceRetrieveParams,
 } from "@letsmoe/otter-sdk";
 import { cookieHeaderOf, cookiesFromSetCookie, type CookieJar } from "./cookies.ts";
-import { chipIndexOf, csrfTokenOf, pageUrlOf, providerChipsOf, type ProviderChip } from "./site.ts";
+import { chipIndexOf, csrfTokenOf, openLinkOf, pageUrlOf, providerChipsOf, type ProviderChip } from "./site.ts";
 
 /** The movie page's session: its cookies and the tokens the page hands out. */
 interface PageSession {
@@ -71,13 +71,18 @@ async function requestMintToken(chip: ProviderChip, session: PageSession, ctx: P
   return body.x;
 }
 
-/** The mint URL answers with a redirect to the hoster; the redirect is read, not followed. */
+/**
+ * The mint URL answers with a redirect to the hoster, or for some hosters with a
+ * "Video öffnen" page that links to it; the redirect is read, not followed.
+ */
 async function hosterUrlOf(mintToken: string, session: PageSession, ctx: PluginContext): Promise<string> {
   const response = await ctx.http.get(`${session.origin}/n/${mintToken}`, {
     headers: sessionHeaders(session),
     follow_redirects: false,
   });
   const location = response.response().headers.get("location");
-  if (!location) throw new PluginSourceError("extraction_failed", `${session.pageUrl} did not redirect to a hoster`);
-  return ctx.http.absolute(location);
+  if (location) return ctx.http.absolute(location);
+  const linked = openLinkOf(await response.html());
+  if (!linked) throw new PluginSourceError("extraction_failed", `${session.pageUrl} did not redirect to a hoster`);
+  return ctx.http.absolute(linked);
 }

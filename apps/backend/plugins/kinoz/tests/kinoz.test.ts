@@ -30,4 +30,16 @@ describe("kinoz (offline)", () => {
     const streams = await subject.streams.list({ media: movie({ title: "dark" }) });
     expect(streams.data).toEqual([]);
   });
+
+  test("a site that redirects everything elsewhere is offline, not empty", async () => {
+    // What kinoz.to serves since November 2026, for every page.
+    const takenOver = (async () =>
+      new Response('<meta http-equiv="refresh" content="0;url=https://kion.ru">', {
+        headers: { "content-type": "text/html" },
+      })) as unknown as typeof fetch;
+    const gone = testPlugin(plugin, { fetch: takenOver });
+    const failure = gone.streams.list({ media: movie({ title: "Inception", year: 2010 }) });
+    await expect(failure).rejects.toMatchObject({ code: "source_offline" });
+    await expect(failure).rejects.toThrow("kinoz.to now redirects to kion.ru");
+  });
 });

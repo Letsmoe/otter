@@ -1,5 +1,5 @@
 import type { HTMLElement } from "node-html-parser";
-import type { PluginContext } from "@letsmoe/otter-sdk";
+import { domainOf, PluginSourceError, type PluginContext } from "@letsmoe/otter-sdk";
 import { slugFromHref } from "./paths.ts";
 
 export interface SearchCandidate {
@@ -12,7 +12,9 @@ export interface SearchCandidate {
 /** Catalog rows of kinoz's site search; kinoz has no API. */
 export async function searchCandidates(query: string, ctx: PluginContext): Promise<SearchCandidate[]> {
   const page = await ctx.http.get(`/Search.html?q=${encodeURIComponent(query.trim())}`);
-  const listElement = (await page.html()).querySelector("#content_list");
+  const root = await page.html();
+  throwIfSiteMoved(root, ctx);
+  const listElement = root.querySelector("#content_list");
   if (!listElement) return [];
 
   const candidates: SearchCandidate[] = [];
@@ -21,6 +23,20 @@ export async function searchCandidates(query: string, ctx: PluginContext): Promi
     if (candidate) candidates.push(candidate);
   }
   return candidates;
+}
+
+/**
+ * Since November 2026 every kinoz.to page is a meta refresh to an unrelated site (kion.ru):
+ * the site is gone, which is "offline", not a search without results. A mirror set as the
+ * plugin's Domain is used as long as it still serves the catalog.
+ */
+function throwIfSiteMoved(root: HTMLElement, ctx: PluginContext): void {
+  const refresh = root.querySelector('meta[http-equiv="refresh" i]')?.getAttribute("content") || "";
+  const target = /url\s*=\s*['"]?([^'"\s]+)/i.exec(refresh)?.[1];
+  if (!target) return;
+  const site = domainOf(ctx.plugin.base_url || "");
+  if (domainOf(target) === site) return;
+  throw new PluginSourceError("source_offline", `${site} now redirects to ${domainOf(target)}; the site is gone`);
 }
 
 function candidateOf(item: HTMLElement): SearchCandidate | undefined {

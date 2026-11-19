@@ -13,6 +13,7 @@ import (
 	"github.com/dop251/goja"
 
 	"github.com/Letsmoe/otter/internal/challenge"
+	"github.com/Letsmoe/otter/internal/chrometls"
 	"github.com/Letsmoe/otter/internal/tracing"
 	"github.com/Letsmoe/otter/internal/vpn"
 )
@@ -33,11 +34,10 @@ type fetcher struct {
 
 // newFetcher creates the clients, sharing one connection pool. Every request
 // of a plugin goes through the VPN while it is required: a call that started
-// with the VPN up fails instead of going on without it.
+// with the VPN up fails instead of going on without it. HTTPS greets like
+// Chrome, so Cloudflare doesn't single out Go's handshake (package chrometls).
 func newFetcher() *fetcher {
-	base := http.DefaultTransport.(*http.Transport).Clone()
-	base.DialContext = vpn.DialContext
-	transport := tracing.Transport(base)
+	transport := tracing.Transport(chrometls.New(vpn.DialContext))
 	return &fetcher{
 		following: &http.Client{Transport: transport},
 		manual: &http.Client{

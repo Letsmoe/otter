@@ -6,7 +6,7 @@ import { SITE_DOMAIN } from "./src/constants.ts";
 export default definePlugin({
   id: "vidsrc",
   name: "VidSrc",
-  version: "0.1.0",
+  version: "0.2.0",
   description: "English movies and series: HLS streams from the VidSrc player",
   base_url: "https://vidsrc.sh",
   languages: ["en"],
