@@ -5,7 +5,9 @@ import android.util.Log
 import com.letsmoe.otter.AppScope
 import com.letsmoe.otter.api.OtterApi
 import com.letsmoe.otter.api.ServerSettings
+import com.apollographql.apollo.api.Optional
 import com.letsmoe.otter.graphql.ChallengesSubscription
+import com.letsmoe.otter.graphql.type.ChallengeKind
 import com.letsmoe.otter.graphql.CompleteChallengeMutation
 import com.letsmoe.otter.graphql.FailChallengeMutation
 import kotlinx.coroutines.CancellationException
@@ -20,8 +22,11 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
-/** A site's bot check the backend asks the app to pass. */
-data class SiteChallenge(val id: String, val url: String, val domain: String, val interactive: Boolean)
+/**
+ * A site's bot check the backend asks the app to pass. A [navigation] also wants the first URL
+ * off the site, e.g. the hoster a captcha-gated link page redirects to.
+ */
+data class SiteChallenge(val id: String, val url: String, val domain: String, val interactive: Boolean, val navigation: Boolean)
 
 /**
  * Passes sites' bot checks (Cloudflare, Turnstile) for the embedded backend, like FlareSolverr:
@@ -61,7 +66,8 @@ object ChallengeSolver {
             try {
                 OtterApi.client.subscription(ChallengesSubscription()).toFlow().collect { response ->
                     val challenge = response.data?.challenges ?: return@collect
-                    onChallenge(SiteChallenge(challenge.id, challenge.url, challenge.domain, challenge.interactive))
+                    val navigation = challenge.kind == ChallengeKind.NAVIGATION
+                    onChallenge(SiteChallenge(challenge.id, challenge.url, challenge.domain, challenge.interactive, navigation))
                 }
             } catch (cancellation: CancellationException) {
                 throw cancellation
@@ -81,31 +87,30 @@ object ChallengeSolver {
     }
 
     private suspend fun solveHidden(challenge: SiteChallenge) {
-        val clearance = hiddenAttempts.withLock { clearHidden(challenge.url) }
-        if (clearance == null) {
+        val result = hiddenAttempts.withLock { passHidden(challenge) }
+        if (result == null) {
             fail(challenge.id, "The check wants a click.")
             return
         }
         Log.i(TAG, "passed the check of ${challenge.domain} hidden")
-        complete(challenge.id, clearance)
+        complete(challenge.id, result)
     }
 
-    private suspend fun clearHidden(url: String): Clearance? = withContext(Dispatchers.Main) {
-        val webView = createChallengeWebView(applicationContext)
-        layOutOffscreen(webView)
+    private suspend fun passHidden(challenge: SiteChallenge): ChallengeResult? = withContext(Dispatchers.Main) {
+        val page = ChallengePage(applicationContext, challenge)
+        page.layOutOffscreen()
         try {
-            webView.loadUrl(url)
-            withTimeoutOrNull(HIDDEN_TIMEOUT_MILLISECONDS) { awaitClearance(webView, url) }
+            page.load()
+            withTimeoutOrNull(HIDDEN_TIMEOUT_MILLISECONDS) { page.await() }
         } finally {
-            webView.stopLoading()
-            webView.destroy()
+            page.destroy()
         }
     }
 
     /** The sheet's WebView passed the check. */
-    fun onShownSolved(challenge: SiteChallenge, clearance: Clearance) {
+    fun onShownSolved(challenge: SiteChallenge, result: ChallengeResult) {
         dismiss(challenge)
-        AppScope.launch { complete(challenge.id, clearance) }
+        AppScope.launch { complete(challenge.id, result) }
     }
 
     /** The user closed the sheet without passing the check. */
@@ -118,8 +123,9 @@ object ChallengeSolver {
         mutableShown.update { waiting -> waiting.filter { candidate -> candidate.id != challenge.id } }
     }
 
-    private suspend fun complete(id: String, clearance: Clearance) {
-        send("completing") { OtterApi.client.mutation(CompleteChallengeMutation(id, clearance.cookies, clearance.userAgent)).execute() }
+    private suspend fun complete(id: String, result: ChallengeResult) {
+        val mutation = CompleteChallengeMutation(id, result.cookies, result.userAgent, Optional.presentIfNotNull(result.finalUrl))
+        send("completing") { OtterApi.client.mutation(mutation).execute() }
     }
 
     private suspend fun fail(id: String, reason: String) {

@@ -210,17 +210,18 @@ func (s *session) installGlobals() error {
 	}
 	timers := s.newTimers()
 	globals := map[string]any{
-		"setTimeout":   timers.set,
-		"clearTimeout": timers.clear,
-		"module":       module,
-		"exports":      exports,
-		"require":      s.require,
-		"console":      s.console(),
-		"process":      s.process(),
-		"Bun":          s.bun(),
-		"fetch":        s.fetch,
-		"AbortSignal":  s.abortSignal(),
-		"WebAssembly":  s.webAssembly.object(),
+		"setTimeout":    timers.set,
+		"clearTimeout":  timers.clear,
+		"module":        module,
+		"exports":       exports,
+		"require":       s.require,
+		"console":       s.console(),
+		"process":       s.process(),
+		"Bun":           s.bun(),
+		"fetch":         s.fetch,
+		"__otterBrowse": s.browse,
+		"AbortSignal":   s.abortSignal(),
+		"WebAssembly":   s.webAssembly.object(),
 	}
 	for name, value := range globals {
 		if err := s.vm.Set(name, value); err != nil {

@@ -24,5 +24,9 @@ func challengeUpdates(ctx context.Context, requests <-chan challenge.Request) <-
 }
 
 func challengeModel(request challenge.Request) *model.Challenge {
-	return &model.Challenge{ID: request.ID, URL: request.URL, Domain: request.Domain, Interactive: request.Interactive}
+	kind := model.ChallengeKindClearance
+	if request.Kind == challenge.KindNavigation {
+		kind = model.ChallengeKindNavigation
+	}
+	return &model.Challenge{ID: request.ID, Kind: kind, URL: request.URL, Domain: request.Domain, Interactive: request.Interactive}
 }

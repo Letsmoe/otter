@@ -19,6 +19,8 @@ var (
 	raceSize          = 5
 	raceDecisionDelay = 2500 * time.Millisecond
 	candidateTimeout  = 20 * time.Second
+	// Links on sites with a bot check may wait for the user to pass it in the app.
+	checkedCandidateTimeout = 150 * time.Second
 )
 
 // ErrNothingPlays means every link was tried and none delivered video.
@@ -65,7 +67,7 @@ func (s *Service) ResolveBest(ctx context.Context, urls []string, prober Prober,
 }
 
 func (s *Service) tryLink(ctx context.Context, link string, prober Prober) Outcome {
-	ctx, cancel := context.WithTimeout(ctx, candidateTimeout)
+	ctx, cancel := context.WithTimeout(ctx, s.timeoutFor(link))
 	defer cancel()
 	result, cached, err := s.ResolveWithoutCaching(ctx, link)
 	if err != nil {
@@ -79,6 +81,13 @@ func (s *Service) tryLink(ctx context.Context, link string, prober Prober) Outco
 		return Outcome{URL: link, Err: err}
 	}
 	return Outcome{URL: link, Result: result, BytesPerSecond: probe.BytesPerSecond, Quality: probe.Quality()}
+}
+
+func (s *Service) timeoutFor(link string) time.Duration {
+	if s.checkedHost != nil && s.checkedHost(hostOf(link)) {
+		return checkedCandidateTimeout
+	}
+	return candidateTimeout
 }
 
 func pickBest(ctx context.Context, urls []string, tryLink linkTrier, record func(Outcome)) (Outcome, error) {

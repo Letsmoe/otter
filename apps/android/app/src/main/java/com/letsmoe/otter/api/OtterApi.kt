@@ -3,6 +3,7 @@ package com.letsmoe.otter.api
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.ApolloResponse
 import com.apollographql.apollo.api.Operation
+import com.apollographql.apollo.network.http.DefaultHttpEngine
 import com.apollographql.apollo.network.websocket.GraphQLWsProtocol
 import com.apollographql.apollo.network.websocket.WebSocketNetworkTransport
 import kotlinx.coroutines.Dispatchers
@@ -16,9 +17,12 @@ import java.net.URL
 object OtterApi {
 
     private const val HEALTH_POLL_MILLISECONDS = 250L
+    // Resolving a link may wait for the user to pass a site's check in the app (up to 2.5 min).
+    private const val HTTP_TIMEOUT_MILLISECONDS = 180_000L
 
     val client: ApolloClient = ApolloClient.Builder()
         .serverUrl("${ServerSettings.baseUrl}/graphql")
+        .httpEngine(DefaultHttpEngine(timeoutMillis = HTTP_TIMEOUT_MILLISECONDS))
         .subscriptionNetworkTransport(
             WebSocketNetworkTransport.Builder()
                 .serverUrl("${ServerSettings.baseUrl.replace("http", "ws")}/graphql")

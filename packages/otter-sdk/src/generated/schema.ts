@@ -507,10 +507,13 @@ export interface NeoworksSync {
     __typename: 'NeoworksSync'
 }
 
+export type ChallengeKind = 'CLEARANCE' | 'NAVIGATION'
+
 
 /** A site's bot check (Cloudflare, Turnstile) the phone app solves in a WebView, like FlareSolverr. */
 export interface Challenge {
     id: Scalars['ID']
+    kind: ChallengeKind
     /** The page to open; the check passes on it. */
     url: Scalars['String']
     domain: Scalars['String']
@@ -520,7 +523,7 @@ export interface Challenge {
 }
 
 export interface Mutation {
-    /** The app passed a bot check: its cookies for the site and the WebView's user agent, which they are bound to. */
+    /** The app passed a bot check: its cookies for the site, the WebView's user agent they are bound to, and for a NAVIGATION the URL it led to. */
     completeChallenge: Scalars['Boolean']
     /** The app couldn't pass a bot check, e.g. hidden while it wants a click. */
     failChallenge: Scalars['Boolean']
@@ -1134,6 +1137,7 @@ export interface NeoworksSyncGenqlSelection{
 /** A site's bot check (Cloudflare, Turnstile) the phone app solves in a WebView, like FlareSolverr. */
 export interface ChallengeGenqlSelection{
     id?: boolean | number
+    kind?: boolean | number
     /** The page to open; the check passes on it. */
     url?: boolean | number
     domain?: boolean | number
@@ -1144,8 +1148,8 @@ export interface ChallengeGenqlSelection{
 }
 
 export interface MutationGenqlSelection{
-    /** The app passed a bot check: its cookies for the site and the WebView's user agent, which they are bound to. */
-    completeChallenge?: { __args: {id: Scalars['ID'], cookies: Scalars['String'], userAgent: Scalars['String']} }
+    /** The app passed a bot check: its cookies for the site, the WebView's user agent they are bound to, and for a NAVIGATION the URL it led to. */
+    completeChallenge?: { __args: {id: Scalars['ID'], cookies: Scalars['String'], userAgent: Scalars['String'], finalUrl?: (Scalars['String'] | null)} }
     /** The app couldn't pass a bot check, e.g. hidden while it wants a click. */
     failChallenge?: { __args: {id: Scalars['ID'], reason: Scalars['String']} }
     /** Ask every streams plugin again for a movie or episode, in the background. */
@@ -1599,4 +1603,9 @@ export const enumCatalogTheme = {
    BLOCKBUSTERS: 'BLOCKBUSTERS' as const,
    FEEL_GOOD: 'FEEL_GOOD' as const,
    BINGEWORTHY: 'BINGEWORTHY' as const
+}
+
+export const enumChallengeKind = {
+   CLEARANCE: 'CLEARANCE' as const,
+   NAVIGATION: 'NAVIGATION' as const
 }

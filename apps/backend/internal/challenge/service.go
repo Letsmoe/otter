@@ -25,14 +25,26 @@ const (
 	hiddenTimeout = 15 * time.Second
 	// The user taps the Turnstile box in the app's sheet.
 	interactiveTimeout = 2 * time.Minute
+	// After a failed hidden attempt, background requests to the site don't try again for this
+	// long: every request of a link search would otherwise wait out its own attempt.
+	hiddenRetryAfter = 10 * time.Minute
 	// Clearances are renewed in the background once this old, before sites expire them.
-	renewAfter = 12 * time.Hour
+	renewAfter   = 12 * time.Hour
 	clearanceTTL = 24 * time.Hour
 	// A site that needed solving lately: its links race after the others.
 	neededTTL = 7 * 24 * time.Hour
 
 	clearancePrefix = "challenge:clearance:"
 	neededPrefix    = "challenge:needed:"
+)
+
+// What the app is asked to do with a page.
+const (
+	// KindClearance: pass the check and send back the site's cookies.
+	KindClearance = "clearance"
+	// KindNavigation: open the page, pass any check, and send back the first URL off the site
+	// (e.g. a link page that redirects to the hoster once its captcha is solved).
+	KindNavigation = "navigation"
 )
 
 // Clearance is what the app's WebView earned for one site.
@@ -47,17 +59,26 @@ type Clearance struct {
 // Request is a check the app is asked to solve.
 type Request struct {
 	ID     string
+	Kind   string
 	Domain string
 	URL    string
 	// Interactive asks the app to show the page: the hidden attempt failed and the user waits for this link.
 	Interactive bool
 }
 
-type pending struct {
-	request   Request
-	done      chan struct{}
+// outcome is what the app sent back for one request.
+type outcome struct {
 	clearance Clearance
-	err       error
+	// finalURL is where a navigation ended up.
+	finalURL string
+}
+
+type pending struct {
+	request Request
+	key     string
+	done    chan struct{}
+	result  outcome
+	err     error
 }
 
 // Service hands checks to the app and keeps the clearances it sends back.
@@ -67,11 +88,12 @@ type Service struct {
 	mutex       sync.Mutex
 	nextID      int
 	pendingByID map[string]*pending
-	// Keyed by domain and interactivity: one hidden and one shown attempt per site at a time.
+	// One hidden and one shown attempt per site (clearances) or page (navigations) at a time.
 	pendingByKey map[string]*pending
 	subscribers  map[chan Request]bool
 	clearances   map[string]Clearance
 	needed       map[string]bool
+	hiddenFailed map[string]time.Time
 }
 
 // New loads the stored clearances and the sites that needed solving.
@@ -83,6 +105,7 @@ func New(ctx context.Context, cacheClient *cache.Client) *Service {
 		subscribers:  map[chan Request]bool{},
 		clearances:   map[string]Clearance{},
 		needed:       map[string]bool{},
+		hiddenFailed: map[string]time.Time{},
 	}
 	service.load(ctx)
 	return service
@@ -128,7 +151,7 @@ func (s *Service) Clearance(pageURL string) (Clearance, bool) {
 }
 
 func (s *Service) renew(pageURL string) {
-	if _, err := s.await(context.Background(), pageURL, false); err != nil {
+	if _, err := s.attempt(context.Background(), KindClearance, pageURL, false); err != nil {
 		log.Printf("challenge: renewing %s: %v", DomainOf(pageURL), err)
 	}
 }
@@ -140,18 +163,46 @@ func (s *Service) NeedsSolving(domain string) bool {
 	return s.needed[strings.TrimPrefix(strings.ToLower(domain), "www.")]
 }
 
-// Solve has the app pass the check on pageURL: hidden first, shown to the user
-// only when the hidden attempt fails and ctx comes from someone playing.
+// Solve has the app pass the check on pageURL and keeps the site's cookies:
+// hidden first, shown to the user only when that fails and ctx comes from someone playing.
 func (s *Service) Solve(ctx context.Context, pageURL string) (Clearance, error) {
-	s.markNeeded(DomainOf(pageURL))
+	result, err := s.run(ctx, KindClearance, pageURL)
+	return result.clearance, err
+}
+
+// Navigate has the app open pageURL, pass any check on the way, and returns the first
+// URL off the site, e.g. the hoster a captcha-gated link page redirects to.
+func (s *Service) Navigate(ctx context.Context, pageURL string) (string, error) {
+	result, err := s.run(ctx, KindNavigation, pageURL)
+	return result.finalURL, err
+}
+
+func (s *Service) run(ctx context.Context, kind, pageURL string) (outcome, error) {
+	domain := DomainOf(pageURL)
+	s.markNeeded(domain)
 	if !s.Available() {
-		return Clearance{}, ErrNoSolver
+		return outcome{}, ErrNoSolver
 	}
-	clearance, err := s.await(ctx, pageURL, false)
-	if err == nil || !IsInteractive(ctx) {
-		return clearance, err
+	interactive := IsInteractive(ctx)
+	// A hidden attempt that failed a moment ago would fail again: go straight to the user, or give up.
+	if s.failedHiddenLately(domain) {
+		if !interactive {
+			return outcome{}, fmt.Errorf("%w: it wanted a click a moment ago", ErrUnsolved)
+		}
+		return s.attempt(ctx, kind, pageURL, true)
 	}
-	return s.await(ctx, pageURL, true)
+	result, err := s.attempt(ctx, kind, pageURL, false)
+	if err == nil || !interactive {
+		return result, err
+	}
+	return s.attempt(ctx, kind, pageURL, true)
+}
+
+func (s *Service) failedHiddenLately(domain string) bool {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	failedAt, found := s.hiddenFailed[domain]
+	return found && time.Since(failedAt) < hiddenRetryAfter
 }
 
 func (s *Service) markNeeded(domain string) {
@@ -167,33 +218,42 @@ func (s *Service) markNeeded(domain string) {
 	}
 }
 
-func (s *Service) await(ctx context.Context, pageURL string, interactive bool) (Clearance, error) {
-	attempt := s.enqueue(pageURL, interactive)
+func (s *Service) attempt(ctx context.Context, kind, pageURL string, interactive bool) (outcome, error) {
+	attempt := s.enqueue(kind, pageURL, interactive)
 	select {
 	case <-attempt.done:
-		return attempt.clearance, attempt.err
+		return attempt.result, attempt.err
 	case <-ctx.Done():
-		return Clearance{}, ctx.Err()
+		return outcome{}, ctx.Err()
 	}
 }
 
-// enqueue joins the attempt already running for the site, or starts one and tells the app.
-func (s *Service) enqueue(pageURL string, interactive bool) *pending {
+// enqueue joins the attempt already running for the site (or page), or starts one and tells the app.
+func (s *Service) enqueue(kind, pageURL string, interactive bool) *pending {
 	domain := DomainOf(pageURL)
-	key := domain + "|" + strconv.FormatBool(interactive)
+	key := attemptKey(kind, domain, pageURL, interactive)
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	if existing, found := s.pendingByKey[key]; found {
 		return existing
 	}
 	s.nextID++
-	request := Request{ID: strconv.Itoa(s.nextID), Domain: domain, URL: pageURL, Interactive: interactive}
-	attempt := &pending{request: request, done: make(chan struct{})}
+	request := Request{ID: strconv.Itoa(s.nextID), Kind: kind, Domain: domain, URL: pageURL, Interactive: interactive}
+	attempt := &pending{request: request, key: key, done: make(chan struct{})}
 	s.pendingByID[request.ID] = attempt
 	s.pendingByKey[key] = attempt
-	time.AfterFunc(timeoutOf(interactive), func() { s.finish(request.ID, Clearance{}, ErrUnsolved) })
+	time.AfterFunc(timeoutOf(interactive), func() { s.finish(request.ID, outcome{}, ErrUnsolved) })
 	s.broadcast(request)
 	return attempt
+}
+
+// A clearance is the site's, a navigation the page's: each link page leads somewhere else.
+func attemptKey(kind, domain, pageURL string, interactive bool) string {
+	target := domain
+	if kind == KindNavigation {
+		target = pageURL
+	}
+	return kind + "|" + target + "|" + strconv.FormatBool(interactive)
 }
 
 func timeoutOf(interactive bool) time.Duration {
@@ -219,17 +279,22 @@ func (s *Service) sendTo(subscriber chan Request, request Request) {
 	}
 }
 
-// Complete stores the clearance the app earned and wakes everyone waiting for it.
-func (s *Service) Complete(id, cookies, userAgent string) error {
+// Complete takes what the app earned: the site's cookies and, for a navigation, where it led.
+func (s *Service) Complete(id, cookies, userAgent, finalURL string) error {
 	s.mutex.Lock()
 	attempt, found := s.pendingByID[id]
 	s.mutex.Unlock()
 	if !found {
 		return fmt.Errorf("challenge %s is not pending", id)
 	}
+	if attempt.request.Kind == KindNavigation && finalURL == "" {
+		return fmt.Errorf("challenge %s is a navigation and needs the URL it led to", id)
+	}
 	clearance := Clearance{Cookies: cookies, UserAgent: userAgent, SolvedAt: time.Now()}
-	s.store(attempt.request.Domain, clearance)
-	s.finish(id, clearance, nil)
+	if cookies != "" {
+		s.store(attempt.request.Domain, clearance)
+	}
+	s.finish(id, outcome{clearance: clearance, finalURL: finalURL}, nil)
 	return nil
 }
 
@@ -245,10 +310,10 @@ func (s *Service) store(domain string, clearance Clearance) {
 
 // Fail ends an attempt the app gave up on, e.g. because the page wants a click.
 func (s *Service) Fail(id, reason string) {
-	s.finish(id, Clearance{}, fmt.Errorf("%w: %s", ErrUnsolved, reason))
+	s.finish(id, outcome{}, fmt.Errorf("%w: %s", ErrUnsolved, reason))
 }
 
-func (s *Service) finish(id string, clearance Clearance, err error) {
+func (s *Service) finish(id string, result outcome, err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	attempt, found := s.pendingByID[id]
@@ -256,8 +321,14 @@ func (s *Service) finish(id string, clearance Clearance, err error) {
 		return
 	}
 	delete(s.pendingByID, id)
-	delete(s.pendingByKey, attempt.request.Domain+"|"+strconv.FormatBool(attempt.request.Interactive))
-	attempt.clearance = clearance
+	delete(s.pendingByKey, attempt.key)
+	if err != nil && !attempt.request.Interactive {
+		s.hiddenFailed[attempt.request.Domain] = time.Now()
+	}
+	if err == nil {
+		delete(s.hiddenFailed, attempt.request.Domain)
+	}
+	attempt.result = result
 	attempt.err = err
 	close(attempt.done)
 }

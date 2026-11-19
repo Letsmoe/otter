@@ -20,6 +20,13 @@ type Service struct {
 	registry *plugins.Registry
 	runner   *plugins.Runner
 	cache    *stream.CacheService // nil if not configured
+	// checkedHost reports sites with a bot check, whose links get longer to resolve; nil = none.
+	checkedHost func(host string) bool
+}
+
+// SetCheckedHosts tells which sites may wait for the user to pass a bot check in the app.
+func (s *Service) SetCheckedHosts(checked func(host string) bool) {
+	s.checkedHost = checked
 }
 
 func New(registry *plugins.Registry, runner *plugins.Runner) *Service {

@@ -1,3 +1,4 @@
+import type { Browser } from "./browser.ts";
 import type { HosterRegistry } from "./hosters/registry.ts";
 import type { Extractor } from "./extract.ts";
 import type { HttpClient } from "./http-client.ts";
@@ -28,6 +29,8 @@ export interface PluginContext {
   match: Matcher;
   extract: Extractor;
   hosters: HosterRegistry;
+  /** Pages behind a captcha, opened in the Otter app's WebView. */
+  browser: Browser;
   /** Values of the settings the plugin declares (default applied), by key. */
   settings: Record<string, string>;
   /** The user's login, for plugins that declare `account`; undefined until they logged in. */

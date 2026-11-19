@@ -79,8 +79,8 @@ func (r *episodeResolver) SkipSegments(ctx context.Context, obj *model.Episode) 
 }
 
 // CompleteChallenge is the resolver for the completeChallenge field.
-func (r *mutationResolver) CompleteChallenge(ctx context.Context, id string, cookies string, userAgent string) (bool, error) {
-	if err := r.Challenges.Complete(id, cookies, userAgent); err != nil {
+func (r *mutationResolver) CompleteChallenge(ctx context.Context, id string, cookies string, userAgent string, finalURL *string) (bool, error) {
+	if err := r.Challenges.Complete(id, cookies, userAgent, valueOr(finalURL, "")); err != nil {
 		return false, err
 	}
 	return true, nil

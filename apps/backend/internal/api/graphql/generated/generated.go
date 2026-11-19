@@ -50,6 +50,7 @@ type ComplexityRoot struct {
 		Domain      func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Interactive func(childComplexity int) int
+		Kind        func(childComplexity int) int
 		URL         func(childComplexity int) int
 	}
 
@@ -121,7 +122,7 @@ type ComplexityRoot struct {
 		CheckNotifications     func(childComplexity int) int
 		CheckTmdbConnection    func(childComplexity int) int
 		ClearRating            func(childComplexity int, profileID string, mediaID string) int
-		CompleteChallenge      func(childComplexity int, id string, cookies string, userAgent string) int
+		CompleteChallenge      func(childComplexity int, id string, cookies string, userAgent string, finalURL *string) int
 		CompleteNeoworksSignIn func(childComplexity int, code string, state string) int
 		CreateProfile          func(childComplexity int, name string, avatarURL *string, pin *string, isChild *bool, languages []string) int
 		DeleteDownload         func(childComplexity int, id string) int
@@ -457,7 +458,7 @@ type EpisodeResolver interface {
 	SkipSegments(ctx context.Context, obj *model.Episode) ([]*model.SkipSegment, error)
 }
 type MutationResolver interface {
-	CompleteChallenge(ctx context.Context, id string, cookies string, userAgent string) (bool, error)
+	CompleteChallenge(ctx context.Context, id string, cookies string, userAgent string, finalURL *string) (bool, error)
 	FailChallenge(ctx context.Context, id string, reason string) (bool, error)
 	FindStreams(ctx context.Context, id string) (bool, error)
 	ResolveStream(ctx context.Context, streamID string) (*model.ResolvedStream, error)
@@ -598,6 +599,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Challenge.Interactive(childComplexity), true
+	case "Challenge.kind":
+		if e.ComplexityRoot.Challenge.Kind == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Challenge.Kind(childComplexity), true
 	case "Challenge.url":
 		if e.ComplexityRoot.Challenge.URL == nil {
 			break
@@ -918,7 +925,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.CompleteChallenge(childComplexity, args["id"].(string), args["cookies"].(string), args["userAgent"].(string)), true
+		return e.ComplexityRoot.Mutation.CompleteChallenge(childComplexity, args["id"].(string), args["cookies"].(string), args["userAgent"].(string), args["finalUrl"].(*string)), true
 	case "Mutation.completeNeoworksSignIn":
 		if e.ComplexityRoot.Mutation.CompleteNeoworksSignIn == nil {
 			break
@@ -3286,9 +3293,17 @@ type NeoworksSync {
   failure: String
 }
 
+enum ChallengeKind {
+  "Pass the check and send back the site's cookies."
+  CLEARANCE
+  "Open the page, pass any check, and send back the first URL off the site (e.g. the hoster a link page redirects to)."
+  NAVIGATION
+}
+
 "A site's bot check (Cloudflare, Turnstile) the phone app solves in a WebView, like FlareSolverr."
 type Challenge {
   id: ID!
+  kind: ChallengeKind!
   "The page to open; the check passes on it."
   url: String!
   domain: String!
@@ -3297,8 +3312,8 @@ type Challenge {
 }
 
 type Mutation {
-  "The app passed a bot check: its cookies for the site and the WebView's user agent, which they are bound to."
-  completeChallenge(id: ID!, cookies: String!, userAgent: String!): Boolean!
+  "The app passed a bot check: its cookies for the site, the WebView's user agent they are bound to, and for a NAVIGATION the URL it led to."
+  completeChallenge(id: ID!, cookies: String!, userAgent: String!, finalUrl: String): Boolean!
   "The app couldn't pass a bot check, e.g. hidden while it wants a click."
   failChallenge(id: ID!, reason: String!): Boolean!
   "Ask every streams plugin again for a movie or episode, in the background."
@@ -3408,6 +3423,8 @@ func (ec *executionContext) childFields_Challenge(ctx context.Context, field gra
 	switch field.Name {
 	case "id":
 		return ec.fieldContext_Challenge_id(ctx, field)
+	case "kind":
+		return ec.fieldContext_Challenge_kind(ctx, field)
 	case "url":
 		return ec.fieldContext_Challenge_url(ctx, field)
 	case "domain":
@@ -4287,6 +4304,14 @@ func (ec *executionContext) field_Mutation_completeChallenge_args(ctx context.Co
 		return nil, err
 	}
 	args["userAgent"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "finalUrl",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["finalUrl"] = arg3
 	return args, nil
 }
 
@@ -5692,6 +5717,29 @@ func (ec *executionContext) fieldContext_Challenge_id(_ context.Context, field g
 	return graphql.NewScalarFieldContext("Challenge", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
+func (ec *executionContext) _Challenge_kind(ctx context.Context, field graphql.CollectedField, obj *model.Challenge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Challenge_kind(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Kind, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.ChallengeKind) graphql.Marshaler {
+			return ec.marshalNChallengeKind2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐChallengeKind(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Challenge_kind(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Challenge", field, false, false, errors.New("field of type ChallengeKind does not have child fields"))
+}
+
 func (ec *executionContext) _Challenge_url(ctx context.Context, field graphql.CollectedField, obj *model.Challenge) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -6888,7 +6936,7 @@ func (ec *executionContext) _Mutation_completeChallenge(ctx context.Context, fie
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().CompleteChallenge(ctx, fc.Args["id"].(string), fc.Args["cookies"].(string), fc.Args["userAgent"].(string))
+			return ec.Resolvers.Mutation().CompleteChallenge(ctx, fc.Args["id"].(string), fc.Args["cookies"].(string), fc.Args["userAgent"].(string), fc.Args["finalUrl"].(*string))
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
@@ -15372,6 +15420,11 @@ func (ec *executionContext) _Challenge(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "kind":
+			out.Values[i] = ec._Challenge_kind(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "url":
 			out.Values[i] = ec._Challenge_url(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -19411,6 +19464,16 @@ func (ec *executionContext) marshalNChallenge2ᚖgithubᚗcomᚋLetsmoeᚋotter�
 		return graphql.Null
 	}
 	return ec._Challenge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNChallengeKind2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐChallengeKind(ctx context.Context, v any) (model.ChallengeKind, error) {
+	var res model.ChallengeKind
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNChallengeKind2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐChallengeKind(ctx context.Context, sel ast.SelectionSet, v model.ChallengeKind) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNCoStar2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCoStarᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CoStar) graphql.Marshaler {
