@@ -5,7 +5,7 @@ import { retrieveSource } from "./src/retrieve.ts";
 export default definePlugin({
   id: "filmo",
   name: "Filmo",
-  version: "0.2.0",
+  version: "0.2.1",
   description: "German and English movies: finds hoster links for titles on filmo.to",
   base_url: "https://filmo.to",
   languages: ["de", "en"],

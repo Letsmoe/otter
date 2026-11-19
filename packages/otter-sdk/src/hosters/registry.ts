@@ -55,12 +55,20 @@ export class HosterRegistry {
     return this.hosters.flatMap((hoster) => hoster.domains);
   }
 
+  /** The registered hoster called `name`, ignoring case ("VOE", "voe"). */
+  named(name: string): HosterDefinition | undefined {
+    const wanted = name.trim().toLowerCase();
+    return this.hosters.find((hoster) => hoster.name.toLowerCase() === wanted);
+  }
+
   /**
    * Retrieves the source with the hoster serving the link. Site links like
    * aniworld.to/redirect/<id> redirect to a hoster, so an unknown link is
-   * followed first; only then does the fallback get it.
+   * followed first; only then does the fallback get it. `options.hoster`
+   * names the hoster for links on domains no extractor knows yet (VOE
+   * mirrors change daily), when the site says which hoster a link is.
    */
-  async retrieve(url: string, ctx: PluginContext): Promise<SourceInput> {
+  async retrieve(url: string, ctx: PluginContext, options: RetrieveOptions = {}): Promise<SourceInput> {
     const hoster = this.find(url);
     if (hoster) return hoster.retrieve(url, ctx);
 
@@ -68,7 +76,20 @@ export class HosterRegistry {
     const destinationHoster = this.find(destination);
     if (destinationHoster) return destinationHoster.retrieve(destination, ctx);
 
+    const namedHoster = this.namedIn(options);
+    if (namedHoster) return namedHoster.retrieve(destination, ctx);
+
     if (!this.fallback) throw new Error(`no hoster serves ${url}`);
     return this.fallback.retrieve(destination, ctx);
   }
+
+  private namedIn(options: RetrieveOptions): HosterDefinition | undefined {
+    if (!options.hoster) return undefined;
+    return this.named(options.hoster);
+  }
+}
+
+export interface RetrieveOptions {
+  /** The hoster the site names for the link, e.g. s.to's provider "VOE". */
+  hoster?: string;
 }

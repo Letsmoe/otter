@@ -1,5 +1,6 @@
 package com.letsmoe.otter.ui.challenges
 
+import android.annotation.SuppressLint
 import android.webkit.WebView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -88,6 +89,16 @@ private suspend fun showOnlyTheCaptcha(page: ChallengePage): Boolean {
     return true
 }
 
+// The sheet's drag-to-close would otherwise take vertical swipes from the page after a few pixels.
+@SuppressLint("ClickableViewAccessibility")
+private fun keepingItsTouches(webView: WebView): WebView {
+    webView.setOnTouchListener { view, _ ->
+        view.parent?.requestDisallowInterceptTouchEvent(true)
+        false
+    }
+    return webView
+}
+
 @Composable
 private fun ChallengeSheetContent(challenge: SiteChallenge, webView: WebView, captchaVisible: Boolean) {
     Column(Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -103,7 +114,7 @@ private fun ChallengeSheetContent(challenge: SiteChallenge, webView: WebView, ca
                 webViewAlpha = 1f
             }
             AndroidView(
-                factory = { webView },
+                factory = { keepingItsTouches(webView) },
                 modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp)).alpha(webViewAlpha),
             )
             if (!captchaVisible) {

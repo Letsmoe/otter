@@ -21,6 +21,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -37,6 +39,7 @@ import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.media.FeaturedItem
 
 private const val MAX_GENRES = 3
+private const val POSTER_SCREEN_SHARE = 0.5f
 private val cardShape = RoundedCornerShape(8.dp)
 
 /**
@@ -53,7 +56,7 @@ fun FeaturedPreview(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier.widthIn(max = 448.dp).fillMaxWidth(),
+        modifier.widthIn(max = maxPreviewWidth()).fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -62,6 +65,14 @@ fun FeaturedPreview(
             FeaturedFooter(featured, inMyList, onPlay, onToggleMyList)
         }
     }
+}
+
+// Narrow enough that the poster leaves room for its buttons and the next row on one screen.
+@Composable
+private fun maxPreviewWidth(): Dp {
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val posterHeight = screenHeight * POSTER_SCREEN_SHARE
+    return minOf(posterHeight * 2f / 3f, 448.dp)
 }
 
 @Composable
