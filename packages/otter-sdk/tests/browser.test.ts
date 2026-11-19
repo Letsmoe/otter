@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { createBrowser } from "../src/browser.ts";
 import { PluginBlockedError } from "../src/errors.ts";
 
-type BrowseGlobal = { __otterBrowse?: (url: string) => Promise<string> };
+type BrowseGlobal = { __otterBrowse?: (url: string, options?: unknown) => Promise<string> };
 const runtime = globalThis as BrowseGlobal;
 
 afterEach(() => {
@@ -26,6 +26,23 @@ describe("ctx.browser.open", () => {
     const failure = createBrowser().open("https://s.to/r?t=abc");
     await expect(failure).rejects.toBeInstanceOf(PluginBlockedError);
     await expect(failure).rejects.toThrow("Closed by the user.");
+  });
+
+  test("passes click and submit on to the app", async () => {
+    let seen: unknown;
+    runtime.__otterBrowse = async (_url, options) => {
+      seen = options;
+      return "https://voe.sx/e/abc";
+    };
+    await createBrowser().open("https://s.to/serie/x/staffel-1/episode-1", { click: "#voe", submit: "#form" });
+    expect(seen).toEqual({ click: "#voe", submit: "#form" });
+  });
+
+  test("a page without the link to click is a dead link", async () => {
+    runtime.__otterBrowse = async () => {
+      throw new Error("dead_link: the link is not on the page any more: no #voe");
+    };
+    await expect(createBrowser().open("https://s.to/x", { click: "#voe" })).rejects.toMatchObject({ code: "dead_link" });
   });
 
   test("other failures pass through unchanged", async () => {

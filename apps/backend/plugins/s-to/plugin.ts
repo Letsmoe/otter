@@ -6,7 +6,7 @@ import { listStreams } from "./src/streams.ts";
 export default definePlugin({
   id: "s-to",
   name: "S.to",
-  version: "0.5.0",
+  version: "0.6.0",
   description: "German streaming aggregator: finds playable streams for episodes on serienstream.to (formerly s.to)",
   icon: "https://serienstream.to/favicon.ico",
   base_url: "https://serienstream.to",

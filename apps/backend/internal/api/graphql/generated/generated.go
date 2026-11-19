@@ -47,10 +47,12 @@ type ComplexityRoot struct {
 	}
 
 	Challenge struct {
+		Click       func(childComplexity int) int
 		Domain      func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Interactive func(childComplexity int) int
 		Kind        func(childComplexity int) int
+		Submit      func(childComplexity int) int
 		URL         func(childComplexity int) int
 	}
 
@@ -127,7 +129,7 @@ type ComplexityRoot struct {
 		CreateProfile          func(childComplexity int, name string, avatarURL *string, pin *string, isChild *bool, languages []string) int
 		DeleteDownload         func(childComplexity int, id string) int
 		DeleteProfile          func(childComplexity int, id string) int
-		FailChallenge          func(childComplexity int, id string, reason string) int
+		FailChallenge          func(childComplexity int, id string, reason string, linkGone *bool) int
 		FindStreams            func(childComplexity int, id string) int
 		HostTogether           func(childComplexity int, profileID string) int
 		JoinTogether           func(childComplexity int, profileID string, code string) int
@@ -459,7 +461,7 @@ type EpisodeResolver interface {
 }
 type MutationResolver interface {
 	CompleteChallenge(ctx context.Context, id string, cookies string, userAgent string, finalURL *string) (bool, error)
-	FailChallenge(ctx context.Context, id string, reason string) (bool, error)
+	FailChallenge(ctx context.Context, id string, reason string, linkGone *bool) (bool, error)
 	FindStreams(ctx context.Context, id string) (bool, error)
 	ResolveStream(ctx context.Context, streamID string) (*model.ResolvedStream, error)
 	ResolveBestStream(ctx context.Context, streamIds []string) (*model.ResolvedStream, error)
@@ -581,6 +583,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.CatalogRow.Items(childComplexity), true
 
+	case "Challenge.click":
+		if e.ComplexityRoot.Challenge.Click == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Challenge.Click(childComplexity), true
 	case "Challenge.domain":
 		if e.ComplexityRoot.Challenge.Domain == nil {
 			break
@@ -605,6 +613,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Challenge.Kind(childComplexity), true
+	case "Challenge.submit":
+		if e.ComplexityRoot.Challenge.Submit == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Challenge.Submit(childComplexity), true
 	case "Challenge.url":
 		if e.ComplexityRoot.Challenge.URL == nil {
 			break
@@ -980,7 +994,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.FailChallenge(childComplexity, args["id"].(string), args["reason"].(string)), true
+		return e.ComplexityRoot.Mutation.FailChallenge(childComplexity, args["id"].(string), args["reason"].(string), args["linkGone"].(*bool)), true
 	case "Mutation.findStreams":
 		if e.ComplexityRoot.Mutation.FindStreams == nil {
 			break
@@ -3309,13 +3323,17 @@ type Challenge {
   domain: String!
   "Show the page to the user: the hidden attempt failed and they are waiting to play."
   interactive: Boolean!
+  "NAVIGATION: CSS selector of the element to click once the page has loaded, e.g. a link's button."
+  click: String
+  "NAVIGATION: CSS selector of a form to submit once its captchas are solved; then the first page off the site in any frame after the submit counts."
+  submit: String
 }
 
 type Mutation {
   "The app passed a bot check: its cookies for the site, the WebView's user agent they are bound to, and for a NAVIGATION the URL it led to."
   completeChallenge(id: ID!, cookies: String!, userAgent: String!, finalUrl: String): Boolean!
-  "The app couldn't pass a bot check, e.g. hidden while it wants a click."
-  failChallenge(id: ID!, reason: String!): Boolean!
+  "The app couldn't pass a bot check, e.g. hidden while it wants a click. linkGone: the page lacks the element to click, so the link is dead and nobody is asked to try."
+  failChallenge(id: ID!, reason: String!, linkGone: Boolean): Boolean!
   "Ask every streams plugin again for a movie or episode, in the background."
   findStreams(id: ID!): Boolean!
   "Turn a stored stream into a playable URL; only succeeds when the link really delivers video."
@@ -3431,6 +3449,10 @@ func (ec *executionContext) childFields_Challenge(ctx context.Context, field gra
 		return ec.fieldContext_Challenge_domain(ctx, field)
 	case "interactive":
 		return ec.fieldContext_Challenge_interactive(ctx, field)
+	case "click":
+		return ec.fieldContext_Challenge_click(ctx, field)
+	case "submit":
+		return ec.fieldContext_Challenge_submit(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Challenge", field.Name)
 }
@@ -4430,6 +4452,14 @@ func (ec *executionContext) field_Mutation_failChallenge_args(ctx context.Contex
 		return nil, err
 	}
 	args["reason"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "linkGone",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["linkGone"] = arg2
 	return args, nil
 }
 
@@ -5809,6 +5839,52 @@ func (ec *executionContext) fieldContext_Challenge_interactive(_ context.Context
 	return graphql.NewScalarFieldContext("Challenge", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
+func (ec *executionContext) _Challenge_click(ctx context.Context, field graphql.CollectedField, obj *model.Challenge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Challenge_click(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Click, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Challenge_click(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Challenge", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Challenge_submit(ctx context.Context, field graphql.CollectedField, obj *model.Challenge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Challenge_submit(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Submit, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Challenge_submit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Challenge", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
 func (ec *executionContext) _CoStar_person(ctx context.Context, field graphql.CollectedField, obj *model.CoStar) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -6980,7 +7056,7 @@ func (ec *executionContext) _Mutation_failChallenge(ctx context.Context, field g
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().FailChallenge(ctx, fc.Args["id"].(string), fc.Args["reason"].(string))
+			return ec.Resolvers.Mutation().FailChallenge(ctx, fc.Args["id"].(string), fc.Args["reason"].(string), fc.Args["linkGone"].(*bool))
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
@@ -15440,6 +15516,10 @@ func (ec *executionContext) _Challenge(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "click":
+			out.Values[i] = ec._Challenge_click(ctx, field, obj)
+		case "submit":
+			out.Values[i] = ec._Challenge_submit(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

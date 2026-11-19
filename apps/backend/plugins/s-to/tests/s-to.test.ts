@@ -9,12 +9,18 @@ describe("s-to (offline)", () => {
     const streams = await subject.streams.list({ media: episode({ series: "Dark", tmdb_id: 70523 }, 1, 1) });
     expect(streams.data.map((stream) => stream.label)).toEqual(["VOE — Deutsch", "Vidoza — Untertitel"]);
     expect(streams.data.map((stream) => stream.language)).toEqual(["de", "de-sub"]);
-    expect(streams.data[0].url).toBe("https://serienstream.to/r?t=abc123");
+    // The play links' tokens change with every page load: the episode page and button are stored.
+    expect(streams.data.map((stream) => stream.url)).toEqual([
+      "https://serienstream.to/serie/dark/staffel-1/episode-1#provider=VOE&language=1",
+      "https://serienstream.to/serie/dark/staffel-1/episode-1#provider=Vidoza&language=3",
+    ]);
   });
 
   test("matches titles with umlauts", async () => {
     const streams = await subject.streams.list({ media: episode({ series: "Ueber den Dingen" }, 1, 1) });
-    expect(streams.data.map((stream) => stream.url)).toEqual(["https://serienstream.to/r?t=umlaut1"]);
+    expect(streams.data.map((stream) => stream.url)).toEqual([
+      "https://serienstream.to/serie/ueber-den-dingen/staffel-1/episode-1#provider=Streamtape&language=1",
+    ]);
   });
 
   test("a series not on the site is an empty list", async () => {
@@ -27,27 +33,33 @@ describe("s-to (offline)", () => {
     expect(streams.data).toEqual([]);
   });
 
-  test("a play link that stays behind the captcha is stored as is", async () => {
-    const streams = await subject.streams.list({ media: episode({ series: "Dark", tmdb_id: 70523 }, 1, 1) });
-    expect(streams.data.every((stream) => stream.url.startsWith("https://serienstream.to/r?t="))).toBe(true);
-  });
-
-  test("a play link is opened in the app and resolved by the hoster it leads to", async () => {
-    const opened: string[] = [];
+  test("a link opens its episode page in the app, clicks its button and posts the captcha form", async () => {
+    const opened: Array<{ url: string; options: unknown }> = [];
     const browser = {
-      async open(url: string) {
-        opened.push(url);
+      async open(url: string, options?: unknown) {
+        opened.push({ url, options });
         return "https://unknown-hoster.example/e/abc";
       },
     };
     const withApp = testPlugin(plugin, { fetch: fixtures(`${import.meta.dir}/fixtures`), browser });
-    // The hoster isn't in the fixtures: reaching it shows the play link was opened and its target handed on.
-    await expect(withApp.sources.retrieve({ url: "https://serienstream.to/r?t=abc123" })).rejects.toThrow();
-    expect(opened).toEqual(["https://serienstream.to/r?t=abc123"]);
+    // The hoster isn't in the fixtures: reaching it shows the link was opened and its target handed on.
+    const link = "https://serienstream.to/serie/dark/staffel-1/episode-1#provider=VOE&language=1";
+    await expect(withApp.sources.retrieve({ url: link })).rejects.toThrow();
+    expect(opened).toEqual([
+      {
+        url: "https://serienstream.to/serie/dark/staffel-1/episode-1",
+        options: { click: 'button.link-box[data-provider-name="VOE"][data-language-id="1"]', submit: "#player-prepare-form" },
+      },
+    ]);
   });
 
-  test("without the app a play link is blocked, not broken", async () => {
-    await expect(subject.sources.retrieve({ url: "https://serienstream.to/r?t=abc123" })).rejects.toMatchObject({ code: "blocked" });
+  test("without the app a link is blocked, not broken", async () => {
+    const link = "https://serienstream.to/serie/dark/staffel-1/episode-1#provider=VOE&language=1";
+    await expect(subject.sources.retrieve({ url: link })).rejects.toMatchObject({ code: "blocked" });
+  });
+
+  test("an old play link is dead: its token only ever worked inside the page", async () => {
+    await expect(subject.sources.retrieve({ url: "https://serienstream.to/r?t=abc123" })).rejects.toMatchObject({ code: "dead_link" });
   });
 
   test("movies are an empty list (s.to is series-only)", async () => {

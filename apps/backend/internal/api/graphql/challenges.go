@@ -28,5 +28,13 @@ func challengeModel(request challenge.Request) *model.Challenge {
 	if request.Kind == challenge.KindNavigation {
 		kind = model.ChallengeKindNavigation
 	}
-	return &model.Challenge{ID: request.ID, Kind: kind, URL: request.URL, Domain: request.Domain, Interactive: request.Interactive}
+	return &model.Challenge{
+		ID:          request.ID,
+		Kind:        kind,
+		URL:         request.URL,
+		Domain:      request.Domain,
+		Interactive: request.Interactive,
+		Click:       optional(request.Navigate.Click),
+		Submit:      optional(request.Navigate.Submit),
+	}
 }

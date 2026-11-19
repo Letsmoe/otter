@@ -24,9 +24,18 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * A site's bot check the backend asks the app to pass. A [navigation] also wants the first URL
- * off the site, e.g. the hoster a captcha-gated link page redirects to.
+ * off the site, e.g. the hoster a captcha-gated link leads to: [click] names the element to click
+ * once the page has loaded, [submit] the form to send once its captchas are solved.
  */
-data class SiteChallenge(val id: String, val url: String, val domain: String, val interactive: Boolean, val navigation: Boolean)
+data class SiteChallenge(
+    val id: String,
+    val url: String,
+    val domain: String,
+    val interactive: Boolean,
+    val navigation: Boolean,
+    val click: String? = null,
+    val submit: String? = null,
+)
 
 /**
  * Passes sites' bot checks (Cloudflare, Turnstile) for the embedded backend, like FlareSolverr:
@@ -40,8 +49,8 @@ object ChallengeSolver {
 
     private const val TAG = "OtterChallenges"
     private const val RECONNECT_MILLISECONDS = 5_000L
-    // Under the backend's 15 s, so it hears "failed" rather than timing out.
-    private const val HIDDEN_TIMEOUT_MILLISECONDS = 12_000L
+    // Under the backend's 25 s, so it hears "failed" rather than timing out.
+    private const val HIDDEN_TIMEOUT_MILLISECONDS = 20_000L
 
     private val mutableShown = MutableStateFlow<List<SiteChallenge>>(emptyList())
     /** Checks waiting for the user, oldest first; the sheet shows the first. */
@@ -67,7 +76,9 @@ object ChallengeSolver {
                 OtterApi.client.subscription(ChallengesSubscription()).toFlow().collect { response ->
                     val challenge = response.data?.challenges ?: return@collect
                     val navigation = challenge.kind == ChallengeKind.NAVIGATION
-                    onChallenge(SiteChallenge(challenge.id, challenge.url, challenge.domain, challenge.interactive, navigation))
+                    onChallenge(
+                        SiteChallenge(challenge.id, challenge.url, challenge.domain, challenge.interactive, navigation, challenge.click, challenge.submit),
+                    )
                 }
             } catch (cancellation: CancellationException) {
                 throw cancellation
@@ -87,13 +98,17 @@ object ChallengeSolver {
     }
 
     private suspend fun solveHidden(challenge: SiteChallenge) {
-        val result = hiddenAttempts.withLock { passHidden(challenge) }
-        if (result == null) {
-            fail(challenge.id, "The check wants a click.")
-            return
+        try {
+            val result = hiddenAttempts.withLock { passHidden(challenge) }
+            if (result == null) {
+                fail(challenge.id, "The check wants a click.")
+                return
+            }
+            Log.i(TAG, "passed the check of ${challenge.domain} hidden")
+            complete(challenge.id, result)
+        } catch (gone: LinkGoneException) {
+            fail(challenge.id, gone.message.orEmpty(), linkGone = true)
         }
-        Log.i(TAG, "passed the check of ${challenge.domain} hidden")
-        complete(challenge.id, result)
     }
 
     private suspend fun passHidden(challenge: SiteChallenge): ChallengeResult? = withContext(Dispatchers.Main) {
@@ -113,6 +128,12 @@ object ChallengeSolver {
         AppScope.launch { complete(challenge.id, result) }
     }
 
+    /** The sheet's page doesn't have the link any more. */
+    fun onShownLinkGone(challenge: SiteChallenge, reason: String) {
+        dismiss(challenge)
+        AppScope.launch { fail(challenge.id, reason, linkGone = true) }
+    }
+
     /** The user closed the sheet without passing the check. */
     fun onShownDismissed(challenge: SiteChallenge) {
         dismiss(challenge)
@@ -128,8 +149,8 @@ object ChallengeSolver {
         send("completing") { OtterApi.client.mutation(mutation).execute() }
     }
 
-    private suspend fun fail(id: String, reason: String) {
-        send("failing") { OtterApi.client.mutation(FailChallengeMutation(id, reason)).execute() }
+    private suspend fun fail(id: String, reason: String, linkGone: Boolean = false) {
+        send("failing") { OtterApi.client.mutation(FailChallengeMutation(id, reason, Optional.present(linkGone))).execute() }
     }
 
     // The backend times the check out by itself when an answer gets lost.

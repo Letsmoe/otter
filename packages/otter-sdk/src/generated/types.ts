@@ -1260,6 +1260,12 @@ export default {
             "interactive": [
                 6
             ],
+            "click": [
+                4
+            ],
+            "submit": [
+                4
+            ],
             "__typename": [
                 4
             ]
@@ -1295,6 +1301,9 @@ export default {
                     "reason": [
                         4,
                         "String!"
+                    ],
+                    "linkGone": [
+                        6
                     ]
                 }
             ],

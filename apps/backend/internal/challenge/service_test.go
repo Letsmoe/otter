@@ -105,8 +105,8 @@ func TestSolveWaitsForTheAppAndStoresTheClearance(t *testing.T) {
 func TestOneAttemptPerSiteAtATime(t *testing.T) {
 	service := newTestService(t)
 	requests := subscribe(t, service)
-	first := service.enqueue(KindClearance, "https://example.org/a", false)
-	second := service.enqueue(KindClearance, "https://www.example.org/b", false)
+	first := service.enqueue(clearanceOf("https://example.org/a"), false)
+	second := service.enqueue(clearanceOf("https://www.example.org/b"), false)
 	if first != second {
 		t.Fatal("a second check of the same site started another attempt")
 	}
@@ -122,12 +122,13 @@ func TestNavigateReturnsWhereThePageLed(t *testing.T) {
 	service := newTestService(t)
 	requests := subscribe(t, service)
 	result := make(chan string, 1)
+	options := NavigateOptions{Click: `button[data-provider-name="VOE"]`, Submit: "#player-prepare-form"}
 	go func() {
-		finalURL, _ := service.Navigate(context.Background(), "https://s.to/r?t=one")
+		finalURL, _ := service.Navigate(context.Background(), "https://s.to/serie/x/staffel-1/episode-1", options)
 		result <- finalURL
 	}()
 	request := receive(t, requests)
-	if request.Kind != KindNavigation || request.URL != "https://s.to/r?t=one" {
+	if request.Kind != KindNavigation || request.Navigate != options {
 		t.Fatalf("request = %+v", request)
 	}
 	if err := service.Complete(request.ID, "", "WebView UA", ""); err == nil {
@@ -139,9 +140,31 @@ func TestNavigateReturnsWhereThePageLed(t *testing.T) {
 	if finalURL := <-result; finalURL != "https://voe.sx/e/abc" {
 		t.Fatalf("final URL = %q", finalURL)
 	}
-	// Each link page leads elsewhere: two pages of one site are two attempts.
-	if service.enqueue(KindNavigation, "https://s.to/r?t=two", false) == service.enqueue(KindNavigation, "https://s.to/r?t=three", false) {
-		t.Fatal("two link pages shared one navigation")
+	// Each link leads elsewhere: two buttons of one page are two attempts.
+	page := "https://s.to/serie/x/staffel-1/episode-1"
+	voe := Request{Kind: KindNavigation, URL: page, Domain: "s.to", Navigate: NavigateOptions{Click: "#voe"}}
+	vidoza := Request{Kind: KindNavigation, URL: page, Domain: "s.to", Navigate: NavigateOptions{Click: "#vidoza"}}
+	if service.enqueue(voe, false) == service.enqueue(vidoza, false) {
+		t.Fatal("two links of one page shared one navigation")
+	}
+}
+
+func TestAGoneLinkIsNotShownToTheUser(t *testing.T) {
+	service := newTestService(t)
+	requests := subscribe(t, service)
+	result := make(chan error, 1)
+	go func() {
+		_, err := service.Navigate(WithInteractive(context.Background()), "https://s.to/serie/x/staffel-1/episode-1", NavigateOptions{Click: "#gone"})
+		result <- err
+	}()
+	service.Fail(receive(t, requests).ID, "no #gone on the page", true)
+	if err := <-result; !errors.Is(err, ErrLinkGone) {
+		t.Fatalf("err = %v, want ErrLinkGone", err)
+	}
+	select {
+	case shown := <-requests:
+		t.Fatalf("a gone link was shown to the user: %+v", shown)
+	default:
 	}
 }
 
@@ -154,7 +177,7 @@ func TestFailedHiddenAttemptIsShownOnlyToSomeoneWaiting(t *testing.T) {
 		_, err := service.Solve(context.Background(), "https://example.org/a")
 		background <- err
 	}()
-	service.Fail(receive(t, requests).ID, "wants a click")
+	service.Fail(receive(t, requests).ID, "wants a click", false)
 	if err := <-background; !errors.Is(err, ErrUnsolved) {
 		t.Fatalf("background err = %v, want ErrUnsolved", err)
 	}
