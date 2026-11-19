@@ -5,6 +5,7 @@ import type { SourceInput } from "../model.ts";
 import { parse } from "node-html-parser";
 import { getLinkPage } from "./dead-link.ts";
 import { defineHoster } from "./registry.ts";
+import { voe } from "./voe.ts";
 
 const MIME_PREFERENCE = ["application/x-mpegURL", "application/dash+xml", "video/mp4", "video/webm"];
 
@@ -47,6 +48,9 @@ async function mediaInFrames(html: string, pageUrl: string, ctx: PluginContext):
   return undefined;
 }
 
+// VOE pages on mirrors missing from its domain list. They plant a decoy `var source=` test video.
+const VOE_PAGE_TITLE = /<title>[^<]*- VOE \|/;
+
 /** For hosters nobody wrote an extractor for: takes the first media URL the page or its iframes show. */
 export const genericHoster = defineHoster({
   name: "Generic",
@@ -54,6 +58,7 @@ export const genericHoster = defineHoster({
   async retrieve(url, ctx): Promise<SourceInput> {
     const page = await getLinkPage(url, ctx);
     const html = await page.text();
+    if (VOE_PAGE_TITLE.test(html)) return voe.retrieve(url, ctx);
     const found = mediaOnPage(html, ctx) || (await mediaInFrames(html, url, ctx));
     if (!found) {
       throw new PluginSourceError("extraction_failed", `no stream URL found at ${url}`);

@@ -14,5 +14,5 @@ export async function retrieveSource({ url }: SourceRetrieveParams, ctx: PluginC
   if (!link) throw new PluginDeadLinkError(`${url} is an old play link; the episode's links are listed anew`);
   const hosterUrl = await ctx.browser.open(link.pageUrl, { click: buttonSelector(link.button), submit: GATE_FORM });
   ctx.log("link led to", hosterUrl);
-  return ctx.hosters.retrieve(hosterUrl, ctx);
+  return ctx.hosters.retrieve(hosterUrl, ctx, { hoster: link.button.provider });
 }

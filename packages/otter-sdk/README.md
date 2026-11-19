@@ -102,6 +102,7 @@ The SDK adds `object: "stream"` / `"source"` and converts to the backend's wire 
 
 ```ts
 hosters.retrieve(url, ctx)   // the hoster serving the link, else the generic scanner
+hosters.retrieve(url, ctx, { hoster: "VOE" })   // the site names the hoster: used for mirror domains no extractor lists yet
 hosters.supports(url); hosters.nameOf(url); hosters.domains();
 
 export const myHoster = defineHoster({

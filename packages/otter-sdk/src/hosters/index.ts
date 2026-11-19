@@ -7,7 +7,7 @@ import { vidara } from "./vidara.ts";
 import { vinovo } from "./vinovo.ts";
 import { voe } from "./voe.ts";
 
-export { defineHoster, HosterRegistry, type HosterDefinition } from "./registry.ts";
+export { defineHoster, HosterRegistry, type HosterDefinition, type RetrieveOptions } from "./registry.ts";
 export { dood, filemoon, genericHoster, streamtape, vidara, vinovo, voe };
 
 /** The built-in hosters. Links no hoster serves go through the generic page scanner. */

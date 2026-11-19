@@ -4,7 +4,7 @@ import { definePlugin, hosters } from "@letsmoe/otter-sdk";
 export default definePlugin({
   id: "resolvers",
   name: "Stream Resolvers",
-  version: "0.4.0",
+  version: "0.4.1",
   description: "Turns hoster links (VOE, Vidara, Doodstream, ...) into playable URLs; generic page scan for every other host",
   icon: "🔗",
   sources: {

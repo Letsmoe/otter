@@ -113,6 +113,22 @@ describe("generic hoster", () => {
     expect(source.url).toBe("https://cdn.example/movie.mp4");
   });
 
+  test("hands a VOE page on an unknown mirror to VOE instead of taking its decoy video", async () => {
+    const page =
+      `<html><head><title>Watch Episode.mkv - VOE | Content Delivery Network</title></head>` +
+      `<script>var source='https://test-videos.co.uk/bigbuckbunny.mp4'; var player = {"hls": "https://cdn.example/real.m3u8"}</script></html>`;
+    const { ctx } = site({ "https://new-mirror.example/e/abc": page });
+    const source = await hosters.retrieve("https://new-mirror.example/e/abc", ctx);
+    expect(source).toMatchObject({ url: "https://cdn.example/real.m3u8", headers: { Referer: "https://new-mirror.example/" } });
+  });
+
+  test("uses the hoster the site names for a domain no extractor knows", async () => {
+    const page = `<script>var source='https://test-videos.co.uk/decoy.mp4'; var player = {"hls": "https://cdn.example/real.m3u8"}</script>`;
+    const { ctx } = site({ "https://new-mirror.example/e/abc": page });
+    const source = await hosters.retrieve("https://new-mirror.example/e/abc", ctx, { hoster: "voe" });
+    expect(source.url).toBe("https://cdn.example/real.m3u8");
+  });
+
   test("fails with extraction_failed", async () => {
     const { ctx } = site({ "https://unknown.example/v/1": "<p>nothing</p>" });
     const failure = await hosters.retrieve("https://unknown.example/v/1", ctx).catch((error) => error);
