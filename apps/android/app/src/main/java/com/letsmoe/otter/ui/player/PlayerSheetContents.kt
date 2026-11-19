@@ -46,22 +46,24 @@ fun SpeedSheetContent(speed: Float, onChange: (Float) -> Unit) {
 fun SourcesSheetContent(
     sources: List<PlayerSource>,
     currentSourceId: String?,
+    chosenSourceId: String?,
     searching: Boolean,
     onChoose: (String) -> Unit,
     onSearchAgain: () -> Unit,
 ) {
     val (broken, usable) = sources.partition { source -> source.playable == false }
+    val marking = sourceMarking(currentSourceId, chosenSourceId)
     Column(Modifier.fillMaxSize().padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Sources", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         LazyColumn {
             items(usable, key = { source -> source.id }) { source ->
-                SourceRow(source, source.id == currentSourceId) { onChoose(source.id) }
+                SourceRow(source, marking(source.id)) { onChoose(source.id) }
             }
             if (broken.isNotEmpty()) {
                 item(key = "broken-heading") { BrokenSourcesHeading() }
             }
             items(broken, key = { source -> source.id }) { source ->
-                SourceRow(source, source.id == currentSourceId, Modifier.alpha(BROKEN_SOURCE_ALPHA)) { onChoose(source.id) }
+                SourceRow(source, marking(source.id), Modifier.alpha(BROKEN_SOURCE_ALPHA)) { onChoose(source.id) }
             }
             item(key = "search-again") { SourceSearchStatus(searching, foundSome = sources.isNotEmpty(), onSearchAgain) }
         }
@@ -69,6 +71,26 @@ fun SourcesSheetContent(
 }
 
 private const val BROKEN_SOURCE_ALPHA = 0.4f
+
+/** How a source row is marked: the picked link wins over the one still playing. */
+private enum class SourceMark { NONE, PLAYING, LOADING }
+
+private fun sourceMarking(currentSourceId: String?, chosenSourceId: String?): (String) -> SourceMark {
+    return { sourceId -> markOf(sourceId, currentSourceId, chosenSourceId) }
+}
+
+private fun markOf(sourceId: String, currentSourceId: String?, chosenSourceId: String?): SourceMark {
+    if (chosenSourceId != null) {
+        if (sourceId == chosenSourceId) {
+            return SourceMark.LOADING
+        }
+        return SourceMark.NONE
+    }
+    if (sourceId == currentSourceId) {
+        return SourceMark.PLAYING
+    }
+    return SourceMark.NONE
+}
 
 @Composable
 private fun BrokenSourcesHeading() {
@@ -112,10 +134,10 @@ private fun StillSearchingRow(foundSome: Boolean, color: Color) {
 }
 
 @Composable
-private fun SourceRow(source: PlayerSource, current: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun SourceRow(source: PlayerSource, mark: SourceMark, modifier: Modifier = Modifier, onClick: () -> Unit) {
     var color = Color.White.copy(alpha = 0.55f)
     var weight = FontWeight.Normal
-    if (current) {
+    if (mark != SourceMark.NONE) {
         color = Color.White
         weight = FontWeight.Bold
     }
@@ -124,7 +146,7 @@ private fun SourceRow(source: PlayerSource, current: Boolean, modifier: Modifier
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CheckSlot(current)
+        MarkSlot(mark)
         Column(Modifier.weight(1f)) {
             Text(source.label, color = color, fontWeight = weight, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (source.details.isNotEmpty()) {
@@ -143,9 +165,20 @@ private fun SourceRow(source: PlayerSource, current: Boolean, modifier: Modifier
 
 @Composable
 private fun CheckSlot(checked: Boolean) {
+    if (checked) {
+        MarkSlot(SourceMark.PLAYING)
+        return
+    }
+    MarkSlot(SourceMark.NONE)
+}
+
+@Composable
+private fun MarkSlot(mark: SourceMark) {
     Box(Modifier.width(20.dp)) {
-        if (checked) {
-            Icon(PhosphorIcons.Regular.Check, contentDescription = "Playing", modifier = Modifier.size(18.dp))
+        when (mark) {
+            SourceMark.PLAYING -> Icon(PhosphorIcons.Regular.Check, contentDescription = "Playing", modifier = Modifier.size(18.dp))
+            SourceMark.LOADING -> CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+            SourceMark.NONE -> Unit
         }
     }
 }

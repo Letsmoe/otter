@@ -266,6 +266,7 @@ private fun SheetContent(kind: PlayerSheetKind, state: PlayerUiState, viewModel:
         PlayerSheetKind.SOURCES -> SourcesSheetContent(
             state.sources,
             state.currentSourceId,
+            state.chosenSourceId,
             state.searchingSources,
             onChoose = { sourceId ->
                 closeSheet()

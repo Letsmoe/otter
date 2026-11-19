@@ -116,7 +116,7 @@ private fun ColumnScope.RemoteContent(target: TelevisionTarget, onContinueOnPhon
             TelevisionCaptionsContent(state, viewModel::chooseAudio, viewModel::chooseSubtitle)
         }
         RemotePage.SOURCES -> SubPage(onBack = { page = RemotePage.MAIN }) {
-            SourcesSheetContent(state.sources, state.currentSourceId, state.searchingSources, { sourceId ->
+            SourcesSheetContent(state.sources, state.currentSourceId, state.chosenSourceId, state.searchingSources, { sourceId ->
                 page = RemotePage.MAIN
                 viewModel.chooseSource(sourceId)
             }, viewModel::searchSourcesAgain)

@@ -115,6 +115,8 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private var sourceSwitchResumeSeconds = 0.0
     // One fresh link per TV failure: a dead link fails again, a new one may not.
     private var televisionLinkRenewed = false
+    // Whether the attached link ever got ready; one that didn't is dropped as soon as another is picked.
+    private var sourceStarted = false
     private var catchUpFactor = 1f
 
     override val currentMediaId: String
@@ -296,6 +298,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
                 sources = sources,
                 searchingSources = streamState.searching,
                 currentSourceId = streamState.playing?.sourceId,
+                chosenSourceId = streamState.chosenId,
                 loadError = streamState.error,
                 statusText = statusTextFor(streamState),
             )
@@ -316,20 +319,29 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     /**
      * A link that died in the player is replaced by the next playing one, where it stopped.
-     * The DLNA TV renews its own link, unless it refused the video (e.g. its resolution);
-     * downloaded files have no other links.
+     * On a DLNA TV only links the TV refused (e.g. their resolution) or that stayed dead after
+     * renewing them are replaced; a TV that isn't answering won't play another link either.
+     * Downloaded files have no other links.
      */
     private fun fallBackToAnotherSource(error: PlaybackException): Boolean {
         if (mutableState.value.currentSourceId == null) {
             return false
         }
-        if (televisionPlayer != null && error.errorCode != PlaybackException.ERROR_CODE_DECODING_FORMAT_UNSUPPORTED) {
+        if (televisionPlayer != null && !replacesTelevisionLink(error)) {
             return false
         }
         sourceSwitchResumeSeconds = positionSeconds
         mutableState.update { current -> current.copy(isBuffering = true, playbackError = null) }
         streamPlayback.fallBack()
         return true
+    }
+
+    private fun replacesTelevisionLink(error: PlaybackException): Boolean {
+        if (error.errorCode == PlaybackException.ERROR_CODE_DECODING_FORMAT_UNSUPPORTED) {
+            return true
+        }
+        // renewTelevisionLink already resolved this link again once.
+        return error.errorCode == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS && televisionLinkRenewed
     }
 
     fun chooseSource(sourceId: String) {
@@ -365,8 +377,17 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         sourceSwitchResumeSeconds = positionSeconds
         televisionLinkRenewed = false
         playing = null
+        if (!sourceStarted) {
+            dropUnstartedSource()
+        }
         mutableState.update { state -> state.copy(playbackError = null, isBuffering = true) }
         streamPlayback.switchSource(sourceId)
+    }
+
+    // A link still loading (in the player or on the TV) stops loading instead of finishing first.
+    private fun dropUnstartedSource() {
+        attachJob?.cancel()
+        activePlayer.stop()
     }
 
     /** Asks every plugin again; the backend then re-tests every link, failed ones included. */
@@ -379,6 +400,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     }
 
     private fun attachSource(source: PlayingSource) {
+        sourceStarted = false
         attachJob?.cancel()
         attachJob = viewModelScope.launch {
             val resumeSeconds = resumeSecondsFor(currentMediaId)
@@ -445,6 +467,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     private fun onReady() {
         televisionLinkRenewed = false
+        sourceStarted = true
         val duration = activePlayer.duration
         if (duration > 0) {
             mutableState.update { current -> current.copy(durationSeconds = duration / 1000.0) }

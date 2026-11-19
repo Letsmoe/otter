@@ -24,6 +24,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
+import java.net.SocketTimeoutException
 import java.net.URL
 
 private const val TAG = "OtterDlna"
@@ -37,6 +38,16 @@ private const val COMMAND_SETTLE_MILLISECONDS = 3000L
 // (a Philips shows "resolution not supported"); a playable one runs within a second or two.
 private const val REFUSAL_MILLISECONDS = 10_000L
 private const val MAX_POLL_FAILURES = 5
+// Taps on skip and scrubs within this window become one seek: TVs reject a Seek while still
+// TRANSITIONING from the last one (UPnP 701) and may give up on the stream after a few.
+private const val SEEK_SETTLE_MILLISECONDS = 600L
+private const val SEEK_RETRY_MILLISECONDS = 1000L
+private const val MAX_SEEK_ATTEMPTS = 5
+private const val UPNP_TRANSITION_NOT_AVAILABLE = 701
+// An ERROR_OCCURRED this recent explains a STOPPED: the TV failed, nobody pressed stop.
+private const val TELEVISION_ERROR_WINDOW_MILLISECONDS = 15_000L
+// How often a stream that failed on the TV after playing is loaded again at its position.
+private const val MAX_RECOVERIES = 2
 // A stop this close to the end counts as the end.
 private const val END_TOLERANCE_SECONDS = 15.0
 
@@ -68,10 +79,14 @@ private data class ContinuousProbe(val startSeconds: Double, val durationSeconds
  * HLS goes to the TV as one continuous stream; seeking in it restarts the
  * stream at the new position. Files are seeked by the TV itself.
  */
-class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : SimpleBasePlayer(Looper.getMainLooper()) {
+class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : SimpleBasePlayer(Looper.getMainLooper()) {
 
-    private val journal = CastJournal(renderer)
-    private val client = DlnaClient(renderer, journal)
+    /** The TV; replaced when it is found again under another address. */
+    var renderer: DlnaRenderer = initialRenderer
+        private set
+
+    private val journal = CastJournal(initialRenderer)
+    private var client = DlnaClient(initialRenderer, journal)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val heights = TelevisionHeights(context)
 
@@ -104,9 +119,14 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
     private var loadedAtMilliseconds = 0L
     private var lastCommandAtMilliseconds = 0L
     private var pollFailures = 0
+    // The latest seek asked for and not sent yet; null when none is waiting.
+    private var seekTargetSeconds: Double? = null
+    private var televisionErrorAtMilliseconds: Long? = null
+    private var recoveries = 0
 
     private var loadJob: Job? = null
     private var pollJob: Job? = null
+    private var seekJob: Job? = null
 
     // State --------------------------------------------------------------------
 
@@ -203,6 +223,7 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         playbackState = Player.STATE_IDLE
         playerError = null
         durationSeconds = 0.0
+        recoveries = 0
         var startSeconds = 0.0
         if (startPositionMs != C.TIME_UNSET) {
             startSeconds = startPositionMs / 1000.0
@@ -247,18 +268,70 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         if (playbackState == Player.STATE_IDLE) {
             return Futures.immediateVoidFuture()
         }
-        if (isContinuous) {
-            startLoad(targetSeconds)
-            return Futures.immediateVoidFuture()
-        }
-        if (playbackState == Player.STATE_ENDED) {
+        if (playbackState == Player.STATE_ENDED && !isContinuous) {
             playbackState = Player.STATE_BUFFERING
             startLoad(targetSeconds)
             return Futures.immediateVoidFuture()
         }
-        lastCommandAtMilliseconds = SystemClock.elapsedRealtime()
-        sendCommand { client.seek(targetSeconds) }
+        requestSeek(targetSeconds)
         return Futures.immediateVoidFuture()
+    }
+
+    // Only the last of several quick seeks reaches the TV.
+    private fun requestSeek(targetSeconds: Double) {
+        seekTargetSeconds = targetSeconds
+        lastCommandAtMilliseconds = SystemClock.elapsedRealtime()
+        if (seekJob?.isActive == true) {
+            return
+        }
+        seekJob = scope.launch { runSeeks() }
+    }
+
+    private suspend fun runSeeks() {
+        delay(SEEK_SETTLE_MILLISECONDS)
+        while (true) {
+            val targetSeconds = seekTargetSeconds ?: return
+            seekTargetSeconds = null
+            // A continuous stream seeks by starting again at the new position.
+            if (isContinuous) {
+                startLoad(targetSeconds)
+                return
+            }
+            seekUntilAccepted(targetSeconds)
+        }
+    }
+
+    // Repeated while the TV is busy with the last transition; a newer target takes over.
+    private suspend fun seekUntilAccepted(targetSeconds: Double) {
+        repeat(MAX_SEEK_ATTEMPTS) {
+            if (!trySeek(targetSeconds)) {
+                return
+            }
+            delay(SEEK_RETRY_MILLISECONDS)
+            if (seekTargetSeconds != null) {
+                return
+            }
+        }
+    }
+
+    /** Sends one Seek; true when the TV was still transitioning and it should be repeated. */
+    private suspend fun trySeek(targetSeconds: Double): Boolean {
+        lastCommandAtMilliseconds = SystemClock.elapsedRealtime()
+        try {
+            client.seek(targetSeconds)
+            return false
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: DlnaException) {
+            if (error.upnpErrorCode == UPNP_TRANSITION_NOT_AVAILABLE) {
+                return true
+            }
+            Log.w(TAG, "seeking failed", error)
+            return false
+        } catch (error: Exception) {
+            Log.w(TAG, "seeking failed", error)
+            return false
+        }
     }
 
     override fun handleStop(): ListenableFuture<*> {
@@ -306,8 +379,11 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
     private fun stopWork() {
         loadJob?.cancel()
         pollJob?.cancel()
+        seekJob?.cancel()
         loadJob = null
         pollJob = null
+        seekJob = null
+        seekTargetSeconds = null
     }
 
     // Loading ------------------------------------------------------------------
@@ -320,6 +396,7 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         televisionStopped = false
         hasPlayed = false
         refusingSinceMilliseconds = null
+        televisionErrorAtMilliseconds = null
         invalidateState()
         loadJob = scope.launch {
             try {
@@ -337,17 +414,37 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         val item = mediaItem ?: return
         val origin = lanStreamOrigin(context) ?: throw DlnaException("The phone is not on Wi-Fi.")
         val media = televisionMedia(item, origin, startSeconds)
-        try {
-            client.stop()
-        } catch (error: Exception) {
-            // Nothing was playing.
-        }
+        stopBeforeLoading()
         client.load(media)
         if (playWhenReady) {
             client.play()
         }
         loadedAtMilliseconds = SystemClock.elapsedRealtime()
         lastCommandAtMilliseconds = loadedAtMilliseconds
+    }
+
+    // The first command of a load also tells whether the TV is still where it was.
+    private suspend fun stopBeforeLoading() {
+        try {
+            client.stop()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (unreachable: TelevisionUnreachableException) {
+            findTelevisionAgain(unreachable)
+        } catch (error: Exception) {
+            // Nothing was playing.
+        }
+    }
+
+    // A TV that got another address from the router answers the SSDP search under it.
+    private suspend fun findTelevisionAgain(unreachable: TelevisionUnreachableException) {
+        val found = discoverRenderers(context).firstOrNull { candidate -> candidate.id == renderer.id }
+        if (found == null || found.controlUrl == renderer.controlUrl) {
+            throw unreachable
+        }
+        journal.note("Found the TV again at ${found.controlUrl}", mapOf("tv_previous_control_url" to renderer.controlUrl))
+        renderer = found
+        client = DlnaClient(found, journal)
     }
 
     private suspend fun televisionMedia(item: MediaItem, origin: String, startSeconds: Double): TelevisionMedia {
@@ -423,26 +520,33 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         connection.requestMethod = "HEAD"
         connection.connectTimeout = 10_000
         connection.readTimeout = 30_000
+        // Cancelled when another link is picked while the backend still opens this one.
+        disconnectingOnCancel(connection) { readProbe(connection) }
+    }
+
+    private fun readProbe(connection: HttpURLConnection): ContinuousProbe {
         try {
             if (connection.responseCode != 200) {
-                throw StreamUnavailableException("The stream could not be prepared for the TV.")
+                throw StreamUnavailableException("The stream could not be prepared for the TV. ${backendReason(connection)}".trim())
             }
             val start = connection.getHeaderField("X-Otter-Start")?.toDoubleOrNull() ?: 0.0
             val duration = connection.getHeaderField("X-Otter-Duration")?.toDoubleOrNull() ?: 0.0
             val height = connection.getHeaderField("X-Otter-Height")?.toIntOrNull()
-            ContinuousProbe(start, duration, connection.contentType ?: "video/mpeg", height)
+            return ContinuousProbe(start, duration, connection.contentType ?: "video/mpeg", height)
         } finally {
             connection.disconnect()
         }
     }
 
+    // A HEAD answer has no body, so the backend's reason is only the status.
+    private fun backendReason(connection: HttpURLConnection): String {
+        return "(HTTP ${connection.responseCode} ${connection.responseMessage.orEmpty()})"
+    }
+
     private fun fail(error: Exception) {
         Log.w(TAG, "TV playback failed", error)
         reportFailure(error)
-        var message = error.message
-        if (message == null) {
-            message = "The TV could not play this."
-        }
+        val message = failureMessage(error)
         var errorCode = PlaybackException.ERROR_CODE_REMOTE_ERROR
         if (error is StreamUnavailableException) {
             errorCode = PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS
@@ -455,6 +559,18 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         televisionPlaying = false
         stopWork()
         invalidateState()
+    }
+
+    // Socket errors read "timeout" or "Socket closed"; the user gets what that means for the TV.
+    private fun failureMessage(error: Exception): String {
+        if (error is SocketTimeoutException) {
+            return "The TV stopped answering."
+        }
+        val message = error.message
+        if (message == null) {
+            return "The TV could not play this."
+        }
+        return message
     }
 
     // What a TV that refuses to play needs to be reproduced: the TV, what it accepts and what it was sent.
@@ -495,10 +611,13 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
 
     private suspend fun poll() {
         try {
-            val transport = client.transportState()
+            val transport = client.transportInfo()
             val position = client.position()
             pollFailures = 0
-            onTelevisionState(transport, position)
+            if (transport.errorOccurred) {
+                televisionErrorAtMilliseconds = SystemClock.elapsedRealtime()
+            }
+            onTelevisionState(transport.state, position)
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
@@ -524,7 +643,10 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         televisionStopped = false
         playbackState = Player.STATE_READY
         televisionPlaying = playing
-        report(streamOffsetSeconds + position.positionSeconds)
+        // The TV still reports the old position until a waiting seek reaches it.
+        if (seekJob?.isActive != true) {
+            report(streamOffsetSeconds + position.positionSeconds)
+        }
         if (!isContinuous && position.durationSeconds > 0) {
             durationSeconds = position.durationSeconds
         }
@@ -541,8 +663,7 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
         val fileSeek = pendingFileSeekSeconds
         if (playing && fileSeek != null) {
             pendingFileSeekSeconds = null
-            lastCommandAtMilliseconds = SystemClock.elapsedRealtime()
-            client.seek(fileSeek)
+            requestSeek(fileSeek)
         }
     }
 
@@ -556,6 +677,11 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
 
     // Samsungs report STOPPED for a while before they start.
     private suspend fun onNotStartedYet(position: TransportPosition) {
+        // The TV said it failed to open the stream: no need to wait out the start timeout.
+        if (reportedErrorRecently()) {
+            fail(TelevisionRefusedException("The TV couldn't open this video."))
+            return
+        }
         if (refusedTheVideo(position)) {
             streamHeight?.let { height -> heights.recordRefused(renderer.id, height) }
             fail(TelevisionRefusedException("The TV can't play this video."))
@@ -608,6 +734,26 @@ class DlnaPlayer(private val context: Context, val renderer: DlnaRenderer) : Sim
             playbackState = Player.STATE_ENDED
             return
         }
+        if (reportedErrorRecently()) {
+            recoverFromTelevisionError()
+            return
+        }
         playWhenReady = false
+    }
+
+    private fun reportedErrorRecently(): Boolean {
+        val errorAt = televisionErrorAtMilliseconds ?: return false
+        return SystemClock.elapsedRealtime() - errorAt < TELEVISION_ERROR_WINDOW_MILLISECONDS
+    }
+
+    // Stopped by an error after playing (e.g. after seeks): loaded again where it was, not paused as if by its remote.
+    private fun recoverFromTelevisionError() {
+        if (recoveries >= MAX_RECOVERIES) {
+            fail(DlnaException("The TV keeps stopping with an error."))
+            return
+        }
+        recoveries++
+        journal.note("TV stopped with an error; loading again at ${formatTime(reportedSeconds)}", emptyMap())
+        startLoad(reportedSeconds)
     }
 }

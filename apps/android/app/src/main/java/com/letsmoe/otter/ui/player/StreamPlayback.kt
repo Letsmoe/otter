@@ -43,6 +43,8 @@ data class StreamPlaybackState(
     val streams: List<SourceStream> = emptyList(),
     val searching: Boolean = true,
     val loadingId: String? = null,
+    /** The link the user picked, from the tap until it plays or fails; the old link keeps playing meanwhile. */
+    val chosenId: String? = null,
     val playing: PlayingSource? = null,
     val error: String? = null,
 )
@@ -157,7 +159,7 @@ class StreamPlayback(private val scope: CoroutineScope) {
 
     /** Plays the best link once one is there. */
     fun play() {
-        mutableState.update { current -> current.copy(playing = null, error = null) }
+        mutableState.update { current -> current.copy(playing = null, error = null, chosenId = null) }
         autoplayAttempted = false
         autoplay()
     }
@@ -192,7 +194,7 @@ class StreamPlayback(private val scope: CoroutineScope) {
             play()
             return
         }
-        mutableState.update { current -> current.copy(playing = null, error = null) }
+        mutableState.update { current -> current.copy(playing = null, error = null, chosenId = null) }
         autoplayAttempted = true
         playJob?.cancel()
         playJob = scope.launch {
@@ -239,7 +241,7 @@ class StreamPlayback(private val scope: CoroutineScope) {
     fun fallBack() {
         val failedId = mutableState.value.playing?.sourceId ?: return
         failedIds.add(failedId)
-        mutableState.update { current -> current.copy(playing = null, error = null) }
+        mutableState.update { current -> current.copy(playing = null, error = null, chosenId = null) }
         autoplayAttempted = false
         autoplay()
     }
@@ -247,12 +249,24 @@ class StreamPlayback(private val scope: CoroutineScope) {
     /** Switching from inside the player; the player keeps its position. */
     fun switchSource(sourceId: String) {
         val stream = mutableState.value.streams.firstOrNull { candidate -> candidate.id == sourceId } ?: return
-        mutableState.update { current -> current.copy(error = null) }
+        mutableState.update { current -> current.copy(error = null, chosenId = stream.id) }
         playJob?.cancel()
         playJob = scope.launch {
-            if (!tryPlay(stream)) {
+            val played = tryPlay(stream)
+            clearChosen(stream.id)
+            if (!played) {
                 mutableState.update { current -> current.copy(error = "This source could not be played.") }
             }
+        }
+    }
+
+    // Only the latest pick clears it: a superseded pick finishing late must not.
+    private fun clearChosen(sourceId: String) {
+        mutableState.update { current ->
+            if (current.chosenId != sourceId) {
+                return@update current
+            }
+            current.copy(chosenId = null)
         }
     }
 
@@ -345,7 +359,8 @@ class StreamPlayback(private val scope: CoroutineScope) {
 
     private suspend fun tryPlayBest(group: List<SourceStream>): Boolean {
         val resolvingMediaId = mediaId
-        mutableState.update { current -> current.copy(loadingId = group.first().id) }
+        val loadingId = group.first().id
+        mutableState.update { current -> current.copy(loadingId = loadingId) }
         try {
             val mutation = ResolveBestStreamMutation(group.map { stream -> stream.id })
             val resolved = OtterApi.client.mutation(mutation).execute().dataOrThrow().resolveBestStream
@@ -361,7 +376,13 @@ class StreamPlayback(private val scope: CoroutineScope) {
         } catch (error: Exception) {
             return false
         } finally {
-            mutableState.update { current -> current.copy(loadingId = null) }
+            // A cancelled resolve finishes after its replacement started; it leaves that one's loadingId alone.
+            mutableState.update { current ->
+                if (current.loadingId != loadingId) {
+                    return@update current
+                }
+                current.copy(loadingId = null)
+            }
         }
     }
 }
