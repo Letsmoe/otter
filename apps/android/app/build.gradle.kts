@@ -8,6 +8,10 @@ plugins {
 // has the key (with POSTHOG_CLI_HOST and POSTHOG_CLI_PROJECT_ID); local builds skip the upload.
 if (providers.environmentVariable("POSTHOG_CLI_API_KEY").isPresent) {
     apply(plugin = "com.posthog.android")
+    // A failed upload costs readable error reports for this build, never the build itself.
+    tasks.withType<com.posthog.android.PostHogCliExecTask>().configureEach {
+        isIgnoreExitValue = true
+    }
 }
 
 android {
