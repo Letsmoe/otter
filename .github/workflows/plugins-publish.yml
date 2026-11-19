@@ -77,6 +77,10 @@ jobs:
             if ! (cd "$folder" && npm publish --access public); then
               echo "::error::Publishing $name@$version failed"
               failed="$failed $name@$version"
+              # npm only says why trusted publishing was refused at verbose level.
+              echo "::group::Trusted publishing log of $name"
+              (cd "$folder" && npm publish --access public --loglevel verbose 2>&1 | grep -iE "oidc|trust|provenance" || true)
+              echo "::endgroup::"
             fi
           done
           if [ -n "$failed" ]; then
