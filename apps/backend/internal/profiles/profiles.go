@@ -56,6 +56,8 @@ type Profile struct {
 	SubtitleLanguage string `json:"subtitle_language"`
 	// SubtitleSize is one of SubtitleSizes.
 	SubtitleSize string `json:"subtitle_size"`
+	// SubtitleStyle is one of SubtitleStyles.
+	SubtitleStyle string `json:"subtitle_style"`
 	// VoiceBoost lifts dialogue over music and effects.
 	VoiceBoost bool `json:"voice_boost"`
 }
@@ -65,6 +67,13 @@ const (
 	SubtitleSizeSmall  = "small"
 	SubtitleSizeMedium = "medium"
 	SubtitleSizeLarge  = "large"
+)
+
+// Caption looks a profile can pick: white with an outline, white on a dark box, yellow with an outline.
+const (
+	SubtitleStyleOutline = "outline"
+	SubtitleStyleBox     = "box"
+	SubtitleStyleYellow  = "yellow"
 )
 
 // LanguageList returns the profile's audio languages, most preferred first.
@@ -154,6 +163,7 @@ type Update struct {
 	// SubtitleLanguage "" clears the choice.
 	SubtitleLanguage *string
 	SubtitleSize     *string
+	SubtitleStyle    *string
 	VoiceBoost       *bool
 }
 
@@ -169,12 +179,13 @@ func (s *Service) Update(ctx context.Context, profileID int, update Update) (*Pr
 	_, err = s.database.Exec(ctx, `UPDATE profile
 		SET name = $name, avatar_url = $avatar_url, pin_hash = $pin_hash, is_child = $is_child,
 			languages = $languages, subtitles_enabled = $subtitles_enabled,
-			subtitle_language = $subtitle_language, subtitle_size = $subtitle_size, voice_boost = $voice_boost
+			subtitle_language = $subtitle_language, subtitle_size = $subtitle_size,
+			subtitle_style = $subtitle_style, voice_boost = $voice_boost
 		WHERE id = $id`,
 		db.Vars{"id": profileID, "name": profile.Name, "avatar_url": profile.AvatarURL,
 			"pin_hash": profile.PinHash, "is_child": profile.IsChild, "languages": profile.Languages,
 			"subtitles_enabled": profile.SubtitlesEnabled, "subtitle_language": nullableText(profile.SubtitleLanguage),
-			"subtitle_size": profile.SubtitleSize, "voice_boost": profile.VoiceBoost})
+			"subtitle_size": profile.SubtitleSize, "subtitle_style": profile.SubtitleStyle, "voice_boost": profile.VoiceBoost})
 	if err != nil {
 		return nil, storeError("update", err)
 	}
@@ -225,6 +236,12 @@ func applyCaptionUpdate(profile *Profile, update Update) error {
 		}
 		profile.SubtitleSize = *update.SubtitleSize
 	}
+	if update.SubtitleStyle != nil {
+		if err := validateSubtitleStyle(*update.SubtitleStyle); err != nil {
+			return err
+		}
+		profile.SubtitleStyle = *update.SubtitleStyle
+	}
 	if update.SubtitleLanguage == nil {
 		return nil
 	}
@@ -242,6 +259,14 @@ func validateSubtitleSize(size string) error {
 		return nil
 	}
 	return fmt.Errorf("%q is not a caption size", size)
+}
+
+func validateSubtitleStyle(style string) error {
+	switch style {
+	case SubtitleStyleOutline, SubtitleStyleBox, SubtitleStyleYellow:
+		return nil
+	}
+	return fmt.Errorf("%q is not a caption style", style)
 }
 
 // normalizeCaptionLanguage validates an ISO 639-1 code; "" stays empty.

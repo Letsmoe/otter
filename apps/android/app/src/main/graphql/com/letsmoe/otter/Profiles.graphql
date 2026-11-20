@@ -8,6 +8,7 @@ fragment ProfileFields on Profile {
   subtitlesEnabled
   subtitleLanguage
   subtitleSize
+  subtitleStyle
   voiceBoost
 }
 
@@ -40,6 +41,7 @@ mutation UpdateProfile(
   $subtitlesEnabled: Boolean
   $subtitleLanguage: String
   $subtitleSize: SubtitleSize
+  $subtitleStyle: SubtitleStyle
   $voiceBoost: Boolean
 ) {
   updateProfile(
@@ -52,6 +54,7 @@ mutation UpdateProfile(
     subtitlesEnabled: $subtitlesEnabled
     subtitleLanguage: $subtitleLanguage
     subtitleSize: $subtitleSize
+    subtitleStyle: $subtitleStyle
     voiceBoost: $voiceBoost
   ) {
     ...ProfileFields

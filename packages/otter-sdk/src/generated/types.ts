@@ -7,13 +7,14 @@ export default {
         5,
         6,
         25,
-        27,
-        35,
-        37,
-        39,
-        44,
+        26,
+        28,
+        36,
+        38,
+        40,
         45,
-        50
+        46,
+        51
     ],
     "types": {
         "MediaType": {},
@@ -546,6 +547,9 @@ export default {
             "subtitleSize": [
                 25
             ],
+            "subtitleStyle": [
+                26
+            ],
             "voiceBoost": [
                 6
             ],
@@ -583,6 +587,7 @@ export default {
             ]
         },
         "SubtitleSize": {},
+        "SubtitleStyle": {},
         "PinCheck": {
             "success": [
                 6
@@ -603,7 +608,7 @@ export default {
                 4
             ],
             "tmdbKeyStatus": [
-                27
+                28
             ],
             "usesDefaultTmdbKey": [
                 6
@@ -716,10 +721,10 @@ export default {
                 6
             ],
             "settings": [
-                30
+                31
             ],
             "account": [
-                33
+                34
             ],
             "__typename": [
                 4
@@ -768,7 +773,7 @@ export default {
                 2
             ],
             "kind": [
-                35
+                36
             ],
             "heading": [
                 4
@@ -798,7 +803,7 @@ export default {
                 2
             ],
             "status": [
-                37
+                38
             ],
             "progress": [
                 5
@@ -851,13 +856,13 @@ export default {
                 6
             ],
             "status": [
-                39
+                40
             ],
             "self": [
-                40
+                41
             ],
             "peers": [
-                40
+                41
             ],
             "__typename": [
                 4
@@ -865,7 +870,7 @@ export default {
         },
         "TogetherMessage": {
             "from": [
-                40
+                41
             ],
             "payload": [
                 4
@@ -876,10 +881,10 @@ export default {
         },
         "TogetherUpdate": {
             "room": [
-                41
+                42
             ],
             "message": [
-                42
+                43
             ],
             "__typename": [
                 4
@@ -1019,7 +1024,7 @@ export default {
                         "MediaType!"
                     ],
                     "sort": [
-                        44
+                        45
                     ]
                 }
             ],
@@ -1031,13 +1036,13 @@ export default {
                         "MediaType!"
                     ],
                     "theme": [
-                        45,
+                        46,
                         "CatalogTheme!"
                     ]
                 }
             ],
             "catalogRows": [
-                46,
+                47,
                 {
                     "mediaType": [
                         0,
@@ -1134,7 +1139,7 @@ export default {
                 }
             ],
             "notifications": [
-                36,
+                37,
                 {
                     "profileId": [
                         2,
@@ -1155,7 +1160,7 @@ export default {
                 }
             ],
             "downloads": [
-                38,
+                39,
                 {
                     "profileId": [
                         2,
@@ -1167,7 +1172,7 @@ export default {
                 4
             ],
             "togetherRoom": [
-                41
+                42
             ],
             "subtitles": [
                 24,
@@ -1185,7 +1190,7 @@ export default {
                 23
             ],
             "settings": [
-                28
+                29
             ],
             "checkTmdbKey": [
                 6,
@@ -1197,13 +1202,13 @@ export default {
                 }
             ],
             "plugins": [
-                32
+                33
             ],
             "status": [
-                34
+                35
             ],
             "neoworksAccount": [
-                48
+                49
             ],
             "__typename": [
                 4
@@ -1220,7 +1225,7 @@ export default {
                 4
             ],
             "lastSync": [
-                49
+                50
             ],
             "__typename": [
                 4
@@ -1249,7 +1254,7 @@ export default {
                 2
             ],
             "kind": [
-                50
+                51
             ],
             "url": [
                 4
@@ -1441,7 +1446,7 @@ export default {
                 6
             ],
             "startDownload": [
-                38,
+                39,
                 {
                     "profileId": [
                         2,
@@ -1469,7 +1474,7 @@ export default {
                 6
             ],
             "hostTogether": [
-                41,
+                42,
                 {
                     "profileId": [
                         2,
@@ -1478,7 +1483,7 @@ export default {
                 }
             ],
             "joinTogether": [
-                41,
+                42,
                 {
                     "profileId": [
                         2,
@@ -1576,6 +1581,9 @@ export default {
                     "subtitleSize": [
                         25
                     ],
+                    "subtitleStyle": [
+                        26
+                    ],
                     "voiceBoost": [
                         6
                     ]
@@ -1591,7 +1599,7 @@ export default {
                 }
             ],
             "verifyPin": [
-                26,
+                27,
                 {
                     "profileId": [
                         2,
@@ -1604,10 +1612,10 @@ export default {
                 }
             ],
             "updateSettings": [
-                28,
+                29,
                 {
                     "input": [
-                        29,
+                        30,
                         "SettingsInput!"
                     ]
                 }
@@ -1616,7 +1624,7 @@ export default {
                 6
             ],
             "setPluginEnabled": [
-                32,
+                33,
                 {
                     "name": [
                         4,
@@ -1629,20 +1637,20 @@ export default {
                 }
             ],
             "setPluginSettings": [
-                32,
+                33,
                 {
                     "name": [
                         4,
                         "String!"
                     ],
                     "values": [
-                        31,
+                        32,
                         "[PluginSettingInput!]!"
                     ]
                 }
             ],
             "loginPlugin": [
-                32,
+                33,
                 {
                     "name": [
                         4,
@@ -1659,7 +1667,7 @@ export default {
                 }
             ],
             "logoutPlugin": [
-                32,
+                33,
                 {
                     "name": [
                         4,
@@ -1668,7 +1676,7 @@ export default {
                 }
             ],
             "updatePlugins": [
-                54
+                55
             ],
             "startNeoworksSignIn": [
                 4,
@@ -1679,7 +1687,7 @@ export default {
                 }
             ],
             "completeNeoworksSignIn": [
-                48,
+                49,
                 {
                     "code": [
                         4,
@@ -1692,10 +1700,10 @@ export default {
                 }
             ],
             "signOutOfNeoworks": [
-                48
+                49
             ],
             "syncNeoworks": [
-                48
+                49
             ],
             "syncNeoworksSoon": [
                 6
@@ -1720,7 +1728,7 @@ export default {
         },
         "PluginUpdateReport": {
             "updated": [
-                53
+                54
             ],
             "failed": [
                 4
@@ -1740,10 +1748,10 @@ export default {
                 }
             ],
             "together": [
-                43
+                44
             ],
             "challenges": [
-                51
+                52
             ],
             "__typename": [
                 4

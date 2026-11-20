@@ -153,7 +153,7 @@ type ComplexityRoot struct {
 		SyncNeoworks           func(childComplexity int) int
 		SyncNeoworksSoon       func(childComplexity int) int
 		UpdatePlugins          func(childComplexity int) int
-		UpdateProfile          func(childComplexity int, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, voiceBoost *bool) int
+		UpdateProfile          func(childComplexity int, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, subtitleStyle *model.SubtitleStyle, voiceBoost *bool) int
 		UpdateSettings         func(childComplexity int, input model.SettingsInput) int
 		VerifyPin              func(childComplexity int, profileID string, pin string) int
 	}
@@ -253,6 +253,7 @@ type ComplexityRoot struct {
 		Name             func(childComplexity int) int
 		SubtitleLanguage func(childComplexity int) int
 		SubtitleSize     func(childComplexity int) int
+		SubtitleStyle    func(childComplexity int) int
 		SubtitlesEnabled func(childComplexity int) int
 		VoiceBoost       func(childComplexity int) int
 	}
@@ -482,7 +483,7 @@ type MutationResolver interface {
 	AdoptStream(ctx context.Context, mediaID string, url string, plugin string, label *string) (*model.Stream, error)
 	SendTogether(ctx context.Context, payload string) (bool, error)
 	CreateProfile(ctx context.Context, name string, avatarURL *string, pin *string, isChild *bool, languages []string) (*model.Profile, error)
-	UpdateProfile(ctx context.Context, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, voiceBoost *bool) (*model.Profile, error)
+	UpdateProfile(ctx context.Context, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, subtitleStyle *model.SubtitleStyle, voiceBoost *bool) (*model.Profile, error)
 	DeleteProfile(ctx context.Context, id string) (bool, error)
 	VerifyPin(ctx context.Context, profileID string, pin string) (*model.PinCheck, error)
 	UpdateSettings(ctx context.Context, input model.SettingsInput) (*model.Settings, error)
@@ -1228,7 +1229,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.UpdateProfile(childComplexity, args["id"].(string), args["name"].(*string), args["avatarUrl"].(*string), args["isChild"].(*bool), args["pin"].(*string), args["languages"].([]string), args["subtitlesEnabled"].(*bool), args["subtitleLanguage"].(*string), args["subtitleSize"].(*model.SubtitleSize), args["voiceBoost"].(*bool)), true
+		return e.ComplexityRoot.Mutation.UpdateProfile(childComplexity, args["id"].(string), args["name"].(*string), args["avatarUrl"].(*string), args["isChild"].(*bool), args["pin"].(*string), args["languages"].([]string), args["subtitlesEnabled"].(*bool), args["subtitleLanguage"].(*string), args["subtitleSize"].(*model.SubtitleSize), args["subtitleStyle"].(*model.SubtitleStyle), args["voiceBoost"].(*bool)), true
 	case "Mutation.updateSettings":
 		if e.ComplexityRoot.Mutation.UpdateSettings == nil {
 			break
@@ -1661,6 +1662,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Profile.SubtitleSize(childComplexity), true
+	case "Profile.subtitleStyle":
+		if e.ComplexityRoot.Profile.SubtitleStyle == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Profile.SubtitleStyle(childComplexity), true
 	case "Profile.subtitlesEnabled":
 		if e.ComplexityRoot.Profile.SubtitlesEnabled == nil {
 			break
@@ -3004,6 +3011,8 @@ type Profile {
   "Preferred caption language (ISO 639-1); null = the profile's first language"
   subtitleLanguage: String
   subtitleSize: SubtitleSize!
+  "How captions look on the phone and on TVs"
+  subtitleStyle: SubtitleStyle!
   "Boost dialogue over music and effects"
   voiceBoost: Boolean!
 }
@@ -3030,6 +3039,15 @@ enum SubtitleSize {
   SMALL
   MEDIUM
   LARGE
+}
+
+enum SubtitleStyle {
+  "White with a dark outline"
+  OUTLINE
+  "White on a dark box"
+  BOX
+  "Yellow with a dark outline"
+  YELLOW
 }
 
 type PinCheck {
@@ -3370,7 +3388,7 @@ type Mutation {
   "The first profile's top language also becomes the TMDB language."
   createProfile(name: String!, avatarUrl: String, pin: String, isChild: Boolean = false, languages: [String!]): Profile!
   "Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it."
-  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, voiceBoost: Boolean): Profile!
+  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, subtitleStyle: SubtitleStyle, voiceBoost: Boolean): Profile!
   deleteProfile(id: ID!): Boolean!
   verifyPin(profileId: ID!, pin: String!): PinCheck!
 
@@ -3773,6 +3791,8 @@ func (ec *executionContext) childFields_Profile(ctx context.Context, field graph
 		return ec.fieldContext_Profile_subtitleLanguage(ctx, field)
 	case "subtitleSize":
 		return ec.fieldContext_Profile_subtitleSize(ctx, field)
+	case "subtitleStyle":
+		return ec.fieldContext_Profile_subtitleStyle(ctx, field)
 	case "voiceBoost":
 		return ec.fieldContext_Profile_voiceBoost(ctx, field)
 	}
@@ -4896,14 +4916,22 @@ func (ec *executionContext) field_Mutation_updateProfile_args(ctx context.Contex
 		return nil, err
 	}
 	args["subtitleSize"] = arg8
-	arg9, err := graphql.ProcessArgField(ctx, rawArgs, "voiceBoost",
+	arg9, err := graphql.ProcessArgField(ctx, rawArgs, "subtitleStyle",
+		func(ctx context.Context, v any) (*model.SubtitleStyle, error) {
+			return ec.unmarshalOSubtitleStyle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleStyle(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["subtitleStyle"] = arg9
+	arg10, err := graphql.ProcessArgField(ctx, rawArgs, "voiceBoost",
 		func(ctx context.Context, v any) (*bool, error) {
 			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
 		})
 	if err != nil {
 		return nil, err
 	}
-	args["voiceBoost"] = arg9
+	args["voiceBoost"] = arg10
 	return args, nil
 }
 
@@ -7917,7 +7945,7 @@ func (ec *executionContext) _Mutation_updateProfile(ctx context.Context, field g
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().UpdateProfile(ctx, fc.Args["id"].(string), fc.Args["name"].(*string), fc.Args["avatarUrl"].(*string), fc.Args["isChild"].(*bool), fc.Args["pin"].(*string), fc.Args["languages"].([]string), fc.Args["subtitlesEnabled"].(*bool), fc.Args["subtitleLanguage"].(*string), fc.Args["subtitleSize"].(*model.SubtitleSize), fc.Args["voiceBoost"].(*bool))
+			return ec.Resolvers.Mutation().UpdateProfile(ctx, fc.Args["id"].(string), fc.Args["name"].(*string), fc.Args["avatarUrl"].(*string), fc.Args["isChild"].(*bool), fc.Args["pin"].(*string), fc.Args["languages"].([]string), fc.Args["subtitlesEnabled"].(*bool), fc.Args["subtitleLanguage"].(*string), fc.Args["subtitleSize"].(*model.SubtitleSize), fc.Args["subtitleStyle"].(*model.SubtitleStyle), fc.Args["voiceBoost"].(*bool))
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Profile) graphql.Marshaler {
@@ -10099,6 +10127,29 @@ func (ec *executionContext) _Profile_subtitleSize(ctx context.Context, field gra
 }
 func (ec *executionContext) fieldContext_Profile_subtitleSize(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Profile", field, false, false, errors.New("field of type SubtitleSize does not have child fields"))
+}
+
+func (ec *executionContext) _Profile_subtitleStyle(ctx context.Context, field graphql.CollectedField, obj *model.Profile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Profile_subtitleStyle(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SubtitleStyle, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.SubtitleStyle) graphql.Marshaler {
+			return ec.marshalNSubtitleStyle2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleStyle(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Profile_subtitleStyle(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Profile", field, false, false, errors.New("field of type SubtitleStyle does not have child fields"))
 }
 
 func (ec *executionContext) _Profile_voiceBoost(ctx context.Context, field graphql.CollectedField, obj *model.Profile) (ret graphql.Marshaler) {
@@ -17091,6 +17142,11 @@ func (ec *executionContext) _Profile(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "subtitleStyle":
+			out.Values[i] = ec._Profile_subtitleStyle(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "voiceBoost":
 			out.Values[i] = ec._Profile_voiceBoost(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -20327,6 +20383,16 @@ func (ec *executionContext) marshalNSubtitleSize2githubᚗcomᚋLetsmoeᚋotter�
 	return v
 }
 
+func (ec *executionContext) unmarshalNSubtitleStyle2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleStyle(ctx context.Context, v any) (model.SubtitleStyle, error) {
+	var res model.SubtitleStyle
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNSubtitleStyle2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleStyle(ctx context.Context, sel ast.SelectionSet, v model.SubtitleStyle) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNTitle2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx context.Context, sel ast.SelectionSet, v model.Title) graphql.Marshaler {
 	return ec._Title(ctx, sel, &v)
 }
@@ -20800,6 +20866,22 @@ func (ec *executionContext) unmarshalOSubtitleSize2ᚖgithubᚗcomᚋLetsmoeᚋo
 }
 
 func (ec *executionContext) marshalOSubtitleSize2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleSize(ctx context.Context, sel ast.SelectionSet, v *model.SubtitleSize) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOSubtitleStyle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleStyle(ctx context.Context, v any) (*model.SubtitleStyle, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.SubtitleStyle)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOSubtitleStyle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleStyle(ctx context.Context, sel ast.SelectionSet, v *model.SubtitleStyle) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

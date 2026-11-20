@@ -161,6 +161,7 @@ func profileModel(profile profiles.Profile) *model.Profile {
 		SubtitlesEnabled: profile.SubtitlesEnabled,
 		SubtitleLanguage: optional(profile.SubtitleLanguage),
 		SubtitleSize:     modelSubtitleSize(profile.SubtitleSize),
+		SubtitleStyle:    modelSubtitleStyle(profile.SubtitleStyle),
 		VoiceBoost:       profile.VoiceBoost,
 	}
 }

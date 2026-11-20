@@ -56,11 +56,34 @@ func profileSubtitleSize(size *model.SubtitleSize) *string {
 	return &lowered
 }
 
-func captionUpdate(subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, voiceBoost *bool) profiles.Update {
+func modelSubtitleStyle(style string) model.SubtitleStyle {
+	return model.SubtitleStyle(strings.ToUpper(style))
+}
+
+// profileSubtitleStyle maps an optional style argument; nil leaves it unchanged.
+func profileSubtitleStyle(style *model.SubtitleStyle) *string {
+	if style == nil {
+		return nil
+	}
+	lowered := strings.ToLower(string(*style))
+	return &lowered
+}
+
+// captionChange is updateProfile's caption arguments.
+type captionChange struct {
+	subtitlesEnabled *bool
+	subtitleLanguage *string
+	subtitleSize     *model.SubtitleSize
+	subtitleStyle    *model.SubtitleStyle
+	voiceBoost       *bool
+}
+
+func captionUpdate(change captionChange) profiles.Update {
 	return profiles.Update{
-		SubtitlesEnabled: subtitlesEnabled,
-		SubtitleLanguage: subtitleLanguage,
-		SubtitleSize:     profileSubtitleSize(subtitleSize),
-		VoiceBoost:       voiceBoost,
+		SubtitlesEnabled: change.subtitlesEnabled,
+		SubtitleLanguage: change.subtitleLanguage,
+		SubtitleSize:     profileSubtitleSize(change.subtitleSize),
+		SubtitleStyle:    profileSubtitleStyle(change.subtitleStyle),
+		VoiceBoost:       change.voiceBoost,
 	}
 }

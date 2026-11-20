@@ -7,6 +7,7 @@ import com.letsmoe.otter.api.dataOrThrow
 import com.letsmoe.otter.graphql.UpdateProfileMutation
 import com.letsmoe.otter.graphql.fragment.ProfileFields
 import com.letsmoe.otter.graphql.type.SubtitleSize
+import com.letsmoe.otter.graphql.type.SubtitleStyle
 import com.letsmoe.otter.toasts.ToastKind
 import com.letsmoe.otter.toasts.Toasts
 import kotlinx.coroutines.CancellationException
@@ -17,6 +18,7 @@ data class PreferenceChange(
     val subtitlesEnabled: Boolean? = null,
     val subtitleLanguage: String? = null,
     val subtitleSize: SubtitleSize? = null,
+    val subtitleStyle: SubtitleStyle? = null,
     val voiceBoost: Boolean? = null,
 )
 
@@ -34,6 +36,7 @@ private fun ProfileFields.withChange(change: PreferenceChange): ProfileFields {
         subtitlesEnabled = change.subtitlesEnabled ?: subtitlesEnabled,
         subtitleLanguage = change.subtitleLanguage ?: subtitleLanguage,
         subtitleSize = change.subtitleSize ?: subtitleSize,
+        subtitleStyle = change.subtitleStyle ?: subtitleStyle,
         voiceBoost = change.voiceBoost ?: voiceBoost,
     )
 }
@@ -55,6 +58,7 @@ object ProfilePreferences {
                 subtitlesEnabled = Optional.presentIfNotNull(change.subtitlesEnabled),
                 subtitleLanguage = Optional.presentIfNotNull(change.subtitleLanguage),
                 subtitleSize = Optional.presentIfNotNull(change.subtitleSize),
+                subtitleStyle = Optional.presentIfNotNull(change.subtitleStyle),
                 voiceBoost = Optional.presentIfNotNull(change.voiceBoost),
             )
             val saved = OtterApi.client.mutation(mutation).execute().dataOrThrow().updateProfile
