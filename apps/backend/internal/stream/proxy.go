@@ -38,12 +38,15 @@ type sessionData struct {
 //	GET /api/stream/seg?s=<session>&h=<hash>&u=<encodedURL>
 //	GET /api/stream/mp4?s=<session>&u=<encodedURL>&c=<cacheID>[&direct=1]
 //	GET /api/stream/continuous?s=<session>&u=<encodedURL>&start=<seconds> (continuous.go)
+//	GET /api/stream/overlay?job=<id> (overlay.go)
 type Proxy struct {
 	cache   *CacheService
 	kv      *cache.Client
 	baseURL string // public backend URL, e.g. "http://localhost:8080"
 
 	playlists continuousPlaylists
+	// overlaySource is the app's loopback encoder for overlay streams; empty without one.
+	overlaySource string
 }
 
 func NewProxy(cs *CacheService, kv *cache.Client, baseURL string) *Proxy {
@@ -100,6 +103,8 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		p.serveMP4(w, r)
 	case strings.HasSuffix(r.URL.Path, "/continuous"):
 		p.serveContinuous(w, r)
+	case strings.HasSuffix(r.URL.Path, "/overlay"):
+		p.serveOverlay(w, r)
 	default:
 		http.NotFound(w, r)
 	}

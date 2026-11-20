@@ -1,6 +1,7 @@
 package com.letsmoe.otter.cast
 
 import android.content.Context
+import android.media.MediaMetadataRetriever
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
@@ -13,7 +14,12 @@ import androidx.media3.common.SimpleBasePlayer
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.letsmoe.otter.backend.EmbeddedBackend
+import com.letsmoe.otter.cast.overlay.OverlayJob
+import com.letsmoe.otter.cast.overlay.OverlayJobs
+import com.letsmoe.otter.cast.overlay.TelevisionHints
+import com.letsmoe.otter.cast.overlay.loadOverlayPlan
 import com.letsmoe.otter.reporting.ErrorReporting
+import com.letsmoe.otter.settings.PlaybackSettings
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -50,6 +56,9 @@ private const val TELEVISION_ERROR_WINDOW_MILLISECONDS = 15_000L
 private const val MAX_RECOVERIES = 2
 // A stop this close to the end counts as the end.
 private const val END_TOLERANCE_SECONDS = 15.0
+// The phone's encoder makes at most 1080p; the TV gets it as MPEG-TS.
+private const val OVERLAY_MAX_HEIGHT = 1080
+private const val OVERLAY_MIME_TYPE = "video/mpeg"
 
 private val dlnaCommands = Player.Commands.Builder().addAll(
     Player.COMMAND_PLAY_PAUSE,
@@ -105,6 +114,13 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     private var acceptedFormats: List<TelevisionFormat>? = null
     // What the TV was last told to play, for error reports.
     private var lastMedia: TelevisionMedia? = null
+
+    /** The title's skippable parts and next episode, drawn into the picture from the next load on. */
+    var hints: TelevisionHints = TelevisionHints()
+    // The overlay stream the TV plays; null when it plays a plain one.
+    private var overlayJobId: String? = null
+    // Set once the phone's encoder failed: this TV gets plain streams from then on.
+    private var overlaysFailed = false
 
     private var isContinuous = false
     // Where the TV's 0:00 lies on the title's timeline (continuous streams).
@@ -450,18 +466,30 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     private suspend fun televisionMedia(item: MediaItem, origin: String, startSeconds: Double): TelevisionMedia {
         val playerUrl = item.localConfiguration?.uri?.toString().orEmpty()
         val title = item.mediaMetadata.title?.toString().orEmpty()
+        overlayJobId = null
+        if (drawsOverlays(playerUrl)) {
+            return overlayMedia(item, origin, startSeconds, title)
+        }
         isContinuous = item.localConfiguration?.mimeType == MimeTypes.APPLICATION_M3U8
         if (isContinuous) {
-            val path = TelevisionUrls.continuousPath(playerUrl, startSeconds, heights.refusedHeight(renderer.id))
-                ?: throw DlnaException("This source can't be played on a TV.")
-            val probe = probeContinuous(EmbeddedBackend.BASE_URL + path)
-            streamHeight = probe.height ?: linkHeight
-            streamOffsetSeconds = probe.startSeconds
-            durationSeconds = probe.durationSeconds
-            report(probe.startSeconds)
-            pendingFileSeekSeconds = null
-            return televisionMediaFor(origin, path, title, probe.mimeType, seekableBytes = false)
+            return continuousMedia(playerUrl, origin, startSeconds, title)
         }
+        return fileMedia(item, playerUrl, origin, startSeconds, title)
+    }
+
+    private suspend fun continuousMedia(playerUrl: String, origin: String, startSeconds: Double, title: String): TelevisionMedia {
+        val path = TelevisionUrls.continuousPath(playerUrl, startSeconds, heights.refusedHeight(renderer.id))
+            ?: throw DlnaException("This source can't be played on a TV.")
+        val probe = probeContinuous(EmbeddedBackend.BASE_URL + path)
+        streamHeight = probe.height ?: linkHeight
+        streamOffsetSeconds = probe.startSeconds
+        durationSeconds = probe.durationSeconds
+        report(probe.startSeconds)
+        pendingFileSeekSeconds = null
+        return televisionMediaFor(origin, path, title, probe.mimeType, seekableBytes = false)
+    }
+
+    private suspend fun fileMedia(item: MediaItem, playerUrl: String, origin: String, startSeconds: Double, title: String): TelevisionMedia {
         val path = TelevisionUrls.filePath(playerUrl) ?: throw DlnaException("This source can't be played on a TV.")
         streamHeight = linkHeight
         streamOffsetSeconds = 0.0
@@ -475,18 +503,98 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     }
 
     // The type and profile the TV is told about, and the stream URL that sends the same.
-    private suspend fun televisionMediaFor(origin: String, path: String, title: String, mimeType: String, seekableBytes: Boolean): TelevisionMedia {
+    // Without [captionHints] the TV isn't told about a caption file: they are in the picture.
+    private suspend fun televisionMediaFor(
+        origin: String,
+        path: String,
+        title: String,
+        mimeType: String,
+        seekableBytes: Boolean,
+        captionHints: Boolean = true,
+    ): TelevisionMedia {
         val format = announcedFormat(mimeType, televisionFormats())
         val formattedPath = TelevisionUrls.withFormat(path, mimeType, format)
         val castPath = TelevisionUrls.withCast(formattedPath, journal.castId)
-        val url = origin + TelevisionUrls.withSubtitle(castPath, subtitleFile?.id)
-        val media = TelevisionMedia(url, title, format.mimeType, seekableBytes, televisionSubtitle(origin), format.profile)
+        var url = origin + castPath
+        var subtitle: TelevisionSubtitle? = null
+        if (captionHints) {
+            url = origin + TelevisionUrls.withSubtitle(castPath, subtitleFile?.id)
+            subtitle = televisionSubtitle(origin)
+        }
+        val media = TelevisionMedia(url, title, format.mimeType, seekableBytes, subtitle, format.profile)
         journal.note(
             "Casting ${format.mimeType} (stream is $mimeType)",
             mapOf("media_url" to url, "media_profile" to format.profile, "media_continuous" to !seekableBytes),
         )
         lastMedia = media
         return media
+    }
+
+    // Overlays -----------------------------------------------------------------
+
+    // Only streams the backend serves can be re-encoded; a failed encoder isn't tried again on this TV.
+    private fun drawsOverlays(playerUrl: String): Boolean {
+        return PlaybackSettings.televisionOverlays && !overlaysFailed && playerUrl.startsWith(EmbeddedBackend.BASE_URL)
+    }
+
+    // The phone re-encodes the title with captions and hints drawn in; the TV gets one continuous stream.
+    private suspend fun overlayMedia(item: MediaItem, origin: String, startSeconds: Double, title: String): TelevisionMedia {
+        val playerUrl = item.localConfiguration?.uri?.toString().orEmpty()
+        val mimeType = item.localConfiguration?.mimeType
+        val maxHeight = overlayMaxHeight()
+        durationSeconds = overlayDurationSeconds(playerUrl, mimeType, startSeconds)
+        isContinuous = true
+        streamOffsetSeconds = startSeconds
+        streamHeight = minOf(linkHeight ?: maxHeight, maxHeight)
+        report(startSeconds)
+        pendingFileSeekSeconds = null
+        val plan = loadOverlayPlan(context, hints, subtitleFile?.srtPath)
+        val job = OverlayJob(playerUrl, mimeType, startSeconds, maxHeight, plan, ::onOverlayFailed)
+        overlayJobId = OverlayJobs.register(job)
+        journal.note("Drawing into the picture", mapOf("overlay_job" to job.id, "overlay_captions" to plan.captions.size))
+        return televisionMediaFor(origin, "/api/stream/overlay?job=${job.id}", title, OVERLAY_MIME_TYPE, seekableBytes = false, captionHints = false)
+    }
+
+    private fun overlayMaxHeight(): Int {
+        val refused = heights.refusedHeight(renderer.id) ?: return OVERLAY_MAX_HEIGHT
+        return minOf(refused - 1, OVERLAY_MAX_HEIGHT)
+    }
+
+    // The title's length: HLS from the backend's continuous probe, files from their header.
+    private suspend fun overlayDurationSeconds(playerUrl: String, mimeType: String?, startSeconds: Double): Double {
+        if (mimeType != MimeTypes.APPLICATION_M3U8) {
+            return fileDurationSeconds(playerUrl)
+        }
+        val path = TelevisionUrls.continuousPath(playerUrl, startSeconds, null) ?: return 0.0
+        return probeContinuous(EmbeddedBackend.BASE_URL + path).durationSeconds
+    }
+
+    // Unknown (0) when the file can't be read; the TV still plays it.
+    private suspend fun fileDurationSeconds(url: String): Double = withContext(Dispatchers.IO) {
+        val retriever = MediaMetadataRetriever()
+        try {
+            retriever.setDataSource(url, emptyMap())
+            val milliseconds = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()
+            (milliseconds ?: 0L) / 1000.0
+        } catch (error: RuntimeException) {
+            Log.w(TAG, "reading the file's duration failed", error)
+            0.0
+        } finally {
+            retriever.release()
+        }
+    }
+
+    // Called from the encoder's thread. The TV gets the plain stream from where it is now.
+    private fun onOverlayFailed(job: OverlayJob, error: Exception) {
+        scope.launch {
+            if (job.id != overlayJobId) {
+                return@launch
+            }
+            overlaysFailed = true
+            journal.note("Drawing into the picture failed; casting the plain stream", mapOf("overlay_error" to error.toString()))
+            ErrorReporting.capture(error, "dlna.overlay", mapOf("cast_id" to journal.castId, "tv_name" to renderer.name, "tv_exchanges" to journal.text()))
+            startLoad(currentPositionMilliseconds() / 1000.0)
+        }
     }
 
     private suspend fun televisionFormats(): List<TelevisionFormat> {
@@ -591,6 +699,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
                 "media_mime_type" to media?.mimeType,
                 "media_profile" to media?.profile,
                 "media_continuous" to isContinuous,
+                "media_overlay" to (overlayJobId != null),
                 "media_height" to streamHeight,
                 "played_before_failing" to hasPlayed,
             ),

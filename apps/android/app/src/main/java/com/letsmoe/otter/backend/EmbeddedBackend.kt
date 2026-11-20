@@ -78,6 +78,8 @@ class EmbeddedBackend(context: Context) {
         // Streams and blobs only, private-network clients only: what a Chromecast plays.
         "LAN_STREAM_PORT" to BuildConfig.BACKEND_LAN_PORT.toString(),
         "PUBLIC_URL" to BASE_URL,
+        // TV streams with captions drawn in come from the app's encoder (OverlayStreamServer).
+        "OVERLAY_STREAM_URL" to "http://127.0.0.1:${BuildConfig.OVERLAY_PORT}",
         "PLUGIN_DIR" to seedDir.absolutePath,
         "DNS_SERVERS_FILE" to dnsFile.absolutePath,
         "DNS_SERVERS" to PUBLIC_DNS_SERVERS,

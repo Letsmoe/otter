@@ -23,6 +23,8 @@ android {
         applicationId = "com.letsmoe.otter"
         minSdk = 26
         targetSdk = 36
+        // Device tests: the TV overlay encoder needs a real (or emulated) codec and GPU.
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // CI derives the versionCode from the latest release, the same for its release and debug
         // builds, so users can switch between both channels (Android only refuses lower codes).
         versionCode = providers.environmentVariable("OTTER_VERSION_CODE").orElse("1").get().toInt()
@@ -35,6 +37,8 @@ android {
         buildConfigField("int", "BACKEND_PORT", "47833")
         // Stream-only port on the Wi-Fi interface, read by Chromecasts.
         buildConfigField("int", "BACKEND_LAN_PORT", "47834")
+        // Loopback only: the encoder that draws captions and hints into the TV's picture.
+        buildConfigField("int", "OVERLAY_PORT", "47835")
         // GitHub repository whose releases the in-app updater installs.
         buildConfigField("String", "UPDATE_REPOSITORY", "\"Letsmoe/otter\"")
     }
@@ -125,6 +129,9 @@ dependencies {
     implementation(libs.media3.ui)
     implementation(libs.media3.ui.compose)
     implementation(libs.media3.cast)
+    implementation(libs.media3.transformer)
+    implementation(libs.media3.effect)
+    implementation(libs.media3.muxer)
     implementation(libs.posthog.android)
     implementation(libs.appcompat)
     implementation(libs.newpipe.extractor)
@@ -138,4 +145,7 @@ dependencies {
     implementation(libs.haze.blur)
     implementation(libs.phosphor.icons)
     testImplementation(libs.junit)
+    androidTestImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.junit)
 }
