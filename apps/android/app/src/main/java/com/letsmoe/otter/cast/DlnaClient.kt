@@ -37,7 +37,7 @@ private const val LOADING_TIMEOUT_MILLISECONDS = 30_000
 /** [upnpErrorCode] is the TV's UPnP error, e.g. 701 "Transition not available"; null when it sent none. */
 class DlnaException(message: String, val upnpErrorCode: Int? = null) : IOException(message)
 
-/** The TV accepted no connection: switched off, asleep, or at another address. */
+/** The TV accepted no connection or stopped answering: switched off, asleep, or at another address. */
 class TelevisionUnreachableException(message: String, cause: IOException? = null) : IOException(message, cause)
 
 /** The TV took the link but never started it, e.g. "resolution not supported": another link may play. */

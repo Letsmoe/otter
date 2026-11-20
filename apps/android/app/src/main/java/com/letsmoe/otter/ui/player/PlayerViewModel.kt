@@ -20,6 +20,7 @@ import com.letsmoe.otter.cast.LanMediaItemConverter
 import com.letsmoe.otter.cast.TelevisionConnection
 import com.letsmoe.otter.cast.TelevisionSubtitleFile
 import com.letsmoe.otter.cast.TelevisionTarget
+import com.letsmoe.otter.cast.TelevisionUnreachableException
 import com.letsmoe.otter.downloads.DownloadItem
 import com.letsmoe.otter.downloads.DownloadsRepository
 import com.letsmoe.otter.graphql.fragment.ProfileFields
@@ -140,6 +141,9 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) = onPlayWhenReadyChanged(playWhenReady)
 
         override fun onPlayerError(error: PlaybackException) {
+            if (leaveLostTelevision(error)) {
+                return
+            }
             if (renewTelevisionLink(error)) {
                 return
             }
@@ -662,6 +666,18 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         televisionLinkRenewed = true
         sourceSwitchResumeSeconds = positionSeconds
         streamPlayback.switchSource(sourceId)
+        return true
+    }
+
+    // No link plays on a TV that stopped answering: it is disconnected so the next title doesn't wait for it either.
+    private fun leaveLostTelevision(error: PlaybackException): Boolean {
+        if (televisionPlayer == null) {
+            return false
+        }
+        if (error.cause !is TelevisionUnreachableException) {
+            return false
+        }
+        TelevisionPlayback.onTelevisionLost(currentRequestAt())
         return true
     }
 
