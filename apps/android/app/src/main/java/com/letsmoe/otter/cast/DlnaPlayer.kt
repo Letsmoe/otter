@@ -623,7 +623,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
         } catch (error: Exception) {
             pollFailures++
             if (pollFailures >= MAX_POLL_FAILURES) {
-                fail(DlnaException("Lost the connection to the TV."))
+                fail(TelevisionUnreachableException("Lost the connection to the TV."))
             }
         }
     }

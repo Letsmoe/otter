@@ -8,9 +8,13 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.letsmoe.otter.AppScope
 import com.letsmoe.otter.cast.CastKeepAliveService
 import com.letsmoe.otter.cast.TelevisionConnection
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+
+/** A TV that stopped answering, and the title it played, from where it was. */
+data class LostTelevision(val name: String, val request: PlayerRequest)
 
 /**
  * What plays on the connected TV, independent of any screen: one [PlayerViewModel] that lives
@@ -29,6 +33,10 @@ object TelevisionPlayback {
     /** Whether the remote overlay is shown. */
     val remoteOpen: StateFlow<Boolean> = mutableRemoteOpen
 
+    private val mutableLostTelevision = MutableStateFlow<LostTelevision?>(null)
+    /** The TV that was disconnected because it stopped answering; null once the user decided. */
+    val lostTelevision: StateFlow<LostTelevision?> = mutableLostTelevision
+
     fun initialize(application: Application) {
         this.application = application
         // A Chromecast session can also end from the TV or the system's media controls.
@@ -45,6 +53,7 @@ object TelevisionPlayback {
     fun play(request: PlayerRequest) {
         val target = TelevisionConnection.target.value ?: return
         CastKeepAliveService.start(application, target.name)
+        mutableLostTelevision.value = null
         mutableRemoteOpen.value = true
         val current = mutablePlayer.value
         if (current != null) {
@@ -79,6 +88,25 @@ object TelevisionPlayback {
         val request = current.currentRequestAt()
         disconnect()
         return request
+    }
+
+    /** The TV stopped answering while playing [request]: it is disconnected and the user asked how to go on. */
+    fun onTelevisionLost(request: PlayerRequest) {
+        val target = TelevisionConnection.target.value ?: return
+        mutableLostTelevision.value = LostTelevision(target.name, request)
+        // Posted: the failing TV player is still notifying its listeners and is released by disconnect().
+        AppScope.launch(Dispatchers.Main) { disconnect() }
+    }
+
+    /** The title of the lost TV, to open on the phone's player screen. */
+    fun continueLostOnPhone(): PlayerRequest? {
+        val lost = mutableLostTelevision.value ?: return null
+        mutableLostTelevision.value = null
+        return lost.request
+    }
+
+    fun dismissLostTelevision() {
+        mutableLostTelevision.value = null
     }
 
     fun openRemote() {
