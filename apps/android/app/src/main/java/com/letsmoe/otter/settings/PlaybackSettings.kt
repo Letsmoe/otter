@@ -16,6 +16,7 @@ object PlaybackSettings {
 
     private const val PREFERENCES = "playback"
     private const val KEY_AUTO_SKIP_INTRO = "autoSkipIntro"
+    private const val KEY_TELEVISION_OVERLAYS = "televisionOverlays"
 
     private lateinit var preferences: SharedPreferences
 
@@ -30,6 +31,16 @@ object PlaybackSettings {
         }
         set(value) {
             preferences.edit { putString(KEY_AUTO_SKIP_INTRO, value.name) }
+        }
+
+    /**
+     * Whether captions and hints (skip intro, next episode) are drawn into the picture a DLNA TV
+     * gets. The phone re-encodes the video for it, which costs battery.
+     */
+    var televisionOverlays: Boolean
+        get() = preferences.getBoolean(KEY_TELEVISION_OVERLAYS, true)
+        set(value) {
+            preferences.edit { putBoolean(KEY_TELEVISION_OVERLAYS, value) }
         }
 
     /** Whether to skip on its own, given whether a TV (DLNA or Chromecast) plays. */

@@ -52,7 +52,7 @@ func announcedTypeWriter(next http.Handler) http.Handler {
 // for TVs (e.g. Hisense VIDAA) that only accept specific profiles.
 func contentFeatures(request *http.Request) string {
 	operations := "DLNA.ORG_OP=01"
-	if strings.HasSuffix(request.URL.Path, "/continuous") {
+	if isRestartedOnSeek(request.URL.Path) {
 		operations = "DLNA.ORG_OP=00"
 	}
 	profile := request.URL.Query().Get("dlnaProfile")
@@ -60,6 +60,11 @@ func contentFeatures(request *http.Request) string {
 		operations = "DLNA.ORG_PN=" + profile + ";" + operations
 	}
 	return operations + ";DLNA.ORG_CI=0;" + dlnaFlags
+}
+
+// isRestartedOnSeek tells streams the TV can't seek in by bytes: continuous and overlay streams start again at the new position.
+func isRestartedOnSeek(path string) bool {
+	return strings.HasSuffix(path, "/continuous") || strings.HasSuffix(path, "/overlay")
 }
 
 type contentTypeWriter struct {

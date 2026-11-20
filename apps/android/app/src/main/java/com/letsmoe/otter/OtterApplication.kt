@@ -7,6 +7,7 @@ import com.letsmoe.otter.cast.CastSetup
 import com.letsmoe.otter.challenges.ChallengeSolver
 import com.letsmoe.otter.cast.LocalNetworkRouting
 import com.letsmoe.otter.cast.TelevisionConnection
+import com.letsmoe.otter.cast.overlay.OverlayStreamServer
 import com.letsmoe.otter.network.ConnectivityStore
 import com.letsmoe.otter.notifications.NotificationCheckWorker
 import com.letsmoe.otter.ui.player.TelevisionPlayback
@@ -18,6 +19,7 @@ import com.letsmoe.otter.updates.UpdateSettings
 import com.letsmoe.otter.vpn.VpnStatusStore
 
 /** Starts the on-device backend and restores the active profile once per app process, before any activity. */
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 class OtterApplication : Application() {
 
     override fun onCreate() {
@@ -37,6 +39,7 @@ class OtterApplication : Application() {
         CastSetup.initialize(this)
         TelevisionConnection.initialize(this)
         TelevisionPlayback.initialize(this)
+        OverlayStreamServer.start(this)
         NotificationCheckWorker.schedule(this)
     }
 }

@@ -69,6 +69,7 @@ class UpNext(private val scope: CoroutineScope, private val playNext: () -> Unit
     }
 }
 
-private fun episodeLabel(episode: PlayerEpisode): String {
+/** "S1:E2 · Name", as the next episode's card shows it. */
+fun episodeLabel(episode: PlayerEpisode): String {
     return "${episodeCode(episode.seasonNumber, episode.episodeNumber)} · ${episodeName(episode.name, episode.episodeNumber)}"
 }

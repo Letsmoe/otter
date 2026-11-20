@@ -14,6 +14,13 @@ data class SkipJump(val kind: String, val startSeconds: Double, val endSeconds: 
             "recap" -> "Skip Recap"
             else -> "Skip Intro"
         }
+
+    /** The hint drawn into a TV's picture: the TV's remote can't press it. */
+    val televisionLabel: String
+        get() = when (kind) {
+            "recap" -> "Skip recap on your phone"
+            else -> "Skip intro on your phone"
+        }
 }
 
 /**
@@ -23,7 +30,9 @@ data class SkipJump(val kind: String, val startSeconds: Double, val endSeconds: 
  */
 class SkipTracker {
 
-    private var jumps = emptyList<SkipJump>()
+    /** The title's intros and recaps. */
+    var jumps = emptyList<SkipJump>()
+        private set
     private val autoSkipped = mutableSetOf<SkipJump>()
 
     /** Where the credits start; null when nobody timed them. */

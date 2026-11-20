@@ -111,6 +111,11 @@ func (remuxer *tsRemuxer) writeFragment(fragment []byte) error {
 	if err := parts.Unmarshal(fragment); err != nil {
 		return fmt.Errorf("fMP4 fragment: %w", err)
 	}
+	return remuxer.writeParts(parts)
+}
+
+// writeParts writes the samples of parsed fragments.
+func (remuxer *tsRemuxer) writeParts(parts fmp4.Parts) error {
 	for _, sample := range remuxer.samplesInDecodeOrder(parts) {
 		if err := sample.track.write(remuxer.writer, sample.track, sample); err != nil {
 			return err

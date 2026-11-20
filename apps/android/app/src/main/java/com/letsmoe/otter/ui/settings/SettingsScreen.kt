@@ -240,9 +240,26 @@ private fun PlaybackGroup() {
                 PlaybackSettings.autoSkipIntro = choice
             }, showLabel = false)
         }
+        SettingsDivider()
+        TelevisionOverlaysRow()
         profile?.let { activeProfile ->
             SettingsDivider()
             CaptionSettingsRows(activeProfile)
+        }
+    }
+}
+
+@Composable
+private fun TelevisionOverlaysRow() {
+    var drawn by remember { mutableStateOf(PlaybackSettings.televisionOverlays) }
+    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("Draw on the TV picture", fontSize = 14.sp)
+            Text("Captions, skip and next-episode hints on any TV; uses more battery", fontSize = 12.sp, color = Color.White.copy(alpha = 0.45f))
+        }
+        OtterSwitch(drawn) { enabled ->
+            drawn = enabled
+            PlaybackSettings.televisionOverlays = enabled
         }
     }
 }

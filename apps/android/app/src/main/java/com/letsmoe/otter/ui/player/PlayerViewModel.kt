@@ -21,6 +21,9 @@ import com.letsmoe.otter.cast.TelevisionConnection
 import com.letsmoe.otter.cast.TelevisionSubtitleFile
 import com.letsmoe.otter.cast.TelevisionTarget
 import com.letsmoe.otter.cast.TelevisionUnreachableException
+import com.letsmoe.otter.cast.overlay.SkipHint
+import com.letsmoe.otter.cast.overlay.TelevisionHints
+import com.letsmoe.otter.cast.overlay.UpNextPreview
 import com.letsmoe.otter.downloads.DownloadItem
 import com.letsmoe.otter.downloads.DownloadsRepository
 import com.letsmoe.otter.graphql.fragment.ProfileFields
@@ -230,6 +233,8 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             val loaded = loadPlayerMedia(mediaId, profileId) ?: return@launch
             media = loaded
             skipTracker.reset(loaded.skipSegments)
+            // Reaches the TV's picture with its next load, e.g. the next seek.
+            televisionPlayer?.hints = televisionHints()
             mutableState.update { current ->
                 current.copy(title = loaded.title, episodes = loaded.episodes, hasNextEpisode = loaded.nextEpisodeId != null)
             }
@@ -433,6 +438,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             return
         }
         television.linkHeight = playingStream()?.let(::qualityHeight)
+        television.hints = televisionHints()
         television.setMediaItem(mediaItem, startMilliseconds)
         television.showSubtitle(televisionSubtitleFile())
         television.prepare()
@@ -859,6 +865,18 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         val loaded = media ?: return null
         val nextId = loaded.nextEpisodeId ?: return null
         return loaded.episodes.firstOrNull { episode -> episode.id == nextId }
+    }
+
+    // What the TV's picture shows besides captions: skip hints and, during the credits, the next episode.
+    private fun televisionHints(): TelevisionHints {
+        val skips = skipTracker.jumps.map { jump -> SkipHint(jump.televisionLabel, jump.startSeconds, jump.endSeconds) }
+        return TelevisionHints(skips, upNextPreview())
+    }
+
+    private fun upNextPreview(): UpNextPreview? {
+        val next = nextEpisode() ?: return null
+        val creditsStart = skipTracker.creditsStartSeconds ?: return null
+        return UpNextPreview(episodeLabel(next), next.stillUrl, creditsStart, UP_NEXT_MILLISECONDS / 1000.0)
     }
 
     /** The skip button: jumps to the end of the intro or recap playing now. */

@@ -55,7 +55,9 @@ type config struct {
 	// Optional second port on every interface that serves only stream and
 	// blob routes to LAN devices (Chromecast fed by the phone app).
 	lanStreamPort string
-	publicURL     string
+	// The phone app's loopback encoder for TV streams with captions drawn in; "" elsewhere.
+	overlayStreamURL string
+	publicURL        string
 	dataDir       string
 	pluginDir     string
 	hooksDir      string
@@ -72,7 +74,8 @@ func loadConfig() config {
 		// HOST empty = every interface; the phone app binds to 127.0.0.1.
 		host:          os.Getenv("HOST"),
 		port:          port,
-		lanStreamPort: os.Getenv("LAN_STREAM_PORT"),
+		lanStreamPort:    os.Getenv("LAN_STREAM_PORT"),
+		overlayStreamURL: os.Getenv("OVERLAY_STREAM_URL"),
 		// Externally reachable origin; stream-proxy and blob URLs are built from it.
 		publicURL:    envOr("PUBLIC_URL", "http://localhost:"+port),
 		dataDir:      dataDir,
@@ -184,6 +187,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	streamResolver.SetCache(streamCache)
 	streamResolver.SetCheckedHosts(challenges.NeedsSolving)
 	streamProxy := stream.NewProxy(streamCache, cacheClient, cfg.publicURL)
+	streamProxy.SetOverlaySource(cfg.overlayStreamURL)
 	// Downloads pin their blobs, so they register before eviction starts.
 	downloadService := downloads.NewService(downloads.NewStore(database), libraryService, streamResolver, streamCache)
 	streamCache.SetPinnedURLs(downloadService.Store.PinnedURLs)
