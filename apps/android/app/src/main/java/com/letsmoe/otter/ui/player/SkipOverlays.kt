@@ -100,22 +100,17 @@ private fun UpNextCardContent(card: UpNextCard, onCancel: () -> Unit, onPlayNow:
     }
 }
 
-// Counts down from the card's start, so it is right after rotation or coming back to the app.
+// Counts down to the card's end, so it is right after rotation or coming back to the app; a paused card stands still.
 @Composable
 private fun rememberRemainingMilliseconds(card: UpNextCard): Long {
-    var remaining by remember(card) { mutableLongStateOf(remainingOf(card)) }
+    var remaining by remember(card) { mutableLongStateOf(remainingMillisOf(card)) }
     LaunchedEffect(card) {
-        while (remaining > 0) {
+        while (remaining > 0 && card.pausedRemainingMillis == null) {
             delay(COUNTDOWN_TICK_MILLISECONDS)
-            remaining = remainingOf(card)
+            remaining = remainingMillisOf(card)
         }
     }
     return remaining
-}
-
-private fun remainingOf(card: UpNextCard): Long {
-    val elapsed = System.currentTimeMillis() - card.startedAtMillis
-    return (UP_NEXT_MILLISECONDS - elapsed).coerceIn(0, UP_NEXT_MILLISECONDS)
 }
 
 @Composable

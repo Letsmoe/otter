@@ -9,13 +9,31 @@ import kotlinx.coroutines.launch
 
 const val UP_NEXT_MILLISECONDS = 10_000L
 
-/** The next episode as the card during the credits shows it. */
-data class UpNextCard(val episodeLabel: String, val stillUrl: String?, val startedAtMillis: Long)
+/**
+ * The next episode as the card during the credits shows it. A running
+ * countdown ends at [endsAtMillis]; a paused one holds [pausedRemainingMillis].
+ */
+data class UpNextCard(
+    val episodeLabel: String,
+    val stillUrl: String?,
+    val endsAtMillis: Long,
+    val pausedRemainingMillis: Long? = null,
+)
+
+/** Milliseconds until the next episode plays, between 0 and the whole countdown. */
+fun remainingMillisOf(card: UpNextCard): Long {
+    val paused = card.pausedRemainingMillis
+    if (paused != null) {
+        return paused
+    }
+    return (card.endsAtMillis - System.currentTimeMillis()).coerceIn(0, UP_NEXT_MILLISECONDS)
+}
 
 /**
  * Offers the next episode once the credits start and plays it after the
  * countdown. The countdown runs here, not in an animation, so it also
- * finishes while the phone is locked and a TV plays.
+ * finishes while the phone is locked and a TV plays. It holds while the
+ * video is paused, on the phone or on the TV.
  */
 class UpNext(private val scope: CoroutineScope, private val playNext: () -> Unit) {
 
@@ -37,10 +55,15 @@ class UpNext(private val scope: CoroutineScope, private val playNext: () -> Unit
             reset()
             return
         }
-        if (dismissed || mutableCard.value != null || !playing || next == null) {
+        val shown = mutableCard.value
+        if (shown != null) {
+            followPlayback(shown, playing)
             return
         }
-        offer(next)
+        if (dismissed || !playing || next == null) {
+            return
+        }
+        startCountdown(UpNextCard(episodeLabel(next), next.stillUrl, 0), UP_NEXT_MILLISECONDS)
     }
 
     fun cancel() {
@@ -53,10 +76,22 @@ class UpNext(private val scope: CoroutineScope, private val playNext: () -> Unit
         playNext()
     }
 
-    private fun offer(next: PlayerEpisode) {
-        mutableCard.value = UpNextCard(episodeLabel(next), next.stillUrl, System.currentTimeMillis())
+    private fun followPlayback(shown: UpNextCard, playing: Boolean) {
+        val paused = shown.pausedRemainingMillis
+        if (!playing && paused == null) {
+            countdown?.cancel()
+            mutableCard.value = shown.copy(pausedRemainingMillis = remainingMillisOf(shown))
+            return
+        }
+        if (playing && paused != null) {
+            startCountdown(shown, paused)
+        }
+    }
+
+    private fun startCountdown(card: UpNextCard, remainingMillis: Long) {
+        mutableCard.value = card.copy(endsAtMillis = System.currentTimeMillis() + remainingMillis, pausedRemainingMillis = null)
         countdown = scope.launch {
-            delay(UP_NEXT_MILLISECONDS)
+            delay(remainingMillis)
             mutableCard.value = null
             playNext()
         }
