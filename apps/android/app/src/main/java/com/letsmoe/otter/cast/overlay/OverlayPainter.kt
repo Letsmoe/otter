@@ -38,6 +38,7 @@ private const val CARD_TITLE_SIZE = 32f
 private const val CARD_LABEL_SIZE = 26f
 private const val CARD_LINE_GAP = 8f
 private val CARD_FILL = Color.argb(222, 18, 18, 22)
+private val CARD_PROGRESS = Color.argb(70, 255, 255, 255)
 private val LABEL_COLOR = Color.argb(184, 255, 255, 255)
 
 /** What one bitmap shows: the moment's frame in the profile's caption look. */
@@ -78,7 +79,7 @@ class OverlayPainter(private val job: OverlayJob) : BitmapOverlay() {
         if (frame.upNextSecondsLeft == null || !job.upNextDismissed()) {
             return frame
         }
-        return frame.copy(upNextSecondsLeft = null)
+        return frame.copy(upNextSecondsLeft = null, upNextProgress = null)
     }
 
     private fun titleSecondsAt(presentationTimeUs: Long): Double {
@@ -94,7 +95,7 @@ fun drawFrame(canvas: Canvas, frame: OverlayFrame, captionLook: CaptionLook, upN
     frame.caption?.let { caption -> drawCaption(canvas, caption, captionLook) }
     val secondsLeft = frame.upNextSecondsLeft
     if (secondsLeft != null && upNext != null) {
-        drawUpNextCard(canvas, upNext, secondsLeft, scale)
+        drawUpNextCard(canvas, upNext, UpNextCountdown(secondsLeft, frame.upNextProgress ?: 0f), scale)
         return
     }
     frame.skipLabel?.let { label -> drawSkipPill(canvas, label, scale) }
@@ -175,8 +176,11 @@ private fun drawSkipPill(canvas: Canvas, label: String, scale: Float) {
     canvas.drawText(label, pill.left + HINT_PADDING_HORIZONTAL * scale, baseline, paint)
 }
 
+/** The card's countdown: whole seconds for the text, [progress] (0 to 1) for the fill. */
+private data class UpNextCountdown(val secondsLeft: Int, val progress: Float)
+
 // The still on top, then "Next episode in Ns" and the episode, bottom right.
-private fun drawUpNextCard(canvas: Canvas, upNext: UpNextHint, secondsLeft: Int, scale: Float) {
+private fun drawUpNextCard(canvas: Canvas, upNext: UpNextHint, countdown: UpNextCountdown, scale: Float) {
     val width = CARD_WIDTH * scale
     val padding = CARD_PADDING * scale
     val title = titlePaint(scale)
@@ -187,16 +191,28 @@ private fun drawUpNextCard(canvas: Canvas, upNext: UpNextHint, secondsLeft: Int,
     val right = canvas.width - SIDE_MARGIN * scale
     val bottom = canvas.height - BOTTOM_MARGIN * scale
     val card = RectF(right - width, bottom - height, right, bottom)
-    val fill = Paint(Paint.ANTI_ALIAS_FLAG)
-    fill.color = CARD_FILL
     val radius = CARD_RADIUS * scale
-    canvas.drawRoundRect(card, radius, radius, fill)
+    drawCardBackground(canvas, card, radius, countdown.progress)
     upNext.still?.let { still -> drawStill(canvas, still, RectF(card.left, card.top, card.right, card.top + stillHeight), radius) }
     val textLeft = card.left + padding
     val titleBaseline = card.top + stillHeight + padding - title.ascent()
-    canvas.drawText("Next episode in ${secondsLeft}s", textLeft, titleBaseline, title)
+    canvas.drawText("Next episode in ${countdown.secondsLeft}s", textLeft, titleBaseline, title)
     val episode = TextUtils.ellipsize(upNext.episodeLabel, label, width - 2 * padding, TextUtils.TruncateAt.END).toString()
     canvas.drawText(episode, textLeft, titleBaseline + title.descent() + CARD_LINE_GAP * scale - label.ascent(), label)
+}
+
+// The dark card, filled from the left as the countdown runs, like the phone's Play now button.
+private fun drawCardBackground(canvas: Canvas, card: RectF, radius: Float, progress: Float) {
+    val fill = Paint(Paint.ANTI_ALIAS_FLAG)
+    fill.color = CARD_FILL
+    canvas.drawRoundRect(card, radius, radius, fill)
+    canvas.save()
+    val shape = Path()
+    shape.addRoundRect(card, radius, radius, Path.Direction.CW)
+    canvas.clipPath(shape)
+    fill.color = CARD_PROGRESS
+    canvas.drawRect(card.left, card.top, card.left + card.width() * progress, card.bottom, fill)
+    canvas.restore()
 }
 
 private fun titlePaint(scale: Float): TextPaint {

@@ -72,6 +72,17 @@ class OverlayPlanTest {
     }
 
     @Test
+    fun theCardFillsAsItCountsDown() {
+        val plan = OverlayPlan(upNext = UpNextHint("S1:E2 · Pilot", 1200.0, 10.0, null))
+
+        assertNull(plan.frameAt(1199.9).upNextProgress)
+        assertEquals(0f, plan.frameAt(1200.0).upNextProgress!!, 0.001f)
+        assertEquals(0.5f, plan.frameAt(1205.0).upNextProgress!!, 0.01f)
+        assertTrue(plan.frameAt(1209.99).upNextProgress!! > 0.99f)
+        assertNull(plan.frameAt(1210.0).upNextProgress)
+    }
+
+    @Test
     fun framesAreEqualWhileNothingChanges() {
         val plan = OverlayPlan(captions = parseSrt(srt))
 
