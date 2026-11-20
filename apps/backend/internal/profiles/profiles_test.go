@@ -151,6 +151,32 @@ func TestCaptionPreferencesDefaultAndUpdate(t *testing.T) {
 	}
 }
 
+func TestCaptionStyleDefaultsToOutlineAndChanges(t *testing.T) {
+	ctx := context.Background()
+	service := newTestService(t)
+	created, err := service.Create(ctx, "Frank", "", "", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if created.SubtitleStyle != SubtitleStyleOutline {
+		t.Fatalf("default style %q, want outline", created.SubtitleStyle)
+	}
+
+	style := SubtitleStyleBox
+	updated, err := service.Update(ctx, created.ID, Update{SubtitleStyle: &style})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.SubtitleStyle != SubtitleStyleBox || updated.SubtitleSize != SubtitleSizeMedium {
+		t.Fatalf("unexpected profile after style update: %+v", updated)
+	}
+
+	badStyle := "neon"
+	if _, err := service.Update(ctx, created.ID, Update{SubtitleStyle: &badStyle}); err == nil {
+		t.Error("expected an error for an unknown caption style")
+	}
+}
+
 func TestCaptionPreferencesRejectInvalidValues(t *testing.T) {
 	ctx := context.Background()
 	service := newTestService(t)

@@ -229,6 +229,8 @@ type Profile struct {
 	// Preferred caption language (ISO 639-1); null = the profile's first language
 	SubtitleLanguage *string      `json:"subtitleLanguage,omitempty"`
 	SubtitleSize     SubtitleSize `json:"subtitleSize"`
+	// How captions look on the phone and on TVs
+	SubtitleStyle SubtitleStyle `json:"subtitleStyle"`
 	// Boost dialogue over music and effects
 	VoiceBoost bool `json:"voiceBoost"`
 }
@@ -852,6 +854,66 @@ func (e *SubtitleSize) UnmarshalJSON(b []byte) error {
 }
 
 func (e SubtitleSize) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type SubtitleStyle string
+
+const (
+	// White with a dark outline
+	SubtitleStyleOutline SubtitleStyle = "OUTLINE"
+	// White on a dark box
+	SubtitleStyleBox SubtitleStyle = "BOX"
+	// Yellow with a dark outline
+	SubtitleStyleYellow SubtitleStyle = "YELLOW"
+)
+
+var AllSubtitleStyle = []SubtitleStyle{
+	SubtitleStyleOutline,
+	SubtitleStyleBox,
+	SubtitleStyleYellow,
+}
+
+func (e SubtitleStyle) IsValid() bool {
+	switch e {
+	case SubtitleStyleOutline, SubtitleStyleBox, SubtitleStyleYellow:
+		return true
+	}
+	return false
+}
+
+func (e SubtitleStyle) String() string {
+	return string(e)
+}
+
+func (e *SubtitleStyle) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SubtitleStyle(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SubtitleStyle", str)
+	}
+	return nil
+}
+
+func (e SubtitleStyle) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SubtitleStyle) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SubtitleStyle) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

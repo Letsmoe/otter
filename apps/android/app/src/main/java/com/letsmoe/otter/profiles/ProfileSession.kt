@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.letsmoe.otter.graphql.fragment.ProfileFields
 import com.letsmoe.otter.graphql.type.SubtitleSize
+import com.letsmoe.otter.graphql.type.SubtitleStyle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -21,6 +22,7 @@ object ProfileSession {
     private const val KEY_SUBTITLES_ENABLED = "subtitlesEnabled"
     private const val KEY_SUBTITLE_LANGUAGE = "subtitleLanguage"
     private const val KEY_SUBTITLE_SIZE = "subtitleSize"
+    private const val KEY_SUBTITLE_STYLE = "subtitleStyle"
     private const val KEY_VOICE_BOOST = "voiceBoost"
 
     private lateinit var preferences: SharedPreferences
@@ -43,6 +45,7 @@ object ProfileSession {
             putBoolean(KEY_SUBTITLES_ENABLED, profile.subtitlesEnabled)
             putString(KEY_SUBTITLE_LANGUAGE, profile.subtitleLanguage)
             putString(KEY_SUBTITLE_SIZE, profile.subtitleSize.rawValue)
+            putString(KEY_SUBTITLE_STYLE, profile.subtitleStyle.rawValue)
             putBoolean(KEY_VOICE_BOOST, profile.voiceBoost)
         }
         mutableActiveProfile.value = profile
@@ -65,6 +68,7 @@ object ProfileSession {
             subtitlesEnabled = preferences.getBoolean(KEY_SUBTITLES_ENABLED, false),
             subtitleLanguage = preferences.getString(KEY_SUBTITLE_LANGUAGE, null),
             subtitleSize = readStoredSubtitleSize(),
+            subtitleStyle = readStoredSubtitleStyle(),
             voiceBoost = preferences.getBoolean(KEY_VOICE_BOOST, false),
         )
     }
@@ -85,6 +89,15 @@ object ProfileSession {
             return SubtitleSize.MEDIUM
         }
         return SubtitleSize.safeValueOf(stored)
+    }
+
+    // Stored before caption styles existed: the outline until the next login.
+    private fun readStoredSubtitleStyle(): SubtitleStyle {
+        val stored = preferences.getString(KEY_SUBTITLE_STYLE, null)
+        if (stored == null) {
+            return SubtitleStyle.OUTLINE
+        }
+        return SubtitleStyle.safeValueOf(stored)
     }
 
     /** Takes over an edit of the active profile, e.g. new languages. */

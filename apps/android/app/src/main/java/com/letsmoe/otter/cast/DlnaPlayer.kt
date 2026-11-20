@@ -18,8 +18,10 @@ import com.letsmoe.otter.cast.overlay.OverlayJob
 import com.letsmoe.otter.cast.overlay.OverlayJobs
 import com.letsmoe.otter.cast.overlay.TelevisionHints
 import com.letsmoe.otter.cast.overlay.loadOverlayPlan
+import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.reporting.ErrorReporting
 import com.letsmoe.otter.settings.PlaybackSettings
+import com.letsmoe.otter.ui.player.captionLookOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -117,6 +119,9 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
 
     /** The title's skippable parts and next episode, drawn into the picture from the next load on. */
     var hints: TelevisionHints = TelevisionHints()
+    /** The viewer cancelled the next episode during these credits; the picture drops its card. */
+    @Volatile
+    var upNextDismissed = false
     // The overlay stream the TV plays; null when it plays a plain one.
     private var overlayJobId: String? = null
     // Set once the phone's encoder failed: this TV gets plain streams from then on.
@@ -549,7 +554,12 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
         report(startSeconds)
         pendingFileSeekSeconds = null
         val plan = loadOverlayPlan(context, hints, subtitleFile?.srtPath)
-        val job = OverlayJob(playerUrl, mimeType, startSeconds, maxHeight, plan, ::onOverlayFailed)
+        val job = OverlayJob(
+            playerUrl, mimeType, startSeconds, maxHeight, plan,
+            captionLook = { captionLookOf(ProfileSession.activeProfile.value) },
+            upNextDismissed = { upNextDismissed },
+            onFailure = ::onOverlayFailed,
+        )
         overlayJobId = OverlayJobs.register(job)
         journal.note("Drawing into the picture", mapOf("overlay_job" to job.id, "overlay_captions" to plan.captions.size))
         return televisionMediaFor(origin, "/api/stream/overlay?job=${job.id}", title, OVERLAY_MIME_TYPE, seekableBytes = false, captionHints = false)

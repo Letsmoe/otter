@@ -116,7 +116,7 @@ class OverlayEncoder(
             .setMimeType(job.sourceMimeType)
             .setClippingConfiguration(clipping)
             .build()
-        val overlays: List<TextureOverlay> = listOf(OverlayPainter(job.plan, job.startSeconds))
+        val overlays: List<TextureOverlay> = listOf(OverlayPainter(job))
         val overlay = OverlayEffect(overlays)
         return EditedMediaItem.Builder(mediaItem)
             .setEffects(Effects(emptyList(), listOf(overlay)))

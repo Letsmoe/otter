@@ -235,6 +235,8 @@ export interface Profile {
     /** Preferred caption language (ISO 639-1); null = the profile's first language */
     subtitleLanguage: (Scalars['String'] | null)
     subtitleSize: SubtitleSize
+    /** How captions look on the phone and on TVs */
+    subtitleStyle: SubtitleStyle
     /** Boost dialogue over music and effects */
     voiceBoost: Scalars['Boolean']
     __typename: 'Profile'
@@ -261,6 +263,8 @@ export interface Subtitle {
 }
 
 export type SubtitleSize = 'SMALL' | 'MEDIUM' | 'LARGE'
+
+export type SubtitleStyle = 'OUTLINE' | 'BOX' | 'YELLOW'
 
 export interface PinCheck {
     success: Scalars['Boolean']
@@ -859,6 +863,8 @@ export interface ProfileGenqlSelection{
     /** Preferred caption language (ISO 639-1); null = the profile's first language */
     subtitleLanguage?: boolean | number
     subtitleSize?: boolean | number
+    /** How captions look on the phone and on TVs */
+    subtitleStyle?: boolean | number
     /** Boost dialogue over music and effects */
     voiceBoost?: boolean | number
     __typename?: boolean | number
@@ -1194,7 +1200,7 @@ export interface MutationGenqlSelection{
     /** The first profile's top language also becomes the TMDB language. */
     createProfile?: (ProfileGenqlSelection & { __args: {name: Scalars['String'], avatarUrl?: (Scalars['String'] | null), pin?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), languages?: (Scalars['String'][] | null)} })
     /** Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it. */
-    updateProfile?: (ProfileGenqlSelection & { __args: {id: Scalars['ID'], name?: (Scalars['String'] | null), avatarUrl?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), pin?: (Scalars['String'] | null), languages?: (Scalars['String'][] | null), subtitlesEnabled?: (Scalars['Boolean'] | null), subtitleLanguage?: (Scalars['String'] | null), subtitleSize?: (SubtitleSize | null), voiceBoost?: (Scalars['Boolean'] | null)} })
+    updateProfile?: (ProfileGenqlSelection & { __args: {id: Scalars['ID'], name?: (Scalars['String'] | null), avatarUrl?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), pin?: (Scalars['String'] | null), languages?: (Scalars['String'][] | null), subtitlesEnabled?: (Scalars['Boolean'] | null), subtitleLanguage?: (Scalars['String'] | null), subtitleSize?: (SubtitleSize | null), subtitleStyle?: (SubtitleStyle | null), voiceBoost?: (Scalars['Boolean'] | null)} })
     deleteProfile?: { __args: {id: Scalars['ID']} }
     verifyPin?: (PinCheckGenqlSelection & { __args: {profileId: Scalars['ID'], pin: Scalars['String']} })
     updateSettings?: (SettingsGenqlSelection & { __args: {input: SettingsInput} })
@@ -1572,6 +1578,12 @@ export const enumSubtitleSize = {
    SMALL: 'SMALL' as const,
    MEDIUM: 'MEDIUM' as const,
    LARGE: 'LARGE' as const
+}
+
+export const enumSubtitleStyle = {
+   OUTLINE: 'OUTLINE' as const,
+   BOX: 'BOX' as const,
+   YELLOW: 'YELLOW' as const
 }
 
 export const enumTmdbKeyStatus = {

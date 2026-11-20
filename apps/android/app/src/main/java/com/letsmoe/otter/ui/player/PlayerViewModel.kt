@@ -27,7 +27,6 @@ import com.letsmoe.otter.cast.overlay.UpNextPreview
 import com.letsmoe.otter.downloads.DownloadItem
 import com.letsmoe.otter.downloads.DownloadsRepository
 import com.letsmoe.otter.graphql.fragment.ProfileFields
-import com.letsmoe.otter.graphql.type.SubtitleSize
 import com.letsmoe.otter.profiles.captionLanguage
 import com.letsmoe.otter.profiles.PreferenceChange
 import com.letsmoe.otter.profiles.ProfilePreferences
@@ -213,7 +212,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             castDeviceName = previous.castDeviceName,
             castsToTelevision = previous.castsToTelevision,
             voiceBoost = previous.voiceBoost,
-            subtitleFraction = previous.subtitleFraction,
+            captionLook = previous.captionLook,
         )
     }
 
@@ -814,15 +813,8 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private fun onProfileChanged(profile: ProfileFields?) {
         voiceBoost.enabled = profile?.voiceBoost == true
         mutableState.update { current ->
-            current.copy(voiceBoost = voiceBoost.enabled, subtitleFraction = subtitleFractionOf(profile))
+            current.copy(voiceBoost = voiceBoost.enabled, captionLook = captionLookOf(profile))
         }
-    }
-
-    private fun subtitleFractionOf(profile: ProfileFields?): Float {
-        if (profile == null) {
-            return subtitleTextFraction(SubtitleSize.MEDIUM)
-        }
-        return subtitleTextFraction(profile.subtitleSize)
     }
 
     /** Dialogue boost on or off for every title of the profile. */
@@ -847,8 +839,13 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     private fun followSegments(positionSeconds: Double) {
         mutableSkipButton.value = skipTracker.jumpAt(positionSeconds)
-        upNextOffer.follow(skipTracker.isInCredits(positionSeconds), activePlayer.isPlaying, nextEpisode())
+        val inCredits = skipTracker.isInCredits(positionSeconds)
+        upNextOffer.follow(inCredits, activePlayer.isPlaying, nextEpisode())
         skipIntroAt(positionSeconds)
+        // Back before the credits, the TV's card may show again, like the phone's.
+        if (!inCredits) {
+            televisionPlayer?.upNextDismissed = false
+        }
     }
 
     // Only while playing: a paused or loading player keeps whatever the viewer picked.
@@ -889,6 +886,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     /** The card's Cancel: the credits keep playing. */
     fun cancelUpNext() {
         upNextOffer.cancel()
+        televisionPlayer?.upNextDismissed = true
     }
 
     fun playUpNextNow() {

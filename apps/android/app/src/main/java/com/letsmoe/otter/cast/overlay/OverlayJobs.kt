@@ -1,5 +1,6 @@
 package com.letsmoe.otter.cast.overlay
 
+import com.letsmoe.otter.ui.player.CaptionLook
 import java.util.UUID
 
 // A TV plays one stream at a time; the last few stay for TVs that open a stream twice.
@@ -8,8 +9,10 @@ private const val KEPT_JOBS = 4
 /**
  * One overlay stream a TV was handed: the title's stream on loopback
  * ([sourceUrl], played from [startSeconds]), at most [maxHeight] lines tall,
- * with [plan] drawn in. [onFailure] hears when encoding fails, so the TV can
- * get the plain stream instead.
+ * with [plan] drawn in. [captionLook] and [upNextDismissed] are asked while
+ * encoding, so a changed caption setting or a cancelled card reaches the
+ * picture without a restart. [onFailure] hears when encoding fails, so the TV
+ * can get the plain stream instead.
  */
 class OverlayJob(
     val sourceUrl: String,
@@ -17,6 +20,8 @@ class OverlayJob(
     val startSeconds: Double,
     val maxHeight: Int,
     val plan: OverlayPlan,
+    val captionLook: () -> CaptionLook = { CaptionLook.DEFAULT },
+    val upNextDismissed: () -> Boolean = { false },
     val onFailure: (OverlayJob, Exception) -> Unit,
 ) {
     val id: String = UUID.randomUUID().toString()

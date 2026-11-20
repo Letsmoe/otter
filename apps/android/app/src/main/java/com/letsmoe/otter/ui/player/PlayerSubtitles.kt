@@ -13,7 +13,6 @@ import com.letsmoe.otter.api.dataOrThrow
 import com.letsmoe.otter.graphql.PlayerSubtitlesQuery
 import com.letsmoe.otter.graphql.fragment.ProfileFields
 import com.letsmoe.otter.graphql.fragment.SubtitleFields
-import com.letsmoe.otter.graphql.type.SubtitleSize
 import com.letsmoe.otter.profiles.captionLanguage
 import kotlinx.coroutines.CancellationException
 
@@ -78,13 +77,4 @@ fun captionSelection(profile: ProfileFields?, base: TrackSelectionParameters): T
 
 fun applyCaptionSelection(player: Player, profile: ProfileFields?) {
     player.trackSelectionParameters = captionSelection(profile, player.trackSelectionParameters)
-}
-
-/** Text size as a fraction of the video height; MEDIUM is the SubtitleView default. */
-fun subtitleTextFraction(size: SubtitleSize): Float {
-    return when (size) {
-        SubtitleSize.SMALL -> 0.045f
-        SubtitleSize.LARGE -> 0.07f
-        else -> 0.0533f
-    }
 }

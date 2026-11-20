@@ -33,7 +33,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.Player
 import androidx.media3.ui.AspectRatioFrameLayout
-import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
@@ -118,7 +117,7 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
     val videoBackdrop = rememberHazeState()
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         Box(Modifier.fillMaxSize().hazeSource(videoBackdrop)) {
-            VideoSurface(viewModel.player, state.subtitleFraction)
+            VideoSurface(viewModel.player, state.captionLook)
             state.castDeviceName?.let { deviceName -> CastingBackdrop(deviceName) }
         }
         PlayerTapSurface(
@@ -185,31 +184,23 @@ private fun HideControlsAfterIdle(state: PlayerUiState, chrome: PlayerChrome, sh
 }
 
 @Composable
-private fun VideoSurface(player: Player, subtitleFraction: Float) {
+private fun VideoSurface(player: Player, captionLook: CaptionLook) {
     AndroidView(
         factory = { context ->
             (LayoutInflater.from(context).inflate(R.layout.player_video, null) as PlayerView).apply {
                 resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                 setShutterBackgroundColor(android.graphics.Color.BLACK)
                 this.player = player
-                subtitleView?.setStyle(captionStyle)
                 subtitleView?.setApplyEmbeddedFontSizes(false)
             }
         },
-        update = { view -> view.subtitleView?.setFractionalTextSize(subtitleFraction) },
+        update = { view ->
+            view.subtitleView?.setStyle(phoneCaptionStyle(captionLook.style))
+            view.subtitleView?.setFractionalTextSize(captionLook.textFraction)
+        },
         modifier = Modifier.fillMaxSize(),
     )
 }
-
-// White text with a dark outline stays readable on bright scenes.
-private val captionStyle = CaptionStyleCompat(
-    android.graphics.Color.WHITE,
-    android.graphics.Color.TRANSPARENT,
-    android.graphics.Color.TRANSPARENT,
-    CaptionStyleCompat.EDGE_TYPE_OUTLINE,
-    android.graphics.Color.BLACK,
-    null,
-)
 
 // The video runs on the TV; the phone shows where and keeps the controls.
 @Composable

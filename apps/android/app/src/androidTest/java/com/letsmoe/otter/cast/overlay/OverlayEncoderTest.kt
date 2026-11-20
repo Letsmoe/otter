@@ -8,6 +8,10 @@ import androidx.media3.common.util.UnstableApi
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.letsmoe.otter.BuildConfig
+import com.letsmoe.otter.graphql.type.SubtitleSize
+import com.letsmoe.otter.graphql.type.SubtitleStyle
+import com.letsmoe.otter.ui.player.CaptionLook
+import com.letsmoe.otter.ui.player.subtitleTextFraction
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
@@ -74,6 +78,21 @@ class OverlayEncoderTest {
         val body = stream.inputStream.use { input -> input.readBytes() }
         assertEquals("ftyp", String(body, 4, 4))
         assertTrue("streamed ${body.size} bytes", body.size > 1_000)
+    }
+
+    // One 1080p frame per caption style, for a look: files/caption-<style>.png.
+    @Test
+    fun drawsEveryCaptionStyle() {
+        val frame = OverlayFrame("Upstairs. With the dog,\nlike every Sunday.", null, null)
+        for (style in listOf(SubtitleStyle.OUTLINE, SubtitleStyle.BOX, SubtitleStyle.YELLOW)) {
+            val picture = Bitmap.createBitmap(1920, 1080, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(picture)
+            canvas.drawColor(Color.rgb(200, 190, 170))
+            drawFrame(canvas, frame, CaptionLook(subtitleTextFraction(SubtitleSize.MEDIUM), style), null)
+            File(context.filesDir, "caption-${style.rawValue.lowercase()}.png").outputStream().use { stream ->
+                picture.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            }
+        }
     }
 
     private suspend fun encode(asset: String, outputName: String, startSeconds: Double, videoBitrate: Int): File {

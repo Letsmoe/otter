@@ -14,6 +14,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.letsmoe.otter.graphql.fragment.ProfileFields
 import com.letsmoe.otter.graphql.type.SubtitleSize
+import com.letsmoe.otter.graphql.type.SubtitleStyle
+import com.letsmoe.otter.ui.player.knownStyle
 import com.letsmoe.otter.profiles.LANGUAGE_CHOICES
 import com.letsmoe.otter.profiles.PreferenceChange
 import com.letsmoe.otter.profiles.ProfilePreferences
@@ -24,6 +26,12 @@ private val captionSizes = listOf(
     SubtitleSize.SMALL to "Small",
     SubtitleSize.MEDIUM to "Medium",
     SubtitleSize.LARGE to "Large",
+)
+
+private val captionStyles = listOf(
+    SubtitleStyle.OUTLINE to "Outline",
+    SubtitleStyle.BOX to "Dark box",
+    SubtitleStyle.YELLOW to "Yellow",
 )
 
 /** Caption and voice boost rows; every change is saved on the active profile. */
@@ -39,6 +47,10 @@ fun CaptionSettingsRows(profile: ProfileFields) {
     SettingsDivider()
     SettingsChoiceRow("Caption size", captionSizes, normalizedSize(profile.subtitleSize)) { size ->
         ProfilePreferences.change(PreferenceChange(subtitleSize = size))
+    }
+    SettingsDivider()
+    SettingsChoiceRow("Caption style", captionStyles, knownStyle(profile.subtitleStyle)) { style ->
+        ProfilePreferences.change(PreferenceChange(subtitleStyle = style))
     }
     SettingsDivider()
     SettingsSwitchRow("Voice boost", "Louder dialogue, softer music and effects", profile.voiceBoost) { enabled ->

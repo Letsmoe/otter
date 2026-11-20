@@ -263,6 +263,9 @@ type Profile {
   subtitleLanguage: String
   subtitleSize: SubtitleSize!
 
+  """How captions look on the phone and on TVs"""
+  subtitleStyle: SubtitleStyle!
+
   """Boost dialogue over music and effects"""
   voiceBoost: Boolean!
 }
@@ -299,6 +302,17 @@ enum SubtitleSize {
   SMALL
   MEDIUM
   LARGE
+}
+
+enum SubtitleStyle {
+  """White with a dark outline"""
+  OUTLINE
+
+  """White on a dark box"""
+  BOX
+
+  """Yellow with a dark outline"""
+  YELLOW
 }
 
 type PinCheck {
@@ -769,7 +783,7 @@ type Mutation {
   """
   Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it.
   """
-  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, voiceBoost: Boolean): Profile!
+  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, subtitleStyle: SubtitleStyle, voiceBoost: Boolean): Profile!
   deleteProfile(id: ID!): Boolean!
   verifyPin(profileId: ID!, pin: String!): PinCheck!
   updateSettings(input: SettingsInput!): Settings!

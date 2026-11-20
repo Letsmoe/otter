@@ -16,11 +16,15 @@ import android.text.TextUtils
 import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.BitmapOverlay
+import com.letsmoe.otter.graphql.type.SubtitleStyle
+import com.letsmoe.otter.ui.player.CaptionColors
+import com.letsmoe.otter.ui.player.CaptionLook
 
 // Sizes are in pixels of a 1080-line picture and scale with the real one.
 private const val REFERENCE_HEIGHT = 1080f
-private const val CAPTION_TEXT_SIZE = 50f
-private const val CAPTION_OUTLINE_WIDTH = 7f
+// Relative to the caption's text size.
+private const val CAPTION_OUTLINE_FRACTION = 0.14f
+private const val CAPTION_BOX_PADDING_FRACTION = 0.3f
 private const val CAPTION_MAX_WIDTH_FRACTION = 0.62f
 private const val BOTTOM_MARGIN = 72f
 private const val SIDE_MARGIN = 64f
@@ -36,45 +40,58 @@ private const val CARD_LINE_GAP = 8f
 private val CARD_FILL = Color.argb(222, 18, 18, 22)
 private val LABEL_COLOR = Color.argb(184, 255, 255, 255)
 
+/** What one bitmap shows: the moment's frame in the profile's caption look. */
+private data class OverlayScene(val frame: OverlayFrame, val captionLook: CaptionLook)
+
 /**
  * Draws captions, the skip hint and the next episode's card into the frames
- * of one overlay stream. The stream starts at [startSeconds] of the title;
- * its first frame, whatever its timestamp, is that moment. The bitmap is only
+ * of one overlay stream. The stream starts at the job's start second; its
+ * first frame, whatever its timestamp, is that moment. The bitmap is only
  * redrawn (and uploaded to the GPU) when what it shows changes.
  */
 @UnstableApi
-class OverlayPainter(private val plan: OverlayPlan, private val startSeconds: Double) : BitmapOverlay() {
+class OverlayPainter(private val job: OverlayJob) : BitmapOverlay() {
 
     private var canvasBitmap: Bitmap? = null
-    private var drawnFrame: OverlayFrame? = null
+    private var drawnScene: OverlayScene? = null
     private var firstPresentationTimeUs: Long? = null
 
     override fun configure(videoSize: Size) {
         super.configure(videoSize)
         canvasBitmap = Bitmap.createBitmap(videoSize.width, videoSize.height, Bitmap.Config.ARGB_8888)
-        drawnFrame = null
+        drawnScene = null
     }
 
     override fun getBitmap(presentationTimeUs: Long): Bitmap {
         val bitmap = checkNotNull(canvasBitmap) { "configure() comes first" }
-        val frame = plan.frameAt(titleSecondsAt(presentationTimeUs))
-        if (frame != drawnFrame) {
-            drawFrame(Canvas(bitmap), frame, bitmap.height / REFERENCE_HEIGHT, plan.upNext)
-            drawnFrame = frame
+        val scene = OverlayScene(visibleFrameAt(titleSecondsAt(presentationTimeUs)), job.captionLook())
+        if (scene != drawnScene) {
+            drawFrame(Canvas(bitmap), scene.frame, scene.captionLook, job.plan.upNext)
+            drawnScene = scene
         }
         return bitmap
     }
 
+    // A card the viewer cancelled on the phone leaves the picture too.
+    private fun visibleFrameAt(seconds: Double): OverlayFrame {
+        val frame = job.plan.frameAt(seconds)
+        if (frame.upNextSecondsLeft == null || !job.upNextDismissed()) {
+            return frame
+        }
+        return frame.copy(upNextSecondsLeft = null)
+    }
+
     private fun titleSecondsAt(presentationTimeUs: Long): Double {
         val first = firstPresentationTimeUs ?: presentationTimeUs.also { firstPresentationTimeUs = it }
-        return startSeconds + (presentationTimeUs - first) / 1_000_000.0
+        return job.startSeconds + (presentationTimeUs - first) / 1_000_000.0
     }
 }
 
-/** Draws [frame] over a transparent picture; [scale] is the picture's height over 1080. */
-fun drawFrame(canvas: Canvas, frame: OverlayFrame, scale: Float, upNext: UpNextHint?) {
+/** Draws [frame] over a transparent picture, scaled to the picture's height. */
+fun drawFrame(canvas: Canvas, frame: OverlayFrame, captionLook: CaptionLook, upNext: UpNextHint?) {
+    val scale = canvas.height / REFERENCE_HEIGHT
     canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
-    frame.caption?.let { caption -> drawCaption(canvas, caption, scale) }
+    frame.caption?.let { caption -> drawCaption(canvas, caption, captionLook) }
     val secondsLeft = frame.upNextSecondsLeft
     if (secondsLeft != null && upNext != null) {
         drawUpNextCard(canvas, upNext, secondsLeft, scale)
@@ -83,26 +100,59 @@ fun drawFrame(canvas: Canvas, frame: OverlayFrame, scale: Float, upNext: UpNextH
     frame.skipLabel?.let { label -> drawSkipPill(canvas, label, scale) }
 }
 
-// White text with a dark outline: readable on any picture without a box.
-private fun drawCaption(canvas: Canvas, caption: String, scale: Float) {
+// The profile's size (as on the phone) and style, bottom center.
+private fun drawCaption(canvas: Canvas, caption: String, captionLook: CaptionLook) {
     val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
-    paint.textSize = CAPTION_TEXT_SIZE * scale
+    paint.textSize = captionLook.textFraction * canvas.height
     paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
     val width = (canvas.width * CAPTION_MAX_WIDTH_FRACTION).toInt()
     val layout = StaticLayout.Builder.obtain(caption, 0, caption.length, paint, width)
         .setAlignment(Layout.Alignment.ALIGN_CENTER)
         .build()
     canvas.save()
-    canvas.translate((canvas.width - width) / 2f, canvas.height - BOTTOM_MARGIN * scale - layout.height)
+    canvas.translate((canvas.width - width) / 2f, canvas.height - BOTTOM_MARGIN * canvas.height / REFERENCE_HEIGHT - layout.height)
+    if (captionLook.style == SubtitleStyle.BOX) {
+        drawBoxedCaption(canvas, layout, paint)
+    } else {
+        drawOutlinedCaption(canvas, layout, paint, captionTextColor(captionLook.style))
+    }
+    canvas.restore()
+}
+
+private fun captionTextColor(style: SubtitleStyle): Int {
+    if (style == SubtitleStyle.YELLOW) {
+        return CaptionColors.YELLOW
+    }
+    return Color.WHITE
+}
+
+private fun drawOutlinedCaption(canvas: Canvas, layout: StaticLayout, paint: TextPaint, textColor: Int) {
     paint.style = Paint.Style.STROKE
-    paint.strokeWidth = CAPTION_OUTLINE_WIDTH * scale
+    paint.strokeWidth = paint.textSize * CAPTION_OUTLINE_FRACTION
     paint.strokeJoin = Paint.Join.ROUND
-    paint.color = Color.argb(230, 0, 0, 0)
+    paint.color = CaptionColors.OUTLINE
     layout.draw(canvas)
     paint.style = Paint.Style.FILL
+    paint.color = textColor
+    layout.draw(canvas)
+}
+
+// A dark box behind each line, as TV captions often look.
+private fun drawBoxedCaption(canvas: Canvas, layout: StaticLayout, paint: TextPaint) {
+    val box = Paint(Paint.ANTI_ALIAS_FLAG)
+    box.color = CaptionColors.BOX
+    val padding = paint.textSize * CAPTION_BOX_PADDING_FRACTION
+    for (line in 0 until layout.lineCount) {
+        val lineBox = RectF(
+            layout.getLineLeft(line) - padding,
+            layout.getLineTop(line).toFloat(),
+            layout.getLineRight(line) + padding,
+            layout.getLineBottom(line).toFloat(),
+        )
+        canvas.drawRect(lineBox, box)
+    }
     paint.color = Color.WHITE
     layout.draw(canvas)
-    canvas.restore()
 }
 
 // Looks like the app's filled pill buttons: white with dark text, bottom right.

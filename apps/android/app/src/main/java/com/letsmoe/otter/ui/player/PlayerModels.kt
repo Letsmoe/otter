@@ -65,8 +65,8 @@ data class PlayerUiState(
     val castsToTelevision: Boolean = false,
     /** Dialogue boost of the profile; it only works on the phone's own speakers. */
     val voiceBoost: Boolean = false,
-    /** Caption text size as a fraction of the video height. */
-    val subtitleFraction: Float = 0.0533f,
+    /** The profile's caption size and style. */
+    val captionLook: CaptionLook = CaptionLook.DEFAULT,
 ) {
     val shownError: String?
         get() = loadError ?: playbackError
