@@ -17,6 +17,7 @@ const (
 	kindStream       = "stream"
 	kindNotification = "notification"
 	kindDownload     = "download"
+	kindCollection   = "collection"
 )
 
 func formatID(kind string, number int) string {

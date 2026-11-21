@@ -43,7 +43,17 @@ func titleModel(title library.Title) *model.Title {
 		Genres:        nonNil(title.Genres),
 		Keywords:      nonNil(title.Keywords),
 		DetailFetched: title.DetailFetchedAt != "",
+		CollectionID:  collectionID(title.CollectionID),
 	}
+}
+
+// collectionID formats a movie's collection id; nil for none.
+func collectionID(tmdbID int) *string {
+	if tmdbID == 0 {
+		return nil
+	}
+	id := formatID(kindCollection, tmdbID)
+	return &id
 }
 
 func titleModels(titles []library.Title) []*model.Title {

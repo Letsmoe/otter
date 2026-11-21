@@ -1,0 +1,35 @@
+fragment CollectionGuide on Collection {
+  id
+  name
+  overview
+  posterPath
+  backdropPath
+  watchedCount
+  parts {
+    number
+    status
+    progress
+    released
+    title {
+      id
+      title
+      year
+      posterPath
+    }
+  }
+  next {
+    number
+  }
+}
+
+query WatchOrder($id: ID!, $profileId: ID!) {
+  collection(id: $id, profileId: $profileId) {
+    ...CollectionGuide
+  }
+}
+
+query Franchises($profileId: ID!, $limit: Int!) {
+  franchises(profileId: $profileId, limit: $limit) {
+    ...CollectionGuide
+  }
+}

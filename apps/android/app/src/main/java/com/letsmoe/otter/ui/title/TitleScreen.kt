@@ -38,6 +38,7 @@ fun TitleScreen(
     onSearch: () -> Unit,
     onOpenItem: (RailItem) -> Unit,
     onOpenPerson: (String) -> Unit,
+    onOpenWatchOrder: (String) -> Unit,
     slots: TitleSlots = TitleSlots(),
 ) {
     val titleViewModel = viewModel(key = titleId) { TitleViewModel(titleId) }
@@ -46,7 +47,7 @@ fun TitleScreen(
         when (val current = detail) {
             is LoadState.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
             is LoadState.Failed -> FailedMessage(current.message, onRetry = titleViewModel::load)
-            is LoadState.Loaded -> LoadedTitle(current.value, titleViewModel, linkedEpisode, onPlay, onBack, onSearch, onOpenItem, onOpenPerson, slots)
+            is LoadState.Loaded -> LoadedTitle(current.value, titleViewModel, linkedEpisode, onPlay, onBack, onSearch, onOpenItem, onOpenPerson, onOpenWatchOrder, slots)
         }
     }
 }
@@ -61,6 +62,7 @@ private fun LoadedTitle(
     onSearch: () -> Unit,
     onOpenItem: (RailItem) -> Unit,
     onOpenPerson: (String) -> Unit,
+    onOpenWatchOrder: (String) -> Unit,
     slots: TitleSlots,
 ) {
     val rails by titleViewModel.rails.collectAsStateWithLifecycle()
@@ -83,7 +85,7 @@ private fun LoadedTitle(
         return
     }
     val streams by titleViewModel.streams.collectAsStateWithLifecycle()
-    MoviePage(detail, streams, rails, titleViewModel, actions, slots, onPlay, onOpenItem)
+    MoviePage(detail, streams, rails, titleViewModel, actions, slots, onPlay, onOpenItem, onOpenWatchOrder)
 }
 
 @Composable

@@ -122,11 +122,24 @@ func (s *Service) fetchMovie(ctx context.Context, tmdbID int) (Title, error) {
 	if err := s.Store.SaveMovie(ctx, title); err != nil {
 		return Title{}, err
 	}
+	if err := s.saveCollectionSummary(ctx, detail.BelongsToCollection); err != nil {
+		return Title{}, err
+	}
 	ref := MediaRef{MediaType: MediaTypeMovie, MediaID: tmdbID}
 	if err := s.Store.ReplaceCredits(ctx, ref, titleCredits(detail.Credits)); err != nil {
 		return Title{}, err
 	}
 	return title, s.saveRecommendations(ctx, ref, MediaTypeMovie, detail.Recommendations.Results)
+}
+
+func (s *Service) saveCollectionSummary(ctx context.Context, summary *tmdb.CollectionSummary) error {
+	if summary == nil {
+		return nil
+	}
+	return s.Store.SaveCollectionSummary(ctx, Collection{
+		TMDBID: summary.ID, Name: summary.Name,
+		PosterPath: summary.PosterPath, BackdropPath: summary.BackdropPath,
+	})
 }
 
 func (s *Service) fetchSeries(ctx context.Context, tmdbID int) (Title, error) {

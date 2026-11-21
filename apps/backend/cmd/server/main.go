@@ -26,6 +26,7 @@ import (
 	"github.com/Letsmoe/otter/internal/db"
 	"github.com/Letsmoe/otter/internal/downloads"
 	"github.com/Letsmoe/otter/internal/errorreport"
+	"github.com/Letsmoe/otter/internal/franchise"
 	"github.com/Letsmoe/otter/internal/hooks"
 	"github.com/Letsmoe/otter/internal/library"
 	"github.com/Letsmoe/otter/internal/neoworks"
@@ -205,6 +206,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	pluginStore := startPluginStore(ctx, cfg.pluginDir)
 	resolver := gqlapi.NewResolver(gqlapi.Services{
 		Library:             libraryService,
+		FranchiseGuides:     franchise.NewService(libraryService, database),
 		Profiles:            profiles.NewService(database, cacheClient, hookRunner),
 		Notifications:       notificationStore,
 		NotificationWatcher: notificationWatcher,

@@ -4,6 +4,7 @@ import (
 	"github.com/Letsmoe/otter/internal/accounts"
 	"github.com/Letsmoe/otter/internal/challenge"
 	"github.com/Letsmoe/otter/internal/downloads"
+	"github.com/Letsmoe/otter/internal/franchise"
 	"github.com/Letsmoe/otter/internal/library"
 	"github.com/Letsmoe/otter/internal/neoworks"
 	"github.com/Letsmoe/otter/internal/notify"
@@ -24,6 +25,7 @@ import (
 // Services is everything the API reads from or acts on.
 type Services struct {
 	Library             *library.Service
+	FranchiseGuides     *franchise.Service
 	Profiles            *profiles.Service
 	Notifications       *notify.Store
 	NotificationWatcher *notify.Watcher

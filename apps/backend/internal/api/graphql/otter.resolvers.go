@@ -641,6 +641,36 @@ func (r *queryResolver) WatchedActors(ctx context.Context, profileID string, med
 	return models, nil
 }
 
+// Collection is the resolver for the collection field.
+func (r *queryResolver) Collection(ctx context.Context, id string, profileID string) (*model.Collection, error) {
+	_, collectionID, err := parseID(id, kindCollection)
+	if err != nil {
+		return nil, err
+	}
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return nil, err
+	}
+	guide, err := r.FranchiseGuides.Guide(ctx, collectionID, profile)
+	if err != nil {
+		return nil, err
+	}
+	return collectionModel(*guide), nil
+}
+
+// Franchises is the resolver for the franchises field.
+func (r *queryResolver) Franchises(ctx context.Context, profileID string, limit *int) ([]*model.Collection, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return nil, err
+	}
+	guides, err := r.FranchiseGuides.Franchises(ctx, profile, clamp(valueOr(limit, 12), 50))
+	if err != nil {
+		return nil, err
+	}
+	return collectionModels(guides), nil
+}
+
 // MoreWith is the resolver for the moreWith field.
 func (r *queryResolver) MoreWith(ctx context.Context, profileID string, mediaType model.MediaType) (*model.MoreWithRow, error) {
 	profile, err := parseProfile(profileID)

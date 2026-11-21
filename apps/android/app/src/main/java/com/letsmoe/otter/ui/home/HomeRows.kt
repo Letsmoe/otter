@@ -9,6 +9,7 @@ import com.letsmoe.otter.ui.components.PosterSize
 import com.letsmoe.otter.ui.components.TopTenRail
 import com.letsmoe.otter.ui.components.WideRail
 import com.letsmoe.otter.ui.media.RailItem
+import com.letsmoe.otter.ui.watchorder.FranchiseRail
 
 /** Adds every row of the page to the lazy list, each in its own style. */
 fun LazyListScope.homeRows(
@@ -16,12 +17,14 @@ fun LazyListScope.homeRows(
     actors: List<ActorItem>,
     onOpenItem: (RailItem) -> Unit,
     onOpenPerson: (String) -> Unit,
+    onOpenWatchOrder: (String) -> Unit,
 ) {
     for (row in rows) {
         item(key = row.key) {
             when (row) {
                 is PosterRow -> PosterRowContent(row, onOpenItem)
                 is ActorsRow -> ActorRail("Stars of What You've Watched", actors, onOpen = { actor -> onOpenPerson(actor.personId) })
+                is FranchisesRow -> FranchiseRail("Franchises", row.guides, onOpen = { guide -> onOpenWatchOrder(guide.id) })
             }
         }
     }

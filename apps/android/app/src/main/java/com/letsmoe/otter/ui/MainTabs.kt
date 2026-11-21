@@ -59,6 +59,7 @@ private fun TabPage(tab: Tab, navController: NavHostController, openTab: (Tab) -
             onOpenItem = onOpenItem,
             onPlayItem = { item -> scope.launch { playItem(navController, item, onOpenItem) } },
             onOpenPerson = { personId -> navController.navigate(Routes.person(personId)) },
+            onOpenWatchOrder = { collectionId -> navController.navigate(Routes.watchOrder(collectionId)) },
             onSearch = { navController.navigate(Routes.SEARCH) },
         )
         Tab.MY_LIST -> WatchlistScreen(onOpenItem = onOpenItem, onSearch = { navController.navigate(Routes.SEARCH) })
