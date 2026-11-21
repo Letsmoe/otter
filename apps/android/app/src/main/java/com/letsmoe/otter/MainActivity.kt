@@ -3,12 +3,14 @@ package com.letsmoe.otter
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import com.letsmoe.otter.cast.TelevisionVolumeKeys
 import com.letsmoe.otter.links.IncomingLinks
 import com.letsmoe.otter.neoworks.NeoworksAccountStore
 import com.letsmoe.otter.together.TogetherSession
@@ -38,6 +40,22 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         NeoworksAccountStore.syncSoon()
+    }
+
+    // While a title plays on a TV the volume buttons set the TV's volume, not the phone's.
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (TelevisionVolumeKeys.handles(keyCode)) {
+            TelevisionVolumeKeys.press(keyCode)
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+        if (TelevisionVolumeKeys.handles(keyCode)) {
+            return true
+        }
+        return super.onKeyUp(keyCode, event)
     }
 
     override fun onNewIntent(intent: Intent) {
