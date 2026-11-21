@@ -46,6 +46,8 @@ fun BedtimeRows() {
     if (chosen != null) {
         SettingsDivider()
         BedtimeTimeRow(chosen) { picking = true }
+        SettingsDivider()
+        NightVolumeRows()
     }
     if (picking && chosen != null) {
         BedtimePickerDialog(
