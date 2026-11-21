@@ -31,17 +31,20 @@ class OverlayJob(
     fun captionDelaySeconds(): Double = live.captionDelaySeconds()
 
     fun voiceBoost(): Boolean = live.voiceBoost()
+
+    fun together(): TogetherMoments = live.together()
 }
 
 /**
  * What can change while a stream plays: the profile's caption look, a cancelled next-episode
- * card, the viewer's caption timing (positive: later) and voice boost.
+ * card, the viewer's caption timing (positive: later), voice boost and the Watch Together room.
  */
 class OverlayLiveInputs(
     val captionLook: () -> CaptionLook = { CaptionLook.DEFAULT },
     val upNextDismissed: () -> Boolean = { false },
     val captionDelaySeconds: () -> Double = { 0.0 },
     val voiceBoost: () -> Boolean = { false },
+    val together: () -> TogetherMoments = { TogetherMoments() },
 )
 
 /** The overlay streams the loopback server can encode, by id. */

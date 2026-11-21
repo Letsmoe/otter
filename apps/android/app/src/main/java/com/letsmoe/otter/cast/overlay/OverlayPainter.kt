@@ -36,6 +36,14 @@ private const val TITLE_CARD_TITLE_SIZE = 58f
 private const val TITLE_CARD_DETAIL_SIZE = 32f
 private const val TITLE_CARD_MAX_WIDTH_FRACTION = 0.6f
 private const val TITLE_SHADE_HEIGHT = 300f
+private const val CHAT_TEXT_SIZE = 28f
+private const val CHAT_MAX_WIDTH_FRACTION = 0.35f
+private const val REACTION_SIZE = 64f
+private const val REACTION_NAME_SIZE = 22f
+private const val REACTION_LANE_WIDTH = 96f
+// Reactions rise between these heights (fractions of the picture, from the top).
+private const val REACTION_START_FRACTION = 0.62f
+private const val REACTION_END_FRACTION = 0.3f
 private const val BOTTOM_MARGIN = 72f
 private const val SIDE_MARGIN = 64f
 private const val HINT_TEXT_SIZE = 30f
@@ -51,8 +59,8 @@ private val CARD_FILL = Color.argb(222, 18, 18, 22)
 private val CARD_PROGRESS = Color.argb(70, 255, 255, 255)
 private val LABEL_COLOR = Color.argb(184, 255, 255, 255)
 
-/** What one bitmap shows: the moment's frame in the profile's caption look. */
-private data class OverlayScene(val frame: OverlayFrame, val captionLook: CaptionLook)
+/** What one bitmap shows: the moment's frame in the profile's caption look, and the room's reactions and chat. */
+private data class OverlayScene(val frame: OverlayFrame, val captionLook: CaptionLook, val together: TogetherMarks)
 
 /**
  * Draws captions, the skip hint and the next episode's card into the frames
@@ -66,6 +74,7 @@ class OverlayPainter(private val job: OverlayJob) : BitmapOverlay() {
     private var canvasBitmap: Bitmap? = null
     private var drawnScene: OverlayScene? = null
     private var firstPresentationTimeUs: Long? = null
+    private val togetherLayer = TogetherLayer()
 
     override fun configure(videoSize: Size) {
         super.configure(videoSize)
@@ -75,9 +84,12 @@ class OverlayPainter(private val job: OverlayJob) : BitmapOverlay() {
 
     override fun getBitmap(presentationTimeUs: Long): Bitmap {
         val bitmap = checkNotNull(canvasBitmap) { "configure() comes first" }
-        val scene = OverlayScene(visibleFrameAt(titleSecondsAt(presentationTimeUs)), job.captionLook())
+        val seconds = titleSecondsAt(presentationTimeUs)
+        val scene = OverlayScene(visibleFrameAt(seconds), job.captionLook(), togetherLayer.marksAt(seconds, job.together()))
         if (scene != drawnScene) {
-            drawFrame(Canvas(bitmap), scene.frame, scene.captionLook, job.plan.upNext)
+            val canvas = Canvas(bitmap)
+            drawFrame(canvas, scene.frame, scene.captionLook, job.plan.upNext)
+            drawTogether(canvas, scene.together)
             drawnScene = scene
         }
         return bitmap
@@ -211,10 +223,60 @@ private fun drawTitleCard(canvas: Canvas, card: TitleCard, scale: Float) {
     val maxWidth = canvas.width * TITLE_CARD_MAX_WIDTH_FRACTION
     val titleBaseline = TITLE_CARD_TOP * scale - title.ascent()
     canvas.drawText(ellipsized(card.title, title, maxWidth), left, titleBaseline, title)
-    val detail = card.detail ?: return
     val detailPaint = titleCardPaint(TITLE_CARD_DETAIL_SIZE * scale, LABEL_COLOR, Typeface.NORMAL)
-    val detailBaseline = titleBaseline + title.descent() + CARD_LINE_GAP * scale - detailPaint.ascent()
-    canvas.drawText(ellipsized(detail, detailPaint, maxWidth), left, detailBaseline, detailPaint)
+    var baseline = titleBaseline + title.descent() + CARD_LINE_GAP * scale - detailPaint.ascent()
+    for (line in listOfNotNull(card.detail, card.endsAtLabel)) {
+        canvas.drawText(ellipsized(line, detailPaint, maxWidth), left, baseline, detailPaint)
+        baseline += detailPaint.fontSpacing
+    }
+}
+
+/** The Watch Together room: chat top right, reactions rising up the right edge. */
+private fun drawTogether(canvas: Canvas, marks: TogetherMarks) {
+    val scale = canvas.height / REFERENCE_HEIGHT
+    var top = TITLE_CARD_TOP * scale
+    for (line in marks.chat) {
+        top += drawChatBubble(canvas, line, top, scale) + CARD_LINE_GAP * scale
+    }
+    marks.reactions.forEach { reaction -> drawReaction(canvas, reaction, scale) }
+}
+
+// "Anna  so good" in a dark pill, right-aligned; returns its height.
+private fun drawChatBubble(canvas: Canvas, line: TogetherChatLine, top: Float, scale: Float): Float {
+    val name = titleCardPaint(CHAT_TEXT_SIZE * scale, LABEL_COLOR, Typeface.BOLD)
+    val text = titleCardPaint(CHAT_TEXT_SIZE * scale, Color.WHITE, Typeface.NORMAL)
+    val padding = HINT_PADDING_HORIZONTAL * scale * 0.6f
+    val nameLabel = line.name + "  "
+    val maxTextWidth = canvas.width * CHAT_MAX_WIDTH_FRACTION - name.measureText(nameLabel)
+    val shownText = ellipsized(line.text, text, maxTextWidth)
+    val width = name.measureText(nameLabel) + text.measureText(shownText) + 2 * padding
+    val height = text.fontSpacing + padding
+    val right = canvas.width - SIDE_MARGIN * scale
+    val bubble = RectF(right - width, top, right, top + height)
+    val fill = Paint(Paint.ANTI_ALIAS_FLAG)
+    fill.color = CARD_FILL
+    canvas.drawRoundRect(bubble, height / 2, height / 2, fill)
+    val baseline = bubble.centerY() - (text.ascent() + text.descent()) / 2
+    canvas.drawText(nameLabel, bubble.left + padding, baseline, name)
+    canvas.drawText(shownText, bubble.left + padding + name.measureText(nameLabel), baseline, text)
+    return height
+}
+
+// Rises from above the bottom-right corner and fades; three lanes keep a burst apart.
+private fun drawReaction(canvas: Canvas, reaction: ReactionMark, scale: Float) {
+    val alpha = ((1f - reaction.progress) * 255).toInt().coerceIn(0, 255)
+    val emoji = titleCardPaint(REACTION_SIZE * scale, Color.WHITE, Typeface.NORMAL)
+    emoji.alpha = alpha
+    val name = titleCardPaint(REACTION_NAME_SIZE * scale, LABEL_COLOR, Typeface.BOLD)
+    name.alpha = (alpha * Color.alpha(LABEL_COLOR)) / 255
+    val centerX = canvas.width - (SIDE_MARGIN + REACTION_LANE_WIDTH * (reaction.lane + 0.5f)) * scale
+    val startY = canvas.height * REACTION_START_FRACTION
+    val endY = canvas.height * REACTION_END_FRACTION
+    val baseline = startY + (endY - startY) * reaction.progress
+    emoji.textAlign = Paint.Align.CENTER
+    name.textAlign = Paint.Align.CENTER
+    canvas.drawText(reaction.emoji, centerX, baseline, emoji)
+    canvas.drawText(reaction.name, centerX, baseline + name.fontSpacing, name)
 }
 
 private fun titleCardPaint(textSize: Float, color: Int, style: Int): TextPaint {

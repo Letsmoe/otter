@@ -821,6 +821,27 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         return subtitles.mapIndexed { index, subtitle -> TrackOption(index, subtitle.label) }
     }
 
+    /**
+     * While casting, the phone lists what was just said: from the captions on
+     * the TV, or with captions off there, from the profile's caption language.
+     */
+    fun loadTranscript() {
+        captionExtras.showTranscript(transcriptSubtitle())
+    }
+
+    private fun transcriptSubtitle(): PlayerSubtitle? {
+        val shown = shownSubtitle
+        if (shown != null) {
+            return shown
+        }
+        val profileLanguage = ProfileSession.activeProfile.value?.captionLanguage()
+        val inProfileLanguage = subtitles.firstOrNull { subtitle -> subtitle.language == profileLanguage }
+        if (inProfileLanguage != null) {
+            return inProfileLanguage
+        }
+        return subtitles.firstOrNull()
+    }
+
     /** The second language's index among [secondSubtitleOptions]; -1 for none. */
     fun selectedSecondSubtitleIndex(): Int {
         val id = captionExtras.state.value.secondSubtitleId ?: return -1
