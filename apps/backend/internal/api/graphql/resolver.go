@@ -19,12 +19,14 @@ import (
 	"github.com/Letsmoe/otter/internal/tmdb"
 	"github.com/Letsmoe/otter/internal/together"
 	"github.com/Letsmoe/otter/internal/vpn"
+	"github.com/Letsmoe/otter/internal/yearinreview"
 )
 
 // Services is everything the API reads from or acts on.
 type Services struct {
 	Library             *library.Service
-	Profiles            *profiles.Service
+	YearReviews         *yearinreview.Service
+	Profiles           *profiles.Service
 	Notifications       *notify.Store
 	NotificationWatcher *notify.Watcher
 	Downloads           *downloads.Service

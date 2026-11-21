@@ -215,6 +215,70 @@ export interface MoreWithRow {
     __typename: 'MoreWithRow'
 }
 
+
+/**
+ * One profile's calendar year of watching, from its watch history. The history keeps one row per
+ * movie or episode, dated by its latest update, so a title counts in the year of its last watch and
+ * rewatches are estimated: a title started 30+ days before its last watch counts as watched again.
+ */
+export interface YearInReview {
+    year: Scalars['Int']
+    /** False when nothing was watched that year. */
+    hasActivity: Scalars['Boolean']
+    hoursWatched: Scalars['Float']
+    moviesFinished: Scalars['Int']
+    episodesFinished: Scalars['Int']
+    /** Series with at least one episode watched. */
+    seriesWatched: Scalars['Int']
+    topSeries: (TopSeries | null)
+    /** Up to five, the most watched first. */
+    topGenres: GenreShare[]
+    longestBinge: (Binge | null)
+    mostRewatched: (Rewatched | null)
+    firstTitle: (YearMoment | null)
+    lastTitle: (YearMoment | null)
+    __typename: 'YearInReview'
+}
+
+export interface TopSeries {
+    title: Title
+    hoursWatched: Scalars['Float']
+    episodesWatched: Scalars['Int']
+    __typename: 'TopSeries'
+}
+
+export interface GenreShare {
+    genre: Scalars['String']
+    hoursWatched: Scalars['Float']
+    /** Share of the watch time of titles with genres, 0..1. */
+    share: Scalars['Float']
+    __typename: 'GenreShare'
+}
+
+
+/** Most episodes of one series in one night (a night runs from 5 am to 5 am). */
+export interface Binge {
+    title: Title
+    episodes: Scalars['Int']
+    /** The date the night began, YYYY-MM-DD. */
+    date: Scalars['String']
+    __typename: 'Binge'
+}
+
+export interface Rewatched {
+    title: Title
+    /** Episodes watched again (1 for a movie). */
+    count: Scalars['Int']
+    __typename: 'Rewatched'
+}
+
+export interface YearMoment {
+    title: Title
+    /** YYYY-MM-DD. */
+    date: Scalars['String']
+    __typename: 'YearMoment'
+}
+
 export interface RecommendationRow {
     key: Scalars['String']
     title: Scalars['String']
@@ -466,6 +530,8 @@ export interface Query {
     continueWatching: ContinueItem[]
     history: HistoryEntry[]
     watchlist: Title[]
+    /** The profile's year in review. utcOffsetMinutes is the phone's time zone, so days and nights fall where they were lived. */
+    yearInReview: YearInReview
     /** Titles the profile rated well (I like this, Love this), latest rating first. */
     likedTitles: Title[]
     /** Newest first. */
@@ -842,6 +908,76 @@ export interface MoreWithRowGenqlSelection{
     __scalar?: boolean | number
 }
 
+
+/**
+ * One profile's calendar year of watching, from its watch history. The history keeps one row per
+ * movie or episode, dated by its latest update, so a title counts in the year of its last watch and
+ * rewatches are estimated: a title started 30+ days before its last watch counts as watched again.
+ */
+export interface YearInReviewGenqlSelection{
+    year?: boolean | number
+    /** False when nothing was watched that year. */
+    hasActivity?: boolean | number
+    hoursWatched?: boolean | number
+    moviesFinished?: boolean | number
+    episodesFinished?: boolean | number
+    /** Series with at least one episode watched. */
+    seriesWatched?: boolean | number
+    topSeries?: TopSeriesGenqlSelection
+    /** Up to five, the most watched first. */
+    topGenres?: GenreShareGenqlSelection
+    longestBinge?: BingeGenqlSelection
+    mostRewatched?: RewatchedGenqlSelection
+    firstTitle?: YearMomentGenqlSelection
+    lastTitle?: YearMomentGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface TopSeriesGenqlSelection{
+    title?: TitleGenqlSelection
+    hoursWatched?: boolean | number
+    episodesWatched?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface GenreShareGenqlSelection{
+    genre?: boolean | number
+    hoursWatched?: boolean | number
+    /** Share of the watch time of titles with genres, 0..1. */
+    share?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** Most episodes of one series in one night (a night runs from 5 am to 5 am). */
+export interface BingeGenqlSelection{
+    title?: TitleGenqlSelection
+    episodes?: boolean | number
+    /** The date the night began, YYYY-MM-DD. */
+    date?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface RewatchedGenqlSelection{
+    title?: TitleGenqlSelection
+    /** Episodes watched again (1 for a movie). */
+    count?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface YearMomentGenqlSelection{
+    title?: TitleGenqlSelection
+    /** YYYY-MM-DD. */
+    date?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 export interface RecommendationRowGenqlSelection{
     key?: boolean | number
     title?: boolean | number
@@ -1095,6 +1231,8 @@ export interface QueryGenqlSelection{
     continueWatching?: (ContinueItemGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     history?: (HistoryEntryGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     watchlist?: (TitleGenqlSelection & { __args: {profileId: Scalars['ID']} })
+    /** The profile's year in review. utcOffsetMinutes is the phone's time zone, so days and nights fall where they were lived. */
+    yearInReview?: (YearInReviewGenqlSelection & { __args: {profileId: Scalars['ID'], year: Scalars['Int'], utcOffsetMinutes?: (Scalars['Int'] | null)} })
     /** Titles the profile rated well (I like this, Love this), latest rating first. */
     likedTitles?: (TitleGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     /** Newest first. */
@@ -1373,6 +1511,54 @@ export interface SubscriptionGenqlSelection{
     export const isMoreWithRow = (obj?: { __typename?: any } | null): obj is MoreWithRow => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isMoreWithRow"')
       return MoreWithRow_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const YearInReview_possibleTypes: string[] = ['YearInReview']
+    export const isYearInReview = (obj?: { __typename?: any } | null): obj is YearInReview => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isYearInReview"')
+      return YearInReview_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const TopSeries_possibleTypes: string[] = ['TopSeries']
+    export const isTopSeries = (obj?: { __typename?: any } | null): obj is TopSeries => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isTopSeries"')
+      return TopSeries_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const GenreShare_possibleTypes: string[] = ['GenreShare']
+    export const isGenreShare = (obj?: { __typename?: any } | null): obj is GenreShare => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isGenreShare"')
+      return GenreShare_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const Binge_possibleTypes: string[] = ['Binge']
+    export const isBinge = (obj?: { __typename?: any } | null): obj is Binge => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isBinge"')
+      return Binge_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const Rewatched_possibleTypes: string[] = ['Rewatched']
+    export const isRewatched = (obj?: { __typename?: any } | null): obj is Rewatched => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isRewatched"')
+      return Rewatched_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const YearMoment_possibleTypes: string[] = ['YearMoment']
+    export const isYearMoment = (obj?: { __typename?: any } | null): obj is YearMoment => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isYearMoment"')
+      return YearMoment_possibleTypes.includes(obj.__typename)
     }
     
 

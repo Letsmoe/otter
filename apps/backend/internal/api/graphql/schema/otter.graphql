@@ -202,6 +202,62 @@ type MoreWithRow {
   items: [Title!]!
 }
 
+"""
+One profile's calendar year of watching, from its watch history. The history keeps one row per
+movie or episode, dated by its latest update, so a title counts in the year of its last watch and
+rewatches are estimated: a title started 30+ days before its last watch counts as watched again.
+"""
+type YearInReview {
+  year: Int!
+  "False when nothing was watched that year."
+  hasActivity: Boolean!
+  hoursWatched: Float!
+  moviesFinished: Int!
+  episodesFinished: Int!
+  "Series with at least one episode watched."
+  seriesWatched: Int!
+  topSeries: TopSeries
+  "Up to five, the most watched first."
+  topGenres: [GenreShare!]!
+  longestBinge: Binge
+  mostRewatched: Rewatched
+  firstTitle: YearMoment
+  lastTitle: YearMoment
+}
+
+type TopSeries {
+  title: Title!
+  hoursWatched: Float!
+  episodesWatched: Int!
+}
+
+type GenreShare {
+  genre: String!
+  hoursWatched: Float!
+  "Share of the watch time of titles with genres, 0..1."
+  share: Float!
+}
+
+"Most episodes of one series in one night (a night runs from 5 am to 5 am)."
+type Binge {
+  title: Title!
+  episodes: Int!
+  "The date the night began, YYYY-MM-DD."
+  date: String!
+}
+
+type Rewatched {
+  title: Title!
+  "Episodes watched again (1 for a movie)."
+  count: Int!
+}
+
+type YearMoment {
+  title: Title!
+  "YYYY-MM-DD."
+  date: String!
+}
+
 type RecommendationRow {
   key: String!
   title: String!
@@ -491,6 +547,8 @@ type Query {
   continueWatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
   history(profileId: ID!, limit: Int = 50): [HistoryEntry!]!
   watchlist(profileId: ID!): [Title!]!
+  "The profile's year in review. utcOffsetMinutes is the phone's time zone, so days and nights fall where they were lived."
+  yearInReview(profileId: ID!, year: Int!, utcOffsetMinutes: Int = 0): YearInReview!
   "Titles the profile rated well (I like this, Love this), latest rating first."
   likedTitles(profileId: ID!, limit: Int = 30): [Title!]!
   "Newest first."
