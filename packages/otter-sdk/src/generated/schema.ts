@@ -153,7 +153,31 @@ export interface Stream {
     /** Null until someone tried to play it. */
     playable: (Scalars['Boolean'] | null)
     foundAt: Scalars['String']
+    /** What the app measured when it played; null until it did. */
+    report: (LinkReport | null)
     __typename: 'Stream'
+}
+
+
+/** What a link really delivered when it played, as the app measured it. */
+export interface LinkReport {
+    /** Pixel height the site's label claimed; 0 when it named none */
+    claimedHeight: Scalars['Int']
+    /** Pixel height of the picture (wide films count by their width); 0 when unknown */
+    measuredHeight: Scalars['Int']
+    /** True when the picture had clearly fewer pixels than claimed */
+    overclaimed: Scalars['Boolean']
+    /** Video bitrate of the latest play in bits per second; 0 when unknown */
+    bitrateBps: Scalars['Int']
+    /** Times the latest play stopped to buffer after it had started, and for how long */
+    stalls: Scalars['Int']
+    stallMillis: Scalars['Int']
+    /** Milliseconds from loading the link to its first picture, latest play */
+    firstFrameMillis: Scalars['Int']
+    /** Reported plays, and how many of them stalled a lot */
+    plays: Scalars['Int']
+    roughPlays: Scalars['Int']
+    __typename: 'LinkReport'
 }
 
 export interface StreamUpdate {
@@ -541,6 +565,8 @@ export interface Mutation {
     resolveStream: ResolvedStream
     /** Resolves several links at once (most preferred first) and returns the fastest that really delivers video. Fails only when none plays. */
     resolveBestStream: ResolvedStream
+    /** Records what a link delivered while it played (resolution, bitrate, stalls, time to first picture). Links that stall or claim more than they deliver are tried later. */
+    reportLinkPlayback: Scalars['Boolean']
     recordProgress: WatchProgress
     setRating: Scalars['Boolean']
     clearRating: Scalars['Boolean']
@@ -768,9 +794,38 @@ export interface StreamGenqlSelection{
     /** Null until someone tried to play it. */
     playable?: boolean | number
     foundAt?: boolean | number
+    /** What the app measured when it played; null until it did. */
+    report?: LinkReportGenqlSelection
     __typename?: boolean | number
     __scalar?: boolean | number
 }
+
+
+/** What a link really delivered when it played, as the app measured it. */
+export interface LinkReportGenqlSelection{
+    /** Pixel height the site's label claimed; 0 when it named none */
+    claimedHeight?: boolean | number
+    /** Pixel height of the picture (wide films count by their width); 0 when unknown */
+    measuredHeight?: boolean | number
+    /** True when the picture had clearly fewer pixels than claimed */
+    overclaimed?: boolean | number
+    /** Video bitrate of the latest play in bits per second; 0 when unknown */
+    bitrateBps?: boolean | number
+    /** Times the latest play stopped to buffer after it had started, and for how long */
+    stalls?: boolean | number
+    stallMillis?: boolean | number
+    /** Milliseconds from loading the link to its first picture, latest play */
+    firstFrameMillis?: boolean | number
+    /** Reported plays, and how many of them stalled a lot */
+    plays?: boolean | number
+    roughPlays?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** What the player measured during one play of a link. */
+export interface LinkReportInput {streamId: Scalars['ID'],widthPixels: Scalars['Int'],heightPixels: Scalars['Int'],bitrateBps: Scalars['Int'],stalls: Scalars['Int'],stallMillis: Scalars['Int'],firstFrameMillis: Scalars['Int'],playedMillis: Scalars['Int']}
 
 export interface StreamUpdateGenqlSelection{
     streams?: StreamGenqlSelection
@@ -1172,6 +1227,8 @@ export interface MutationGenqlSelection{
     resolveStream?: (ResolvedStreamGenqlSelection & { __args: {streamId: Scalars['ID']} })
     /** Resolves several links at once (most preferred first) and returns the fastest that really delivers video. Fails only when none plays. */
     resolveBestStream?: (ResolvedStreamGenqlSelection & { __args: {streamIds: Scalars['ID'][]} })
+    /** Records what a link delivered while it played (resolution, bitrate, stalls, time to first picture). Links that stall or claim more than they deliver are tried later. */
+    reportLinkPlayback?: { __args: {input: LinkReportInput} }
     recordProgress?: (WatchProgressGenqlSelection & { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], progressSeconds: Scalars['Float'], durationSeconds: Scalars['Float']} })
     setRating?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], rating: Scalars['Float']} }
     clearRating?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
@@ -1317,6 +1374,14 @@ export interface SubscriptionGenqlSelection{
     export const isStream = (obj?: { __typename?: any } | null): obj is Stream => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isStream"')
       return Stream_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const LinkReport_possibleTypes: string[] = ['LinkReport']
+    export const isLinkReport = (obj?: { __typename?: any } | null): obj is LinkReport => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isLinkReport"')
+      return LinkReport_possibleTypes.includes(obj.__typename)
     }
     
 

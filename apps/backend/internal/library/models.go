@@ -115,14 +115,19 @@ type Stream struct {
 	Plugin    string    `json:"plugin"`
 	URL       string    `json:"url"`
 	Label     string    `json:"label"`
-	Quality   string    `json:"quality"`
-	Language  string    `json:"language"`
-	Format    string    `json:"format"`
-	SizeBytes int64     `json:"size_bytes"`
-	SpeedBps  float64   `json:"speed_bps"`
+	// Quality is the resolution a probe saw, else what the plugin claimed.
+	Quality string `json:"quality"`
+	// ClaimedQuality is what the plugin said, whatever a probe saw later.
+	ClaimedQuality string  `json:"claimed_quality"`
+	Language       string  `json:"language"`
+	Format         string  `json:"format"`
+	SizeBytes      int64   `json:"size_bytes"`
+	SpeedBps       float64 `json:"speed_bps"`
 	// Playable is nil until a resolve was attempted.
 	Playable *bool  `json:"playable"`
 	FoundAt  string `json:"found_at"`
+	// Report is what the app measured when the link played; nil before it did.
+	Report *LinkReport `json:"report,omitempty"`
 }
 
 // MediaRef points at one title of any kind.

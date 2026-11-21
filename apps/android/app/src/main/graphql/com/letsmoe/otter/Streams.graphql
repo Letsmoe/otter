@@ -15,6 +15,25 @@ fragment StreamLink on Stream {
   language
   playable
   speedBps
+  report {
+    ...LinkReportFields
+  }
+}
+
+fragment LinkReportFields on LinkReport {
+  claimedHeight
+  measuredHeight
+  overclaimed
+  bitrateBps
+  stalls
+  stallMillis
+  firstFrameMillis
+  plays
+  roughPlays
+}
+
+mutation ReportLinkPlayback($input: LinkReportInput!) {
+  reportLinkPlayback(input: $input)
 }
 
 mutation ResolveStream($streamId: ID!) {

@@ -31,7 +31,10 @@ import com.adamglin.phosphoricons.fill.Play
 import com.adamglin.phosphoricons.fill.SealCheck
 import com.adamglin.phosphoricons.regular.ArrowClockwise
 import com.letsmoe.otter.graphql.fragment.StreamLink
+import com.letsmoe.otter.ui.components.LinkBadgeRow
 import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
+import com.letsmoe.otter.ui.components.linkBadges
+import com.letsmoe.otter.ui.components.toInfo
 import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.theme.OtterColors
 
@@ -120,6 +123,7 @@ private fun SourceRow(stream: StreamLink, onClick: () -> Unit, modifier: Modifie
         Column(Modifier.weight(1f)) {
             SourceTitle(stream)
             Text(sourceDetails(stream), fontSize = 12.sp, color = mutedText)
+            LinkBadgeRow(linkBadges(stream.report?.linkReportFields?.toInfo()), Modifier.padding(top = 4.dp))
         }
         Text(
             stream.plugin,
