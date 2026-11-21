@@ -73,7 +73,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private var request = request
 
     private val voiceBoost = VoiceBoostAudioProcessor()
-    private val evenVolume = EvenVolumeAudioProcessor().apply { enabled = PlaybackSettings.evenVolume }
+    private val evenVolume = EvenVolumeAudioProcessor().apply { enabled = PlaybackSettings.evenVolumeActive }
 
     // Plays on the phone, or on a Chromecast once one is picked in the cast menu.
     val player: Player = buildPlayer(application, voiceBoost, evenVolume)
@@ -92,7 +92,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     val previewPlayer: ExoPlayer
         get() = framePreview.player
 
-    private val mutableState = MutableStateFlow(PlayerUiState(mediaId = request.mediaId, evenVolume = PlaybackSettings.evenVolume))
+    private val mutableState = MutableStateFlow(PlayerUiState(mediaId = request.mediaId, evenVolume = PlaybackSettings.evenVolumeActive))
     val state: StateFlow<PlayerUiState> = mutableState
 
     private val mutablePosition = MutableStateFlow(PlaybackPosition())
@@ -131,6 +131,8 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     // Whether the attached link ever got ready; one that didn't is dropped as soon as another is picked.
     private var sourceStarted = false
     private var catchUpFactor = 1f
+    // The title the bedtime's defaults were applied to; they apply once, so the viewer can switch them off.
+    private var bedtimeAppliedTo: String? = null
 
     override val currentMediaId: String
         get() = mutableState.value.mediaId
@@ -209,6 +211,8 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         startSubtitleLoad(mediaId)
         televisionPlayer?.stopsAfterEpisode = false
         mutableState.update { fresh(mediaId, it) }
+        bedtimeAppliedTo = null
+        applyBedtimeIfDue()
         mutablePosition.value = PlaybackPosition()
         loadMediaInfo(mediaId)
         startStreams(mediaId, initial)
@@ -905,10 +909,27 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     /** Even volume on or off on this phone; a TV's sound follows within seconds. */
     fun toggleEvenVolume() {
-        val enabled = !evenVolume.enabled
+        val enabled = !PlaybackSettings.evenVolumeActive
         PlaybackSettings.evenVolume = enabled
+        PlaybackSettings.evenVolumeFromBedtime = false
         evenVolume.enabled = enabled
         mutableState.update { current -> current.copy(evenVolume = enabled) }
+    }
+
+    /**
+     * After the bedtime every title stops after its episode and plays with even volume. It is applied
+     * once per title (also when the bedtime passes during one), so the player can still switch both off.
+     */
+    private fun applyBedtimeIfDue() {
+        if (bedtimeAppliedTo == currentMediaId || !PlaybackSettings.isPastBedtime()) {
+            return
+        }
+        bedtimeAppliedTo = currentMediaId
+        PlaybackSettings.evenVolumeFromBedtime = true
+        evenVolume.enabled = true
+        televisionPlayer?.stopsAfterEpisode = true
+        upNextOffer.cancel()
+        mutableState.update { current -> current.copy(stopsAfterEpisode = true, evenVolume = true) }
     }
 
     /** Nothing plays after the episode playing now; the next title starts without this again. */
@@ -956,6 +977,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             val position = activePlayer.currentPosition / 1000.0
             val buffered = activePlayer.bufferedPosition / 1000.0
             mutablePosition.value = PlaybackPosition(position, buffered)
+            applyBedtimeIfDue()
             followSegments(position)
             if (activePlayer.playWhenReady) {
                 saveProgress(force = false)

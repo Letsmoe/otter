@@ -619,7 +619,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
             captionDelaySeconds = { captionDelaySeconds },
             voiceBoost = { ProfileSession.activeProfile.value?.voiceBoost == true },
             together = ::togetherMoments,
-            evenVolume = { PlaybackSettings.evenVolume },
+            evenVolume = { PlaybackSettings.evenVolumeActive },
             replayUntilSeconds = { replayUntilSeconds },
             stopsAfterEpisode = { stopsAfterEpisode },
         )

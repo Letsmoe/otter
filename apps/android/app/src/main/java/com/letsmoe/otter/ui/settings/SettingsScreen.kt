@@ -256,6 +256,8 @@ private fun PlaybackGroup() {
         PlaybackSwitchRow("Brighten dark scenes on the TV", "Lifts shadows from the next episode or seek on", PlaybackSettings.brightenDarkScenes) { enabled ->
             PlaybackSettings.brightenDarkScenes = enabled
         }
+        SettingsDivider()
+        BedtimeRows()
         profile?.let { activeProfile ->
             SettingsDivider()
             CaptionSettingsRows(activeProfile)
