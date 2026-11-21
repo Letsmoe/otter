@@ -4,6 +4,10 @@ import android.content.Context
 import android.util.Log
 import androidx.media3.common.util.UnstableApi
 import com.letsmoe.otter.BuildConfig
+import com.letsmoe.otter.cast.session.SessionEncoder
+import com.letsmoe.otter.cast.session.SessionJob
+import com.letsmoe.otter.cast.session.TelevisionSession
+import com.letsmoe.otter.cast.session.TelevisionSessions
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,14 +28,23 @@ private const val TAG = "OtterOverlay"
 private const val OVERLAY_PATH = "/overlay/"
 private const val MAX_REQUEST_LINE = 2048
 private const val LOOPBACK_ADDRESS = "127.0.0.1"
+// GET /session/<id>/next?at=<microseconds>: the TV session's next job, from that moment of the session.
+private val sessionPathPattern = Regex("""^/session/([A-Za-z0-9-]{1,64})/next\?at=(\d{1,15})$""")
 
-/** A request line the server understands: GET or HEAD of /overlay/<id>. */
-private data class OverlayRequest(val method: String, val jobId: String)
+/** A request the server understands. */
+private sealed interface LoopbackRequest
+
+/** GET or HEAD of /overlay/<id>. */
+private data class OverlayRequest(val method: String, val jobId: String) : LoopbackRequest
+
+/** The backend's long poll for a TV session's next job. */
+private data class SessionJobRequest(val sessionId: String, val atMicroseconds: Long) : LoopbackRequest
 
 /**
  * Serves overlay streams to the backend on loopback (OVERLAY_STREAM_URL); the
  * backend turns them into MPEG-TS for the TV. A newer request for a job stops
- * the older one: a TV that opens the stream again starts it over.
+ * the older one: a TV that opens the stream again starts it over. TV sessions
+ * get their jobs one after the other here too (see [TelevisionSession]).
  */
 @UnstableApi
 object OverlayStreamServer {
@@ -63,20 +76,55 @@ object OverlayStreamServer {
 
     private suspend fun answer(socket: Socket) {
         socket.use {
-            val request = readRequest(socket.getInputStream())
-            if (request == null) {
-                respond(socket.getOutputStream(), "400 Bad Request")
+            when (val request = readRequest(socket.getInputStream())) {
+                is OverlayRequest -> answerOverlay(socket, request)
+                is SessionJobRequest -> answerSessionJob(socket, request)
+                null -> respond(socket.getOutputStream(), "400 Bad Request")
+            }
+        }
+    }
+
+    private suspend fun answerOverlay(socket: Socket, request: OverlayRequest) {
+        val job = OverlayJobs.find(request.jobId)
+        if (job == null) {
+            respond(socket.getOutputStream(), "404 Not Found")
+            return
+        }
+        respond(socket.getOutputStream(), "200 OK")
+        if (request.method == "GET") {
+            streamTakingOver(job, socket.getOutputStream())
+        }
+    }
+
+    // Waits until the session has a job the backend doesn't have yet; 404 once the session is over.
+    private suspend fun answerSessionJob(socket: Socket, request: SessionJobRequest) {
+        val session = TelevisionSessions.find(request.sessionId)
+        val job = session?.takeNext(request.atMicroseconds)
+        if (session == null || job == null) {
+            respond(socket.getOutputStream(), "404 Not Found")
+            return
+        }
+        respond(socket.getOutputStream(), "200 OK")
+        val encoderJob = currentJob() ?: return
+        session.onEncoderStarted(job, encoderJob)
+        streamSessionJob(session, job, socket.getOutputStream())
+    }
+
+    // A job that ends on its own is followed by the next; a backend that hung up gets it again when it asks.
+    private suspend fun streamSessionJob(session: TelevisionSession, job: SessionJob, output: OutputStream) {
+        val watched = WatchedOutputStream(output)
+        try {
+            val endMicroseconds = SessionEncoder(applicationContext, session, job).encode(watched)
+            session.onCompleted(job, endMicroseconds)
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Exception) {
+            if (watched.failed) {
+                session.onReaderGone(job)
                 return
             }
-            val job = OverlayJobs.find(request.jobId)
-            if (job == null) {
-                respond(socket.getOutputStream(), "404 Not Found")
-                return
-            }
-            respond(socket.getOutputStream(), "200 OK")
-            if (request.method == "GET") {
-                streamTakingOver(job, socket.getOutputStream())
-            }
+            Log.w(TAG, "encoding TV session job ${job.id} failed", error)
+            session.onEncoderFailed(job, error)
         }
     }
 
@@ -149,8 +197,8 @@ private class WatchedOutputStream(output: OutputStream) : FilterOutputStream(out
     }
 }
 
-// Reads the request line and skips the headers; null for anything but GET/HEAD /overlay/<id>.
-private fun readRequest(input: InputStream): OverlayRequest? {
+// Reads the request line and skips the headers; null for anything but GET/HEAD /overlay/<id> and a session's next job.
+private fun readRequest(input: InputStream): LoopbackRequest? {
     val requestLine = readLine(input) ?: return null
     while (true) {
         val header = readLine(input) ?: return null
@@ -159,10 +207,22 @@ private fun readRequest(input: InputStream): OverlayRequest? {
         }
     }
     val parts = requestLine.split(" ")
-    if (parts.size < 2 || parts[0] !in setOf("GET", "HEAD") || !parts[1].startsWith(OVERLAY_PATH)) {
+    if (parts.size < 2 || parts[0] !in setOf("GET", "HEAD")) {
         return null
     }
-    return OverlayRequest(parts[0], parts[1].removePrefix(OVERLAY_PATH))
+    if (parts[1].startsWith(OVERLAY_PATH)) {
+        return OverlayRequest(parts[0], parts[1].removePrefix(OVERLAY_PATH))
+    }
+    return sessionJobRequest(parts[0], parts[1])
+}
+
+private fun sessionJobRequest(method: String, target: String): SessionJobRequest? {
+    val match = sessionPathPattern.matchEntire(target) ?: return null
+    if (method != "GET") {
+        return null
+    }
+    val atMicroseconds = match.groupValues[2].toLongOrNull() ?: return null
+    return SessionJobRequest(match.groupValues[1], atMicroseconds)
 }
 
 private fun readLine(input: InputStream): String? {

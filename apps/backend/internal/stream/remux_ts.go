@@ -32,6 +32,10 @@ var errNoRemuxableVideo = errors.New("fMP4 has no H.264 or H.265 video")
 type tsRemuxer struct {
 	writer *mpegts.Writer
 	tracks map[int]*remuxTrack
+	// shiftTicks is added to every timestamp: timestampOffset, or where a TV session's job continues.
+	shiftTicks int64
+	// endTicks is where the samples written so far end, on the MPEG-TS clock.
+	endTicks int64
 }
 
 // remuxTrack is one fMP4 track and how its samples go into MPEG-TS.
@@ -45,10 +49,11 @@ type remuxTrack struct {
 
 // timedSample is a sample with its timestamps on the 90 kHz MPEG-TS clock.
 type timedSample struct {
-	track *remuxTrack
-	dts   int64
-	pts   int64
-	data  []byte
+	track    *remuxTrack
+	dts      int64
+	pts      int64
+	duration int64
+	data     []byte
 }
 
 // newTSRemuxer reads the init segment; tracks whose codec MPEG-TS can't carry are left out.
@@ -57,7 +62,7 @@ func newTSRemuxer(output io.Writer, initSegment []byte) (*tsRemuxer, error) {
 	if err := init.Unmarshal(bytes.NewReader(initSegment)); err != nil {
 		return nil, fmt.Errorf("fMP4 init: %w", err)
 	}
-	remuxer := &tsRemuxer{tracks: map[int]*remuxTrack{}}
+	remuxer := &tsRemuxer{tracks: map[int]*remuxTrack{}, shiftTicks: timestampOffset, endTicks: timestampOffset}
 	outputTracks := []*mpegts.Track{}
 	hasVideo := false
 	for _, initTrack := range init.Tracks {
@@ -116,10 +121,15 @@ func (remuxer *tsRemuxer) writeFragment(fragment []byte) error {
 
 // writeParts writes the samples of parsed fragments.
 func (remuxer *tsRemuxer) writeParts(parts fmp4.Parts) error {
-	for _, sample := range remuxer.samplesInDecodeOrder(parts) {
+	return remuxer.writeSamples(remuxer.samplesInDecodeOrder(parts))
+}
+
+func (remuxer *tsRemuxer) writeSamples(samples []timedSample) error {
+	for _, sample := range samples {
 		if err := sample.track.write(remuxer.writer, sample.track, sample); err != nil {
 			return err
 		}
+		remuxer.endTicks = max(remuxer.endTicks, sample.dts+sample.duration)
 	}
 	return nil
 }
@@ -147,10 +157,11 @@ func (remuxer *tsRemuxer) timedSamples(partTrack *fmp4.PartTrack) []timedSample 
 	decodeTime := int64(partTrack.BaseTime)
 	for _, sample := range partTrack.Samples {
 		samples = append(samples, timedSample{
-			track: track,
-			dts:   track.clockTicks(decodeTime),
-			pts:   track.clockTicks(decodeTime + int64(sample.PTSOffset)),
-			data:  sample.Payload,
+			track:    track,
+			dts:      track.clockTicks(decodeTime) + remuxer.shiftTicks,
+			pts:      track.clockTicks(decodeTime+int64(sample.PTSOffset)) + remuxer.shiftTicks,
+			duration: track.clockTicks(int64(sample.Duration)),
+			data:     sample.Payload,
 		})
 		decodeTime += int64(sample.Duration)
 	}
@@ -159,7 +170,7 @@ func (remuxer *tsRemuxer) timedSamples(partTrack *fmp4.PartTrack) []timedSample 
 
 // clockTicks converts a time in the track's time scale to the MPEG-TS clock.
 func (track *remuxTrack) clockTicks(value int64) int64 {
-	return value*mpegtsClockRate/int64(track.timeScale) + timestampOffset
+	return value * mpegtsClockRate / int64(track.timeScale)
 }
 
 func writeH264Sample(writer *mpegts.Writer, track *remuxTrack, sample timedSample) error {

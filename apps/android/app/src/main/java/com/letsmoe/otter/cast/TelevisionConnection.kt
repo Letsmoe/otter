@@ -61,8 +61,23 @@ object TelevisionConnection {
 
     fun connectDlna(renderer: DlnaRenderer) {
         disconnect()
-        mutableTarget.value = TelevisionTarget.Dlna(renderer, DlnaPlayer(applicationContext, renderer))
+        val player = DlnaPlayer(applicationContext, renderer)
+        mutableTarget.value = TelevisionTarget.Dlna(renderer, player)
+        // The phone encodes the TV's one stream from now on, also while nothing plays.
+        if (player.connect()) {
+            CastKeepAliveService.start(applicationContext, renderer.name)
+        }
     }
+
+    /** Whether the TV plays one stream for the whole connection, which the phone keeps encoding between titles. */
+    val streamsContinuously: Boolean
+        get() {
+            val current = mutableTarget.value
+            if (current is TelevisionTarget.Dlna) {
+                return current.player.streamsContinuously
+            }
+            return false
+        }
 
     /** Opens the system's Chromecast picker; the session listener connects once one is picked. */
     fun connectChromecast(context: Context) {
@@ -74,9 +89,14 @@ object TelevisionConnection {
         val current = mutableTarget.value ?: return
         mutableTarget.value = null
         when (current) {
-            is TelevisionTarget.Dlna -> current.player.release()
+            is TelevisionTarget.Dlna -> disconnectDlna(current.player)
             is TelevisionTarget.Chromecast -> CastSetup.endSession(applicationContext)
         }
+    }
+
+    private fun disconnectDlna(player: DlnaPlayer) {
+        player.release()
+        CastKeepAliveService.stop(applicationContext)
     }
 
     // Volume ---------------------------------------------------------------------

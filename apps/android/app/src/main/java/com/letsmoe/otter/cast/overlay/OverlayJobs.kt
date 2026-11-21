@@ -40,6 +40,11 @@ class OverlayJob(
     fun replayUntilSeconds(): Double? = live.replayUntilSeconds()
 
     fun stopsAfterEpisode(): Boolean = live.stopsAfterEpisode()
+
+    /** The same title and picture from [seconds] on, as a new job. */
+    fun restartedAt(seconds: Double): OverlayJob {
+        return OverlayJob(sourceUrl, sourceMimeType, seconds, maxHeight, plan, live, brightensDarkScenes, onFailure)
+    }
 }
 
 /**
