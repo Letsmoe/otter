@@ -132,6 +132,7 @@ func streamModels(streams []library.Stream) []*model.Stream {
 			SpeedBps:  optional(stream.SpeedBps),
 			Playable:  stream.Playable,
 			FoundAt:   stream.FoundAt,
+			Report:    linkReportModel(stream.Report),
 		})
 	}
 	return models

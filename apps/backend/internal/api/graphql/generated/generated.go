@@ -112,6 +112,18 @@ type ComplexityRoot struct {
 		Title    func(childComplexity int) int
 	}
 
+	LinkReport struct {
+		BitrateBps       func(childComplexity int) int
+		ClaimedHeight    func(childComplexity int) int
+		FirstFrameMillis func(childComplexity int) int
+		MeasuredHeight   func(childComplexity int) int
+		Overclaimed      func(childComplexity int) int
+		Plays            func(childComplexity int) int
+		RoughPlays       func(childComplexity int) int
+		StallMillis      func(childComplexity int) int
+		Stalls           func(childComplexity int) int
+	}
+
 	MoreWithRow struct {
 		BecauseOf func(childComplexity int) int
 		Items     func(childComplexity int) int
@@ -140,6 +152,7 @@ type ComplexityRoot struct {
 		OpenDownloadsFolder    func(childComplexity int) int
 		RecordProgress         func(childComplexity int, profileID string, mediaID string, progressSeconds float64, durationSeconds float64) int
 		RemoveFromWatchlist    func(childComplexity int, profileID string, mediaID string) int
+		ReportLinkPlayback     func(childComplexity int, input model.LinkReportInput) int
 		ResolveBestStream      func(childComplexity int, streamIds []string) int
 		ResolveStream          func(childComplexity int, streamID string) int
 		SendTogether           func(childComplexity int, payload string) int
@@ -359,6 +372,7 @@ type ComplexityRoot struct {
 		Playable  func(childComplexity int) int
 		Plugin    func(childComplexity int) int
 		Quality   func(childComplexity int) int
+		Report    func(childComplexity int) int
 		SizeBytes func(childComplexity int) int
 		SpeedBps  func(childComplexity int) int
 		URL       func(childComplexity int) int
@@ -466,6 +480,7 @@ type MutationResolver interface {
 	FindStreams(ctx context.Context, id string) (bool, error)
 	ResolveStream(ctx context.Context, streamID string) (*model.ResolvedStream, error)
 	ResolveBestStream(ctx context.Context, streamIds []string) (*model.ResolvedStream, error)
+	ReportLinkPlayback(ctx context.Context, input model.LinkReportInput) (bool, error)
 	RecordProgress(ctx context.Context, profileID string, mediaID string, progressSeconds float64, durationSeconds float64) (*model.WatchProgress, error)
 	SetRating(ctx context.Context, profileID string, mediaID string, rating float64) (bool, error)
 	ClearRating(ctx context.Context, profileID string, mediaID string) (bool, error)
@@ -866,6 +881,61 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.HistoryEntry.Title(childComplexity), true
 
+	case "LinkReport.bitrateBps":
+		if e.ComplexityRoot.LinkReport.BitrateBps == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LinkReport.BitrateBps(childComplexity), true
+	case "LinkReport.claimedHeight":
+		if e.ComplexityRoot.LinkReport.ClaimedHeight == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LinkReport.ClaimedHeight(childComplexity), true
+	case "LinkReport.firstFrameMillis":
+		if e.ComplexityRoot.LinkReport.FirstFrameMillis == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LinkReport.FirstFrameMillis(childComplexity), true
+	case "LinkReport.measuredHeight":
+		if e.ComplexityRoot.LinkReport.MeasuredHeight == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LinkReport.MeasuredHeight(childComplexity), true
+	case "LinkReport.overclaimed":
+		if e.ComplexityRoot.LinkReport.Overclaimed == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LinkReport.Overclaimed(childComplexity), true
+	case "LinkReport.plays":
+		if e.ComplexityRoot.LinkReport.Plays == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LinkReport.Plays(childComplexity), true
+	case "LinkReport.roughPlays":
+		if e.ComplexityRoot.LinkReport.RoughPlays == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LinkReport.RoughPlays(childComplexity), true
+	case "LinkReport.stallMillis":
+		if e.ComplexityRoot.LinkReport.StallMillis == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LinkReport.StallMillis(childComplexity), true
+	case "LinkReport.stalls":
+		if e.ComplexityRoot.LinkReport.Stalls == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LinkReport.Stalls(childComplexity), true
+
 	case "MoreWithRow.becauseOf":
 		if e.ComplexityRoot.MoreWithRow.BecauseOf == nil {
 			break
@@ -1096,6 +1166,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.RemoveFromWatchlist(childComplexity, args["profileId"].(string), args["mediaId"].(string)), true
+	case "Mutation.reportLinkPlayback":
+		if e.ComplexityRoot.Mutation.ReportLinkPlayback == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_reportLinkPlayback_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.ReportLinkPlayback(childComplexity, args["input"].(model.LinkReportInput)), true
 	case "Mutation.resolveBestStream":
 		if e.ComplexityRoot.Mutation.ResolveBestStream == nil {
 			break
@@ -2261,6 +2342,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Stream.Quality(childComplexity), true
+	case "Stream.report":
+		if e.ComplexityRoot.Stream.Report == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Stream.Report(childComplexity), true
 	case "Stream.sizeBytes":
 		if e.ComplexityRoot.Stream.SizeBytes == nil {
 			break
@@ -2693,6 +2780,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputLinkReportInput,
 		ec.unmarshalInputPluginSettingInput,
 		ec.unmarshalInputSettingsInput,
 		ec.unmarshalInputTitleFilter,
@@ -2930,6 +3018,40 @@ type Stream {
   "Null until someone tried to play it."
   playable: Boolean
   foundAt: String!
+  "What the app measured when it played; null until it did."
+  report: LinkReport
+}
+
+"What a link really delivered when it played, as the app measured it."
+type LinkReport {
+  "Pixel height the site's label claimed; 0 when it named none"
+  claimedHeight: Int!
+  "Pixel height of the picture (wide films count by their width); 0 when unknown"
+  measuredHeight: Int!
+  "True when the picture had clearly fewer pixels than claimed"
+  overclaimed: Boolean!
+  "Video bitrate of the latest play in bits per second; 0 when unknown"
+  bitrateBps: Int!
+  "Times the latest play stopped to buffer after it had started, and for how long"
+  stalls: Int!
+  stallMillis: Int!
+  "Milliseconds from loading the link to its first picture, latest play"
+  firstFrameMillis: Int!
+  "Reported plays, and how many of them stalled a lot"
+  plays: Int!
+  roughPlays: Int!
+}
+
+"What the player measured during one play of a link."
+input LinkReportInput {
+  streamId: ID!
+  widthPixels: Int!
+  heightPixels: Int!
+  bitrateBps: Int!
+  stalls: Int!
+  stallMillis: Int!
+  firstFrameMillis: Int!
+  playedMillis: Int!
 }
 
 type StreamUpdate {
@@ -3358,6 +3480,8 @@ type Mutation {
   resolveStream(streamId: ID!): ResolvedStream!
   "Resolves several links at once (most preferred first) and returns the fastest that really delivers video. Fails only when none plays."
   resolveBestStream(streamIds: [ID!]!): ResolvedStream!
+  "Records what a link delivered while it played (resolution, bitrate, stalls, time to first picture). Links that stall or claim more than they deliver are tried later."
+  reportLinkPlayback(input: LinkReportInput!): Boolean!
 
   recordProgress(profileId: ID!, mediaId: ID!, progressSeconds: Float!, durationSeconds: Float!): WatchProgress!
   setRating(profileId: ID!, mediaId: ID!, rating: Float!): Boolean!
@@ -3585,6 +3709,30 @@ func (ec *executionContext) childFields_HistoryEntry(ctx context.Context, field 
 		return ec.fieldContext_HistoryEntry_progress(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type HistoryEntry", field.Name)
+}
+
+func (ec *executionContext) childFields_LinkReport(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "claimedHeight":
+		return ec.fieldContext_LinkReport_claimedHeight(ctx, field)
+	case "measuredHeight":
+		return ec.fieldContext_LinkReport_measuredHeight(ctx, field)
+	case "overclaimed":
+		return ec.fieldContext_LinkReport_overclaimed(ctx, field)
+	case "bitrateBps":
+		return ec.fieldContext_LinkReport_bitrateBps(ctx, field)
+	case "stalls":
+		return ec.fieldContext_LinkReport_stalls(ctx, field)
+	case "stallMillis":
+		return ec.fieldContext_LinkReport_stallMillis(ctx, field)
+	case "firstFrameMillis":
+		return ec.fieldContext_LinkReport_firstFrameMillis(ctx, field)
+	case "plays":
+		return ec.fieldContext_LinkReport_plays(ctx, field)
+	case "roughPlays":
+		return ec.fieldContext_LinkReport_roughPlays(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type LinkReport", field.Name)
 }
 
 func (ec *executionContext) childFields_MoreWithRow(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -3939,6 +4087,8 @@ func (ec *executionContext) childFields_Stream(ctx context.Context, field graphq
 		return ec.fieldContext_Stream_playable(ctx, field)
 	case "foundAt":
 		return ec.fieldContext_Stream_foundAt(ctx, field)
+	case "report":
+		return ec.fieldContext_Stream_report(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Stream", field.Name)
 }
@@ -4648,6 +4798,20 @@ func (ec *executionContext) field_Mutation_removeFromWatchlist_args(ctx context.
 		return nil, err
 	}
 	args["mediaId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_reportLinkPlayback_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.LinkReportInput, error) {
+			return ec.unmarshalNLinkReportInput2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLinkReportInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -6934,6 +7098,213 @@ func (ec *executionContext) fieldContext_HistoryEntry_progress(_ context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _LinkReport_claimedHeight(ctx context.Context, field graphql.CollectedField, obj *model.LinkReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LinkReport_claimedHeight(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ClaimedHeight, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LinkReport_claimedHeight(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LinkReport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LinkReport_measuredHeight(ctx context.Context, field graphql.CollectedField, obj *model.LinkReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LinkReport_measuredHeight(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.MeasuredHeight, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LinkReport_measuredHeight(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LinkReport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LinkReport_overclaimed(ctx context.Context, field graphql.CollectedField, obj *model.LinkReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LinkReport_overclaimed(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Overclaimed, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LinkReport_overclaimed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LinkReport", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _LinkReport_bitrateBps(ctx context.Context, field graphql.CollectedField, obj *model.LinkReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LinkReport_bitrateBps(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BitrateBps, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LinkReport_bitrateBps(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LinkReport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LinkReport_stalls(ctx context.Context, field graphql.CollectedField, obj *model.LinkReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LinkReport_stalls(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Stalls, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LinkReport_stalls(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LinkReport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LinkReport_stallMillis(ctx context.Context, field graphql.CollectedField, obj *model.LinkReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LinkReport_stallMillis(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.StallMillis, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LinkReport_stallMillis(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LinkReport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LinkReport_firstFrameMillis(ctx context.Context, field graphql.CollectedField, obj *model.LinkReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LinkReport_firstFrameMillis(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FirstFrameMillis, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LinkReport_firstFrameMillis(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LinkReport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LinkReport_plays(ctx context.Context, field graphql.CollectedField, obj *model.LinkReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LinkReport_plays(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Plays, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LinkReport_plays(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LinkReport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LinkReport_roughPlays(ctx context.Context, field graphql.CollectedField, obj *model.LinkReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LinkReport_roughPlays(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RoughPlays, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LinkReport_roughPlays(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LinkReport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
 func (ec *executionContext) _MoreWithRow_person(ctx context.Context, field graphql.CollectedField, obj *model.MoreWithRow) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -7244,6 +7615,50 @@ func (ec *executionContext) fieldContext_Mutation_resolveBestStream(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_resolveBestStream_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_reportLinkPlayback(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_reportLinkPlayback(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().ReportLinkPlayback(ctx, fc.Args["input"].(model.LinkReportInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_reportLinkPlayback(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_reportLinkPlayback_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -12632,6 +13047,38 @@ func (ec *executionContext) fieldContext_Stream_foundAt(_ context.Context, field
 	return graphql.NewScalarFieldContext("Stream", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _Stream_report(ctx context.Context, field graphql.CollectedField, obj *model.Stream) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Stream_report(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Report, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.LinkReport) graphql.Marshaler {
+			return ec.marshalOLinkReport2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLinkReport(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Stream_report(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Stream",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_LinkReport(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _StreamUpdate_streams(ctx context.Context, field graphql.CollectedField, obj *model.StreamUpdate) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -15319,6 +15766,85 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputLinkReportInput(ctx context.Context, obj any) (model.LinkReportInput, error) {
+	var it model.LinkReportInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"streamId", "widthPixels", "heightPixels", "bitrateBps", "stalls", "stallMillis", "firstFrameMillis", "playedMillis"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "streamId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("streamId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StreamID = data
+		case "widthPixels":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("widthPixels"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.WidthPixels = data
+		case "heightPixels":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("heightPixels"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HeightPixels = data
+		case "bitrateBps":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bitrateBps"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BitrateBps = data
+		case "stalls":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stalls"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Stalls = data
+		case "stallMillis":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stallMillis"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StallMillis = data
+		case "firstFrameMillis":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstFrameMillis"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FirstFrameMillis = data
+		case "playedMillis":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("playedMillis"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PlayedMillis = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPluginSettingInput(ctx context.Context, obj any) (model.PluginSettingInput, error) {
 	var it model.PluginSettingInput
 	if obj == nil {
@@ -16095,6 +16621,85 @@ func (ec *executionContext) _HistoryEntry(ctx context.Context, sel ast.Selection
 	return out
 }
 
+var linkReportImplementors = []string{"LinkReport"}
+
+func (ec *executionContext) _LinkReport(ctx context.Context, sel ast.SelectionSet, obj *model.LinkReport) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, linkReportImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LinkReport")
+		case "claimedHeight":
+			out.Values[i] = ec._LinkReport_claimedHeight(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "measuredHeight":
+			out.Values[i] = ec._LinkReport_measuredHeight(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "overclaimed":
+			out.Values[i] = ec._LinkReport_overclaimed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "bitrateBps":
+			out.Values[i] = ec._LinkReport_bitrateBps(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "stalls":
+			out.Values[i] = ec._LinkReport_stalls(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "stallMillis":
+			out.Values[i] = ec._LinkReport_stallMillis(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "firstFrameMillis":
+			out.Values[i] = ec._LinkReport_firstFrameMillis(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "plays":
+			out.Values[i] = ec._LinkReport_plays(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "roughPlays":
+			out.Values[i] = ec._LinkReport_roughPlays(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var moreWithRowImplementors = []string{"MoreWithRow"}
 
 func (ec *executionContext) _MoreWithRow(ctx context.Context, sel ast.SelectionSet, obj *model.MoreWithRow) graphql.Marshaler {
@@ -16194,6 +16799,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "resolveBestStream":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_resolveBestStream(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reportLinkPlayback":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_reportLinkPlayback(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -18367,6 +18979,8 @@ func (ec *executionContext) _Stream(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "report":
+			out.Values[i] = ec._Stream_report(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -19860,6 +20474,11 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) unmarshalNLinkReportInput2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLinkReportInput(ctx context.Context, v any) (model.LinkReportInput, error) {
+	res, err := ec.unmarshalInputLinkReportInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNMediaType2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx context.Context, v any) (model.MediaType, error) {
 	var res model.MediaType
 	err := res.UnmarshalGQL(v)
@@ -20756,6 +21375,13 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	_ = ctx
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOLinkReport2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLinkReport(ctx context.Context, sel ast.SelectionSet, v *model.LinkReport) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._LinkReport(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOMediaType2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx context.Context, v any) (*model.MediaType, error) {

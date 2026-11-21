@@ -2,6 +2,7 @@ package com.letsmoe.otter.ui.player
 
 import com.letsmoe.otter.settings.PlaybackSettings
 import com.letsmoe.otter.together.TogetherPeer
+import com.letsmoe.otter.ui.components.LinkReportInfo
 
 /** What opens the player: a movie or episode, optionally on one link, or a finished download. */
 /** [startSeconds] overrides the saved resume position, e.g. when playback moves from the phone to a TV. */
@@ -11,7 +12,15 @@ data class PlayerRequest(val mediaId: String, val streamId: String? = null, val 
  * [details] is resolution, language and measured speed, e.g. "1080p · de · ~2.4 MB/s".
  * [playable] is the backend's last check: null while untested, false when it didn't deliver video.
  */
-data class PlayerSource(val id: String, val label: String, val details: String, val plugin: String, val playable: Boolean?)
+data class PlayerSource(
+    val id: String,
+    val label: String,
+    val details: String,
+    val plugin: String,
+    val playable: Boolean?,
+    /** What the app measured when the link played; null before it did. */
+    val report: LinkReportInfo? = null,
+)
 
 data class PlayerEpisode(
     val id: String,

@@ -27,6 +27,11 @@ type HosterStats struct {
 	Reliability float64 `json:"reliability"`
 	SpeedBps    float64 `json:"speed_bps"`
 	Attempts    int     `json:"attempts"`
+	// What the app reported about the host's links (see link_report): plays
+	// and the shares of them that stalled a lot or delivered less than claimed.
+	Reports        int     `json:"reports"`
+	RoughShare     float64 `json:"rough_share"`
+	OverclaimShare float64 `json:"overclaim_share"`
 }
 
 // RecordHosterOutcome folds one checked link into its host's record. A
@@ -89,12 +94,13 @@ func (s *Store) AllHosterStats(ctx context.Context) (map[string]HosterStats, err
 	for _, row := range rows {
 		byHost[row.Host] = row
 	}
-	return byHost, nil
+	return byHost, s.hosterReports(ctx, byHost)
 }
 
 // RankByHoster orders links by expected speed: the link's own measurement
 // when it played before, else its host's average, times the host's
-// reliability. Equal scores keep their order.
+// reliability and how the link's plays went (stalls, less picture than
+// claimed, a slow start; see reportFactor). Equal scores keep their order.
 func RankByHoster(links []Stream, stats map[string]HosterStats) []Stream {
 	ranked := slices.Clone(links)
 	slices.SortStableFunc(ranked, func(first, second Stream) int {
@@ -125,7 +131,7 @@ func expectedSpeed(link Stream, stats map[string]HosterStats) float64 {
 	if playedBefore && link.SpeedBps > 0 {
 		speed = link.SpeedBps
 	}
-	return reliability * speed
+	return reliability * speed * reportFactor(link.Report, hoster)
 }
 
 func hostOfLink(linkURL string) string {
