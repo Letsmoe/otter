@@ -168,7 +168,7 @@ private class LiveEvenVolume(private val job: OverlayJob) : EvenVolumeAudioProce
 
 /** Drops metadata the muxer refuses (e.g. the source's own tags), as Media3's file muxers do. */
 @UnstableApi
-private class SupportedMetadataMuxer(private val muxer: Muxer) : Muxer by muxer {
+internal class SupportedMetadataMuxer(private val muxer: Muxer) : Muxer by muxer {
 
     override fun addMetadataEntry(metadataEntry: Metadata.Entry) {
         if (MuxerUtil.isMetadataSupported(metadataEntry)) {
@@ -179,7 +179,7 @@ private class SupportedMetadataMuxer(private val muxer: Muxer) : Muxer by muxer 
 
 /** Hands Transformer a fragmented-MP4 muxer that writes to the TV's connection. */
 @UnstableApi
-private class StreamMuxerFactory(private val output: OutputStream) : Muxer.Factory {
+internal class StreamMuxerFactory(private val output: OutputStream) : Muxer.Factory {
 
     override fun create(path: String): Muxer {
         val muxer = FragmentedMp4Muxer.Builder(output).setFragmentDurationMs(FRAGMENT_MILLISECONDS).build()

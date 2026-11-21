@@ -7,6 +7,7 @@ import com.letsmoe.otter.cast.CastSetup
 import com.letsmoe.otter.challenges.ChallengeSolver
 import com.letsmoe.otter.cast.LocalNetworkRouting
 import com.letsmoe.otter.cast.TelevisionConnection
+import com.letsmoe.otter.cast.browse.TelevisionBrowse
 import com.letsmoe.otter.cast.overlay.OverlayStreamServer
 import com.letsmoe.otter.network.ConnectivityStore
 import com.letsmoe.otter.notifications.NotificationCheckWorker
@@ -39,6 +40,7 @@ class OtterApplication : Application() {
         CastSetup.initialize(this)
         TelevisionConnection.initialize(this)
         TelevisionPlayback.initialize(this)
+        TelevisionBrowse.initialize(this)
         OverlayStreamServer.start(this)
         NotificationCheckWorker.schedule(this)
     }
