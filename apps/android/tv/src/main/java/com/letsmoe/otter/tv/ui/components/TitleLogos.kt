@@ -7,30 +7,51 @@ import com.letsmoe.otter.api.OtterApi
 import com.letsmoe.otter.api.dataOrThrow
 import com.letsmoe.otter.api.tmdbImageUrl
 import com.letsmoe.otter.graphql.SpotlightTitleQuery
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
-/** Title logos (TMDB's artwork of the name) by title id; looked up once per title and kept while the app runs. */
+/** What the hero shows beyond a card's fields: TMDB's logo artwork of the name and the description. */
+data class TitleExtras(val logoUrl: String?, val overview: String?)
+
+private val NO_EXTRAS = TitleExtras(logoUrl = null, overview = null)
+
+/** A title's logo and description by title id; looked up once per title and kept while the app runs. */
 object TitleLogos {
 
-    // A title without a logo is stored as null, so it isn't asked again.
-    private val logoUrls = mutableMapOf<String, String?>()
+    private val extrasById = mutableMapOf<String, TitleExtras>()
+    // The logo and the description of one title are asked at once; one request answers both.
+    private val lookup = Mutex()
 
-    suspend fun logoUrl(titleId: String): String? {
-        if (logoUrls.containsKey(titleId)) {
-            return logoUrls[titleId]
+    suspend fun extras(titleId: String): TitleExtras {
+        return lookup.withLock {
+            val known = extrasById[titleId]
+            if (known != null) {
+                return@withLock known
+            }
+            val fetched = fetchExtras(titleId)
+            extrasById[titleId] = fetched
+            fetched
         }
-        val logo = fetchLogo(titleId)
-        logoUrls[titleId] = logo
-        return logo
     }
 
-    private suspend fun fetchLogo(titleId: String): String? {
-        return try {
-            val title = OtterApi.client.query(SpotlightTitleQuery(titleId)).execute().dataOrThrow().title
-            tmdbImageUrl(title?.logoPath, "w500")
+    private suspend fun fetchExtras(titleId: String): TitleExtras {
+        val title = try {
+            OtterApi.client.query(SpotlightTitleQuery(titleId)).execute().dataOrThrow().title
         } catch (error: Exception) {
-            null
+            return NO_EXTRAS
         }
+        if (title == null) {
+            return NO_EXTRAS
+        }
+        return TitleExtras(logoUrl = tmdbImageUrl(title.logoPath, "w500"), overview = nonBlank(title.overview))
     }
+}
+
+private fun nonBlank(text: String?): String? {
+    if (text.isNullOrBlank()) {
+        return null
+    }
+    return text
 }
 
 /** The title's logo URL once known; null while loading and for titles without one. */
@@ -41,6 +62,18 @@ fun rememberTitleLogo(titleId: String?): State<String?> {
             value = null
             return@produceState
         }
-        value = TitleLogos.logoUrl(titleId)
+        value = TitleLogos.extras(titleId).logoUrl
+    }
+}
+
+/** The title's description once known; null while loading and for titles without one. */
+@Composable
+fun rememberTitleOverview(titleId: String?): State<String?> {
+    return produceState<String?>(null, titleId) {
+        if (titleId == null) {
+            value = null
+            return@produceState
+        }
+        value = TitleLogos.extras(titleId).overview
     }
 }

@@ -70,6 +70,7 @@ query SpotlightTitle($id: ID!) {
     id
     title
     tagline
+    overview
     posterPath
     logoPath
   }

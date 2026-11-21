@@ -31,6 +31,8 @@ import com.letsmoe.otter.tv.theme.TvColors
 import com.letsmoe.otter.tv.theme.TvSpacing
 import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.tv.ui.components.TitleName
+import com.letsmoe.otter.tv.ui.components.rememberTitleOverview
+import androidx.compose.runtime.getValue
 import com.letsmoe.otter.ui.media.RailItem
 
 /** What the top of the home screen shows: the focused title, or the featured one before anything is focused. */
@@ -86,11 +88,28 @@ fun HeroInfo(hero: HeroTitle?, modifier: Modifier = Modifier) {
             HeroLabel(hero.item)
             Text(heroDetails(hero), fontSize = TvType.body, color = TvColors.secondaryContent, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
+        HeroOverview(hero.item.id)
     }
 }
 
-private val HERO_LOGO_MAX_WIDTH = 380.dp
-private val HERO_LOGO_MAX_HEIGHT = 110.dp
+// Logo and two lines of description fit the hero area above the rows.
+private val HERO_LOGO_MAX_WIDTH = 360.dp
+private val HERO_LOGO_MAX_HEIGHT = 90.dp
+private const val OVERVIEW_MAX_LINES = 2
+
+@Composable
+private fun HeroOverview(titleId: String) {
+    val overview by rememberTitleOverview(titleId)
+    val text = overview ?: return
+    Text(
+        text,
+        fontSize = TvType.body,
+        lineHeight = 19.sp,
+        color = Color.White.copy(alpha = 0.82f),
+        maxLines = OVERVIEW_MAX_LINES,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
 
 @Composable
 private fun HeroLabel(item: RailItem) {

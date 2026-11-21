@@ -114,8 +114,8 @@ fun TitlesHome(mediaType: MediaType, onOpenItem: (RailItem) -> Unit, onOpenPerso
         backdrop = { HeroBackdrop(heroTitle) },
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(bottom = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.Bottom),
+            modifier = Modifier.fillMaxSize().padding(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Bottom),
         ) {
             HeroInfo(heroTitle)
             FeaturedActions(
