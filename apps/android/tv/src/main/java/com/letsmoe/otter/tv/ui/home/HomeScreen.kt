@@ -21,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -94,7 +96,9 @@ fun TitlesHome(mediaType: MediaType, onOpenItem: (RailItem) -> Unit, onOpenPerso
     val state by viewModel.state.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.loadPersonalRows() }
     val hero = rememberSettledHero(mediaType)
-    val heroTitle = heroFor(hero.settledItem, state)
+    // The hero cycles while no card has focus; on a card it shows that card's title.
+    val carousel = rememberHeroCarousel(mediaType, state, rotating = hero.focusedItem == null)
+    val heroTitle = heroFor(hero.settledItem, carousel)
     val actions = RowActions(
         onFocusItem = { item -> hero.focusedItem = item },
         onOpenItem = onOpenItem,
@@ -108,7 +112,8 @@ fun TitlesHome(mediaType: MediaType, onOpenItem: (RailItem) -> Unit, onOpenPerso
     ) {
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.Bottom)) {
             HeroInfo(heroTitle)
-            FeaturedActions(state, actions, viewModel::toggleFeaturedInMyList, onFocusFeatured = { hero.focusedItem = null })
+            FeaturedActions(carousel, actions, onFocusFeatured = { hero.focusedItem = null })
+            CarouselDots(carousel)
         }
     }
 }
@@ -129,13 +134,12 @@ private fun rememberSettledHero(mediaType: MediaType): HeroState {
     return hero
 }
 
-// Before any card has focus the featured title fills the hero, with its genres.
-private fun heroFor(focused: RailItem?, state: TitlesPageState): HeroTitle? {
+// Without a focused card the hero shows the carousel's current title.
+private fun heroFor(focused: RailItem?, carousel: HeroCarousel): HeroTitle? {
     if (focused != null) {
         return HeroTitle(focused)
     }
-    val featured = state.featured ?: return null
-    return HeroTitle(featured.item, featured.genres)
+    return carousel.current
 }
 
 /**
@@ -157,12 +161,13 @@ private fun rowsOnceFeaturedArrives(mediaType: MediaType, state: TitlesPageState
 }
 
 /**
- * Open and My List for the featured title. Focus starts here once, when the featured title first
- * arrives; it reloads on resume and may change, which must not pull focus back from the rows.
+ * More info and My List for the carousel's current title; left on More info and right on My List
+ * move through the carousel. Focus starts here once, when the featured title first arrives; it
+ * reloads on resume and may change, which must not pull focus back from the rows.
  */
 @Composable
-private fun FeaturedActions(state: TitlesPageState, actions: RowActions, onToggleMyList: () -> Unit, onFocusFeatured: () -> Unit) {
-    val featured = state.featured ?: return
+private fun FeaturedActions(carousel: HeroCarousel, actions: RowActions, onFocusFeatured: () -> Unit) {
+    val current = carousel.current ?: return
     val openButton = remember { FocusRequester() }
     var focusedOnce by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -172,7 +177,7 @@ private fun FeaturedActions(state: TitlesPageState, actions: RowActions, onToggl
         }
     }
     var myListIcon = PhosphorIcons.Bold.Plus
-    if (state.featuredInMyList) {
+    if (carousel.isInMyList(current.item.id)) {
         myListIcon = PhosphorIcons.Bold.Check
     }
     Row(
@@ -181,12 +186,22 @@ private fun FeaturedActions(state: TitlesPageState, actions: RowActions, onToggl
     ) {
         PillButton(
             "More info",
-            onClick = { actions.onOpenItem(featured.item) },
+            onClick = { actions.onOpenItem(current.item) },
             icon = PhosphorIcons.Fill.Info,
             primary = true,
-            modifier = Modifier.focusRequester(openButton).onFocusGained(onFocusFeatured),
+            modifier = Modifier
+                .focusRequester(openButton)
+                .onFocusGained(onFocusFeatured)
+                .onPreviewKeyEvent { event -> carouselKeys(event, Key.DirectionLeft, carousel::previous) },
         )
-        PillButton("My List", onClick = onToggleMyList, icon = myListIcon, modifier = Modifier.onFocusGained(onFocusFeatured))
+        PillButton(
+            "My List",
+            onClick = carousel::toggleMyList,
+            icon = myListIcon,
+            modifier = Modifier
+                .onFocusGained(onFocusFeatured)
+                .onPreviewKeyEvent { event -> carouselKeys(event, Key.DirectionRight, carousel::next) },
+        )
     }
 }
 
