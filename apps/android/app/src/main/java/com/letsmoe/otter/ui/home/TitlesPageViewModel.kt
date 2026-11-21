@@ -18,6 +18,7 @@ import com.letsmoe.otter.ui.media.TitleActions
 import com.letsmoe.otter.ui.media.onlyKind
 import com.letsmoe.otter.ui.watchorder.WatchOrderGuide
 import com.letsmoe.otter.ui.watchorder.WatchOrderRepository
+import com.letsmoe.otter.ui.shelves.ShelfStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -114,6 +115,7 @@ class TitlesPageViewModel(private val mediaType: MediaType) : ViewModel() {
         loadRow({ MediaRepository.continueRewatching(profileId).onlyKind(mediaType) }) { items -> copy(continueRewatching = items) }
         loadRow({ MediaRepository.watchlist(profileId).onlyKind(mediaType) }) { items -> copy(myList = items) }
         viewModelScope.launch { loadFeatured() }
+        viewModelScope.launch { ShelfStore.refresh() }
         loadFranchises()
     }
 

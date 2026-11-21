@@ -43,11 +43,13 @@ import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.Check
 import com.adamglin.phosphoricons.regular.EyeSlash
 import com.adamglin.phosphoricons.regular.Info
+import com.adamglin.phosphoricons.regular.Rows
 import com.adamglin.phosphoricons.regular.Plus
 import com.letsmoe.otter.ui.components.ActorRail
 import com.letsmoe.otter.ui.components.GlassBottomSheet
 import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.media.RailItem
+import com.letsmoe.otter.ui.shelves.ShelfPicker
 import com.letsmoe.otter.ui.title.TrailerVideo
 import com.letsmoe.otter.ui.title.rememberTrailerState
 
@@ -62,7 +64,12 @@ fun TitlePreviewSheet(onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> 
     val current = item ?: return
     val viewModel = viewModel(key = "preview-${current.id}") { TitlePreviewViewModel(current.id) }
     val detail by viewModel.detail.collectAsStateWithLifecycle()
+    val pickingShelf by viewModel.pickingShelf.collectAsStateWithLifecycle()
     GlassBottomSheet(onDismiss = TitlePreview::close) {
+        if (pickingShelf) {
+            ShelfPicker(current.id, onDone = { viewModel.setPickingShelf(false) })
+            return@GlassBottomSheet
+        }
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             PreviewMedia(detail, fallbackImage = current.posterUrl)
             PreviewText(detail, fallbackTitle = current.title)
@@ -78,6 +85,7 @@ fun TitlePreviewSheet(onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> 
                 },
                 onToggleMyList = viewModel::toggleMyList,
                 onNotForMe = { viewModel.hideFromRecommendations(current.title, onHidden = TitlePreview::close) },
+                onAddToShelf = { viewModel.setPickingShelf(true) },
             )
         }
     }
@@ -149,7 +157,7 @@ private fun PreviewCast(detail: PreviewDetail?, onOpenPerson: (String) -> Unit) 
 }
 
 @Composable
-private fun PreviewButtons(inMyList: Boolean, onDetails: () -> Unit, onToggleMyList: () -> Unit, onNotForMe: () -> Unit) {
+private fun PreviewButtons(inMyList: Boolean, onDetails: () -> Unit, onToggleMyList: () -> Unit, onNotForMe: () -> Unit, onAddToShelf: () -> Unit) {
     var myListIcon = PhosphorIcons.Regular.Plus
     if (inMyList) {
         myListIcon = PhosphorIcons.Regular.Check
@@ -160,7 +168,10 @@ private fun PreviewButtons(inMyList: Boolean, onDetails: () -> Unit, onToggleMyL
             PreviewButton("Details", PhosphorIcons.Regular.Info, Color.White, Color.Black, onDetails, Modifier.weight(1f))
             PreviewButton("My List", myListIcon, quietBackground, Color.White, onToggleMyList, Modifier.weight(1f))
         }
-        PreviewButton("Not for me", PhosphorIcons.Regular.EyeSlash, quietBackground, Color.White, onNotForMe, Modifier.fillMaxWidth())
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            PreviewButton("Not for me", PhosphorIcons.Regular.EyeSlash, quietBackground, Color.White, onNotForMe, Modifier.weight(1f))
+            PreviewButton("Add to shelf", PhosphorIcons.Regular.Rows, quietBackground, Color.White, onAddToShelf, Modifier.weight(1f))
+        }
     }
 }
 

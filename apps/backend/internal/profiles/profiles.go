@@ -350,6 +350,9 @@ func (s *Service) Delete(ctx context.Context, profileID int) error {
 				return err
 			}
 		}
+		if err := DeleteShelves(ctx, tx, profileID); err != nil {
+			return err
+		}
 		_, err := tx.Exec(ctx, "DELETE FROM profile WHERE id = $id", db.Vars{"id": profileID})
 		return err
 	})

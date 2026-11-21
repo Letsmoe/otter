@@ -9,6 +9,7 @@
 		dismissRecommendation,
 		fetchContinueWatching,
 		fetchRecommendationRows,
+		fetchShelves,
 		fetchTrending,
 		restoreRecommendation,
 		detailPath,
@@ -21,6 +22,9 @@
 	let hero = $state<RailItem | null>(null);
 	let continueItems = $state<RailItem[]>([]);
 	let recommendationRails = $state<RecommendationRail[]>([]);
+	let shelfRails = $state<RecommendationRail[]>([]);
+	// The profile's own shelves sit above the generated rows.
+	let homeRails = $derived([...shelfRails, ...recommendationRails]);
 	let trendingItems = $state<RailItem[]>([]);
 
 	// The hero needs a backdrop to render, so prefer the first candidate that
@@ -45,11 +49,13 @@
 		let cancelled = false;
 		Promise.all([
 			fetchContinueWatching(profile.id, RAIL_SIZE),
-			fetchRecommendationRows(profile.id, 8, RAIL_SIZE)
-		]).then(([continueResult, recommendationResult]) => {
+			fetchRecommendationRows(profile.id, 8, RAIL_SIZE),
+			fetchShelves(profile.id)
+		]).then(([continueResult, recommendationResult, shelfResult]) => {
 			if (cancelled) return;
 			continueItems = continueResult;
 			recommendationRails = recommendationResult;
+			shelfRails = shelfResult;
 			const recommended = recommendationResult.flatMap((rail) => rail.items);
 			hero = pickHero([...recommended, ...continueItems, ...trendingItems]);
 		});
@@ -129,7 +135,7 @@
 	function presentKeys(): string[] {
 		const keys = ['hero'];
 		if (continueItems.length > 0) keys.push('continue');
-		for (const rail of recommendationRails) {
+		for (const rail of homeRails) {
 			if (rail.items.length > 0) keys.push(railKey(rail));
 		}
 		if (trendingItems.length > 0) keys.push('trending');
@@ -187,7 +193,7 @@
 		{/if}
 	</Hero>
 
-	{#each recommendationRails as rail (rail.key)}
+	{#each homeRails as rail (rail.key)}
 		{#if rail.items.length > 0}
 			<MediaRail
 				bind:this={refs[railKey(rail)]}

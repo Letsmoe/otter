@@ -24,6 +24,7 @@ import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.navigation.bottomBarClearance
+import com.letsmoe.otter.ui.shelves.ShelfStore
 
 /** One Home category (movies or TV shows): featured preview, then rails. */
 @Composable
@@ -44,7 +45,8 @@ fun TitlesPage(
     val viewModel = viewModel(key = "titles-$mediaType") { TitlesPageViewModel(mediaType) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
-    val rows = state.toRows(labelsOf(mediaType, profileName), hiddenIds)
+    val shelves by ShelfStore.shelves.collectAsStateWithLifecycle()
+    val rows = state.toRows(labelsOf(mediaType, profileName), shelves, mediaType, hiddenIds)
         .withActorsRow(state.actors.isNotEmpty())
         .withFranchisesRow(state.franchises)
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.loadPersonalRows() }

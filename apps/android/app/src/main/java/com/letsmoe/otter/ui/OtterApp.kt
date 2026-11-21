@@ -73,6 +73,8 @@ import com.letsmoe.otter.ui.television.TelevisionNowPlayingBar
 import com.letsmoe.otter.ui.television.TelevisionRemoteHost
 import com.letsmoe.otter.ui.television.TelevisionVolumeDisplay
 import com.letsmoe.otter.ui.title.LinkedEpisode
+import com.letsmoe.otter.ui.shelves.ShelfScreen
+import com.letsmoe.otter.ui.shelves.ShelvesScreen
 import com.letsmoe.otter.ui.title.TitleScreen
 import com.letsmoe.otter.ui.upcoming.UpcomingScreen
 import com.letsmoe.otter.ui.watchorder.WatchOrderActions
@@ -281,6 +283,16 @@ private fun OtterNavHost(navController: NavHostController, pagerState: PagerStat
                     onPlay = { titleId -> navController.play(PlayerRequest(titleId)) },
                     onOpenFilm = { titleId -> navController.navigate(Routes.title(titleId)) },
                 ),
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable(Routes.SHELVES) {
+            ShelvesScreen(onOpenShelf = { shelfId -> navController.navigate(Routes.shelf(shelfId)) }, onBack = { navController.popBackStack() })
+        }
+        composable(Routes.SHELF, arguments = listOf(navArgument("shelfId") { type = NavType.StringType })) { entry ->
+            ShelfScreen(
+                shelfId = entry.arguments?.getString("shelfId").orEmpty(),
+                onOpenItem = { item -> navController.openItem(item) },
                 onBack = { navController.popBackStack() },
             )
         }

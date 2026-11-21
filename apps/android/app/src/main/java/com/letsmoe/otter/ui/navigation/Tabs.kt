@@ -27,6 +27,8 @@ object Routes {
     const val UPCOMING = "upcoming"
     const val PERSON = "person/{personId}"
     const val WATCH_ORDER = "watch-order/{collectionId}"
+    const val SHELVES = "shelves"
+    const val SHELF = "shelf/{shelfId}"
     const val PLAYER = "player/{mediaId}?streamId={streamId}&downloadId={downloadId}&start={start}"
     const val NOTIFICATIONS = "notifications"
     const val SETTINGS = "settings"
@@ -49,6 +51,7 @@ object Routes {
 
     fun browse(kind: String) = "browse/$kind"
     fun person(personId: String) = "person/${android.net.Uri.encode(personId)}"
+    fun shelf(shelfId: String) = "shelf/${android.net.Uri.encode(shelfId)}"
 
     /** A franchise's watch-order guide; [collectionId] is the backend's id, e.g. "collection:2344". */
     fun watchOrder(collectionId: String) = "watch-order/${android.net.Uri.encode(collectionId)}"
@@ -82,7 +85,7 @@ enum class Tab(val route: String, val label: String, val icon: ImageVector, val 
 }
 
 /** Further routes that belong to a tab, like `matches` in apps/mobile/src/lib/tabs.ts. */
-private val routesOfProfileTab = listOf(Routes.PROFILE, Routes.HISTORY, Routes.SETTINGS, Routes.PLUGINS, Routes.NOTIFICATIONS)
+private val routesOfProfileTab = listOf(Routes.PROFILE, Routes.HISTORY, Routes.SETTINGS, Routes.PLUGINS, Routes.NOTIFICATIONS, Routes.SHELVES, Routes.SHELF)
 
 fun tabForRoute(route: String?): Tab? {
     if (route in routesOfProfileTab) {

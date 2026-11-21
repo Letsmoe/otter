@@ -238,6 +238,9 @@ func (mirror profileMirror) deleteLocal(ctx context.Context, link mirroredRow) e
 				return err
 			}
 		}
+		if err := deleteShelvesOf(ctx, tx, link.LocalKey); err != nil {
+			return err
+		}
 		_, err := tx.Exec(ctx, "DELETE FROM profile WHERE id = $id", db.Vars{"id": link.LocalKey})
 		return err
 	})
@@ -245,6 +248,15 @@ func (mirror profileMirror) deleteLocal(ctx context.Context, link mirroredRow) e
 		return err
 	}
 	return deleteMirroredRow(ctx, mirror.database, link.RowID)
+}
+
+// deleteShelvesOf removes the pinned shelves of a deleted profile, whose id is a mirrored row's local key.
+func deleteShelvesOf(ctx context.Context, tx *db.DB, localKey string) error {
+	profileID, err := strconv.Atoi(localKey)
+	if err != nil {
+		return err
+	}
+	return profiles.DeleteShelves(ctx, tx, profileID)
 }
 
 // push writes local profiles that changed since the last sync, and deletes the

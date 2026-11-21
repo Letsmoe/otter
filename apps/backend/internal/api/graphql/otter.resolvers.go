@@ -259,6 +259,93 @@ func (r *mutationResolver) RemoveFromWatchlist(ctx context.Context, profileID st
 	return true, r.Profiles.RemoveFromWatchlist(ctx, profile, ref)
 }
 
+// CreateShelf is the resolver for the createShelf field.
+func (r *mutationResolver) CreateShelf(ctx context.Context, profileID string, name string) (*model.Shelf, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return nil, err
+	}
+	shelf, err := r.Profiles.CreateShelf(ctx, profile, name)
+	if err != nil {
+		return nil, err
+	}
+	return r.singleShelfModel(ctx, shelf)
+}
+
+// RenameShelf is the resolver for the renameShelf field.
+func (r *mutationResolver) RenameShelf(ctx context.Context, profileID string, shelfID string, name string) (*model.Shelf, error) {
+	profile, shelf, err := parseProfileAndShelf(profileID, shelfID)
+	if err != nil {
+		return nil, err
+	}
+	renamed, err := r.Profiles.RenameShelf(ctx, profile, shelf, name)
+	if err != nil {
+		return nil, err
+	}
+	return r.singleShelfModel(ctx, renamed)
+}
+
+// DeleteShelf is the resolver for the deleteShelf field.
+func (r *mutationResolver) DeleteShelf(ctx context.Context, profileID string, shelfID string) (bool, error) {
+	profile, shelf, err := parseProfileAndShelf(profileID, shelfID)
+	if err != nil {
+		return false, err
+	}
+	return true, r.Profiles.DeleteShelf(ctx, profile, shelf)
+}
+
+// AddToShelf is the resolver for the addToShelf field.
+func (r *mutationResolver) AddToShelf(ctx context.Context, profileID string, shelfID string, mediaID string) (bool, error) {
+	profile, shelf, err := parseProfileAndShelf(profileID, shelfID)
+	if err != nil {
+		return false, err
+	}
+	ref, err := parseMedia(mediaID, library.MediaTypeMovie, library.MediaTypeSeries)
+	if err != nil {
+		return false, err
+	}
+	return true, r.Profiles.AddToShelf(ctx, profile, shelf, ref)
+}
+
+// RemoveFromShelf is the resolver for the removeFromShelf field.
+func (r *mutationResolver) RemoveFromShelf(ctx context.Context, profileID string, shelfID string, mediaID string) (bool, error) {
+	profile, shelf, err := parseProfileAndShelf(profileID, shelfID)
+	if err != nil {
+		return false, err
+	}
+	ref, err := parseMedia(mediaID, library.MediaTypeMovie, library.MediaTypeSeries)
+	if err != nil {
+		return false, err
+	}
+	return true, r.Profiles.RemoveFromShelf(ctx, profile, shelf, ref)
+}
+
+// ReorderShelves is the resolver for the reorderShelves field.
+func (r *mutationResolver) ReorderShelves(ctx context.Context, profileID string, shelfIds []string) (bool, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return false, err
+	}
+	numbers, err := parseShelves(shelfIds)
+	if err != nil {
+		return false, err
+	}
+	return true, r.Profiles.ReorderShelves(ctx, profile, numbers)
+}
+
+// ReorderShelfTitles is the resolver for the reorderShelfTitles field.
+func (r *mutationResolver) ReorderShelfTitles(ctx context.Context, profileID string, shelfID string, mediaIds []string) (bool, error) {
+	profile, shelf, err := parseProfileAndShelf(profileID, shelfID)
+	if err != nil {
+		return false, err
+	}
+	refs, err := parseShelfTitles(mediaIds)
+	if err != nil {
+		return false, err
+	}
+	return true, r.Profiles.ReorderShelfTitles(ctx, profile, shelf, refs)
+}
+
 // SetNotifying is the resolver for the setNotifying field.
 func (r *mutationResolver) SetNotifying(ctx context.Context, profileID string, mediaID string, notifying bool) (bool, error) {
 	profile, ref, err := profileAndMedia(profileID, mediaID)
@@ -997,6 +1084,19 @@ func (r *queryResolver) Bookmarks(ctx context.Context, profileID string, titleID
 		models = append(models, bookmarkModel(bookmark))
 	}
 	return models, nil
+}
+
+// Shelves is the resolver for the shelves field.
+func (r *queryResolver) Shelves(ctx context.Context, profileID string) ([]*model.Shelf, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return nil, err
+	}
+	shelves, err := r.Services.Profiles.Shelves(ctx, profile)
+	if err != nil {
+		return nil, err
+	}
+	return r.shelfModels(ctx, shelves)
 }
 
 // LikedTitles is the resolver for the likedTitles field.
