@@ -1,6 +1,7 @@
 package com.letsmoe.otter.ui.profiles
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -19,6 +20,12 @@ import kotlinx.coroutines.launch
 
 enum class EditorStep { FORM, AVATAR, PIN_CREATE, PIN_CONFIRM }
 
+// The bedtime the backend takes as "none".
+private const val NO_BEDTIME = -1
+
+/** The ages a child profile can be limited to (FSK 6, 12 and 16 in Germany); 0 is no limit. */
+val AGE_LIMIT_CHOICES = listOf(0, 6, 12, 16)
+
 /** Add or edit a profile: avatar, name, kids flag and an optional PIN lock. */
 class ProfileEditorViewModel(private val existingProfile: ProfileFields?) : ViewModel() {
 
@@ -32,6 +39,10 @@ class ProfileEditorViewModel(private val existingProfile: ProfileFields?) : View
     /** Audio languages, most preferred first. */
     var languages by mutableStateOf(initialLanguages())
         private set
+    /** Child profiles: the oldest age their titles may be rated for; 0 for no limit. */
+    var ageLimit by mutableIntStateOf(existingProfile?.ageLimit ?: 0)
+    /** Child profiles: the fixed bedtime in minutes after midnight; null for none. */
+    var bedtimeMinutes by mutableStateOf(existingProfile?.bedtimeMinutes)
     var step by mutableStateOf(EditorStep.FORM)
     var saving by mutableStateOf(false)
         private set
@@ -144,7 +155,36 @@ class ProfileEditorViewModel(private val existingProfile: ProfileFields?) : View
             isChild = Optional.present(isChild),
             languages = Optional.present(languages),
         )
+        val created = OtterApi.client.mutation(mutation).execute().dataOrThrow().createProfile
+        if (isChild) {
+            saveChildSettings(created.profileFields.id)
+        }
+    }
+
+    // Creating takes no child settings: they follow in an update.
+    private suspend fun saveChildSettings(profileId: String) {
+        val mutation = UpdateProfileMutation(
+            id = profileId,
+            ageLimit = Optional.present(ageLimit),
+            bedtimeMinutes = Optional.present(bedtimeChange()),
+        )
         OtterApi.client.mutation(mutation).execute().dataOrThrow()
+    }
+
+    // A negative bedtime removes it; a profile that isn't a child's has neither limit.
+    private fun bedtimeChange(): Int {
+        val bedtime = bedtimeMinutes
+        if (!isChild || bedtime == null) {
+            return NO_BEDTIME
+        }
+        return bedtime
+    }
+
+    private fun ageLimitChange(): Int {
+        if (!isChild) {
+            return 0
+        }
+        return ageLimit
     }
 
     private suspend fun updateProfile(profile: ProfileFields) {
@@ -155,6 +195,8 @@ class ProfileEditorViewModel(private val existingProfile: ProfileFields?) : View
             isChild = Optional.present(isChild),
             pin = pinChange(profile),
             languages = Optional.present(languages),
+            ageLimit = Optional.present(ageLimitChange()),
+            bedtimeMinutes = Optional.present(bedtimeChange()),
         )
         val updated = OtterApi.client.mutation(mutation).execute().dataOrThrow().updateProfile
         ProfileSession.refreshIfActive(updated.profileFields)

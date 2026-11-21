@@ -553,6 +553,12 @@ export default {
             "voiceBoost": [
                 6
             ],
+            "ageLimit": [
+                3
+            ],
+            "bedtimeMinutes": [
+                3
+            ],
             "__typename": [
                 4
             ]
@@ -1586,6 +1592,12 @@ export default {
                     ],
                     "voiceBoost": [
                         6
+                    ],
+                    "ageLimit": [
+                        3
+                    ],
+                    "bedtimeMinutes": [
+                        3
                     ]
                 }
             ],

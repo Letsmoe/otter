@@ -60,7 +60,23 @@ type Profile struct {
 	SubtitleStyle string `json:"subtitle_style"`
 	// VoiceBoost lifts dialogue over music and effects.
 	VoiceBoost bool `json:"voice_boost"`
+	// AgeLimit is the oldest age a child profile's titles may be rated for; 0 means no limit.
+	AgeLimit int `json:"age_limit"`
+	// BedtimeMinutes is a child profile's fixed bedtime in minutes after midnight; nil means none.
+	BedtimeMinutes *int `json:"bedtime_minutes"`
 }
+
+// HasAgeLimit reports whether titles are held back from the profile by their age rating.
+func (p Profile) HasAgeLimit() bool {
+	return p.IsChild && p.AgeLimit > 0
+}
+
+// Limits of the child settings.
+const (
+	maxAgeLimit   = 21
+	minutesPerDay = 24 * 60
+	clearBedtime  = -1
+)
 
 // Caption sizes a profile can pick.
 const (
@@ -165,6 +181,10 @@ type Update struct {
 	SubtitleSize     *string
 	SubtitleStyle    *string
 	VoiceBoost       *bool
+	// AgeLimit 0 removes the limit.
+	AgeLimit *int
+	// BedtimeMinutes is minutes after midnight; a negative value removes the bedtime.
+	BedtimeMinutes *int
 }
 
 // Update changes a profile's fields and returns the stored result.
@@ -180,12 +200,14 @@ func (s *Service) Update(ctx context.Context, profileID int, update Update) (*Pr
 		SET name = $name, avatar_url = $avatar_url, pin_hash = $pin_hash, is_child = $is_child,
 			languages = $languages, subtitles_enabled = $subtitles_enabled,
 			subtitle_language = $subtitle_language, subtitle_size = $subtitle_size,
-			subtitle_style = $subtitle_style, voice_boost = $voice_boost
+			subtitle_style = $subtitle_style, voice_boost = $voice_boost,
+			age_limit = $age_limit, bedtime_minutes = $bedtime_minutes
 		WHERE id = $id`,
 		db.Vars{"id": profileID, "name": profile.Name, "avatar_url": profile.AvatarURL,
 			"pin_hash": profile.PinHash, "is_child": profile.IsChild, "languages": profile.Languages,
 			"subtitles_enabled": profile.SubtitlesEnabled, "subtitle_language": nullableText(profile.SubtitleLanguage),
-			"subtitle_size": profile.SubtitleSize, "subtitle_style": profile.SubtitleStyle, "voice_boost": profile.VoiceBoost})
+			"subtitle_size": profile.SubtitleSize, "subtitle_style": profile.SubtitleStyle, "voice_boost": profile.VoiceBoost,
+			"age_limit": profile.AgeLimit, "bedtime_minutes": profile.BedtimeMinutes})
 	if err != nil {
 		return nil, storeError("update", err)
 	}
@@ -212,6 +234,9 @@ func applyUpdate(profile *Profile, update Update) error {
 	if err := applyCaptionUpdate(profile, update); err != nil {
 		return err
 	}
+	if err := applyChildUpdate(profile, update); err != nil {
+		return err
+	}
 	if update.Pin == nil {
 		return nil
 	}
@@ -220,6 +245,28 @@ func applyUpdate(profile *Profile, update Update) error {
 		return err
 	}
 	profile.PinHash = pinHash
+	return nil
+}
+
+func applyChildUpdate(profile *Profile, update Update) error {
+	if update.AgeLimit != nil {
+		if *update.AgeLimit < 0 || *update.AgeLimit > maxAgeLimit {
+			return fmt.Errorf("age limit must be between 0 and %d", maxAgeLimit)
+		}
+		profile.AgeLimit = *update.AgeLimit
+	}
+	if update.BedtimeMinutes == nil {
+		return nil
+	}
+	minutes := *update.BedtimeMinutes
+	if minutes < 0 {
+		profile.BedtimeMinutes = nil
+		return nil
+	}
+	if minutes >= minutesPerDay {
+		return fmt.Errorf("bedtime must be before %d minutes after midnight", minutesPerDay)
+	}
+	profile.BedtimeMinutes = &minutes
 	return nil
 }
 

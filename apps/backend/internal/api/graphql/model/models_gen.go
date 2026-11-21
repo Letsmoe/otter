@@ -233,6 +233,10 @@ type Profile struct {
 	SubtitleStyle SubtitleStyle `json:"subtitleStyle"`
 	// Boost dialogue over music and effects
 	VoiceBoost bool `json:"voiceBoost"`
+	// Child profiles: the oldest age their titles may be rated for (FSK in Germany); 0 means no limit. Titles above it, or without a rating, are hidden and can't be played.
+	AgeLimit int `json:"ageLimit"`
+	// Child profiles: the fixed bedtime in minutes after midnight, after which every title stops after its episode; null for none.
+	BedtimeMinutes *int `json:"bedtimeMinutes,omitempty"`
 }
 
 type Query struct {

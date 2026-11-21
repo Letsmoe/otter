@@ -23,6 +23,7 @@ object OtterApi {
     val client: ApolloClient = ApolloClient.Builder()
         .serverUrl("${ServerSettings.baseUrl}/graphql")
         .httpEngine(DefaultHttpEngine(timeoutMillis = HTTP_TIMEOUT_MILLISECONDS))
+        .addHttpInterceptor(ActiveProfileHeader())
         .subscriptionNetworkTransport(
             WebSocketNetworkTransport.Builder()
                 .serverUrl("${ServerSettings.baseUrl.replace("http", "ws")}/graphql")

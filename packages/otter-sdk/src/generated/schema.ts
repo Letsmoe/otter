@@ -239,6 +239,10 @@ export interface Profile {
     subtitleStyle: SubtitleStyle
     /** Boost dialogue over music and effects */
     voiceBoost: Scalars['Boolean']
+    /** Child profiles: the oldest age their titles may be rated for (FSK in Germany); 0 means no limit. Titles above it, or without a rating, are hidden and can't be played. */
+    ageLimit: Scalars['Int']
+    /** Child profiles: the fixed bedtime in minutes after midnight, after which every title stops after its episode; null for none. */
+    bedtimeMinutes: (Scalars['Int'] | null)
     __typename: 'Profile'
 }
 
@@ -568,7 +572,7 @@ export interface Mutation {
     sendTogether: Scalars['Boolean']
     /** The first profile's top language also becomes the TMDB language. */
     createProfile: Profile
-    /** Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it. */
+    /** Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it; ageLimit 0 and a negative bedtimeMinutes remove those. */
     updateProfile: Profile
     deleteProfile: Scalars['Boolean']
     verifyPin: PinCheck
@@ -867,6 +871,10 @@ export interface ProfileGenqlSelection{
     subtitleStyle?: boolean | number
     /** Boost dialogue over music and effects */
     voiceBoost?: boolean | number
+    /** Child profiles: the oldest age their titles may be rated for (FSK in Germany); 0 means no limit. Titles above it, or without a rating, are hidden and can't be played. */
+    ageLimit?: boolean | number
+    /** Child profiles: the fixed bedtime in minutes after midnight, after which every title stops after its episode; null for none. */
+    bedtimeMinutes?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1199,8 +1207,8 @@ export interface MutationGenqlSelection{
     sendTogether?: { __args: {payload: Scalars['String']} }
     /** The first profile's top language also becomes the TMDB language. */
     createProfile?: (ProfileGenqlSelection & { __args: {name: Scalars['String'], avatarUrl?: (Scalars['String'] | null), pin?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), languages?: (Scalars['String'][] | null)} })
-    /** Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it. */
-    updateProfile?: (ProfileGenqlSelection & { __args: {id: Scalars['ID'], name?: (Scalars['String'] | null), avatarUrl?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), pin?: (Scalars['String'] | null), languages?: (Scalars['String'][] | null), subtitlesEnabled?: (Scalars['Boolean'] | null), subtitleLanguage?: (Scalars['String'] | null), subtitleSize?: (SubtitleSize | null), subtitleStyle?: (SubtitleStyle | null), voiceBoost?: (Scalars['Boolean'] | null)} })
+    /** Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it; ageLimit 0 and a negative bedtimeMinutes remove those. */
+    updateProfile?: (ProfileGenqlSelection & { __args: {id: Scalars['ID'], name?: (Scalars['String'] | null), avatarUrl?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), pin?: (Scalars['String'] | null), languages?: (Scalars['String'][] | null), subtitlesEnabled?: (Scalars['Boolean'] | null), subtitleLanguage?: (Scalars['String'] | null), subtitleSize?: (SubtitleSize | null), subtitleStyle?: (SubtitleStyle | null), voiceBoost?: (Scalars['Boolean'] | null), ageLimit?: (Scalars['Int'] | null), bedtimeMinutes?: (Scalars['Int'] | null)} })
     deleteProfile?: { __args: {id: Scalars['ID']} }
     verifyPin?: (PinCheckGenqlSelection & { __args: {profileId: Scalars['ID'], pin: Scalars['String']} })
     updateSettings?: (SettingsGenqlSelection & { __args: {input: SettingsInput} })

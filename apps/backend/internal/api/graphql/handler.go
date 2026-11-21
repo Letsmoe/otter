@@ -64,5 +64,5 @@ func NewHandler(resolver *Resolver) (http.Handler, error) {
 	srv.Use(extension.Introspection{})
 	srv.Use(extension.AutomaticPersistedQuery{Cache: lru.New[string](100)})
 
-	return srv, nil
+	return withRequestProfile(srv), nil
 }
