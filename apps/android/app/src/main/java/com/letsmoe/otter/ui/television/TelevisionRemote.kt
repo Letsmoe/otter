@@ -362,8 +362,10 @@ private fun VolumeRow() {
         RemoteSlider(
             value = shown,
             onValueChange = { changed ->
-                volume = changed
-                pendingVolume = changed
+                // The slider stays at the night's limit instead of pretending the TV got louder.
+                val allowed = changed.coerceAtMost(TelevisionConnection.maximumVolume())
+                volume = allowed
+                pendingVolume = allowed
             },
             modifier = Modifier.weight(1f),
         )

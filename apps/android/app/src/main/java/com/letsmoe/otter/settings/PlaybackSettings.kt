@@ -22,7 +22,8 @@ object PlaybackSettings {
     private const val KEY_EVEN_VOLUME = "evenVolume"
     private const val KEY_BRIGHTEN_DARK_SCENES = "brightenDarkScenes"
     private const val KEY_BEDTIME_MINUTES = "bedtimeMinutes"
-    private const val BEDTIME_OFF = -1
+    private const val KEY_NIGHT_VOLUME_LIMIT = "nightVolumeLimit"
+    private const val NOT_STORED = -1
 
     private lateinit var preferences: SharedPreferences
 
@@ -59,8 +60,8 @@ object PlaybackSettings {
     /** Minutes after midnight when the night starts; null when there is no bedtime. */
     var bedtimeMinutes: Int?
         get() {
-            val stored = preferences.getInt(KEY_BEDTIME_MINUTES, BEDTIME_OFF)
-            if (stored == BEDTIME_OFF) {
+            val stored = preferences.getInt(KEY_BEDTIME_MINUTES, NOT_STORED)
+            if (stored == NOT_STORED) {
                 return null
             }
             return stored
@@ -80,6 +81,29 @@ object PlaybackSettings {
         val bedtime = bedtimeMinutes ?: return false
         return Bedtime.hasStarted(bedtime, now.hour * 60 + now.minute)
     }
+
+    /** The loudest volume (0 to 100) the TV may have during the night; null for no limit. */
+    var nightVolumeLimit: Int?
+        get() {
+            val stored = preferences.getInt(KEY_NIGHT_VOLUME_LIMIT, NOT_STORED)
+            if (stored == NOT_STORED) {
+                return null
+            }
+            return stored
+        }
+        set(value) {
+            preferences.edit {
+                if (value == null) {
+                    remove(KEY_NIGHT_VOLUME_LIMIT)
+                } else {
+                    putInt(KEY_NIGHT_VOLUME_LIMIT, value)
+                }
+            }
+        }
+
+    /** The loudest volume (0 to 100) the TV may have right now. */
+    val televisionVolumeMaximum: Int
+        get() = NightVolume.maximum(nightVolumeLimit, isPastBedtime())
 
     /** Even volume that the bedtime switched on. Not saved: it ends with the night or when the viewer switches it off. */
     @Volatile
