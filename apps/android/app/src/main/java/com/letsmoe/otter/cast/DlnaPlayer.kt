@@ -633,7 +633,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
         report(startSeconds)
         pendingFileSeekSeconds = null
         val captionPaths = CaptionPaths(subtitleFile?.srtPath, secondSubtitleFile?.srtPath, replayCaptionPath())
-        val plan = loadOverlayPlan(context, hints, captionPaths, titleCardRequest(startSeconds))
+        val plan = loadOverlayPlan(context, hints, captionPaths, titleCardRequest(startSeconds), durationSeconds)
         val brightens = PlaybackSettings.brightenDarkScenes
         val job = OverlayJob(playerUrl, mimeType, startSeconds, maxHeight, plan, liveInputs(), brightens, ::onOverlayFailed)
         overlayJobId = OverlayJobs.register(job)

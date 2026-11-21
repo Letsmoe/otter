@@ -35,6 +35,11 @@ type Title {
   keywords: [String!]!
 
   """
+  Whether TMDB tags the title with a scene during or after the credits (the duringcreditsstinger and aftercreditsstinger keywords).
+  """
+  hasPostCreditsScene: Boolean!
+
+  """
   False for titles only seen in lists; reading them through Query.title fetches the rest.
   """
   detailFetched: Boolean!

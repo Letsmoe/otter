@@ -40,6 +40,8 @@ export interface Title {
     trailerKey: (Scalars['String'] | null)
     genres: Scalars['String'][]
     keywords: Scalars['String'][]
+    /** Whether TMDB tags the title with a scene during or after the credits (the duringcreditsstinger and aftercreditsstinger keywords). */
+    hasPostCreditsScene: Scalars['Boolean']
     /** False for titles only seen in lists; reading them through Query.title fetches the rest. */
     detailFetched: Scalars['Boolean']
     credits: Credit[]
@@ -667,6 +669,8 @@ export interface TitleGenqlSelection{
     trailerKey?: boolean | number
     genres?: boolean | number
     keywords?: boolean | number
+    /** Whether TMDB tags the title with a scene during or after the credits (the duringcreditsstinger and aftercreditsstinger keywords). */
+    hasPostCreditsScene?: boolean | number
     /** False for titles only seen in lists; reading them through Query.title fetches the rest. */
     detailFetched?: boolean | number
     credits?: CreditGenqlSelection

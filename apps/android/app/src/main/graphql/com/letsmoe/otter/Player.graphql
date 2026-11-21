@@ -28,6 +28,7 @@ query PlayerMovie($id: ID!, $profileId: ID!) {
   title(id: $id) {
     id
     title
+    hasPostCreditsScene
     progress(profileId: $profileId) {
       ...PlayerProgressFields
     }
