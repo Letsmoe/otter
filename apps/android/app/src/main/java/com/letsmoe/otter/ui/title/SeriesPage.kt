@@ -77,6 +77,7 @@ fun SeriesPage(
             TonightRow(upNext?.let { next -> tonightEntryOf(detail, next.episode) }, onPlay)
         },
         rewatch = seriesRewatchBar(detail, episodes, seriesViewModel, actions, onPlay),
+        belowDescription = { SeasonHeatmap(episodes.episodes, onPlay = { episode -> onPlay(PlayRequest(episode.id)) }) },
     ) {
         when (tab) {
             SeriesTab.EPISODES -> EpisodesTab(detail, episodes, seriesViewModel, slots, onPlay)
