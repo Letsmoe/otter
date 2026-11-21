@@ -54,6 +54,28 @@ class StillEncoderTest {
         assertTrue("duration ${durationSeconds(output)}", durationSeconds(output) in 2.0..4.5)
     }
 
+    // The picture changes colour after 1.5 s (files/still-live.mp4: red, then blue).
+    @Test
+    fun liveFramesChangeThePictureWhileTheStreamRuns() = runBlocking {
+        val output = File(context.filesDir, "still-live.mp4")
+        val liveFrames = object : LiveFrames {
+            override fun draw(canvas: Canvas, seconds: Double) {
+                if (seconds < 1.5) {
+                    canvas.drawColor(Color.rgb(220, 0, 0))
+                } else {
+                    canvas.drawColor(Color.rgb(0, 0, 220))
+                }
+            }
+        }
+        val job = StillJob(pictureFile(), STILL_SECONDS, liveFrames) { error -> throw error }
+
+        withTimeout(ENCODE_TIMEOUT_MILLISECONDS) {
+            FileOutputStream(output).use { stream -> StillEncoder(context, job).encode(stream) }
+        }
+
+        assertTrue("output is ${output.length()} bytes", output.length() > 5_000)
+    }
+
     @Test
     fun theLoopbackServerStreamsARegisteredPicture() {
         val job = StillJob(pictureFile(), STILL_SECONDS) { _ -> }

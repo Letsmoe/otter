@@ -8,11 +8,13 @@ private const val KEPT_STILLS = 3
 
 /**
  * A picture the TV is shown as video: [imageFile] (a JPEG of the frame) held
- * for [durationSeconds]. [onFailure] hears when encoding fails.
+ * for [durationSeconds]. With [liveFrames] the picture is painted over it frame by frame, so it
+ * can change while the TV watches. [onFailure] hears when encoding fails.
  */
 class StillJob(
     val imageFile: File,
     val durationSeconds: Int,
+    val liveFrames: LiveFrames? = null,
     val onFailure: (Exception) -> Unit,
 ) {
     val id: String = UUID.randomUUID().toString()
