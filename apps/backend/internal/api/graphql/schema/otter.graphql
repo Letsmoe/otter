@@ -572,6 +572,10 @@ type Mutation {
   recordProgress(profileId: ID!, mediaId: ID!, progressSeconds: Float!, durationSeconds: Float!): WatchProgress!
   setRating(profileId: ID!, mediaId: ID!, rating: Float!): Boolean!
   clearRating(profileId: ID!, mediaId: ID!): Boolean!
+  "\"Not for me\" on a recommendation: the profile never gets this title suggested again, and titles like it rank lower."
+  dismissRecommendation(profileId: ID!, mediaId: ID!): Boolean!
+  "Undo dismissRecommendation."
+  restoreRecommendation(profileId: ID!, mediaId: ID!): Boolean!
   addToWatchlist(profileId: ID!, mediaId: ID!): Boolean!
   removeFromWatchlist(profileId: ID!, mediaId: ID!): Boolean!
   "The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it."

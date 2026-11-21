@@ -36,6 +36,17 @@ func profileAndMedia(profileID, mediaID string) (int, library.MediaRef, error) {
 	return profile, ref, err
 }
 
+// profileAndRecommendable is profileAndMedia for titles the engine recommends:
+// movies and series, never episodes.
+func profileAndRecommendable(profileID, mediaID string) (int, library.MediaRef, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return 0, library.MediaRef{}, err
+	}
+	ref, err := parseMedia(mediaID, library.MediaTypeMovie, library.MediaTypeSeries)
+	return profile, ref, err
+}
+
 // titlesByRef loads the titles of recommendation items in one query.
 func (r *Resolver) titlesByRef(ctx context.Context, refs []library.MediaRef) (map[library.MediaRef]*model.Title, error) {
 	titles, err := r.Library.Store.Titles(ctx, refs)

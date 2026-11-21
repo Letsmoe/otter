@@ -42,7 +42,8 @@ fun TitlesPage(
     val profileName = ProfileSession.activeProfile.value?.name.orEmpty()
     val viewModel = viewModel(key = "titles-$mediaType") { TitlesPageViewModel(mediaType) }
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val rows = state.toRows(labelsOf(mediaType, profileName)).withActorsRow(state.actors.isNotEmpty())
+    val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
+    val rows = state.toRows(labelsOf(mediaType, profileName), hiddenIds).withActorsRow(state.actors.isNotEmpty())
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.loadPersonalRows() }
     val featuredPoster = state.featured?.item?.posterUrl
     LaunchedEffect(featuredPoster) { onFeaturedPoster(featuredPoster) }

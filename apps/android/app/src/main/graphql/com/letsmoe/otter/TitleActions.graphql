@@ -18,6 +18,14 @@ mutation ClearRating($profileId: ID!, $mediaId: ID!) {
   clearRating(profileId: $profileId, mediaId: $mediaId)
 }
 
+mutation DismissRecommendation($profileId: ID!, $mediaId: ID!) {
+  dismissRecommendation(profileId: $profileId, mediaId: $mediaId)
+}
+
+mutation RestoreRecommendation($profileId: ID!, $mediaId: ID!) {
+  restoreRecommendation(profileId: $profileId, mediaId: $mediaId)
+}
+
 mutation FindStreams($id: ID!) {
   findStreams(id: $id)
 }

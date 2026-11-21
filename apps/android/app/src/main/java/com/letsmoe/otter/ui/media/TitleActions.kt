@@ -4,9 +4,11 @@ import com.letsmoe.otter.api.OtterApi
 import com.letsmoe.otter.api.dataOrThrow
 import com.letsmoe.otter.graphql.AddToWatchlistMutation
 import com.letsmoe.otter.graphql.ClearRatingMutation
+import com.letsmoe.otter.graphql.DismissRecommendationMutation
 import com.letsmoe.otter.graphql.FindStreamsMutation
 import com.letsmoe.otter.graphql.InWatchlistQuery
 import com.letsmoe.otter.graphql.RemoveFromWatchlistMutation
+import com.letsmoe.otter.graphql.RestoreRecommendationMutation
 import com.letsmoe.otter.graphql.SetNotifyingMutation
 import com.letsmoe.otter.graphql.SetRatingMutation
 
@@ -40,6 +42,14 @@ object TitleActions {
 
     suspend fun clearRating(profileId: String, mediaId: String) {
         OtterApi.client.mutation(ClearRatingMutation(profileId, mediaId)).execute().dataOrThrow()
+    }
+
+    suspend fun dismissRecommendation(profileId: String, mediaId: String) {
+        OtterApi.client.mutation(DismissRecommendationMutation(profileId, mediaId)).execute().dataOrThrow()
+    }
+
+    suspend fun restoreRecommendation(profileId: String, mediaId: String) {
+        OtterApi.client.mutation(RestoreRecommendationMutation(profileId, mediaId)).execute().dataOrThrow()
     }
 
     /** Asks every streams plugin again; results arrive through the streams subscription. */

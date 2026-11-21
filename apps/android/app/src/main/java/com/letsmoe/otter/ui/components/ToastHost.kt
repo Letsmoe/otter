@@ -35,6 +35,7 @@ import com.adamglin.phosphoricons.fill.Info
 import com.adamglin.phosphoricons.fill.WarningCircle
 import com.adamglin.phosphoricons.regular.X
 import com.letsmoe.otter.toasts.Toast
+import com.letsmoe.otter.toasts.ToastAction
 import com.letsmoe.otter.toasts.ToastKind
 import com.letsmoe.otter.toasts.Toasts
 import com.letsmoe.otter.ui.theme.OtterColors
@@ -77,6 +78,12 @@ private fun ToastPill(toast: Toast) {
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false),
             )
+            if (toast.action != null) {
+                ToastActionButton(toast.action) {
+                    Toasts.dismiss(toast.id)
+                    toast.action.onClick()
+                }
+            }
             Icon(
                 PhosphorIcons.Regular.X,
                 contentDescription = "Dismiss",
@@ -85,6 +92,17 @@ private fun ToastPill(toast: Toast) {
             )
         }
     }
+}
+
+@Composable
+private fun ToastActionButton(action: ToastAction, onClick: () -> Unit) {
+    Text(
+        action.label,
+        fontSize = 14.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = infoColor,
+        modifier = Modifier.pressable(onClick = onClick).padding(horizontal = 6.dp, vertical = 4.dp),
+    )
 }
 
 private fun toastIcon(kind: ToastKind): ImageVector {
