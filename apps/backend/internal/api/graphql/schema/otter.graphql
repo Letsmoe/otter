@@ -514,6 +514,53 @@ type Query {
   status: Status!
   "The household's Neoworks account, which syncs profiles, history, lists, ratings and settings between devices."
   neoworksAccount: NeoworksAccount!
+  "Progress and result of the profile's latest Letterboxd import."
+  letterboxdImport(profileId: ID!): LetterboxdImport!
+  "The Letterboxd account the profile follows; null when none."
+  letterboxdAccount(profileId: ID!): LetterboxdAccount
+}
+
+enum LetterboxdImportState {
+  IDLE
+  RUNNING
+  DONE
+  FAILED
+}
+
+"An import of a Letterboxd export (watched, ratings, diary, watchlist) into a profile."
+type LetterboxdImport {
+  state: LetterboxdImportState!
+  "Films in the export, and how many were looked up on TMDB so far."
+  total: Int!
+  processed: Int!
+  "Films that found their TMDB movie."
+  matched: Int!
+  "What the import added; what Otter already had is not counted."
+  watched: Int!
+  rated: Int!
+  watchlisted: Int!
+  "Films TMDB had no match for; notMatched lists the first few hundred."
+  unmatchedCount: Int!
+  notMatched: [LetterboxdFilm!]!
+  error: String
+}
+
+type LetterboxdFilm {
+  name: String!
+  year: Int
+  uri: String
+  reason: String!
+}
+
+"A Letterboxd account whose public diary feed a profile follows. Otter only reads from Letterboxd; writing needs API access Letterboxd has not given."
+type LetterboxdAccount {
+  username: String!
+  lastSyncedAt: String
+  "Why the last sync failed; null after a good one."
+  lastError: String
+  "Watches and ratings the last sync added."
+  lastWatched: Int!
+  lastRated: Int!
 }
 
 type NeoworksAccount {
@@ -624,6 +671,15 @@ type Mutation {
   syncNeoworks: NeoworksAccount!
   "Starts a sync in the background and returns at once; the apps call it when they open."
   syncNeoworksSoon: Boolean!
+
+  "Starts importing a Letterboxd export ZIP (base64) into the profile in the background; follow it with Query.letterboxdImport. Refused when the file is no export or an import is running."
+  importLetterboxd(profileId: ID!, zipBase64: String!): LetterboxdImport!
+  "Makes the profile follow a Letterboxd account's public diary (a username or a profile address); the feed is read every few hours."
+  connectLetterboxd(profileId: ID!, username: String!): LetterboxdAccount!
+  "Stops following the account; what was imported stays."
+  disconnectLetterboxd(profileId: ID!): Boolean!
+  "Reads the followed account's diary feed now; a failure is in the account's lastError."
+  syncLetterboxd(profileId: ID!): LetterboxdAccount!
 }
 
 type PluginUpdate {

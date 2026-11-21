@@ -19,6 +19,27 @@ func (c *Client) SearchMovies(ctx context.Context, query string, limit int) ([]S
 	return c.searchPages(ctx, "/search/movie", query, limit, nil)
 }
 
+// SearchMovieByTitle looks a film up by its title and, when known, the year
+// it came out (TMDB also counts regional releases), first page only. A
+// language like "en-US" asks for titles in it; "" keeps the configured one.
+func (c *Client) SearchMovieByTitle(ctx context.Context, title string, year int, language string) ([]SearchResult, error) {
+	if title == "" {
+		return nil, nil
+	}
+	params := map[string]string{"query": title}
+	if year > 0 {
+		params["year"] = strconv.Itoa(year)
+	}
+	if language != "" {
+		params["language"] = language
+	}
+	var response SearchResponse
+	if err := c.get(ctx, "/search/movie", params, &response); err != nil {
+		return nil, err
+	}
+	return response.Results, nil
+}
+
 // SearchMulti returns TMDB movie and series matches for a query in one
 // relevance order (people are dropped), capped at limit (0 = first page only).
 func (c *Client) SearchMulti(ctx context.Context, query string, limit int) ([]SearchResult, error) {

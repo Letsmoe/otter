@@ -112,6 +112,34 @@ type ComplexityRoot struct {
 		Title    func(childComplexity int) int
 	}
 
+	LetterboxdAccount struct {
+		LastError    func(childComplexity int) int
+		LastRated    func(childComplexity int) int
+		LastSyncedAt func(childComplexity int) int
+		LastWatched  func(childComplexity int) int
+		Username     func(childComplexity int) int
+	}
+
+	LetterboxdFilm struct {
+		Name   func(childComplexity int) int
+		Reason func(childComplexity int) int
+		URI    func(childComplexity int) int
+		Year   func(childComplexity int) int
+	}
+
+	LetterboxdImport struct {
+		Error          func(childComplexity int) int
+		Matched        func(childComplexity int) int
+		NotMatched     func(childComplexity int) int
+		Processed      func(childComplexity int) int
+		Rated          func(childComplexity int) int
+		State          func(childComplexity int) int
+		Total          func(childComplexity int) int
+		UnmatchedCount func(childComplexity int) int
+		Watched        func(childComplexity int) int
+		Watchlisted    func(childComplexity int) int
+	}
+
 	MoreWithRow struct {
 		BecauseOf func(childComplexity int) int
 		Items     func(childComplexity int) int
@@ -126,12 +154,15 @@ type ComplexityRoot struct {
 		ClearRating            func(childComplexity int, profileID string, mediaID string) int
 		CompleteChallenge      func(childComplexity int, id string, cookies string, userAgent string, finalURL *string) int
 		CompleteNeoworksSignIn func(childComplexity int, code string, state string) int
+		ConnectLetterboxd      func(childComplexity int, profileID string, username string) int
 		CreateProfile          func(childComplexity int, name string, avatarURL *string, pin *string, isChild *bool, languages []string) int
 		DeleteDownload         func(childComplexity int, id string) int
 		DeleteProfile          func(childComplexity int, id string) int
+		DisconnectLetterboxd   func(childComplexity int, profileID string) int
 		FailChallenge          func(childComplexity int, id string, reason string, linkGone *bool) int
 		FindStreams            func(childComplexity int, id string) int
 		HostTogether           func(childComplexity int, profileID string) int
+		ImportLetterboxd       func(childComplexity int, profileID string, zipBase64 string) int
 		JoinTogether           func(childComplexity int, profileID string, code string) int
 		LeaveTogether          func(childComplexity int) int
 		LoginPlugin            func(childComplexity int, name string, username string, password string) int
@@ -150,6 +181,7 @@ type ComplexityRoot struct {
 		SignOutOfNeoworks      func(childComplexity int) int
 		StartDownload          func(childComplexity int, profileID string, mediaID string, streamID *string) int
 		StartNeoworksSignIn    func(childComplexity int, returnTo *string) int
+		SyncLetterboxd         func(childComplexity int, profileID string) int
 		SyncNeoworks           func(childComplexity int) int
 		SyncNeoworksSoon       func(childComplexity int) int
 		UpdatePlugins          func(childComplexity int) int
@@ -270,6 +302,8 @@ type ComplexityRoot struct {
 		Episode                 func(childComplexity int, id string) int
 		Genres                  func(childComplexity int) int
 		History                 func(childComplexity int, profileID string, limit *int) int
+		LetterboxdAccount       func(childComplexity int, profileID string) int
+		LetterboxdImport        func(childComplexity int, profileID string) int
 		LikedTitles             func(childComplexity int, profileID string, limit *int) int
 		MoreWith                func(childComplexity int, profileID string, mediaType model.MediaType) int
 		NeoworksAccount         func(childComplexity int) int
@@ -498,6 +532,10 @@ type MutationResolver interface {
 	SignOutOfNeoworks(ctx context.Context) (*model.NeoworksAccount, error)
 	SyncNeoworks(ctx context.Context) (*model.NeoworksAccount, error)
 	SyncNeoworksSoon(ctx context.Context) (bool, error)
+	ImportLetterboxd(ctx context.Context, profileID string, zipBase64 string) (*model.LetterboxdImport, error)
+	ConnectLetterboxd(ctx context.Context, profileID string, username string) (*model.LetterboxdAccount, error)
+	DisconnectLetterboxd(ctx context.Context, profileID string) (bool, error)
+	SyncLetterboxd(ctx context.Context, profileID string) (*model.LetterboxdAccount, error)
 }
 type PersonResolver interface {
 	Filmography(ctx context.Context, obj *model.Person, job *string) ([]*model.Title, error)
@@ -536,6 +574,8 @@ type QueryResolver interface {
 	Plugins(ctx context.Context) ([]*model.Plugin, error)
 	Status(ctx context.Context) (*model.Status, error)
 	NeoworksAccount(ctx context.Context) (*model.NeoworksAccount, error)
+	LetterboxdImport(ctx context.Context, profileID string) (*model.LetterboxdImport, error)
+	LetterboxdAccount(ctx context.Context, profileID string) (*model.LetterboxdAccount, error)
 }
 type SeasonResolver interface {
 	Episodes(ctx context.Context, obj *model.Season) ([]*model.Episode, error)
@@ -866,6 +906,123 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.HistoryEntry.Title(childComplexity), true
 
+	case "LetterboxdAccount.lastError":
+		if e.ComplexityRoot.LetterboxdAccount.LastError == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdAccount.LastError(childComplexity), true
+	case "LetterboxdAccount.lastRated":
+		if e.ComplexityRoot.LetterboxdAccount.LastRated == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdAccount.LastRated(childComplexity), true
+	case "LetterboxdAccount.lastSyncedAt":
+		if e.ComplexityRoot.LetterboxdAccount.LastSyncedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdAccount.LastSyncedAt(childComplexity), true
+	case "LetterboxdAccount.lastWatched":
+		if e.ComplexityRoot.LetterboxdAccount.LastWatched == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdAccount.LastWatched(childComplexity), true
+	case "LetterboxdAccount.username":
+		if e.ComplexityRoot.LetterboxdAccount.Username == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdAccount.Username(childComplexity), true
+
+	case "LetterboxdFilm.name":
+		if e.ComplexityRoot.LetterboxdFilm.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdFilm.Name(childComplexity), true
+	case "LetterboxdFilm.reason":
+		if e.ComplexityRoot.LetterboxdFilm.Reason == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdFilm.Reason(childComplexity), true
+	case "LetterboxdFilm.uri":
+		if e.ComplexityRoot.LetterboxdFilm.URI == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdFilm.URI(childComplexity), true
+	case "LetterboxdFilm.year":
+		if e.ComplexityRoot.LetterboxdFilm.Year == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdFilm.Year(childComplexity), true
+
+	case "LetterboxdImport.error":
+		if e.ComplexityRoot.LetterboxdImport.Error == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdImport.Error(childComplexity), true
+	case "LetterboxdImport.matched":
+		if e.ComplexityRoot.LetterboxdImport.Matched == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdImport.Matched(childComplexity), true
+	case "LetterboxdImport.notMatched":
+		if e.ComplexityRoot.LetterboxdImport.NotMatched == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdImport.NotMatched(childComplexity), true
+	case "LetterboxdImport.processed":
+		if e.ComplexityRoot.LetterboxdImport.Processed == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdImport.Processed(childComplexity), true
+	case "LetterboxdImport.rated":
+		if e.ComplexityRoot.LetterboxdImport.Rated == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdImport.Rated(childComplexity), true
+	case "LetterboxdImport.state":
+		if e.ComplexityRoot.LetterboxdImport.State == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdImport.State(childComplexity), true
+	case "LetterboxdImport.total":
+		if e.ComplexityRoot.LetterboxdImport.Total == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdImport.Total(childComplexity), true
+	case "LetterboxdImport.unmatchedCount":
+		if e.ComplexityRoot.LetterboxdImport.UnmatchedCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdImport.UnmatchedCount(childComplexity), true
+	case "LetterboxdImport.watched":
+		if e.ComplexityRoot.LetterboxdImport.Watched == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdImport.Watched(childComplexity), true
+	case "LetterboxdImport.watchlisted":
+		if e.ComplexityRoot.LetterboxdImport.Watchlisted == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LetterboxdImport.Watchlisted(childComplexity), true
+
 	case "MoreWithRow.becauseOf":
 		if e.ComplexityRoot.MoreWithRow.BecauseOf == nil {
 			break
@@ -952,6 +1109,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CompleteNeoworksSignIn(childComplexity, args["code"].(string), args["state"].(string)), true
+	case "Mutation.connectLetterboxd":
+		if e.ComplexityRoot.Mutation.ConnectLetterboxd == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_connectLetterboxd_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.ConnectLetterboxd(childComplexity, args["profileId"].(string), args["username"].(string)), true
 	case "Mutation.createProfile":
 		if e.ComplexityRoot.Mutation.CreateProfile == nil {
 			break
@@ -985,6 +1153,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeleteProfile(childComplexity, args["id"].(string)), true
+	case "Mutation.disconnectLetterboxd":
+		if e.ComplexityRoot.Mutation.DisconnectLetterboxd == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_disconnectLetterboxd_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.DisconnectLetterboxd(childComplexity, args["profileId"].(string)), true
 	case "Mutation.failChallenge":
 		if e.ComplexityRoot.Mutation.FailChallenge == nil {
 			break
@@ -1018,6 +1197,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.HostTogether(childComplexity, args["profileId"].(string)), true
+	case "Mutation.importLetterboxd":
+		if e.ComplexityRoot.Mutation.ImportLetterboxd == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_importLetterboxd_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.ImportLetterboxd(childComplexity, args["profileId"].(string), args["zipBase64"].(string)), true
 	case "Mutation.joinTogether":
 		if e.ComplexityRoot.Mutation.JoinTogether == nil {
 			break
@@ -1201,6 +1391,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.StartNeoworksSignIn(childComplexity, args["returnTo"].(*string)), true
+	case "Mutation.syncLetterboxd":
+		if e.ComplexityRoot.Mutation.SyncLetterboxd == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_syncLetterboxd_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.SyncLetterboxd(childComplexity, args["profileId"].(string)), true
 	case "Mutation.syncNeoworks":
 		if e.ComplexityRoot.Mutation.SyncNeoworks == nil {
 			break
@@ -1793,6 +1994,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Query.History(childComplexity, args["profileId"].(string), args["limit"].(*int)), true
 
+	case "Query.letterboxdAccount":
+		if e.ComplexityRoot.Query.LetterboxdAccount == nil {
+			break
+		}
+
+		args, err := ec.field_Query_letterboxdAccount_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.LetterboxdAccount(childComplexity, args["profileId"].(string)), true
+	case "Query.letterboxdImport":
+		if e.ComplexityRoot.Query.LetterboxdImport == nil {
+			break
+		}
+
+		args, err := ec.field_Query_letterboxdImport_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.LetterboxdImport(childComplexity, args["profileId"].(string)), true
 	case "Query.likedTitles":
 		if e.ComplexityRoot.Query.LikedTitles == nil {
 			break
@@ -3304,6 +3527,53 @@ type Query {
   status: Status!
   "The household's Neoworks account, which syncs profiles, history, lists, ratings and settings between devices."
   neoworksAccount: NeoworksAccount!
+  "Progress and result of the profile's latest Letterboxd import."
+  letterboxdImport(profileId: ID!): LetterboxdImport!
+  "The Letterboxd account the profile follows; null when none."
+  letterboxdAccount(profileId: ID!): LetterboxdAccount
+}
+
+enum LetterboxdImportState {
+  IDLE
+  RUNNING
+  DONE
+  FAILED
+}
+
+"An import of a Letterboxd export (watched, ratings, diary, watchlist) into a profile."
+type LetterboxdImport {
+  state: LetterboxdImportState!
+  "Films in the export, and how many were looked up on TMDB so far."
+  total: Int!
+  processed: Int!
+  "Films that found their TMDB movie."
+  matched: Int!
+  "What the import added; what Otter already had is not counted."
+  watched: Int!
+  rated: Int!
+  watchlisted: Int!
+  "Films TMDB had no match for; notMatched lists the first few hundred."
+  unmatchedCount: Int!
+  notMatched: [LetterboxdFilm!]!
+  error: String
+}
+
+type LetterboxdFilm {
+  name: String!
+  year: Int
+  uri: String
+  reason: String!
+}
+
+"A Letterboxd account whose public diary feed a profile follows. Otter only reads from Letterboxd; writing needs API access Letterboxd has not given."
+type LetterboxdAccount {
+  username: String!
+  lastSyncedAt: String
+  "Why the last sync failed; null after a good one."
+  lastError: String
+  "Watches and ratings the last sync added."
+  lastWatched: Int!
+  lastRated: Int!
 }
 
 type NeoworksAccount {
@@ -3414,6 +3684,15 @@ type Mutation {
   syncNeoworks: NeoworksAccount!
   "Starts a sync in the background and returns at once; the apps call it when they open."
   syncNeoworksSoon: Boolean!
+
+  "Starts importing a Letterboxd export ZIP (base64) into the profile in the background; follow it with Query.letterboxdImport. Refused when the file is no export or an import is running."
+  importLetterboxd(profileId: ID!, zipBase64: String!): LetterboxdImport!
+  "Makes the profile follow a Letterboxd account's public diary (a username or a profile address); the feed is read every few hours."
+  connectLetterboxd(profileId: ID!, username: String!): LetterboxdAccount!
+  "Stops following the account; what was imported stays."
+  disconnectLetterboxd(profileId: ID!): Boolean!
+  "Reads the followed account's diary feed now; a failure is in the account's lastError."
+  syncLetterboxd(profileId: ID!): LetterboxdAccount!
 }
 
 type PluginUpdate {
@@ -3585,6 +3864,62 @@ func (ec *executionContext) childFields_HistoryEntry(ctx context.Context, field 
 		return ec.fieldContext_HistoryEntry_progress(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type HistoryEntry", field.Name)
+}
+
+func (ec *executionContext) childFields_LetterboxdAccount(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "username":
+		return ec.fieldContext_LetterboxdAccount_username(ctx, field)
+	case "lastSyncedAt":
+		return ec.fieldContext_LetterboxdAccount_lastSyncedAt(ctx, field)
+	case "lastError":
+		return ec.fieldContext_LetterboxdAccount_lastError(ctx, field)
+	case "lastWatched":
+		return ec.fieldContext_LetterboxdAccount_lastWatched(ctx, field)
+	case "lastRated":
+		return ec.fieldContext_LetterboxdAccount_lastRated(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type LetterboxdAccount", field.Name)
+}
+
+func (ec *executionContext) childFields_LetterboxdFilm(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "name":
+		return ec.fieldContext_LetterboxdFilm_name(ctx, field)
+	case "year":
+		return ec.fieldContext_LetterboxdFilm_year(ctx, field)
+	case "uri":
+		return ec.fieldContext_LetterboxdFilm_uri(ctx, field)
+	case "reason":
+		return ec.fieldContext_LetterboxdFilm_reason(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type LetterboxdFilm", field.Name)
+}
+
+func (ec *executionContext) childFields_LetterboxdImport(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "state":
+		return ec.fieldContext_LetterboxdImport_state(ctx, field)
+	case "total":
+		return ec.fieldContext_LetterboxdImport_total(ctx, field)
+	case "processed":
+		return ec.fieldContext_LetterboxdImport_processed(ctx, field)
+	case "matched":
+		return ec.fieldContext_LetterboxdImport_matched(ctx, field)
+	case "watched":
+		return ec.fieldContext_LetterboxdImport_watched(ctx, field)
+	case "rated":
+		return ec.fieldContext_LetterboxdImport_rated(ctx, field)
+	case "watchlisted":
+		return ec.fieldContext_LetterboxdImport_watchlisted(ctx, field)
+	case "unmatchedCount":
+		return ec.fieldContext_LetterboxdImport_unmatchedCount(ctx, field)
+	case "notMatched":
+		return ec.fieldContext_LetterboxdImport_notMatched(ctx, field)
+	case "error":
+		return ec.fieldContext_LetterboxdImport_error(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type LetterboxdImport", field.Name)
 }
 
 func (ec *executionContext) childFields_MoreWithRow(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -4379,6 +4714,28 @@ func (ec *executionContext) field_Mutation_completeNeoworksSignIn_args(ctx conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_connectLetterboxd_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "username",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["username"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createProfile_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4453,6 +4810,20 @@ func (ec *executionContext) field_Mutation_deleteProfile_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_disconnectLetterboxd_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_failChallenge_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4508,6 +4879,28 @@ func (ec *executionContext) field_Mutation_hostTogether_args(ctx context.Context
 		return nil, err
 	}
 	args["profileId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_importLetterboxd_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "zipBase64",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["zipBase64"] = arg1
 	return args, nil
 }
 
@@ -4838,6 +5231,20 @@ func (ec *executionContext) field_Mutation_startNeoworksSignIn_args(ctx context.
 		return nil, err
 	}
 	args["returnTo"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_syncLetterboxd_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
 	return args, nil
 }
 
@@ -5230,6 +5637,34 @@ func (ec *executionContext) field_Query_history_args(ctx context.Context, rawArg
 		return nil, err
 	}
 	args["limit"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_letterboxdAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_letterboxdImport_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
 	return args, nil
 }
 
@@ -6934,6 +7369,452 @@ func (ec *executionContext) fieldContext_HistoryEntry_progress(_ context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _LetterboxdAccount_username(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdAccount_username(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Username, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdAccount_username(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdAccount", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdAccount_lastSyncedAt(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdAccount_lastSyncedAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LastSyncedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdAccount_lastSyncedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdAccount", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdAccount_lastError(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdAccount_lastError(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LastError, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdAccount_lastError(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdAccount", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdAccount_lastWatched(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdAccount_lastWatched(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LastWatched, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdAccount_lastWatched(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdAccount", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdAccount_lastRated(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdAccount) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdAccount_lastRated(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LastRated, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdAccount_lastRated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdAccount", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdFilm_name(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdFilm) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdFilm_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdFilm_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdFilm", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdFilm_year(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdFilm) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdFilm_year(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Year, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *int) graphql.Marshaler {
+			return ec.marshalOInt2ᚖint(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdFilm_year(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdFilm", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdFilm_uri(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdFilm) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdFilm_uri(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.URI, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdFilm_uri(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdFilm", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdFilm_reason(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdFilm) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdFilm_reason(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Reason, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdFilm_reason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdFilm", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdImport_state(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdImport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdImport_state(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.State, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.LetterboxdImportState) graphql.Marshaler {
+			return ec.marshalNLetterboxdImportState2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdImportState(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdImport_state(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdImport", field, false, false, errors.New("field of type LetterboxdImportState does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdImport_total(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdImport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdImport_total(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Total, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdImport_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdImport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdImport_processed(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdImport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdImport_processed(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Processed, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdImport_processed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdImport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdImport_matched(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdImport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdImport_matched(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Matched, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdImport_matched(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdImport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdImport_watched(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdImport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdImport_watched(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Watched, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdImport_watched(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdImport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdImport_rated(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdImport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdImport_rated(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Rated, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdImport_rated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdImport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdImport_watchlisted(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdImport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdImport_watchlisted(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Watchlisted, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdImport_watchlisted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdImport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdImport_unmatchedCount(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdImport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdImport_unmatchedCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UnmatchedCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdImport_unmatchedCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdImport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _LetterboxdImport_notMatched(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdImport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdImport_notMatched(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.NotMatched, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.LetterboxdFilm) graphql.Marshaler {
+			return ec.marshalNLetterboxdFilm2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdFilmᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdImport_notMatched(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LetterboxdImport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_LetterboxdFilm(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LetterboxdImport_error(ctx context.Context, field graphql.CollectedField, obj *model.LetterboxdImport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LetterboxdImport_error(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Error, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_LetterboxdImport_error(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LetterboxdImport", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
 func (ec *executionContext) _MoreWithRow_person(ctx context.Context, field graphql.CollectedField, obj *model.MoreWithRow) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -8515,6 +9396,182 @@ func (ec *executionContext) _Mutation_syncNeoworksSoon(ctx context.Context, fiel
 }
 func (ec *executionContext) fieldContext_Mutation_syncNeoworksSoon(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Mutation", field, true, true, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _Mutation_importLetterboxd(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_importLetterboxd(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().ImportLetterboxd(ctx, fc.Args["profileId"].(string), fc.Args["zipBase64"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.LetterboxdImport) graphql.Marshaler {
+			return ec.marshalNLetterboxdImport2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdImport(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_importLetterboxd(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_LetterboxdImport(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_importLetterboxd_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_connectLetterboxd(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_connectLetterboxd(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().ConnectLetterboxd(ctx, fc.Args["profileId"].(string), fc.Args["username"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.LetterboxdAccount) graphql.Marshaler {
+			return ec.marshalNLetterboxdAccount2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdAccount(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_connectLetterboxd(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_LetterboxdAccount(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_connectLetterboxd_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_disconnectLetterboxd(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_disconnectLetterboxd(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().DisconnectLetterboxd(ctx, fc.Args["profileId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_disconnectLetterboxd(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_disconnectLetterboxd_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_syncLetterboxd(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_syncLetterboxd(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().SyncLetterboxd(ctx, fc.Args["profileId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.LetterboxdAccount) graphql.Marshaler {
+			return ec.marshalNLetterboxdAccount2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdAccount(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_syncLetterboxd(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_LetterboxdAccount(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_syncLetterboxd_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
 }
 
 func (ec *executionContext) _NeoworksAccount_signedIn(ctx context.Context, field graphql.CollectedField, obj *model.NeoworksAccount) (ret graphql.Marshaler) {
@@ -11421,6 +12478,94 @@ func (ec *executionContext) fieldContext_Query_neoworksAccount(_ context.Context
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return ec.childFields_NeoworksAccount(ctx, field)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_letterboxdImport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_letterboxdImport(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().LetterboxdImport(ctx, fc.Args["profileId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.LetterboxdImport) graphql.Marshaler {
+			return ec.marshalNLetterboxdImport2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdImport(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_letterboxdImport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_LetterboxdImport(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_letterboxdImport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_letterboxdAccount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_letterboxdAccount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().LetterboxdAccount(ctx, fc.Args["profileId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.LetterboxdAccount) graphql.Marshaler {
+			return ec.marshalOLetterboxdAccount2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdAccount(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Query_letterboxdAccount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_LetterboxdAccount(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_letterboxdAccount_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -16095,6 +17240,188 @@ func (ec *executionContext) _HistoryEntry(ctx context.Context, sel ast.Selection
 	return out
 }
 
+var letterboxdAccountImplementors = []string{"LetterboxdAccount"}
+
+func (ec *executionContext) _LetterboxdAccount(ctx context.Context, sel ast.SelectionSet, obj *model.LetterboxdAccount) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, letterboxdAccountImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LetterboxdAccount")
+		case "username":
+			out.Values[i] = ec._LetterboxdAccount_username(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "lastSyncedAt":
+			out.Values[i] = ec._LetterboxdAccount_lastSyncedAt(ctx, field, obj)
+		case "lastError":
+			out.Values[i] = ec._LetterboxdAccount_lastError(ctx, field, obj)
+		case "lastWatched":
+			out.Values[i] = ec._LetterboxdAccount_lastWatched(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "lastRated":
+			out.Values[i] = ec._LetterboxdAccount_lastRated(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var letterboxdFilmImplementors = []string{"LetterboxdFilm"}
+
+func (ec *executionContext) _LetterboxdFilm(ctx context.Context, sel ast.SelectionSet, obj *model.LetterboxdFilm) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, letterboxdFilmImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LetterboxdFilm")
+		case "name":
+			out.Values[i] = ec._LetterboxdFilm_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "year":
+			out.Values[i] = ec._LetterboxdFilm_year(ctx, field, obj)
+		case "uri":
+			out.Values[i] = ec._LetterboxdFilm_uri(ctx, field, obj)
+		case "reason":
+			out.Values[i] = ec._LetterboxdFilm_reason(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var letterboxdImportImplementors = []string{"LetterboxdImport"}
+
+func (ec *executionContext) _LetterboxdImport(ctx context.Context, sel ast.SelectionSet, obj *model.LetterboxdImport) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, letterboxdImportImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LetterboxdImport")
+		case "state":
+			out.Values[i] = ec._LetterboxdImport_state(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "total":
+			out.Values[i] = ec._LetterboxdImport_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "processed":
+			out.Values[i] = ec._LetterboxdImport_processed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "matched":
+			out.Values[i] = ec._LetterboxdImport_matched(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "watched":
+			out.Values[i] = ec._LetterboxdImport_watched(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rated":
+			out.Values[i] = ec._LetterboxdImport_rated(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "watchlisted":
+			out.Values[i] = ec._LetterboxdImport_watchlisted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "unmatchedCount":
+			out.Values[i] = ec._LetterboxdImport_unmatchedCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "notMatched":
+			out.Values[i] = ec._LetterboxdImport_notMatched(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "error":
+			out.Values[i] = ec._LetterboxdImport_error(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var moreWithRowImplementors = []string{"MoreWithRow"}
 
 func (ec *executionContext) _MoreWithRow(ctx context.Context, sel ast.SelectionSet, obj *model.MoreWithRow) graphql.Marshaler {
@@ -16418,6 +17745,34 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "syncNeoworksSoon":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_syncNeoworksSoon(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "importLetterboxd":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_importLetterboxd(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "connectLetterboxd":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_connectLetterboxd(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "disconnectLetterboxd":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_disconnectLetterboxd(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "syncLetterboxd":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_syncLetterboxd(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -17849,6 +19204,47 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "letterboxdImport":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_letterboxdImport(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "letterboxdAccount":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_letterboxdAccount(ctx, field)
 				return res
 			}
 
@@ -19860,6 +21256,70 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) marshalNLetterboxdAccount2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdAccount(ctx context.Context, sel ast.SelectionSet, v model.LetterboxdAccount) graphql.Marshaler {
+	return ec._LetterboxdAccount(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNLetterboxdAccount2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdAccount(ctx context.Context, sel ast.SelectionSet, v *model.LetterboxdAccount) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LetterboxdAccount(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLetterboxdFilm2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdFilmᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.LetterboxdFilm) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNLetterboxdFilm2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdFilm(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNLetterboxdFilm2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdFilm(ctx context.Context, sel ast.SelectionSet, v *model.LetterboxdFilm) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LetterboxdFilm(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLetterboxdImport2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdImport(ctx context.Context, sel ast.SelectionSet, v model.LetterboxdImport) graphql.Marshaler {
+	return ec._LetterboxdImport(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNLetterboxdImport2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdImport(ctx context.Context, sel ast.SelectionSet, v *model.LetterboxdImport) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LetterboxdImport(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNLetterboxdImportState2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdImportState(ctx context.Context, v any) (model.LetterboxdImportState, error) {
+	var res model.LetterboxdImportState
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNLetterboxdImportState2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdImportState(ctx context.Context, sel ast.SelectionSet, v model.LetterboxdImportState) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNMediaType2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx context.Context, v any) (model.MediaType, error) {
 	var res model.MediaType
 	err := res.UnmarshalGQL(v)
@@ -20756,6 +22216,13 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	_ = ctx
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOLetterboxdAccount2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐLetterboxdAccount(ctx context.Context, sel ast.SelectionSet, v *model.LetterboxdAccount) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._LetterboxdAccount(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOMediaType2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx context.Context, v any) (*model.MediaType, error) {

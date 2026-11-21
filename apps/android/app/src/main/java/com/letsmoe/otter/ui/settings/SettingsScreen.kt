@@ -73,6 +73,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenPlugins: () -> Unit, viewModel: Set
         ) {
             ServerGroup()
             SyncGroup()
+            LetterboxdGroup()
             MetadataGroup(viewModel)
             StreamingGroup(viewModel)
             PlaybackGroup()
