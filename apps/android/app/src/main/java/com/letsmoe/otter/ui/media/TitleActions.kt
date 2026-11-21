@@ -11,6 +11,8 @@ import com.letsmoe.otter.graphql.RemoveFromWatchlistMutation
 import com.letsmoe.otter.graphql.RestoreRecommendationMutation
 import com.letsmoe.otter.graphql.SetNotifyingMutation
 import com.letsmoe.otter.graphql.SetRatingMutation
+import com.letsmoe.otter.graphql.StartRewatchMutation
+import com.letsmoe.otter.graphql.StopRewatchMutation
 
 /** Watchlist, rating and stream-lookup writes on one movie, series or episode. */
 object TitleActions {
@@ -50,6 +52,15 @@ object TitleActions {
 
     suspend fun restoreRecommendation(profileId: String, mediaId: String) {
         OtterApi.client.mutation(RestoreRecommendationMutation(profileId, mediaId)).execute().dataOrThrow()
+    }
+
+    /** Starts a rewatch from the beginning; the first watch's progress stays as it is. */
+    suspend fun startRewatch(profileId: String, titleId: String) {
+        OtterApi.client.mutation(StartRewatchMutation(profileId, titleId)).execute().dataOrThrow()
+    }
+
+    suspend fun stopRewatch(profileId: String, titleId: String) {
+        OtterApi.client.mutation(StopRewatchMutation(profileId, titleId)).execute().dataOrThrow()
     }
 
     /** Asks every streams plugin again; results arrive through the streams subscription. */

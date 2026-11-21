@@ -102,6 +102,15 @@ func (s *Store) NextEpisode(ctx context.Context, current Episode) (*Episode, err
 			"episode_number": current.EpisodeNumber})
 }
 
+// FirstEpisode returns a series' first regular episode (specials excluded);
+// nil when none is stored.
+func (s *Store) FirstEpisode(ctx context.Context, seriesID int) (*Episode, error) {
+	return db.QueryOneAs[Episode](ctx, s.database, `SELECT * FROM episode
+		WHERE series_id = $series_id AND season_number > 0
+		ORDER BY season_number, episode_number LIMIT 1`,
+		db.Vars{"series_id": seriesID})
+}
+
 // SavePerson writes a fully fetched person.
 func (s *Store) SavePerson(ctx context.Context, person Person) error {
 	_, err := s.database.Exec(ctx, `INSERT INTO person (tmdb_id, imdb_id, name, profile_path,

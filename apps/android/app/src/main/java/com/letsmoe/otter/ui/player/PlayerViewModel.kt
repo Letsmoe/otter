@@ -1189,8 +1189,10 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         if (!activePlayer.isPlaying || current.isHolding) {
             return
         }
+        // A rewatch always jumps over intros and recaps, whatever the setting and the habits say.
+        val rewatching = media?.rewatching == true
         val target = skipTracker.autoSkipTarget(positionSeconds) { jump ->
-            skipHabits.skips(jump, PlaybackSettings.autoSkipIntro, current.isCasting)
+            rewatching || skipHabits.skips(jump, PlaybackSettings.autoSkipIntro, current.isCasting)
         } ?: return
         seekTo(target)
     }

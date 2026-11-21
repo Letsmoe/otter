@@ -36,7 +36,7 @@ fun MoviePage(
     onOpenItem: (RailItem) -> Unit,
 ) {
     var tab by rememberSaveable { mutableStateOf(MovieTab.RELATED) }
-    val playLabel = moviePlayLabel(streams)
+    val playLabel = moviePlayLabel(streams, detail.rewatching)
     TitlePage(
         detail = detail,
         facts = movieFacts(detail),
@@ -54,6 +54,11 @@ fun MoviePage(
         slots = slots,
         downloadTarget = DownloadTarget(detail.id, detail.title),
         tabBar = { SegmentedBar(movieTabs, tab, onSelect = { chosen -> tab = chosen }) },
+        rewatch = RewatchBarState(
+            offer = rewatchOffer(detail.finishedBefore, detail.rewatching),
+            onStart = { actions.onStartRewatch { onPlay(PlayRequest(detail.id)) } },
+            onStop = { actions.onStopRewatch {} },
+        ),
     ) {
         when (tab) {
             MovieTab.RELATED -> RelatedTab(rails, onOpenItem)
@@ -68,7 +73,7 @@ fun MoviePage(
     }
 }
 
-private fun moviePlayLabel(streams: StreamList): String {
+private fun moviePlayLabel(streams: StreamList, rewatching: Boolean): String {
     if (streams.vpnBlocked) {
         return "Connect to a VPN to watch"
     }
@@ -77,6 +82,9 @@ private fun moviePlayLabel(streams: StreamList): String {
     }
     if (streams.nothingFound) {
         return "No sources found"
+    }
+    if (rewatching) {
+        return "Continue rewatch"
     }
     return "Play"
 }

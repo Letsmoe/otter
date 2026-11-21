@@ -265,6 +265,15 @@ type ResolvedStream struct {
 	StreamID *string `json:"streamId,omitempty"`
 }
 
+// A second run through a movie or series. While it is going, `progress` of the title and its
+// episodes is the rewatch's own, so Continue watching, history and recommendations stay as the
+// first watch left them.
+type Rewatch struct {
+	StartedAt string `json:"startedAt"`
+	// True once the movie, or every aired episode, was watched again.
+	Finished bool `json:"finished"`
+}
+
 type Season struct {
 	ID           string  `json:"id"`
 	SeasonNumber int     `json:"seasonNumber"`
@@ -421,6 +430,8 @@ type Title struct {
 	InWatchlist bool           `json:"inWatchlist"`
 	// Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List.
 	Notifying bool `json:"notifying"`
+	// The profile's latest rewatch of this movie or series; null when there never was one.
+	Rewatch *Rewatch `json:"rewatch,omitempty"`
 }
 
 // Narrows search results; omitted fields don't filter. Runtime is in minutes.

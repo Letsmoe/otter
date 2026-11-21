@@ -38,6 +38,10 @@ data class TitleDetail(
     val rating: Double?,
     /** How far Play resumes a movie (0..1); null when it is unwatched or finished. */
     val resumeFraction: Float?,
+    /** The title was watched to the end (a movie; a series is judged from its episodes). */
+    val finishedBefore: Boolean,
+    /** A rewatch of it is going. */
+    val rewatching: Boolean,
 ) {
     /** Seasons without specials. */
     val regularSeasonCount: Int get() = seasons.count { season -> season.seasonNumber > 0 }
@@ -71,6 +75,8 @@ fun TitleDetailQuery.Title.toDetail(): TitleDetail {
         notifying = notifying,
         rating = rating,
         resumeFraction = resumeFractionOf(this),
+        finishedBefore = titleWatchState.progress?.completed == true,
+        rewatching = isRewatchRunning(titleWatchState.rewatch?.finished),
     )
 }
 
