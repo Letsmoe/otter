@@ -102,7 +102,8 @@ class OverlayPainter(private val job: OverlayJob) : BitmapOverlay() {
         if (frame.upNextSecondsLeft == null) {
             return frame
         }
-        if (job.stopsAfterEpisode()) {
+        // A season finale's note has no episode to stop before.
+        if (job.stopsAfterEpisode() && job.plan.upNext?.countsDown == true) {
             return frame.copy(upNextSecondsLeft = null, upNextProgress = null, skipLabel = STOPPING_LABEL)
         }
         if (!job.upNextDismissed()) {
@@ -321,7 +322,15 @@ private fun drawSkipPill(canvas: Canvas, label: String, scale: Float) {
 /** The card's countdown: whole seconds for the text, [progress] (0 to 1) for the fill. */
 private data class UpNextCountdown(val secondsLeft: Int, val progress: Float)
 
-// The still on top, then "Next episode in Ns" and the episode, bottom right.
+// "Next episode in 7s", or only the heading for a note that doesn't count down.
+private fun upNextHeadline(upNext: UpNextHint, countdown: UpNextCountdown): String {
+    if (!upNext.countsDown) {
+        return upNext.heading
+    }
+    return "${upNext.heading} in ${countdown.secondsLeft}s"
+}
+
+// The still on top, then "Next episode in Ns" (or "Next season in Ns") and the episode, bottom right.
 private fun drawUpNextCard(canvas: Canvas, upNext: UpNextHint, countdown: UpNextCountdown, scale: Float) {
     val width = CARD_WIDTH * scale
     val padding = CARD_PADDING * scale
@@ -334,11 +343,15 @@ private fun drawUpNextCard(canvas: Canvas, upNext: UpNextHint, countdown: UpNext
     val bottom = canvas.height - BOTTOM_MARGIN * scale
     val card = RectF(right - width, bottom - height, right, bottom)
     val radius = CARD_RADIUS * scale
-    drawCardBackground(canvas, card, radius, countdown.progress)
+    var fillProgress = countdown.progress
+    if (!upNext.countsDown) {
+        fillProgress = 0f
+    }
+    drawCardBackground(canvas, card, radius, fillProgress)
     upNext.still?.let { still -> drawStill(canvas, still, RectF(card.left, card.top, card.right, card.top + stillHeight), radius) }
     val textLeft = card.left + padding
     val titleBaseline = card.top + stillHeight + padding - title.ascent()
-    canvas.drawText("Next episode in ${countdown.secondsLeft}s", textLeft, titleBaseline, title)
+    canvas.drawText(upNextHeadline(upNext, countdown), textLeft, titleBaseline, title)
     val episode = TextUtils.ellipsize(upNext.episodeLabel, label, width - 2 * padding, TextUtils.TruncateAt.END).toString()
     canvas.drawText(episode, textLeft, titleBaseline + title.descent() + CARD_LINE_GAP * scale - label.ascent(), label)
 }
