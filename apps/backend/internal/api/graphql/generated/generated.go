@@ -153,7 +153,7 @@ type ComplexityRoot struct {
 		SyncNeoworks           func(childComplexity int) int
 		SyncNeoworksSoon       func(childComplexity int) int
 		UpdatePlugins          func(childComplexity int) int
-		UpdateProfile          func(childComplexity int, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, subtitleStyle *model.SubtitleStyle, voiceBoost *bool) int
+		UpdateProfile          func(childComplexity int, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, subtitleStyle *model.SubtitleStyle, voiceBoost *bool, ageLimit *int, bedtimeMinutes *int) int
 		UpdateSettings         func(childComplexity int, input model.SettingsInput) int
 		VerifyPin              func(childComplexity int, profileID string, pin string) int
 	}
@@ -245,7 +245,9 @@ type ComplexityRoot struct {
 	}
 
 	Profile struct {
+		AgeLimit         func(childComplexity int) int
 		AvatarURL        func(childComplexity int) int
+		BedtimeMinutes   func(childComplexity int) int
 		HasPin           func(childComplexity int) int
 		ID               func(childComplexity int) int
 		IsChild          func(childComplexity int) int
@@ -483,7 +485,7 @@ type MutationResolver interface {
 	AdoptStream(ctx context.Context, mediaID string, url string, plugin string, label *string) (*model.Stream, error)
 	SendTogether(ctx context.Context, payload string) (bool, error)
 	CreateProfile(ctx context.Context, name string, avatarURL *string, pin *string, isChild *bool, languages []string) (*model.Profile, error)
-	UpdateProfile(ctx context.Context, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, subtitleStyle *model.SubtitleStyle, voiceBoost *bool) (*model.Profile, error)
+	UpdateProfile(ctx context.Context, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, subtitleStyle *model.SubtitleStyle, voiceBoost *bool, ageLimit *int, bedtimeMinutes *int) (*model.Profile, error)
 	DeleteProfile(ctx context.Context, id string) (bool, error)
 	VerifyPin(ctx context.Context, profileID string, pin string) (*model.PinCheck, error)
 	UpdateSettings(ctx context.Context, input model.SettingsInput) (*model.Settings, error)
@@ -1229,7 +1231,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.UpdateProfile(childComplexity, args["id"].(string), args["name"].(*string), args["avatarUrl"].(*string), args["isChild"].(*bool), args["pin"].(*string), args["languages"].([]string), args["subtitlesEnabled"].(*bool), args["subtitleLanguage"].(*string), args["subtitleSize"].(*model.SubtitleSize), args["subtitleStyle"].(*model.SubtitleStyle), args["voiceBoost"].(*bool)), true
+		return e.ComplexityRoot.Mutation.UpdateProfile(childComplexity, args["id"].(string), args["name"].(*string), args["avatarUrl"].(*string), args["isChild"].(*bool), args["pin"].(*string), args["languages"].([]string), args["subtitlesEnabled"].(*bool), args["subtitleLanguage"].(*string), args["subtitleSize"].(*model.SubtitleSize), args["subtitleStyle"].(*model.SubtitleStyle), args["voiceBoost"].(*bool), args["ageLimit"].(*int), args["bedtimeMinutes"].(*int)), true
 	case "Mutation.updateSettings":
 		if e.ComplexityRoot.Mutation.UpdateSettings == nil {
 			break
@@ -1614,12 +1616,24 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.PluginUpdateReport.Updated(childComplexity), true
 
+	case "Profile.ageLimit":
+		if e.ComplexityRoot.Profile.AgeLimit == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Profile.AgeLimit(childComplexity), true
 	case "Profile.avatarUrl":
 		if e.ComplexityRoot.Profile.AvatarURL == nil {
 			break
 		}
 
 		return e.ComplexityRoot.Profile.AvatarURL(childComplexity), true
+	case "Profile.bedtimeMinutes":
+		if e.ComplexityRoot.Profile.BedtimeMinutes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Profile.BedtimeMinutes(childComplexity), true
 	case "Profile.hasPin":
 		if e.ComplexityRoot.Profile.HasPin == nil {
 			break
@@ -3015,6 +3029,10 @@ type Profile {
   subtitleStyle: SubtitleStyle!
   "Boost dialogue over music and effects"
   voiceBoost: Boolean!
+  "Child profiles: the oldest age their titles may be rated for (FSK in Germany); 0 means no limit. Titles above it, or without a rating, are hidden and can't be played."
+  ageLimit: Int!
+  "Child profiles: the fixed bedtime in minutes after midnight, after which every title stops after its episode; null for none."
+  bedtimeMinutes: Int
 }
 
 "An external subtitle file for a movie or episode, found by a subtitles plugin."
@@ -3387,8 +3405,8 @@ type Mutation {
 
   "The first profile's top language also becomes the TMDB language."
   createProfile(name: String!, avatarUrl: String, pin: String, isChild: Boolean = false, languages: [String!]): Profile!
-  "Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it."
-  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, subtitleStyle: SubtitleStyle, voiceBoost: Boolean): Profile!
+  "Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it; ageLimit 0 and a negative bedtimeMinutes remove those."
+  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, subtitleStyle: SubtitleStyle, voiceBoost: Boolean, ageLimit: Int, bedtimeMinutes: Int): Profile!
   deleteProfile(id: ID!): Boolean!
   verifyPin(profileId: ID!, pin: String!): PinCheck!
 
@@ -3795,6 +3813,10 @@ func (ec *executionContext) childFields_Profile(ctx context.Context, field graph
 		return ec.fieldContext_Profile_subtitleStyle(ctx, field)
 	case "voiceBoost":
 		return ec.fieldContext_Profile_voiceBoost(ctx, field)
+	case "ageLimit":
+		return ec.fieldContext_Profile_ageLimit(ctx, field)
+	case "bedtimeMinutes":
+		return ec.fieldContext_Profile_bedtimeMinutes(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Profile", field.Name)
 }
@@ -4932,6 +4954,22 @@ func (ec *executionContext) field_Mutation_updateProfile_args(ctx context.Contex
 		return nil, err
 	}
 	args["voiceBoost"] = arg10
+	arg11, err := graphql.ProcessArgField(ctx, rawArgs, "ageLimit",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["ageLimit"] = arg11
+	arg12, err := graphql.ProcessArgField(ctx, rawArgs, "bedtimeMinutes",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["bedtimeMinutes"] = arg12
 	return args, nil
 }
 
@@ -7945,7 +7983,7 @@ func (ec *executionContext) _Mutation_updateProfile(ctx context.Context, field g
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().UpdateProfile(ctx, fc.Args["id"].(string), fc.Args["name"].(*string), fc.Args["avatarUrl"].(*string), fc.Args["isChild"].(*bool), fc.Args["pin"].(*string), fc.Args["languages"].([]string), fc.Args["subtitlesEnabled"].(*bool), fc.Args["subtitleLanguage"].(*string), fc.Args["subtitleSize"].(*model.SubtitleSize), fc.Args["subtitleStyle"].(*model.SubtitleStyle), fc.Args["voiceBoost"].(*bool))
+			return ec.Resolvers.Mutation().UpdateProfile(ctx, fc.Args["id"].(string), fc.Args["name"].(*string), fc.Args["avatarUrl"].(*string), fc.Args["isChild"].(*bool), fc.Args["pin"].(*string), fc.Args["languages"].([]string), fc.Args["subtitlesEnabled"].(*bool), fc.Args["subtitleLanguage"].(*string), fc.Args["subtitleSize"].(*model.SubtitleSize), fc.Args["subtitleStyle"].(*model.SubtitleStyle), fc.Args["voiceBoost"].(*bool), fc.Args["ageLimit"].(*int), fc.Args["bedtimeMinutes"].(*int))
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Profile) graphql.Marshaler {
@@ -10173,6 +10211,52 @@ func (ec *executionContext) _Profile_voiceBoost(ctx context.Context, field graph
 }
 func (ec *executionContext) fieldContext_Profile_voiceBoost(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Profile", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _Profile_ageLimit(ctx context.Context, field graphql.CollectedField, obj *model.Profile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Profile_ageLimit(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.AgeLimit, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Profile_ageLimit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Profile", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _Profile_bedtimeMinutes(ctx context.Context, field graphql.CollectedField, obj *model.Profile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Profile_bedtimeMinutes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BedtimeMinutes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *int) graphql.Marshaler {
+			return ec.marshalOInt2ᚖint(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Profile_bedtimeMinutes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Profile", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _Query_title(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -17152,6 +17236,13 @@ func (ec *executionContext) _Profile(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "ageLimit":
+			out.Values[i] = ec._Profile_ageLimit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "bedtimeMinutes":
+			out.Values[i] = ec._Profile_bedtimeMinutes(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

@@ -10,6 +10,8 @@ fragment ProfileFields on Profile {
   subtitleSize
   subtitleStyle
   voiceBoost
+  ageLimit
+  bedtimeMinutes
 }
 
 query Profiles {
@@ -43,6 +45,8 @@ mutation UpdateProfile(
   $subtitleSize: SubtitleSize
   $subtitleStyle: SubtitleStyle
   $voiceBoost: Boolean
+  $ageLimit: Int
+  $bedtimeMinutes: Int
 ) {
   updateProfile(
     id: $id
@@ -56,6 +60,8 @@ mutation UpdateProfile(
     subtitleSize: $subtitleSize
     subtitleStyle: $subtitleStyle
     voiceBoost: $voiceBoost
+    ageLimit: $ageLimit
+    bedtimeMinutes: $bedtimeMinutes
   ) {
     ...ProfileFields
   }

@@ -170,14 +170,17 @@ private fun ActionRow(state: PlayerUiState, actions: PlayerActions, modifier: Mo
         }
         ActionButton(PhosphorIcons.Regular.UsersThree, "Together") { actions.openSheet(PlayerSheetKind.TOGETHER) }
         if (state.hasNextEpisode) {
-            ActionButton(PhosphorIcons.Regular.Moon, stopAfterLabel(state.stopsAfterEpisode), actions.toggleStopAfterEpisode)
+            ActionButton(PhosphorIcons.Regular.Moon, stopAfterLabel(state), actions.toggleStopAfterEpisode)
             ActionButton(PhosphorIcons.Regular.SkipForward, "Next Ep.", actions.playNext)
         }
     }
 }
 
-private fun stopAfterLabel(stopping: Boolean): String {
-    if (stopping) {
+private fun stopAfterLabel(state: PlayerUiState): String {
+    if (state.stopLocked) {
+        return "Bedtime: last episode"
+    }
+    if (state.stopsAfterEpisode) {
         return "Stops after this"
     }
     return "Stop after this"

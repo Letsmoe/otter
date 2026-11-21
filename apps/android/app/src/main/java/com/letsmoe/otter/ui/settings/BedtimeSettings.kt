@@ -81,13 +81,14 @@ private fun BedtimeTimeRow(minutes: Int, onClick: () -> Unit) {
     }
 }
 
-private fun timeLabel(minutes: Int): String {
+/** The time of day for [minutes] after midnight, in the phone's format. */
+fun timeLabel(minutes: Int): String {
     return LocalTime.of(minutes / 60, minutes % 60).format(timeFormat)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun BedtimePickerDialog(initialMinutes: Int, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
+fun BedtimePickerDialog(initialMinutes: Int, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
     val uses24Hours = DateFormat.is24HourFormat(LocalContext.current)
     val pickerState = rememberTimePickerState(initialMinutes / 60, initialMinutes % 60, is24Hour = uses24Hours)
     AlertDialog(

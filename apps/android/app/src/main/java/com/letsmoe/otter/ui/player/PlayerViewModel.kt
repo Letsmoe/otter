@@ -32,6 +32,7 @@ import com.letsmoe.otter.profiles.captionLanguage
 import com.letsmoe.otter.profiles.PreferenceChange
 import com.letsmoe.otter.profiles.ProfilePreferences
 import com.letsmoe.otter.profiles.ProfileSession
+import com.letsmoe.otter.settings.Bedtime
 import com.letsmoe.otter.settings.PlaybackSettings
 import com.letsmoe.otter.toasts.ToastKind
 import com.letsmoe.otter.toasts.Toasts
@@ -53,6 +54,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import java.time.LocalTime
 
 private const val POSITION_POLL_MILLISECONDS = 250L
 // How far "Replay with captions" goes back.
@@ -213,6 +215,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         mutableState.update { fresh(mediaId, it) }
         bedtimeAppliedTo = null
         applyBedtimeIfDue()
+        enforceChildBedtime()
         mutablePosition.value = PlaybackPosition()
         loadMediaInfo(mediaId)
         startStreams(mediaId, initial)
@@ -920,6 +923,22 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
      * After the bedtime every title stops after its episode and plays with even volume. It is applied
      * once per title (also when the bedtime passes during one), so the player can still switch both off.
      */
+    // A child profile's bedtime is fixed: from then on every title stops after its episode, for good.
+    private fun enforceChildBedtime() {
+        val profile = ProfileSession.activeProfile.value ?: return
+        val bedtime = profile.bedtimeMinutes ?: return
+        val now = LocalTime.now()
+        if (!profile.isChild || !Bedtime.hasStarted(bedtime, now.hour * 60 + now.minute)) {
+            return
+        }
+        if (mutableState.value.stopLocked) {
+            return
+        }
+        televisionPlayer?.stopsAfterEpisode = true
+        upNextOffer.cancel()
+        mutableState.update { current -> current.copy(stopsAfterEpisode = true, stopLocked = true) }
+    }
+
     private fun applyBedtimeIfDue() {
         if (bedtimeAppliedTo == currentMediaId || !PlaybackSettings.isPastBedtime()) {
             return
@@ -934,6 +953,10 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     /** Nothing plays after the episode playing now; the next title starts without this again. */
     fun toggleStopAfterEpisode() {
+        if (mutableState.value.stopLocked) {
+            Toasts.push("It's bedtime: this is the last episode tonight")
+            return
+        }
         val stopping = !mutableState.value.stopsAfterEpisode
         televisionPlayer?.stopsAfterEpisode = stopping
         mutableState.update { current -> current.copy(stopsAfterEpisode = stopping) }
@@ -978,6 +1001,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             val buffered = activePlayer.bufferedPosition / 1000.0
             mutablePosition.value = PlaybackPosition(position, buffered)
             applyBedtimeIfDue()
+            enforceChildBedtime()
             followSegments(position)
             if (activePlayer.playWhenReady) {
                 saveProgress(force = false)

@@ -24,6 +24,9 @@ object ProfileSession {
     private const val KEY_SUBTITLE_SIZE = "subtitleSize"
     private const val KEY_SUBTITLE_STYLE = "subtitleStyle"
     private const val KEY_VOICE_BOOST = "voiceBoost"
+    private const val KEY_AGE_LIMIT = "ageLimit"
+    private const val KEY_BEDTIME_MINUTES = "bedtimeMinutes"
+    private const val NO_BEDTIME = -1
 
     private lateinit var preferences: SharedPreferences
     private val mutableActiveProfile = MutableStateFlow<ProfileFields?>(null)
@@ -47,6 +50,8 @@ object ProfileSession {
             putString(KEY_SUBTITLE_SIZE, profile.subtitleSize.rawValue)
             putString(KEY_SUBTITLE_STYLE, profile.subtitleStyle.rawValue)
             putBoolean(KEY_VOICE_BOOST, profile.voiceBoost)
+            putInt(KEY_AGE_LIMIT, profile.ageLimit)
+            putInt(KEY_BEDTIME_MINUTES, storedBedtime(profile.bedtimeMinutes))
         }
         mutableActiveProfile.value = profile
     }
@@ -70,7 +75,24 @@ object ProfileSession {
             subtitleSize = readStoredSubtitleSize(),
             subtitleStyle = readStoredSubtitleStyle(),
             voiceBoost = preferences.getBoolean(KEY_VOICE_BOOST, false),
+            ageLimit = preferences.getInt(KEY_AGE_LIMIT, 0),
+            bedtimeMinutes = readStoredBedtime(),
         )
+    }
+
+    private fun storedBedtime(bedtimeMinutes: Int?): Int {
+        if (bedtimeMinutes == null) {
+            return NO_BEDTIME
+        }
+        return bedtimeMinutes
+    }
+
+    private fun readStoredBedtime(): Int? {
+        val stored = preferences.getInt(KEY_BEDTIME_MINUTES, NO_BEDTIME)
+        if (stored == NO_BEDTIME) {
+            return null
+        }
+        return stored
     }
 
     // Stored before languages existed: the default until the next login.

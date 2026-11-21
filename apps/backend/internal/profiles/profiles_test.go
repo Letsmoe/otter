@@ -209,3 +209,66 @@ func TestVoiceBoostUpdate(t *testing.T) {
 		t.Fatalf("voice boost should be on: %+v", updated)
 	}
 }
+
+func TestChildSettingsAreStoredAndCleared(t *testing.T) {
+	ctx := context.Background()
+	service := newTestService(t)
+	created, err := service.Create(ctx, "Kid", "", "", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if created.HasAgeLimit() || created.BedtimeMinutes != nil {
+		t.Fatalf("new profile has limits: %+v", created)
+	}
+
+	ageLimit, bedtime := 12, 20*60+30
+	updated, err := service.Update(ctx, created.ID, Update{AgeLimit: &ageLimit, BedtimeMinutes: &bedtime})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !updated.HasAgeLimit() || updated.AgeLimit != 12 || updated.BedtimeMinutes == nil || *updated.BedtimeMinutes != 1230 {
+		t.Fatalf("limits not stored: %+v", updated)
+	}
+
+	cleared := -1
+	updated, err = service.Update(ctx, created.ID, Update{BedtimeMinutes: &cleared})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.BedtimeMinutes != nil || updated.AgeLimit != 12 {
+		t.Fatalf("bedtime not cleared or limit lost: %+v", updated)
+	}
+}
+
+func TestAgeLimitOnlyHoldsBackChildProfiles(t *testing.T) {
+	ctx := context.Background()
+	service := newTestService(t)
+	adult, err := service.Create(ctx, "Parent", "", "", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ageLimit := 6
+
+	updated, err := service.Update(ctx, adult.ID, Update{AgeLimit: &ageLimit})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if updated.HasAgeLimit() {
+		t.Fatal("an adult profile is held back by an age limit")
+	}
+}
+
+func TestInvalidChildSettingsAreRefused(t *testing.T) {
+	ctx := context.Background()
+	service := newTestService(t)
+	created, _ := service.Create(ctx, "Kid", "", "", true)
+	tooOld, tooLate := 40, 24*60
+
+	if _, err := service.Update(ctx, created.ID, Update{AgeLimit: &tooOld}); err == nil {
+		t.Error("age limit 40 accepted")
+	}
+	if _, err := service.Update(ctx, created.ID, Update{BedtimeMinutes: &tooLate}); err == nil {
+		t.Error("bedtime at 24:00 accepted")
+	}
+}

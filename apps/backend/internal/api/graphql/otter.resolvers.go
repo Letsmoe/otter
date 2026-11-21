@@ -229,6 +229,13 @@ func (r *mutationResolver) StartDownload(ctx context.Context, profileID string, 
 	if err != nil {
 		return nil, err
 	}
+	gate, err := r.gateForProfile(ctx, profile)
+	if err != nil {
+		return nil, err
+	}
+	if err := r.requireGateAllows(ctx, gate, []library.MediaRef{ref}); err != nil {
+		return nil, err
+	}
 	download, err := r.Services.Downloads.Start(ctx, profile, ref, pickedStream)
 	if err != nil {
 		return nil, err
@@ -335,7 +342,7 @@ func (r *mutationResolver) CreateProfile(ctx context.Context, name string, avata
 }
 
 // UpdateProfile is the resolver for the updateProfile field.
-func (r *mutationResolver) UpdateProfile(ctx context.Context, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, subtitleStyle *model.SubtitleStyle, voiceBoost *bool) (*model.Profile, error) {
+func (r *mutationResolver) UpdateProfile(ctx context.Context, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, subtitleStyle *model.SubtitleStyle, voiceBoost *bool, ageLimit *int, bedtimeMinutes *int) (*model.Profile, error) {
 	profileID, err := parseProfile(id)
 	if err != nil {
 		return nil, err
@@ -345,6 +352,8 @@ func (r *mutationResolver) UpdateProfile(ctx context.Context, id string, name *s
 	update.AvatarURL = avatarURL
 	update.IsChild = isChild
 	update.Pin = pin
+	update.AgeLimit = ageLimit
+	update.BedtimeMinutes = bedtimeMinutes
 	// A null list leaves the languages as they are.
 	if languages != nil {
 		update.Languages = &languages
@@ -512,7 +521,7 @@ func (r *personResolver) Filmography(ctx context.Context, obj *model.Person, job
 	if err != nil {
 		return nil, err
 	}
-	return titleModels(titles), nil
+	return r.visibleTitleModels(ctx, titles)
 }
 
 // CoStars is the resolver for the coStars field.
@@ -551,7 +560,7 @@ func (r *personResolver) RecommendedFor(ctx context.Context, obj *model.Person, 
 	if err != nil {
 		return nil, err
 	}
-	return titleModels(titles), nil
+	return r.visibleTitleModels(ctx, titles)
 }
 
 // Title is the resolver for the title field.
@@ -564,7 +573,11 @@ func (r *queryResolver) Title(ctx context.Context, id string) (*model.Title, err
 	if err != nil {
 		return nil, err
 	}
-	return titleModel(*title), nil
+	visible, err := r.visibleTitles(ctx, []*model.Title{titleModel(*title)})
+	if err != nil || len(visible) == 0 {
+		return nil, err
+	}
+	return visible[0], nil
 }
 
 // Episode is the resolver for the episode field.
@@ -603,7 +616,7 @@ func (r *queryResolver) Search(ctx context.Context, query string, mediaType *mod
 	if err != nil {
 		return nil, err
 	}
-	return titleModels(titles), nil
+	return r.visibleTitleModels(ctx, titles)
 }
 
 // Trending is the resolver for the trending field.
@@ -612,7 +625,7 @@ func (r *queryResolver) Trending(ctx context.Context, mediaType *model.MediaType
 	if err != nil {
 		return nil, err
 	}
-	return titleModels(titles), nil
+	return r.visibleTitleModels(ctx, titles)
 }
 
 // NewAndComingSoon is the resolver for the newAndComingSoon field.
@@ -621,7 +634,7 @@ func (r *queryResolver) NewAndComingSoon(ctx context.Context, mediaType model.Me
 	if err != nil {
 		return nil, err
 	}
-	return titleModels(titles), nil
+	return r.visibleTitleModels(ctx, titles)
 }
 
 // WatchedActors is the resolver for the watchedActors field.
@@ -651,10 +664,14 @@ func (r *queryResolver) MoreWith(ctx context.Context, profileID string, mediaTyp
 	if err != nil || row == nil {
 		return nil, err
 	}
+	items, err := r.visibleTitleModels(ctx, row.Titles)
+	if err != nil {
+		return nil, err
+	}
 	return &model.MoreWithRow{
 		Person:    personModel(row.Person),
 		BecauseOf: titleModel(row.BecauseOf),
-		Items:     titleModels(row.Titles),
+		Items:     items,
 	}, nil
 }
 
@@ -664,7 +681,7 @@ func (r *queryResolver) Browse(ctx context.Context, mediaType model.MediaType, g
 	if err != nil {
 		return nil, err
 	}
-	return titleModels(titles), nil
+	return r.visibleTitleModels(ctx, titles)
 }
 
 // Genres is the resolver for the genres field.
@@ -682,7 +699,7 @@ func (r *queryResolver) Catalog(ctx context.Context, mediaType model.MediaType, 
 	if err != nil {
 		return nil, err
 	}
-	return titleModels(titles), nil
+	return r.visibleTitleModels(ctx, titles)
 }
 
 // CatalogTheme is the resolver for the catalogTheme field.
@@ -691,7 +708,7 @@ func (r *queryResolver) CatalogTheme(ctx context.Context, mediaType model.MediaT
 	if err != nil {
 		return nil, err
 	}
-	return titleModels(titles), nil
+	return r.visibleTitleModels(ctx, titles)
 }
 
 // CatalogRows is the resolver for the catalogRows field.
@@ -702,7 +719,11 @@ func (r *queryResolver) CatalogRows(ctx context.Context, mediaType model.MediaTy
 	}
 	models := make([]*model.CatalogRow, 0, len(rows))
 	for _, row := range rows {
-		models = append(models, &model.CatalogRow{Genre: row.Genre, Items: titleModels(row.Titles)})
+		items, err := r.visibleTitleModels(ctx, row.Titles)
+		if err != nil {
+			return nil, err
+		}
+		models = append(models, &model.CatalogRow{Genre: row.Genre, Items: items})
 	}
 	return models, nil
 }
@@ -718,6 +739,14 @@ func (r *queryResolver) Recommendations(ctx context.Context, profileID string, m
 	if err != nil {
 		return nil, err
 	}
+	gate, err := r.gateForProfile(ctx, profile)
+	if err != nil {
+		return nil, err
+	}
+	items, err = r.gatedItems(ctx, gate, items)
+	if err != nil {
+		return nil, err
+	}
 	return r.recommendationModels(ctx, items)
 }
 
@@ -728,6 +757,14 @@ func (r *queryResolver) RecommendationRows(ctx context.Context, profileID string
 		return nil, err
 	}
 	recommendationRows, err := r.Recommender.Rows(ctx, profile, clamp(valueOr(rows, 8), 20), clamp(valueOr(perRow, 20), 50))
+	if err != nil {
+		return nil, err
+	}
+	gate, err := r.gateForProfile(ctx, profile)
+	if err != nil {
+		return nil, err
+	}
+	recommendationRows, err = r.gatedRows(ctx, gate, recommendationRows)
 	if err != nil {
 		return nil, err
 	}
@@ -784,7 +821,11 @@ func (r *queryResolver) Watchlist(ctx context.Context, profileID string) ([]*mod
 	if err != nil {
 		return nil, err
 	}
-	return titleModels(titles), nil
+	gate, err := r.gateForProfile(ctx, profile)
+	if err != nil {
+		return nil, err
+	}
+	return r.gatedTitles(ctx, gate, titleModels(titles))
 }
 
 // LikedTitles is the resolver for the likedTitles field.
@@ -1002,7 +1043,7 @@ func (r *titleResolver) Related(ctx context.Context, obj *model.Title, limit *in
 	if err != nil {
 		return nil, err
 	}
-	return titleModels(titles), nil
+	return r.visibleTitleModels(ctx, titles)
 }
 
 // Seasons is the resolver for the seasons field.
