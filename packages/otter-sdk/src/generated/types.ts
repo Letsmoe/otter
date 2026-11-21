@@ -553,6 +553,9 @@ export default {
             "voiceBoost": [
                 6
             ],
+            "simpleMode": [
+                6
+            ],
             "__typename": [
                 4
             ]
@@ -1585,6 +1588,9 @@ export default {
                         26
                     ],
                     "voiceBoost": [
+                        6
+                    ],
+                    "simpleMode": [
                         6
                     ]
                 }

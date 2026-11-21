@@ -60,6 +60,8 @@ type Profile struct {
 	SubtitleStyle string `json:"subtitle_style"`
 	// VoiceBoost lifts dialogue over music and effects.
 	VoiceBoost bool `json:"voice_boost"`
+	// SimpleMode makes the apps show only Continue, My List and Search with big controls.
+	SimpleMode bool `json:"simple_mode"`
 }
 
 // Caption sizes a profile can pick.
@@ -165,6 +167,7 @@ type Update struct {
 	SubtitleSize     *string
 	SubtitleStyle    *string
 	VoiceBoost       *bool
+	SimpleMode       *bool
 }
 
 // Update changes a profile's fields and returns the stored result.
@@ -180,12 +183,13 @@ func (s *Service) Update(ctx context.Context, profileID int, update Update) (*Pr
 		SET name = $name, avatar_url = $avatar_url, pin_hash = $pin_hash, is_child = $is_child,
 			languages = $languages, subtitles_enabled = $subtitles_enabled,
 			subtitle_language = $subtitle_language, subtitle_size = $subtitle_size,
-			subtitle_style = $subtitle_style, voice_boost = $voice_boost
+			subtitle_style = $subtitle_style, voice_boost = $voice_boost, simple_mode = $simple_mode
 		WHERE id = $id`,
 		db.Vars{"id": profileID, "name": profile.Name, "avatar_url": profile.AvatarURL,
 			"pin_hash": profile.PinHash, "is_child": profile.IsChild, "languages": profile.Languages,
 			"subtitles_enabled": profile.SubtitlesEnabled, "subtitle_language": nullableText(profile.SubtitleLanguage),
-			"subtitle_size": profile.SubtitleSize, "subtitle_style": profile.SubtitleStyle, "voice_boost": profile.VoiceBoost})
+			"subtitle_size": profile.SubtitleSize, "subtitle_style": profile.SubtitleStyle, "voice_boost": profile.VoiceBoost,
+			"simple_mode": profile.SimpleMode})
 	if err != nil {
 		return nil, storeError("update", err)
 	}
@@ -201,6 +205,9 @@ func applyUpdate(profile *Profile, update Update) error {
 	}
 	if update.IsChild != nil {
 		profile.IsChild = *update.IsChild
+	}
+	if update.SimpleMode != nil {
+		profile.SimpleMode = *update.SimpleMode
 	}
 	if update.Languages != nil {
 		languages, err := encodeLanguages(*update.Languages)

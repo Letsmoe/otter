@@ -27,6 +27,7 @@ class ProfileEditorViewModel(private val existingProfile: ProfileFields?) : View
     var name by mutableStateOf(existingProfile?.name.orEmpty())
     var avatarId by mutableStateOf(initialAvatar())
     var isChild by mutableStateOf(existingProfile?.isChild == true)
+    var simpleMode by mutableStateOf(existingProfile?.simpleMode == true)
     var locked by mutableStateOf(existingProfile?.hasPin == true)
         private set
     /** Audio languages, most preferred first. */
@@ -153,6 +154,7 @@ class ProfileEditorViewModel(private val existingProfile: ProfileFields?) : View
             name = Optional.present(name.trim()),
             avatarUrl = Optional.present(avatarId),
             isChild = Optional.present(isChild),
+            simpleMode = Optional.present(simpleMode),
             pin = pinChange(profile),
             languages = Optional.present(languages),
         )

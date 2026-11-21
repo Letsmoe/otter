@@ -20,6 +20,7 @@ data class PreferenceChange(
     val subtitleSize: SubtitleSize? = null,
     val subtitleStyle: SubtitleStyle? = null,
     val voiceBoost: Boolean? = null,
+    val simpleMode: Boolean? = null,
 )
 
 /** The language captions start in: the profile's pick, else its first audio language. */
@@ -38,6 +39,7 @@ private fun ProfileFields.withChange(change: PreferenceChange): ProfileFields {
         subtitleSize = change.subtitleSize ?: subtitleSize,
         subtitleStyle = change.subtitleStyle ?: subtitleStyle,
         voiceBoost = change.voiceBoost ?: voiceBoost,
+        simpleMode = change.simpleMode ?: simpleMode,
     )
 }
 
@@ -60,6 +62,7 @@ object ProfilePreferences {
                 subtitleSize = Optional.presentIfNotNull(change.subtitleSize),
                 subtitleStyle = Optional.presentIfNotNull(change.subtitleStyle),
                 voiceBoost = Optional.presentIfNotNull(change.voiceBoost),
+                simpleMode = Optional.presentIfNotNull(change.simpleMode),
             )
             val saved = OtterApi.client.mutation(mutation).execute().dataOrThrow().updateProfile
             ProfileSession.refreshIfActive(saved.profileFields)

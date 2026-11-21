@@ -13,7 +13,6 @@ import com.letsmoe.otter.api.tmdbImageUrl
 import com.letsmoe.otter.graphql.ProfilesQuery
 import com.letsmoe.otter.graphql.SpotlightTitleQuery
 import com.letsmoe.otter.graphql.TrendingQuery
-import com.letsmoe.otter.graphql.VerifyPinMutation
 import com.letsmoe.otter.graphql.fragment.ProfileFields
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.profiles.avatarImage
@@ -93,13 +92,9 @@ class ProfileGateViewModel : ViewModel() {
 
     /** Returns an error message, or null when the PIN opened the profile. */
     suspend fun verifyPin(unlock: GateScreen.Unlock, pin: String): String? {
-        val result = try {
-            OtterApi.client.mutation(VerifyPinMutation(unlock.profile.id, pin)).execute().dataOrThrow().verifyPin
-        } catch (error: Exception) {
-            return error.message ?: "Could not check the PIN."
-        }
-        if (!result.success) {
-            return waitMessage(result.waitSeconds)
+        val failure = checkProfilePin(unlock.profile.id, pin)
+        if (failure != null) {
+            return failure
         }
         if (unlock.thenEdit) {
             screen = GateScreen.Edit(unlock.profile)
@@ -108,13 +103,6 @@ class ProfileGateViewModel : ViewModel() {
         ProfileFlight.start(avatarImage(unlock.profile.avatarUrl, unlock.profile.name), from = null)
         ProfileSession.login(unlock.profile)
         return null
-    }
-
-    private fun waitMessage(waitSeconds: Int): String {
-        if (waitSeconds > 0) {
-            return "Too many attempts. Try again in ${waitSeconds}s."
-        }
-        return "Incorrect PIN. Try again."
     }
 
     /** One of the top trending titles with poster, logo and tagline; null offline. */
