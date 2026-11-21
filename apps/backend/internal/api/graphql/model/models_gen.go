@@ -9,6 +9,17 @@ import (
 	"strconv"
 )
 
+// A moment of a movie or episode the profile saved while watching.
+type Bookmark struct {
+	ID string `json:"id"`
+	// The movie or episode.
+	MediaID         string  `json:"mediaId"`
+	PositionSeconds float64 `json:"positionSeconds"`
+	// The caption line spoken at that moment; null when there was none.
+	Caption   *string `json:"caption,omitempty"`
+	CreatedAt string  `json:"createdAt"`
+}
+
 type CatalogRow struct {
 	Genre string   `json:"genre"`
 	Items []*Title `json:"items"`

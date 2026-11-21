@@ -41,6 +41,14 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Bookmark struct {
+		Caption         func(childComplexity int) int
+		CreatedAt       func(childComplexity int) int
+		ID              func(childComplexity int) int
+		MediaID         func(childComplexity int) int
+		PositionSeconds func(childComplexity int) int
+	}
+
 	CatalogRow struct {
 		Genre func(childComplexity int) int
 		Items func(childComplexity int) int
@@ -119,6 +127,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		AddBookmark            func(childComplexity int, profileID string, mediaID string, positionSeconds float64, caption *string) int
 		AddToWatchlist         func(childComplexity int, profileID string, mediaID string) int
 		AdoptStream            func(childComplexity int, mediaID string, url string, plugin string, label *string) int
 		CheckNotifications     func(childComplexity int) int
@@ -139,6 +148,7 @@ type ComplexityRoot struct {
 		MarkNotificationsRead  func(childComplexity int, profileID string) int
 		OpenDownloadsFolder    func(childComplexity int) int
 		RecordProgress         func(childComplexity int, profileID string, mediaID string, progressSeconds float64, durationSeconds float64) int
+		RemoveBookmark         func(childComplexity int, profileID string, bookmarkID string) int
 		RemoveFromWatchlist    func(childComplexity int, profileID string, mediaID string) int
 		ResolveBestStream      func(childComplexity int, streamIds []string) int
 		ResolveStream          func(childComplexity int, streamID string) int
@@ -259,6 +269,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		Bookmarks               func(childComplexity int, profileID string, titleID string) int
 		Browse                  func(childComplexity int, mediaType model.MediaType, genre *string, limit *int, offset *int) int
 		Catalog                 func(childComplexity int, mediaType model.MediaType, sort *model.CatalogSort) int
 		CatalogRows             func(childComplexity int, mediaType model.MediaType, count *int, exclude []string) int
@@ -469,6 +480,8 @@ type MutationResolver interface {
 	RecordProgress(ctx context.Context, profileID string, mediaID string, progressSeconds float64, durationSeconds float64) (*model.WatchProgress, error)
 	SetRating(ctx context.Context, profileID string, mediaID string, rating float64) (bool, error)
 	ClearRating(ctx context.Context, profileID string, mediaID string) (bool, error)
+	AddBookmark(ctx context.Context, profileID string, mediaID string, positionSeconds float64, caption *string) (*model.Bookmark, error)
+	RemoveBookmark(ctx context.Context, profileID string, bookmarkID string) (bool, error)
 	AddToWatchlist(ctx context.Context, profileID string, mediaID string) (bool, error)
 	RemoveFromWatchlist(ctx context.Context, profileID string, mediaID string) (bool, error)
 	SetNotifying(ctx context.Context, profileID string, mediaID string, notifying bool) (bool, error)
@@ -523,6 +536,7 @@ type QueryResolver interface {
 	ContinueWatching(ctx context.Context, profileID string, limit *int) ([]*model.ContinueItem, error)
 	History(ctx context.Context, profileID string, limit *int) ([]*model.HistoryEntry, error)
 	Watchlist(ctx context.Context, profileID string) ([]*model.Title, error)
+	Bookmarks(ctx context.Context, profileID string, titleID string) ([]*model.Bookmark, error)
 	LikedTitles(ctx context.Context, profileID string, limit *int) ([]*model.Title, error)
 	Notifications(ctx context.Context, profileID string, limit *int) ([]*model.Notification, error)
 	UnreadNotificationCount(ctx context.Context, profileID string) (int, error)
@@ -570,6 +584,37 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	ec := newExecutionContext(nil, e, nil)
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Bookmark.caption":
+		if e.ComplexityRoot.Bookmark.Caption == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Bookmark.Caption(childComplexity), true
+	case "Bookmark.createdAt":
+		if e.ComplexityRoot.Bookmark.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Bookmark.CreatedAt(childComplexity), true
+	case "Bookmark.id":
+		if e.ComplexityRoot.Bookmark.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Bookmark.ID(childComplexity), true
+	case "Bookmark.mediaId":
+		if e.ComplexityRoot.Bookmark.MediaID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Bookmark.MediaID(childComplexity), true
+	case "Bookmark.positionSeconds":
+		if e.ComplexityRoot.Bookmark.PositionSeconds == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Bookmark.PositionSeconds(childComplexity), true
 
 	case "CatalogRow.genre":
 		if e.ComplexityRoot.CatalogRow.Genre == nil {
@@ -885,6 +930,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.MoreWithRow.Person(childComplexity), true
 
+	case "Mutation.addBookmark":
+		if e.ComplexityRoot.Mutation.AddBookmark == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addBookmark_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.AddBookmark(childComplexity, args["profileId"].(string), args["mediaId"].(string), args["positionSeconds"].(float64), args["caption"].(*string)), true
 	case "Mutation.addToWatchlist":
 		if e.ComplexityRoot.Mutation.AddToWatchlist == nil {
 			break
@@ -1085,6 +1141,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.RecordProgress(childComplexity, args["profileId"].(string), args["mediaId"].(string), args["progressSeconds"].(float64), args["durationSeconds"].(float64)), true
+	case "Mutation.removeBookmark":
+		if e.ComplexityRoot.Mutation.RemoveBookmark == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_removeBookmark_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.RemoveBookmark(childComplexity, args["profileId"].(string), args["bookmarkId"].(string)), true
 	case "Mutation.removeFromWatchlist":
 		if e.ComplexityRoot.Mutation.RemoveFromWatchlist == nil {
 			break
@@ -1681,6 +1748,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Profile.VoiceBoost(childComplexity), true
 
+	case "Query.bookmarks":
+		if e.ComplexityRoot.Query.Bookmarks == nil {
+			break
+		}
+
+		args, err := ec.field_Query_bookmarks_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Bookmarks(childComplexity, args["profileId"].(string), args["titleId"].(string)), true
 	case "Query.browse":
 		if e.ComplexityRoot.Query.Browse == nil {
 			break
@@ -2955,6 +3033,17 @@ type WatchProgress {
   updatedAt: String!
 }
 
+"A moment of a movie or episode the profile saved while watching."
+type Bookmark {
+  id: ID!
+  "The movie or episode."
+  mediaId: ID!
+  positionSeconds: Float!
+  "The caption line spoken at that moment; null when there was none."
+  caption: String
+  createdAt: String!
+}
+
 type ContinueItem {
   title: Title!
   "For series: the episode to continue or the next one."
@@ -3281,6 +3370,8 @@ type Query {
   continueWatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
   history(profileId: ID!, limit: Int = 50): [HistoryEntry!]!
   watchlist(profileId: ID!): [Title!]!
+  "The profile's bookmarks of a movie, or of all episodes of a series (in watching order), earliest moment first."
+  bookmarks(profileId: ID!, titleId: ID!): [Bookmark!]!
   "Titles the profile rated well (I like this, Love this), latest rating first."
   likedTitles(profileId: ID!, limit: Int = 30): [Title!]!
   "Newest first."
@@ -3362,6 +3453,9 @@ type Mutation {
   recordProgress(profileId: ID!, mediaId: ID!, progressSeconds: Float!, durationSeconds: Float!): WatchProgress!
   setRating(profileId: ID!, mediaId: ID!, rating: Float!): Boolean!
   clearRating(profileId: ID!, mediaId: ID!): Boolean!
+  "Saves the position of a movie or episode, with the caption line spoken then."
+  addBookmark(profileId: ID!, mediaId: ID!, positionSeconds: Float!, caption: String): Bookmark!
+  removeBookmark(profileId: ID!, bookmarkId: ID!): Boolean!
   addToWatchlist(profileId: ID!, mediaId: ID!): Boolean!
   removeFromWatchlist(profileId: ID!, mediaId: ID!): Boolean!
   "The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it."
@@ -3444,6 +3538,22 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // childFields_* functions provide shared child field context lookups.
 // Each function is generated once per unique object type, deduplicating the
 // switch statements that were previously inlined in every fieldContext_* function.
+
+func (ec *executionContext) childFields_Bookmark(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_Bookmark_id(ctx, field)
+	case "mediaId":
+		return ec.fieldContext_Bookmark_mediaId(ctx, field)
+	case "positionSeconds":
+		return ec.fieldContext_Bookmark_positionSeconds(ctx, field)
+	case "caption":
+		return ec.fieldContext_Bookmark_caption(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_Bookmark_createdAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Bookmark", field.Name)
+}
 
 func (ec *executionContext) childFields_CatalogRow(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
@@ -4237,6 +4347,44 @@ func (ec *executionContext) field_Episode_progress_args(ctx context.Context, raw
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_addBookmark_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "mediaId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mediaId"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "positionSeconds",
+		func(ctx context.Context, v any) (float64, error) {
+			return ec.unmarshalNFloat2float64(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["positionSeconds"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "caption",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["caption"] = arg3
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_addToWatchlist_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4626,6 +4774,28 @@ func (ec *executionContext) field_Mutation_recordProgress_args(ctx context.Conte
 		return nil, err
 	}
 	args["durationSeconds"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_removeBookmark_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "bookmarkId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["bookmarkId"] = arg1
 	return args, nil
 }
 
@@ -5032,6 +5202,28 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		return nil, err
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_bookmarks_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "titleId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["titleId"] = arg1
 	return args, nil
 }
 
@@ -5696,6 +5888,121 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _Bookmark_id(ctx context.Context, field graphql.CollectedField, obj *model.Bookmark) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Bookmark_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Bookmark_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Bookmark", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _Bookmark_mediaId(ctx context.Context, field graphql.CollectedField, obj *model.Bookmark) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Bookmark_mediaId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.MediaID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Bookmark_mediaId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Bookmark", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _Bookmark_positionSeconds(ctx context.Context, field graphql.CollectedField, obj *model.Bookmark) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Bookmark_positionSeconds(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PositionSeconds, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Bookmark_positionSeconds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Bookmark", field, false, false, errors.New("field of type Float does not have child fields"))
+}
+
+func (ec *executionContext) _Bookmark_caption(ctx context.Context, field graphql.CollectedField, obj *model.Bookmark) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Bookmark_caption(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Caption, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Bookmark_caption(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Bookmark", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Bookmark_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Bookmark) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Bookmark_createdAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Bookmark_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Bookmark", field, false, false, errors.New("field of type String does not have child fields"))
+}
 
 func (ec *executionContext) _CatalogRow_genre(ctx context.Context, field graphql.CollectedField, obj *model.CatalogRow) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
@@ -7376,6 +7683,94 @@ func (ec *executionContext) fieldContext_Mutation_clearRating(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_clearRating_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_addBookmark(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_addBookmark(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().AddBookmark(ctx, fc.Args["profileId"].(string), fc.Args["mediaId"].(string), fc.Args["positionSeconds"].(float64), fc.Args["caption"].(*string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Bookmark) graphql.Marshaler {
+			return ec.marshalNBookmark2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐBookmark(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_addBookmark(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Bookmark(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_addBookmark_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_removeBookmark(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_removeBookmark(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().RemoveBookmark(ctx, fc.Args["profileId"].(string), fc.Args["bookmarkId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_removeBookmark(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_removeBookmark_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -10940,6 +11335,50 @@ func (ec *executionContext) fieldContext_Query_watchlist(ctx context.Context, fi
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_watchlist_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_bookmarks(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_bookmarks(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Bookmarks(ctx, fc.Args["profileId"].(string), fc.Args["titleId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Bookmark) graphql.Marshaler {
+			return ec.marshalNBookmark2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐBookmarkᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_bookmarks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Bookmark(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_bookmarks_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -15487,6 +15926,62 @@ func (ec *executionContext) unmarshalInputTitleFilter(ctx context.Context, obj a
 
 // region    **************************** object.gotpl ****************************
 
+var bookmarkImplementors = []string{"Bookmark"}
+
+func (ec *executionContext) _Bookmark(ctx context.Context, sel ast.SelectionSet, obj *model.Bookmark) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, bookmarkImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Bookmark")
+		case "id":
+			out.Values[i] = ec._Bookmark_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "mediaId":
+			out.Values[i] = ec._Bookmark_mediaId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "positionSeconds":
+			out.Values[i] = ec._Bookmark_positionSeconds(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "caption":
+			out.Values[i] = ec._Bookmark_caption(ctx, field, obj)
+		case "createdAt":
+			out.Values[i] = ec._Bookmark_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var catalogRowImplementors = []string{"CatalogRow"}
 
 func (ec *executionContext) _CatalogRow(ctx context.Context, sel ast.SelectionSet, obj *model.CatalogRow) graphql.Marshaler {
@@ -16215,6 +16710,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "clearRating":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_clearRating(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "addBookmark":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_addBookmark(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "removeBookmark":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_removeBookmark(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -17566,6 +18075,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_watchlist(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "bookmarks":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_bookmarks(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -19535,6 +20066,36 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) marshalNBookmark2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐBookmark(ctx context.Context, sel ast.SelectionSet, v model.Bookmark) graphql.Marshaler {
+	return ec._Bookmark(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBookmark2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐBookmarkᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Bookmark) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNBookmark2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐBookmark(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNBookmark2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐBookmark(ctx context.Context, sel ast.SelectionSet, v *model.Bookmark) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Bookmark(ctx, sel, v)
+}
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
