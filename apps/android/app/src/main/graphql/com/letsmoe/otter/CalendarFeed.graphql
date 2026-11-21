@@ -1,0 +1,7 @@
+query CalendarFeedPath($profileId: ID!) {
+  calendarFeedPath(profileId: $profileId)
+}
+
+mutation ResetCalendarFeed($profileId: ID!) {
+  resetCalendarFeed(profileId: $profileId)
+}
