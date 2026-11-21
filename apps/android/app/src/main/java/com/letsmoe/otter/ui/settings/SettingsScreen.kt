@@ -230,6 +230,8 @@ private fun PlaybackGroup() {
     var autoSkip by remember { mutableStateOf(PlaybackSettings.autoSkipIntro) }
     val options = AutoSkipIntro.entries.map { option -> option to option.label }
     val footer = "Intro and recap times come from TheIntroDB. The skip button shows either way. " +
+        "\"Learn per series\" skips a series' intro once you skipped it by hand three times in a row (until you watch it twice), " +
+        "and its recaps while the episode before finished less than a day ago. " +
         "Captions and voice boost belong to the profile; voice boost works on this phone and on TVs it draws for, not on a Chromecast."
     SettingsGroup("Playback", footer = footer) {
         Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {

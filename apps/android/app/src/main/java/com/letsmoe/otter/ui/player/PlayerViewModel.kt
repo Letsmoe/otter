@@ -104,6 +104,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private val progressReporter = ProgressReporter()
     private val togetherSync = PlayerTogetherSync(viewModelScope, this)
     private val skipTracker = SkipTracker()
+    private val skipHabits = SkipHabits(PreferencesSkipHabitStorage(application))
     private val upNextOffer = UpNext(viewModelScope, ::playNext)
     private val captionExtras = CaptionExtras(viewModelScope, ::reloadPhoneCaptions)
 
@@ -207,6 +208,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         nextEpisodeJob?.cancel()
         upNextOffer.reset()
         skipTracker.reset(emptyList())
+        skipHabits.reset()
         mutableSkipButton.value = null
         clearPlayers()
         trackCatalog = TrackCatalog.Empty
@@ -251,6 +253,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             val loaded = loadPlayerMedia(mediaId, profileId) ?: return@launch
             media = loaded
             skipTracker.reset(loaded.skipSegments)
+            skipHabits.open(profileId, loaded.seriesId, mediaId, loaded.episodes.episodeBefore(mediaId)?.id)
             // Reaches the TV's picture with its next load, e.g. the next seek.
             televisionPlayer?.hints = televisionHints()
             mutableState.update { current ->
@@ -521,6 +524,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     private fun onEnded() {
         saveProgress(force = true)
+        skipHabits.episodeEnded()
         mutableState.update { current -> current.copy(hasEnded = true, isPlaying = false) }
         continueWithNextEpisode()
     }
@@ -1014,6 +1018,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         mutableSkipButton.value = skipTracker.jumpAt(positionSeconds)
         val inCredits = skipTracker.isInCredits(positionSeconds)
         upNextOffer.follow(inCredits, activePlayer.isPlaying, offeredNextEpisode())
+        skipHabits.follow(skipTracker.jumps, positionSeconds, activePlayer.isPlaying, inCredits)
         skipIntroAt(positionSeconds)
         endReplayAt(positionSeconds)
         // Back before the credits, the TV's card may show again, like the phone's.
@@ -1025,10 +1030,12 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     // Only while playing: a paused or loading player keeps whatever the viewer picked.
     private fun skipIntroAt(positionSeconds: Double) {
         val current = mutableState.value
-        if (!activePlayer.isPlaying || current.isHolding || !PlaybackSettings.skipsIntroAutomatically(current.isCasting)) {
+        if (!activePlayer.isPlaying || current.isHolding) {
             return
         }
-        val target = skipTracker.autoSkipTarget(positionSeconds) ?: return
+        val target = skipTracker.autoSkipTarget(positionSeconds) { jump ->
+            skipHabits.skips(jump, PlaybackSettings.autoSkipIntro, current.isCasting)
+        } ?: return
         seekTo(target)
     }
 
@@ -1067,6 +1074,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     fun skipSegment() {
         val jump = mutableSkipButton.value ?: return
         mutableSkipButton.value = null
+        skipHabits.skippedByHand(jump)
         seekTo(jump.endSeconds)
     }
 
