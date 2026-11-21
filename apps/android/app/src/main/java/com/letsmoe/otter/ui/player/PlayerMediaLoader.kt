@@ -22,6 +22,8 @@ data class PlayerMedia(
     /** The title card on a TV: the movie or series, and for episodes "S1:E2 · Name". */
     val heading: String = title,
     val subheading: String? = null,
+    /** "Episode 3 of 9" for the title card on a TV; null for movies and one-episode seasons. */
+    val episodeCountLabel: String? = null,
 )
 
 /** A skippable part; endSeconds is null when it runs to the end. */
@@ -68,6 +70,7 @@ private suspend fun loadEpisodeMedia(mediaId: String, profileId: String): Player
         title, "/series/$seriesId?episode=$mediaId", episodes, nextId.takeIf { nextKnown }, skipSegments,
         heading = episode.series.title,
         subheading = subheading,
+        episodeCountLabel = episodeCountLabel(episodes, episode.seasonNumber, episode.episodeNumber),
     )
 }
 

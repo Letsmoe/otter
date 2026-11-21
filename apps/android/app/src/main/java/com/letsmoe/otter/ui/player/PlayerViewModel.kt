@@ -1008,7 +1008,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     private fun titleText(): TitleText? {
         val loaded = media ?: return null
-        return TitleText(loaded.heading, loaded.subheading)
+        return TitleText(loaded.heading, loaded.subheading, loaded.episodeCountLabel)
     }
 
     private fun upNextPreview(): UpNextPreview? {
