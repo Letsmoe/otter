@@ -104,6 +104,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private val skipTracker = SkipTracker()
     private val upNextOffer = UpNext(viewModelScope, ::playNext)
     private val captionExtras = CaptionExtras(viewModelScope, ::reloadPhoneCaptions)
+    private val playerBookmarks = PlayerBookmarks(viewModelScope)
 
     /** The next episode's card while the credits run. */
     val upNext: StateFlow<UpNextCard?> = upNextOffer.card
@@ -919,6 +920,11 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         if (stopping) {
             upNextOffer.cancel()
         }
+    }
+
+    /** Saves this moment (and the caption line spoken now) as a bookmark of the title. */
+    fun bookmarkHere() {
+        playerBookmarks.save(currentMediaId, positionSeconds, transcriptSubtitle(), captionExtras.state.value.delaySeconds)
     }
 
     /** Goes back [REPLAY_SECONDS] and shows captions until where it was, even when they are off. */
