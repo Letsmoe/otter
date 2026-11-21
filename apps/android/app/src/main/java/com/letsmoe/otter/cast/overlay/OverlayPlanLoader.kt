@@ -28,8 +28,8 @@ private const val TITLE_CARD_SECONDS = 6.0
 /** The next episode as its card in the picture shows it; it counts down from the credits. */
 data class UpNextPreview(val episodeLabel: String, val stillUrl: String?, val creditsStartSeconds: Double, val countdownSeconds: Double)
 
-/** What is playing, for the title card: "Severance" and "S1:E2 · Half Loop" (null for movies). */
-data class TitleText(val title: String, val detail: String?)
+/** What is playing, for the title card: "Severance", "S1:E2 · Half Loop" (null for movies) and "2 of 3 tonight". */
+data class TitleText(val title: String, val detail: String?, val tonightLabel: String? = null)
 
 /** What the player knows to draw besides captions: the title's skippable parts, what plays next and what plays now. */
 data class TelevisionHints(
@@ -61,7 +61,11 @@ private fun titleCardOf(text: TitleText?, request: TitleCardRequest?): TitleCard
     if (text == null || request == null) {
         return null
     }
-    return TitleCard(text.title, text.detail, request.fromSeconds, request.fromSeconds + TITLE_CARD_SECONDS, request.endsAtLabel)
+    return TitleCard(
+        text.title, text.detail, request.fromSeconds, request.fromSeconds + TITLE_CARD_SECONDS,
+        endsAtLabel = request.endsAtLabel,
+        tonightLabel = text.tonightLabel,
+    )
 }
 
 /** "Ends at 22:41" in the phone's clock format: now plus what is left of the title. */

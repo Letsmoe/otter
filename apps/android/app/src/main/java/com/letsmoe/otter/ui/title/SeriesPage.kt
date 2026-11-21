@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.letsmoe.otter.links.episodeLink
 import com.letsmoe.otter.links.seriesLink
 import com.letsmoe.otter.links.tmdbIdOf
+import com.letsmoe.otter.tonight.TonightEntry
 import com.letsmoe.otter.ui.components.FilterSelect
 import com.letsmoe.otter.ui.components.SegmentedBar
 import com.letsmoe.otter.ui.media.RailItem
@@ -69,7 +70,10 @@ fun SeriesPage(
         slots = slots,
         downloadTarget = upNextDownload(detail, upNext),
         tabBar = { SegmentedBar(seriesTabs, tab, onSelect = { chosen -> tab = chosen }) },
-        playExtras = { UpNextBar(upNext) },
+        playExtras = {
+            UpNextBar(upNext)
+            TonightRow(upNext?.let { next -> tonightEntryOf(detail, next.episode) }, onPlay)
+        },
     ) {
         when (tab) {
             SeriesTab.EPISODES -> EpisodesTab(detail, episodes, seriesViewModel, slots, onPlay)
@@ -77,6 +81,11 @@ fun SeriesPage(
             SeriesTab.TRAILERS -> TrailerTab(detail.trailerKey, detail.title, Modifier.padding(horizontal = 12.dp))
         }
     }
+}
+
+// The episode Play starts, named with its series on the cards of the up-next countdown and the TV.
+private fun tonightEntryOf(detail: TitleDetail, episode: SeasonEpisode): TonightEntry {
+    return TonightEntry(episode.id, "${detail.title} · ${episode.code} ${episode.displayName}")
 }
 
 @Composable
