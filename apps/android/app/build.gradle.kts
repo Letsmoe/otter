@@ -145,6 +145,7 @@ dependencies {
     implementation(libs.haze)
     implementation(libs.palette)
     implementation(libs.work.runtime)
+    implementation(libs.glance.appwidget)
     implementation(libs.haze.blur)
     implementation(libs.phosphor.icons)
     testImplementation(libs.junit)

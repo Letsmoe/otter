@@ -18,6 +18,7 @@ import com.letsmoe.otter.together.roomCodeFromInviteLink
 import com.letsmoe.otter.ui.OtterApp
 import com.letsmoe.otter.ui.splash.SplashOverlay
 import com.letsmoe.otter.ui.splash.SplashPlayback
+import com.letsmoe.otter.widget.refreshContinueWatchingWidgetSoon
 
 class MainActivity : ComponentActivity() {
 
@@ -56,6 +57,12 @@ class MainActivity : ComponentActivity() {
             return true
         }
         return super.onKeyUp(keyCode, event)
+    }
+
+    // What was watched changed: the widget catches up once the progress is saved.
+    override fun onStop() {
+        super.onStop()
+        refreshContinueWatchingWidgetSoon(this)
     }
 
     override fun onNewIntent(intent: Intent) {
