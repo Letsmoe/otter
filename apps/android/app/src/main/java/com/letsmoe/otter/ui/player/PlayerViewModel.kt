@@ -108,6 +108,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private val skipHabits = SkipHabits(PreferencesSkipHabitStorage(application))
     private val seriesMemory = SeriesMemory(PreferencesSeriesMemoryStorage(application))
     private val preferredHoster = PreferredHoster(PreferencesPreferredHosterStorage(application))
+    private val nextEpisodePrefetch = NextEpisodePrefetch { StreamLinkSearch(viewModelScope, streamPlayback.fitsScreen) }
     private val upNextOffer = UpNext(viewModelScope, ::playNext)
     private val captionExtras = CaptionExtras(viewModelScope, ::reloadPhoneCaptions)
 
@@ -285,6 +286,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     }
 
     private fun startStreams(mediaId: String, initial: Boolean) {
+        val prefetched = nextEpisodePrefetch.take(mediaId)
         val download = downloadFor(initial)
         if (download != null) {
             streamPlayback.stop()
@@ -302,6 +304,10 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         val streamId = request.streamId
         if (initial && streamId != null) {
             streamPlayback.playSource(streamId)
+            return
+        }
+        if (prefetched != null) {
+            streamPlayback.playPrefetched(prefetched)
             return
         }
         streamPlayback.play()
@@ -1074,6 +1080,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         if (activePlayer.isPlaying) {
             preferredHoster.follow(positionSeconds, durationSeconds)
         }
+        prefetchNextEpisode(inCredits)
         skipIntroAt(positionSeconds)
         endReplayAt(positionSeconds)
         // Back before the credits, the TV's card may show again, like the phone's.
@@ -1092,6 +1099,15 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             skipHabits.skips(jump, PlaybackSettings.autoSkipIntro, current.isCasting)
         } ?: return
         seekTo(target)
+    }
+
+    // The credits started: the next episode's link is found now, so it plays at once when it follows.
+    private fun prefetchNextEpisode(inCredits: Boolean) {
+        if (!inCredits) {
+            return
+        }
+        val next = offeredNextEpisode() ?: return
+        nextEpisodePrefetch.start(next.id)
     }
 
     // None when the viewer stops after this episode: the card isn't offered.
@@ -1210,6 +1226,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         }
         TogetherSession.detachPlayer(currentMediaId)
         togetherSync.stop()
+        nextEpisodePrefetch.cancel()
         streamPlayback.stop()
         player.removeListener(playerListener)
         player.release()

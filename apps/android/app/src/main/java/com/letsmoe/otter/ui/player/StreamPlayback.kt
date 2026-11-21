@@ -181,6 +181,13 @@ class StreamPlayback(private val scope: CoroutineScope) {
         autoplay()
     }
 
+    /** A link resolved ahead of time for this title, e.g. while the episode before it ran its credits. */
+    fun playPrefetched(link: PrefetchedLink) {
+        autoplayAttempted = true
+        link.stream?.let(::addIfMissing)
+        mutableState.update { current -> current.copy(playing = link.playing, error = null) }
+    }
+
     /** A link that is already playable, e.g. a downloaded file. */
     fun playUrl(url: String, mimeType: String) {
         autoplayAttempted = true
