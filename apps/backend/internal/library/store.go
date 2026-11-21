@@ -20,11 +20,13 @@ func NewStore(database *db.DB) *Store {
 
 const movieColumns = `'movie' AS media_type, tmdb_id, imdb_id, title, original_title, overview,
 	tagline, release_date, runtime, popularity, vote_average, vote_count, poster_path,
-	backdrop_path, logo_path, trailer_key, genres, keywords, adult, detail_fetched_at`
+	backdrop_path, logo_path, trailer_key, genres, keywords, adult, detail_fetched_at,
+	COALESCE(collection_id, 0) AS collection_id`
 
 const seriesColumns = `'series' AS media_type, tmdb_id, imdb_id, title, original_title, overview,
 	tagline, first_air_date AS release_date, status, popularity, vote_average, vote_count,
-	poster_path, backdrop_path, logo_path, trailer_key, genres, keywords, adult, detail_fetched_at`
+	poster_path, backdrop_path, logo_path, trailer_key, genres, keywords, adult, detail_fetched_at,
+	0 AS collection_id`
 
 // titleSelect returns the SELECT head for a title table.
 func titleSelect(mediaType MediaType) (string, error) {
@@ -101,10 +103,10 @@ func (s *Store) SaveMovie(ctx context.Context, movie Title) error {
 	_, err := s.database.Exec(ctx, `INSERT INTO movie (tmdb_id, imdb_id, title, original_title,
 		overview, tagline, release_date, runtime, popularity, vote_average, vote_count,
 		poster_path, backdrop_path, logo_path, trailer_key, genres, keywords, adult,
-		detail_fetched_at, created_at)
+		collection_id, detail_fetched_at, created_at)
 	VALUES ($tmdb_id, $imdb_id, $title, $original_title, $overview, $tagline, $release_date,
 		$runtime, $popularity, $vote_average, $vote_count, $poster_path, $backdrop_path,
-		$logo_path, $trailer_key, $genres, $keywords, $adult, $now, $now)
+		$logo_path, $trailer_key, $genres, $keywords, $adult, $collection_id, $now, $now)
 	ON CONFLICT (tmdb_id) DO UPDATE SET imdb_id = excluded.imdb_id, title = excluded.title,
 		original_title = excluded.original_title, overview = excluded.overview,
 		tagline = excluded.tagline, release_date = excluded.release_date,
@@ -113,7 +115,7 @@ func (s *Store) SaveMovie(ctx context.Context, movie Title) error {
 		poster_path = excluded.poster_path, backdrop_path = excluded.backdrop_path,
 		logo_path = excluded.logo_path, trailer_key = excluded.trailer_key,
 		genres = excluded.genres, keywords = excluded.keywords, adult = excluded.adult,
-		detail_fetched_at = excluded.detail_fetched_at`, titleVars(movie))
+		collection_id = excluded.collection_id, detail_fetched_at = excluded.detail_fetched_at`, titleVars(movie))
 	return err
 }
 
@@ -148,7 +150,7 @@ func titleVars(title Title) db.Vars {
 		"poster_path": nullable(title.PosterPath), "backdrop_path": nullable(title.BackdropPath),
 		"logo_path": nullable(title.LogoPath), "trailer_key": nullable(title.TrailerKey),
 		"genres": title.Genres, "keywords": title.Keywords, "adult": title.Adult,
-		"now": db.Now(),
+		"collection_id": nullableID(title.CollectionID), "now": db.Now(),
 	}
 }
 
@@ -285,6 +287,14 @@ func idsOfType(refs []MediaRef, mediaType MediaType) []int {
 // nullable stores empty strings as NULL so COALESCE and IS NULL work.
 func nullable(value string) any {
 	if value == "" {
+		return nil
+	}
+	return value
+}
+
+// nullableID stores 0 as NULL.
+func nullableID(value int) any {
+	if value == 0 {
 		return nil
 	}
 	return value

@@ -117,6 +117,16 @@ func (c *Client) FetchMovieDetail(ctx context.Context, tmdbID int) (*MovieDetail
 	return &detail, nil
 }
 
+// FetchCollection loads a collection with its films.
+func (c *Client) FetchCollection(ctx context.Context, collectionID int) (*CollectionDetail, error) {
+	var detail CollectionDetail
+	path := fmt.Sprintf("/collection/%d", collectionID)
+	if err := c.get(ctx, path, nil, &detail); err != nil {
+		return nil, err
+	}
+	return &detail, nil
+}
+
 // FetchSeriesDetail loads a series with its season list plus the same
 // appended data as movies and the external ids (for the IMDb id).
 func (c *Client) FetchSeriesDetail(ctx context.Context, tmdbID int) (*SeriesDetail, error) {

@@ -35,6 +35,8 @@ type Title {
   keywords: [String!]!
   "False for titles only seen in lists; reading them through Query.title fetches the rest."
   detailFetched: Boolean!
+  "Movies only: the franchise (TMDB collection) the film belongs to, for Query.collection."
+  collectionId: ID
 
   credits: [Credit!]!
   "TMDB recommendations first, then other work of the director and leads."
@@ -200,6 +202,39 @@ type MoreWithRow {
   person: Person!
   becauseOf: Title!
   items: [Title!]!
+}
+
+"How far a profile got through one film of a franchise."
+enum WatchStatus {
+  WATCHED
+  IN_PROGRESS
+  NOT_YET
+}
+
+"A franchise (TMDB collection) with its films in release order, and one profile's progress through them."
+type Collection {
+  id: ID!
+  tmdbId: Int!
+  name: String!
+  overview: String
+  posterPath: String
+  backdropPath: String
+  parts: [CollectionPart!]!
+  "Films the profile finished."
+  watchedCount: Int!
+  "The film to continue with: the first released one not finished yet. Null when everything out is watched."
+  next: CollectionPart
+}
+
+type CollectionPart {
+  "Place in the watch order, from 1."
+  number: Int!
+  title: Title!
+  status: WatchStatus!
+  "Watched share (0..1) of a film in progress."
+  progress: Float!
+  "False for films that are announced but not out yet."
+  released: Boolean!
 }
 
 type RecommendationRow {
@@ -474,6 +509,10 @@ type Query {
   newAndComingSoon(mediaType: MediaType!): [Title!]!
   "Lead actors of the profile's most recently watched titles of one type, the most frequent first; empty before any history."
   watchedActors(profileId: ID!, mediaType: MediaType!, limit: Int = 15): [Person!]!
+  "A franchise's watch-order guide for a profile; the film list is fetched from TMDB when missing or stale."
+  collection(id: ID!, profileId: ID!): Collection
+  "Franchises the library knows (two or more films): the ones the profile is in the middle of first, finished ones last."
+  franchises(profileId: ID!, limit: Int = 12): [Collection!]!
   "More titles with the lead actor of the profile's latest well-rated title; null before any good rating."
   moreWith(profileId: ID!, mediaType: MediaType!): MoreWithRow
   "Stored titles of one type, most popular first."

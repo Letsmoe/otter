@@ -42,6 +42,8 @@ export interface Title {
     keywords: Scalars['String'][]
     /** False for titles only seen in lists; reading them through Query.title fetches the rest. */
     detailFetched: Scalars['Boolean']
+    /** Movies only: the franchise (TMDB collection) the film belongs to, for Query.collection. */
+    collectionId: (Scalars['ID'] | null)
     credits: Credit[]
     /** TMDB recommendations first, then other work of the director and leads. */
     related: Title[]
@@ -213,6 +215,39 @@ export interface MoreWithRow {
     becauseOf: Title
     items: Title[]
     __typename: 'MoreWithRow'
+}
+
+
+/** How far a profile got through one film of a franchise. */
+export type WatchStatus = 'WATCHED' | 'IN_PROGRESS' | 'NOT_YET'
+
+
+/** A franchise (TMDB collection) with its films in release order, and one profile's progress through them. */
+export interface Collection {
+    id: Scalars['ID']
+    tmdbId: Scalars['Int']
+    name: Scalars['String']
+    overview: (Scalars['String'] | null)
+    posterPath: (Scalars['String'] | null)
+    backdropPath: (Scalars['String'] | null)
+    parts: CollectionPart[]
+    /** Films the profile finished. */
+    watchedCount: Scalars['Int']
+    /** The film to continue with: the first released one not finished yet. Null when everything out is watched. */
+    next: (CollectionPart | null)
+    __typename: 'Collection'
+}
+
+export interface CollectionPart {
+    /** Place in the watch order, from 1. */
+    number: Scalars['Int']
+    title: Title
+    status: WatchStatus
+    /** Watched share (0..1) of a film in progress. */
+    progress: Scalars['Float']
+    /** False for films that are announced but not out yet. */
+    released: Scalars['Boolean']
+    __typename: 'CollectionPart'
 }
 
 export interface RecommendationRow {
@@ -450,6 +485,10 @@ export interface Query {
     newAndComingSoon: Title[]
     /** Lead actors of the profile's most recently watched titles of one type, the most frequent first; empty before any history. */
     watchedActors: Person[]
+    /** A franchise's watch-order guide for a profile; the film list is fetched from TMDB when missing or stale. */
+    collection: (Collection | null)
+    /** Franchises the library knows (two or more films): the ones the profile is in the middle of first, finished ones last. */
+    franchises: Collection[]
     /** More titles with the lead actor of the profile's latest well-rated title; null before any good rating. */
     moreWith: (MoreWithRow | null)
     /** Stored titles of one type, most popular first. */
@@ -650,6 +689,8 @@ export interface TitleGenqlSelection{
     keywords?: boolean | number
     /** False for titles only seen in lists; reading them through Query.title fetches the rest. */
     detailFetched?: boolean | number
+    /** Movies only: the franchise (TMDB collection) the film belongs to, for Query.collection. */
+    collectionId?: boolean | number
     credits?: CreditGenqlSelection
     /** TMDB recommendations first, then other work of the director and leads. */
     related?: (TitleGenqlSelection & { __args?: {limit?: (Scalars['Int'] | null)} })
@@ -838,6 +879,37 @@ export interface MoreWithRowGenqlSelection{
     person?: PersonGenqlSelection
     becauseOf?: TitleGenqlSelection
     items?: TitleGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** A franchise (TMDB collection) with its films in release order, and one profile's progress through them. */
+export interface CollectionGenqlSelection{
+    id?: boolean | number
+    tmdbId?: boolean | number
+    name?: boolean | number
+    overview?: boolean | number
+    posterPath?: boolean | number
+    backdropPath?: boolean | number
+    parts?: CollectionPartGenqlSelection
+    /** Films the profile finished. */
+    watchedCount?: boolean | number
+    /** The film to continue with: the first released one not finished yet. Null when everything out is watched. */
+    next?: CollectionPartGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface CollectionPartGenqlSelection{
+    /** Place in the watch order, from 1. */
+    number?: boolean | number
+    title?: TitleGenqlSelection
+    status?: boolean | number
+    /** Watched share (0..1) of a film in progress. */
+    progress?: boolean | number
+    /** False for films that are announced but not out yet. */
+    released?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1079,6 +1151,10 @@ export interface QueryGenqlSelection{
     newAndComingSoon?: (TitleGenqlSelection & { __args: {mediaType: MediaType} })
     /** Lead actors of the profile's most recently watched titles of one type, the most frequent first; empty before any history. */
     watchedActors?: (PersonGenqlSelection & { __args: {profileId: Scalars['ID'], mediaType: MediaType, limit?: (Scalars['Int'] | null)} })
+    /** A franchise's watch-order guide for a profile; the film list is fetched from TMDB when missing or stale. */
+    collection?: (CollectionGenqlSelection & { __args: {id: Scalars['ID'], profileId: Scalars['ID']} })
+    /** Franchises the library knows (two or more films): the ones the profile is in the middle of first, finished ones last. */
+    franchises?: (CollectionGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     /** More titles with the lead actor of the profile's latest well-rated title; null before any good rating. */
     moreWith?: (MoreWithRowGenqlSelection & { __args: {profileId: Scalars['ID'], mediaType: MediaType} })
     /** Stored titles of one type, most popular first. */
@@ -1377,6 +1453,22 @@ export interface SubscriptionGenqlSelection{
     
 
 
+    const Collection_possibleTypes: string[] = ['Collection']
+    export const isCollection = (obj?: { __typename?: any } | null): obj is Collection => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isCollection"')
+      return Collection_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const CollectionPart_possibleTypes: string[] = ['CollectionPart']
+    export const isCollectionPart = (obj?: { __typename?: any } | null): obj is CollectionPart => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isCollectionPart"')
+      return CollectionPart_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
     const RecommendationRow_possibleTypes: string[] = ['RecommendationRow']
     export const isRecommendationRow = (obj?: { __typename?: any } | null): obj is RecommendationRow => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isRecommendationRow"')
@@ -1572,6 +1664,12 @@ export const enumMediaType = {
    MOVIE: 'MOVIE' as const,
    SERIES: 'SERIES' as const,
    EPISODE: 'EPISODE' as const
+}
+
+export const enumWatchStatus = {
+   WATCHED: 'WATCHED' as const,
+   IN_PROGRESS: 'IN_PROGRESS' as const,
+   NOT_YET: 'NOT_YET' as const
 }
 
 export const enumSubtitleSize = {

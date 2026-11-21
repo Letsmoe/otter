@@ -115,12 +115,32 @@ type MovieDetail struct {
 	Adult            bool    `json:"adult"`
 	Video            bool    `json:"video"`
 	Genres           []Genre `json:"genres"`
+	// BelongsToCollection is nil for films outside a franchise.
+	BelongsToCollection *CollectionSummary `json:"belongs_to_collection"`
 
 	Credits         Credits        `json:"credits"`
 	Videos          Videos         `json:"videos"`
 	Images          Images         `json:"images"`
 	Keywords        Keywords       `json:"keywords"`
 	Recommendations SearchResponse `json:"recommendations"`
+}
+
+// CollectionSummary is the collection entry of a movie detail.
+type CollectionSummary struct {
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	PosterPath   string `json:"poster_path"`
+	BackdropPath string `json:"backdrop_path"`
+}
+
+// CollectionDetail is GET /collection/{id}: the franchise and its films.
+type CollectionDetail struct {
+	ID           int            `json:"id"`
+	Name         string         `json:"name"`
+	Overview     string         `json:"overview"`
+	PosterPath   string         `json:"poster_path"`
+	BackdropPath string         `json:"backdrop_path"`
+	Parts        []SearchResult `json:"parts"`
 }
 
 // Keywords covers both TMDB shapes: movies list them under "keywords",

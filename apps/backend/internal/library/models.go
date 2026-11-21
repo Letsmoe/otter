@@ -37,6 +37,8 @@ type Title struct {
 	Keywords        []string `json:"keywords"`
 	Adult           bool     `json:"adult"`
 	DetailFetchedAt string   `json:"detail_fetched_at"`
+	// CollectionID is the TMDB collection (franchise) of a movie; 0 for none.
+	CollectionID int `json:"collection_id"`
 }
 
 // Ref identifies the title in the library.
