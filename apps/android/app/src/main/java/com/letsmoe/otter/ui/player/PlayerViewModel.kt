@@ -102,6 +102,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private val progressReporter = ProgressReporter()
     private val togetherSync = PlayerTogetherSync(viewModelScope, this)
     private val skipTracker = SkipTracker()
+    private val finishWatch = FinishWatch()
     private val upNextOffer = UpNext(viewModelScope, ::playNext)
     private val captionExtras = CaptionExtras(viewModelScope, ::reloadPhoneCaptions)
 
@@ -198,6 +199,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         saveProgress(force = true)
         TogetherSession.detachPlayer(currentMediaId)
         progressReporter.reset()
+        finishWatch.reset()
         playing = null
         sourceSwitchResumeSeconds = 0.0
         nextEpisodeJob?.cancel()
@@ -968,12 +970,25 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         mutableSkipButton.value = skipTracker.jumpAt(positionSeconds)
         val inCredits = skipTracker.isInCredits(positionSeconds)
         upNextOffer.follow(inCredits, activePlayer.isPlaying, offeredNextEpisode())
+        markFinishedAtCredits(inCredits, positionSeconds)
         skipIntroAt(positionSeconds)
         endReplayAt(positionSeconds)
         // Back before the credits, the TV's card may show again, like the phone's.
         if (!inCredits) {
             televisionPlayer?.upNextDismissed = false
         }
+    }
+
+    // The credits count as the end: saved as complete, so Continue watching moves on to the next episode.
+    private fun markFinishedAtCredits(inCredits: Boolean, positionSeconds: Double) {
+        val current = mutableState.value
+        if (!current.hasSource || !activePlayer.isPlaying) {
+            return
+        }
+        if (!finishWatch.reached(inCredits, positionSeconds, current.durationSeconds)) {
+            return
+        }
+        progressReporter.save(current.mediaId, current.durationSeconds, current.durationSeconds, force = true)
     }
 
     // Only while playing: a paused or loading player keeps whatever the viewer picked.
