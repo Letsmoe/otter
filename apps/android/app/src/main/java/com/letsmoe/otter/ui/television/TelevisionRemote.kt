@@ -63,6 +63,7 @@ import com.letsmoe.otter.ui.player.PlaybackPosition
 import com.letsmoe.otter.ui.player.PlayerRequest
 import com.letsmoe.otter.ui.player.PlayerUiState
 import com.letsmoe.otter.ui.player.PlayerViewModel
+import com.letsmoe.otter.ui.player.RatingReminderCard
 import com.letsmoe.otter.ui.player.SourcesSheetContent
 import com.letsmoe.otter.ui.player.SpeedSheetContent
 import com.letsmoe.otter.ui.player.TelevisionPlayback
@@ -145,8 +146,12 @@ private fun PlayingRemote(
     onOpen: (RemotePage) -> Unit,
     onContinueOnPhone: (PlayerRequest) -> Unit,
 ) {
+    val ratingReminderShown by viewModel.ratingReminderShown.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         ConnectionHeader(target)
+        if (ratingReminderShown) {
+            RatingReminderCard(state.mediaId)
+        }
         NowPlaying(state)
         if (state.shownError != null) {
             ErrorActions(onRetry = viewModel::retryAfterError, onOtherSource = { onOpen(RemotePage.SOURCES) })
