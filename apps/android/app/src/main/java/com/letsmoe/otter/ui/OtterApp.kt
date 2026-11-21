@@ -63,6 +63,7 @@ import androidx.compose.foundation.layout.padding
 import com.letsmoe.otter.ui.navigation.bottomBarClearance
 import com.letsmoe.otter.ui.navigation.play
 import com.letsmoe.otter.ui.player.PlayerRequest
+import com.letsmoe.otter.ui.simple.SimpleShell
 import com.letsmoe.otter.ui.setup.TmdbConnectionOverlay
 import com.letsmoe.otter.ui.setup.TmdbSetupOverlay
 import com.letsmoe.otter.ui.setup.WelcomeOverlay
@@ -87,7 +88,7 @@ fun OtterApp() {
                 ProfileGateOrShell()
             }
             CompositionLocalProvider(LocalGlassBackdrop provides rootBackdrop) {
-                UpdateBanner()
+                UpdateBannerUnlessSimple()
                 TmdbConnectionOverlay()
                 TmdbSetupOverlay()
                 WelcomeOverlay()
@@ -99,10 +100,11 @@ fun OtterApp() {
 @Composable
 private fun ProfileGateOrShell() {
     val activeProfile by ProfileSession.activeProfile.collectAsStateWithLifecycle()
-    if (activeProfile != null) {
+    val signedInProfile = activeProfile
+    if (signedInProfile != null) {
         val shellReload by ShellReloads.latest.collectAsStateWithLifecycle()
         key(shellReload.generation) {
-            AppShell(shellReload.startTab)
+            ShellOfProfile(signedInProfile.simpleMode, shellReload.startTab)
         }
         return
     }
@@ -114,6 +116,25 @@ private fun ProfileGateOrShell() {
     CompositionLocalProvider(LocalGlassBackdrop provides gateBackdrop) {
         ToastHost()
     }
+}
+
+// A button that installs an update is one more thing to press by accident; it waits for the helper.
+@Composable
+private fun UpdateBannerUnlessSimple() {
+    val activeProfile by ProfileSession.activeProfile.collectAsStateWithLifecycle()
+    if (activeProfile?.simpleMode == true) {
+        return
+    }
+    UpdateBanner()
+}
+
+@Composable
+private fun ShellOfProfile(simpleMode: Boolean, startTab: Tab) {
+    if (simpleMode) {
+        SimpleShell()
+        return
+    }
+    AppShell(startTab)
 }
 
 /** The pages with the glass tab bar floating over them. */

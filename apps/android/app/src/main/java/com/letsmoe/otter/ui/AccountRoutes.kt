@@ -62,6 +62,11 @@ fun NavGraphBuilder.accountRoutes(navController: NavHostController) {
     composable(Routes.PLUGINS) {
         WithoutBackdrop { PluginsScreen(onBack = { navController.popBackStack() }) }
     }
+    playerRoute(navController)
+}
+
+/** The player screen, shared by the full app and simple mode. */
+fun NavGraphBuilder.playerRoute(navController: NavHostController) {
     composable(
         Routes.PLAYER,
         arguments = listOf(

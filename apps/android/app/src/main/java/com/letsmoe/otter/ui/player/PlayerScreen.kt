@@ -39,6 +39,7 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.Television
 import com.letsmoe.otter.R
+import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.together.TogetherSession
 import com.letsmoe.otter.together.isOpen
 import com.letsmoe.otter.ui.components.LocalGlassBackdrop
@@ -83,6 +84,8 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
     val askingStillWatching by viewModel.askingStillWatching.collectAsStateWithLifecycle()
     val captionTweaks by viewModel.captionTweaks.collectAsStateWithLifecycle()
     val room by TogetherSession.room.collectAsStateWithLifecycle()
+    val activeProfile by ProfileSession.activeProfile.collectAsStateWithLifecycle()
+    val simpleMode = activeProfile?.simpleMode == true
     val chrome = remember { PlayerChrome() }
     var sheet by remember { mutableStateOf<PlayerSheetKind?>(null) }
     var skipFeedback by remember { mutableStateOf<SkipFeedback?>(null) }
@@ -102,7 +105,9 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
         chrome.show()
     }
 
-    HideControlsAfterIdle(state, chrome, sheet)
+    if (!simpleMode) {
+        HideControlsAfterIdle(state, chrome, sheet)
+    }
     BackHandler { if (sheet != null) closeSheet() else close() }
     HandOverToTelevision(viewModel, onBack)
 
@@ -136,44 +141,60 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
                 CastingBackdrop(deviceName)
             }
         }
-        PlayerTapSurface(
-            onToggleControls = chrome::toggle,
-            onDoubleTap = { side ->
-                if (chrome.locked) {
-                    chrome.toggle()
-                } else {
-                    skipFeedback = SkipFeedback(side, System.currentTimeMillis())
-                    viewModel.skip(skipAmount(side))
-                }
-            },
-        )
+        if (!simpleMode) {
+            PlayerTapSurface(
+                onToggleControls = chrome::toggle,
+                onDoubleTap = { side ->
+                    if (chrome.locked) {
+                        chrome.toggle()
+                    } else {
+                        skipFeedback = SkipFeedback(side, System.currentTimeMillis())
+                        viewModel.skip(skipAmount(side))
+                    }
+                },
+            )
+        }
         skipFeedback?.let { feedback -> SkipFeedbackBubble(feedback) }
         // Above the tap surface, so a line can be tapped to play it again.
         if (state.isCasting) {
             val lines = recentLines(captionTweaks.transcriptCues, position.positionSeconds, captionTweaks.delaySeconds)
             RecentLines(lines, viewModel::replayLine, Modifier.align(Alignment.BottomCenter).padding(start = 32.dp, end = 32.dp, bottom = 150.dp))
         }
-        StatusNotice(state, viewModel, ::openSheet)
-        if (!state.hasEnded) {
+        StatusNotice(state, viewModel, simpleMode, ::openSheet)
+        if (!state.hasEnded && simpleMode) {
+            // The next episode starts by itself after its countdown; there is no card to answer.
+            SimplePlayerControls(state.isPlaying, actions.togglePlay, { actions.skip(-SKIP_SECONDS) }, ::close)
+            SkipSegmentButton(skipButton, controlsVisible = true, onSkip = viewModel::skipSegment)
+        }
+        if (!state.hasEnded && !simpleMode) {
             PlayerControlsLayer(state, position, chrome, actions) { viewModel.previewPlayer }
             SkipSegmentButton(skipButton.takeIf { upNext == null }, chrome.visible, viewModel::skipSegment)
             PostCreditsSceneNotice(postCreditsNotice, chrome.visible)
             // Out of the controls' way; the countdown keeps running and the card returns with it.
             UpNextOverlay(upNext.takeIf { !chrome.visible }, chrome.visible, viewModel::cancelUpNext, viewModel::playUpNextNow)
         }
-        if (room.isOpen()) {
+        if (room.isOpen() && !simpleMode) {
             TogetherOverlay()
         }
         AnimatedVisibility(state.hasEnded, enter = fadeIn(), exit = fadeOut()) {
-            // Not counting down to an episode the viewer asked not to play.
-            val offersNext = state.hasNextEpisode && !state.stopsAfterEpisode
-            EndScreen(state.title, state.mediaId, offersNext, onNext = viewModel::playNextAfterEnd, onClose = ::close)
+            EndOfPlayback(simpleMode, state, viewModel, ::close)
         }
         StillWatchingPrompt(askingStillWatching, viewModel::keepWatching, viewModel::stopWatching)
         CompositionLocalProvider(LocalGlassBackdrop provides videoBackdrop) {
             PlayerSheetHost(sheet, onClose = ::closeSheet) { kind -> SheetContent(kind, state, viewModel, ::closeSheet) }
         }
     }
+}
+
+@Composable
+private fun EndOfPlayback(simpleMode: Boolean, state: PlayerUiState, viewModel: PlayerViewModel, close: () -> Unit) {
+    // Not counting down to an episode the viewer asked not to play.
+    val offersNext = state.hasNextEpisode && !state.stopsAfterEpisode
+    if (simpleMode) {
+        SimpleEndScreen(state.title, offersNext, onNextEpisode = viewModel::playNextAfterEnd, onClose = close)
+        return
+    }
+    EndScreen(state.title, state.mediaId, offersNext, onNext = viewModel::playNextAfterEnd, onClose = close)
 }
 
 private fun skipAmount(side: TapSide): Int {
@@ -248,9 +269,13 @@ private fun showsReplayCaptions(state: PlayerUiState, tweaks: CaptionExtrasState
 
 // Waiting for the room, buffering, or a failure, in the middle of the video.
 @Composable
-private fun StatusNotice(state: PlayerUiState, viewModel: PlayerViewModel, openSheet: (PlayerSheetKind) -> Unit) {
+private fun StatusNotice(state: PlayerUiState, viewModel: PlayerViewModel, simpleMode: Boolean, openSheet: (PlayerSheetKind) -> Unit) {
     Box(Modifier.fillMaxSize()) {
         val error = state.shownError
+        if (error != null && simpleMode) {
+            SimpleErrorNotice(onRetry = viewModel::retryAfterError, modifier = Modifier.align(Alignment.Center))
+            return@Box
+        }
         if (error != null) {
             PlayerErrorNotice(
                 error,

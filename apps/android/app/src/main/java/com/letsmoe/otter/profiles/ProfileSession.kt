@@ -27,6 +27,7 @@ object ProfileSession {
     private const val KEY_AGE_LIMIT = "ageLimit"
     private const val KEY_BEDTIME_MINUTES = "bedtimeMinutes"
     private const val NO_BEDTIME = -1
+    private const val KEY_SIMPLE_MODE = "simpleMode"
 
     private lateinit var preferences: SharedPreferences
     private val mutableActiveProfile = MutableStateFlow<ProfileFields?>(null)
@@ -52,6 +53,7 @@ object ProfileSession {
             putBoolean(KEY_VOICE_BOOST, profile.voiceBoost)
             putInt(KEY_AGE_LIMIT, profile.ageLimit)
             putInt(KEY_BEDTIME_MINUTES, storedBedtime(profile.bedtimeMinutes))
+            putBoolean(KEY_SIMPLE_MODE, profile.simpleMode)
         }
         mutableActiveProfile.value = profile
     }
@@ -77,6 +79,7 @@ object ProfileSession {
             voiceBoost = preferences.getBoolean(KEY_VOICE_BOOST, false),
             ageLimit = preferences.getInt(KEY_AGE_LIMIT, 0),
             bedtimeMinutes = readStoredBedtime(),
+            simpleMode = preferences.getBoolean(KEY_SIMPLE_MODE, false),
         )
     }
 

@@ -166,6 +166,7 @@ func profileModel(profile profiles.Profile) *model.Profile {
 		VoiceBoost:       profile.VoiceBoost,
 		AgeLimit:         profile.AgeLimit,
 		BedtimeMinutes:   profile.BedtimeMinutes,
+		SimpleMode:       profile.SimpleMode,
 	}
 }
 

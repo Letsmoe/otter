@@ -12,6 +12,7 @@ fragment ProfileFields on Profile {
   voiceBoost
   ageLimit
   bedtimeMinutes
+  simpleMode
 }
 
 query Profiles {
@@ -47,6 +48,7 @@ mutation UpdateProfile(
   $voiceBoost: Boolean
   $ageLimit: Int
   $bedtimeMinutes: Int
+  $simpleMode: Boolean
 ) {
   updateProfile(
     id: $id
@@ -62,6 +64,7 @@ mutation UpdateProfile(
     voiceBoost: $voiceBoost
     ageLimit: $ageLimit
     bedtimeMinutes: $bedtimeMinutes
+    simpleMode: $simpleMode
   ) {
     ...ProfileFields
   }

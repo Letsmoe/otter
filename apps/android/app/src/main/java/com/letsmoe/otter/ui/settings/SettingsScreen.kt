@@ -44,6 +44,8 @@ import com.letsmoe.otter.notifications.NotificationItem
 import com.letsmoe.otter.notifications.NotificationsRepository
 import com.letsmoe.otter.notifications.PhoneNotifications
 import com.letsmoe.otter.notifications.rememberNotificationPermissionRequest
+import com.letsmoe.otter.profiles.PreferenceChange
+import com.letsmoe.otter.profiles.ProfilePreferences
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.settings.AutoSkipIntro
 import com.letsmoe.otter.settings.PlaybackSettings
@@ -351,7 +353,12 @@ private val sampleNotification = NotificationItem(
 
 @Composable
 private fun ProfilesGroup(onOpenPlugins: () -> Unit) {
-    SettingsGroup("Profiles") {
+    val profile by ProfileSession.activeProfile.collectAsStateWithLifecycle()
+    SettingsGroup("Profiles", footer = "Simple mode shows only Continue, My List and Search with big buttons. Leaving it takes a long press and a confirmation, or the profile's PIN.") {
+        SettingsSwitchRow("Simple mode", "For someone who just wants to watch", profile?.simpleMode == true) { enabled ->
+            ProfilePreferences.change(PreferenceChange(simpleMode = enabled))
+        }
+        SettingsDivider()
         LinkRow("Manage Profiles", ProfileSession::logout)
         SettingsDivider()
         LinkRow("Plugins", onOpenPlugins)

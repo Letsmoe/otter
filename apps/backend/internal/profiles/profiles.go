@@ -64,6 +64,8 @@ type Profile struct {
 	AgeLimit int `json:"age_limit"`
 	// BedtimeMinutes is a child profile's fixed bedtime in minutes after midnight; nil means none.
 	BedtimeMinutes *int `json:"bedtime_minutes"`
+	// SimpleMode makes the apps show only Continue, My List and Search with big controls.
+	SimpleMode bool `json:"simple_mode"`
 }
 
 // HasAgeLimit reports whether titles are held back from the profile by their age rating.
@@ -185,6 +187,7 @@ type Update struct {
 	AgeLimit *int
 	// BedtimeMinutes is minutes after midnight; a negative value removes the bedtime.
 	BedtimeMinutes *int
+	SimpleMode       *bool
 }
 
 // Update changes a profile's fields and returns the stored result.
@@ -201,13 +204,14 @@ func (s *Service) Update(ctx context.Context, profileID int, update Update) (*Pr
 			languages = $languages, subtitles_enabled = $subtitles_enabled,
 			subtitle_language = $subtitle_language, subtitle_size = $subtitle_size,
 			subtitle_style = $subtitle_style, voice_boost = $voice_boost,
-			age_limit = $age_limit, bedtime_minutes = $bedtime_minutes
+			age_limit = $age_limit, bedtime_minutes = $bedtime_minutes, simple_mode = $simple_mode
 		WHERE id = $id`,
 		db.Vars{"id": profileID, "name": profile.Name, "avatar_url": profile.AvatarURL,
 			"pin_hash": profile.PinHash, "is_child": profile.IsChild, "languages": profile.Languages,
 			"subtitles_enabled": profile.SubtitlesEnabled, "subtitle_language": nullableText(profile.SubtitleLanguage),
 			"subtitle_size": profile.SubtitleSize, "subtitle_style": profile.SubtitleStyle, "voice_boost": profile.VoiceBoost,
-			"age_limit": profile.AgeLimit, "bedtime_minutes": profile.BedtimeMinutes})
+			"age_limit": profile.AgeLimit, "bedtime_minutes": profile.BedtimeMinutes,
+			"simple_mode": profile.SimpleMode})
 	if err != nil {
 		return nil, storeError("update", err)
 	}
@@ -223,6 +227,9 @@ func applyUpdate(profile *Profile, update Update) error {
 	}
 	if update.IsChild != nil {
 		profile.IsChild = *update.IsChild
+	}
+	if update.SimpleMode != nil {
+		profile.SimpleMode = *update.SimpleMode
 	}
 	if update.Languages != nil {
 		languages, err := encodeLanguages(*update.Languages)

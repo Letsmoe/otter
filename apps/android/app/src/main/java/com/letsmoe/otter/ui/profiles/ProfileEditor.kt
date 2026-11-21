@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -184,6 +185,12 @@ private fun ProfileOptions(editor: ProfileEditorViewModel) {
         }
         if (editor.isChild) {
             ChildOptions(editor)
+        }
+        if (!editor.isNew) {
+            HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+            OptionRow(Icons.Filled.Home, "Simple mode", "Big buttons and only Continue, My List and Search. Leaving it takes a long press.") {
+                OtterSwitch(editor.simpleMode, onCheckedChange = { value -> editor.simpleMode = value })
+            }
         }
         HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
         OptionRow(Icons.Filled.Lock, "Profile Lock", "Require a 4-digit PIN to open this profile.") {
