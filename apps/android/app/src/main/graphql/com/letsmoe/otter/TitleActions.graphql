@@ -18,6 +18,16 @@ mutation ClearRating($profileId: ID!, $mediaId: ID!) {
   clearRating(profileId: $profileId, mediaId: $mediaId)
 }
 
+mutation StartRewatch($profileId: ID!, $titleId: ID!) {
+  startRewatch(profileId: $profileId, titleId: $titleId) {
+    startedAt
+  }
+}
+
+mutation StopRewatch($profileId: ID!, $titleId: ID!) {
+  stopRewatch(profileId: $profileId, titleId: $titleId)
+}
+
 mutation FindStreams($id: ID!) {
   findStreams(id: $id)
 }

@@ -979,11 +979,19 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     // Only while playing: a paused or loading player keeps whatever the viewer picked.
     private fun skipIntroAt(positionSeconds: Double) {
         val current = mutableState.value
-        if (!activePlayer.isPlaying || current.isHolding || !PlaybackSettings.skipsIntroAutomatically(current.isCasting)) {
+        if (!activePlayer.isPlaying || current.isHolding || !skipsIntroOnItsOwn(current)) {
             return
         }
         val target = skipTracker.autoSkipTarget(positionSeconds) ?: return
         seekTo(target)
+    }
+
+    // A rewatch always jumps over intros and recaps, whatever the setting says.
+    private fun skipsIntroOnItsOwn(current: PlayerUiState): Boolean {
+        if (media?.rewatching == true) {
+            return true
+        }
+        return PlaybackSettings.skipsIntroAutomatically(current.isCasting)
     }
 
     // None when the viewer stops after this episode: the card isn't offered.

@@ -56,7 +56,22 @@ export interface Title {
     inWatchlist: Scalars['Boolean']
     /** Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List. */
     notifying: Scalars['Boolean']
+    /** The profile's latest rewatch of this movie or series; null when there never was one. */
+    rewatch: (Rewatch | null)
     __typename: 'Title'
+}
+
+
+/**
+ * A second run through a movie or series. While it is going, `progress` of the title and its
+ * episodes is the rewatch's own, so Continue watching, history and recommendations stay as the
+ * first watch left them.
+ */
+export interface Rewatch {
+    startedAt: Scalars['String']
+    /** True once the movie, or every aired episode, was watched again. */
+    finished: Scalars['Boolean']
+    __typename: 'Rewatch'
 }
 
 export interface Season {
@@ -464,6 +479,8 @@ export interface Query {
     recommendations: Recommendation[]
     recommendationRows: RecommendationRow[]
     continueWatching: ContinueItem[]
+    /** Rewatches still going, most recent first: the movie, or the episode of the series to continue or start next. */
+    continueRewatching: ContinueItem[]
     history: HistoryEntry[]
     watchlist: Title[]
     /** Titles the profile rated well (I like this, Love this), latest rating first. */
@@ -542,6 +559,10 @@ export interface Mutation {
     /** Resolves several links at once (most preferred first) and returns the fastest that really delivers video. Fails only when none plays. */
     resolveBestStream: ResolvedStream
     recordProgress: WatchProgress
+    /** Starts a rewatch of a movie or series from the beginning; an earlier rewatch's progress is dropped, the first watch's is kept. */
+    startRewatch: Rewatch
+    /** Ends the rewatch and forgets its progress; the first watch's progress is read again. */
+    stopRewatch: Scalars['Boolean']
     setRating: Scalars['Boolean']
     clearRating: Scalars['Boolean']
     addToWatchlist: Scalars['Boolean']
@@ -664,6 +685,22 @@ export interface TitleGenqlSelection{
     inWatchlist?: { __args: {profileId: Scalars['ID']} }
     /** Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List. */
     notifying?: { __args: {profileId: Scalars['ID']} }
+    /** The profile's latest rewatch of this movie or series; null when there never was one. */
+    rewatch?: (RewatchGenqlSelection & { __args: {profileId: Scalars['ID']} })
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/**
+ * A second run through a movie or series. While it is going, `progress` of the title and its
+ * episodes is the rewatch's own, so Continue watching, history and recommendations stay as the
+ * first watch left them.
+ */
+export interface RewatchGenqlSelection{
+    startedAt?: boolean | number
+    /** True once the movie, or every aired episode, was watched again. */
+    finished?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1093,6 +1130,8 @@ export interface QueryGenqlSelection{
     recommendations?: (RecommendationGenqlSelection & { __args: {profileId: Scalars['ID'], mediaType?: (MediaType | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null), refresh?: (Scalars['Boolean'] | null)} })
     recommendationRows?: (RecommendationRowGenqlSelection & { __args: {profileId: Scalars['ID'], rows?: (Scalars['Int'] | null), perRow?: (Scalars['Int'] | null)} })
     continueWatching?: (ContinueItemGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
+    /** Rewatches still going, most recent first: the movie, or the episode of the series to continue or start next. */
+    continueRewatching?: (ContinueItemGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     history?: (HistoryEntryGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     watchlist?: (TitleGenqlSelection & { __args: {profileId: Scalars['ID']} })
     /** Titles the profile rated well (I like this, Love this), latest rating first. */
@@ -1173,6 +1212,10 @@ export interface MutationGenqlSelection{
     /** Resolves several links at once (most preferred first) and returns the fastest that really delivers video. Fails only when none plays. */
     resolveBestStream?: (ResolvedStreamGenqlSelection & { __args: {streamIds: Scalars['ID'][]} })
     recordProgress?: (WatchProgressGenqlSelection & { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], progressSeconds: Scalars['Float'], durationSeconds: Scalars['Float']} })
+    /** Starts a rewatch of a movie or series from the beginning; an earlier rewatch's progress is dropped, the first watch's is kept. */
+    startRewatch?: (RewatchGenqlSelection & { __args: {profileId: Scalars['ID'], titleId: Scalars['ID']} })
+    /** Ends the rewatch and forgets its progress; the first watch's progress is read again. */
+    stopRewatch?: { __args: {profileId: Scalars['ID'], titleId: Scalars['ID']} }
     setRating?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], rating: Scalars['Float']} }
     clearRating?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
     addToWatchlist?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
@@ -1261,6 +1304,14 @@ export interface SubscriptionGenqlSelection{
     export const isTitle = (obj?: { __typename?: any } | null): obj is Title => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isTitle"')
       return Title_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const Rewatch_possibleTypes: string[] = ['Rewatch']
+    export const isRewatch = (obj?: { __typename?: any } | null): obj is Rewatch => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isRewatch"')
+      return Rewatch_possibleTypes.includes(obj.__typename)
     }
     
 

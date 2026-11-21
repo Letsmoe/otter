@@ -8,6 +8,7 @@ import com.letsmoe.otter.graphql.PlayerMovieQuery
 import com.letsmoe.otter.graphql.PlayerRatingQuery
 import com.letsmoe.otter.graphql.PlayerSeriesEpisodesQuery
 import com.letsmoe.otter.graphql.fragment.PlayerProgressFields
+import com.letsmoe.otter.ui.title.isRewatchRunning
 import kotlinx.coroutines.CancellationException
 
 /** What the player shows about the playing movie or episode. */
@@ -22,6 +23,8 @@ data class PlayerMedia(
     /** The title card on a TV: the movie or series, and for episodes "S1:E2 · Name". */
     val heading: String = title,
     val subheading: String? = null,
+    /** A rewatch of this title is going: intros and recaps are always skipped. */
+    val rewatching: Boolean = false,
 )
 
 /** A skippable part; endSeconds is null when it runs to the end. */
@@ -51,7 +54,7 @@ suspend fun loadPlayerMedia(mediaId: String, profileId: String): PlayerMedia? {
 private suspend fun loadMovieMedia(mediaId: String, profileId: String): PlayerMedia? {
     val data = OtterApi.client.query(PlayerMovieQuery(mediaId, profileId)).execute().dataOrThrow()
     val title = data.title ?: return null
-    return PlayerMedia(title.title, "/movies/$mediaId", emptyList(), null)
+    return PlayerMedia(title.title, "/movies/$mediaId", emptyList(), null, rewatching = isRewatchRunning(title.rewatch?.finished))
 }
 
 private suspend fun loadEpisodeMedia(mediaId: String, profileId: String): PlayerMedia? {
@@ -68,6 +71,7 @@ private suspend fun loadEpisodeMedia(mediaId: String, profileId: String): Player
         title, "/series/$seriesId?episode=$mediaId", episodes, nextId.takeIf { nextKnown }, skipSegments,
         heading = episode.series.title,
         subheading = subheading,
+        rewatching = isRewatchRunning(episode.series.rewatch?.finished),
     )
 }
 

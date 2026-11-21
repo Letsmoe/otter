@@ -28,6 +28,7 @@ models:
       rating: { resolver: true }
       inWatchlist: { resolver: true }
       notifying: { resolver: true }
+      rewatch: { resolver: true }
   Season:
     fields:
       episodes: { resolver: true }

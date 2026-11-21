@@ -73,6 +73,7 @@ private fun TitlesPageState.orderedSpecs(labels: PageLabels): List<RowSpec> {
     val plural = labels.plural
     val head = listOf(
         RowSpec("continue", labels.continueTitle, continueWatching, minimumItems = 1),
+        RowSpec("continue-rewatch", "Continue Rewatch", continueRewatching, minimumItems = 1),
         RowSpec("my-list", "My List", myList, minimumItems = 1),
         RowSpec("top-ten", "Top 10 $plural Today", topTenItems(), RailStyle.TOP_TEN, keepsAllItems = true),
         RowSpec("new", labels.newRow, newAndComingSoon, RailStyle.WIDE),

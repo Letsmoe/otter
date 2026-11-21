@@ -57,7 +57,7 @@ fun SeriesPage(
         detail = detail,
         facts = seriesFacts(detail),
         playButton = PlayButtonState(
-            label = seriesPlayLabel(upNext, vpn.blocksStreaming),
+            label = seriesPlayLabel(upNext, vpn.blocksStreaming, detail.rewatching),
             busy = !episodes.loaded,
             ready = episodes.loaded && upNext != null && !vpn.blocksStreaming,
             disabled = (episodes.loaded && upNext == null) || vpn.blocksStreaming,
@@ -70,6 +70,7 @@ fun SeriesPage(
         downloadTarget = upNextDownload(detail, upNext),
         tabBar = { SegmentedBar(seriesTabs, tab, onSelect = { chosen -> tab = chosen }) },
         playExtras = { UpNextBar(upNext) },
+        rewatch = seriesRewatchBar(detail, episodes, seriesViewModel, actions, onPlay),
     ) {
         when (tab) {
             SeriesTab.EPISODES -> EpisodesTab(detail, episodes, seriesViewModel, slots, onPlay)
@@ -77,6 +78,29 @@ fun SeriesPage(
             SeriesTab.TRAILERS -> TrailerTab(detail.trailerKey, detail.title, Modifier.padding(horizontal = 12.dp))
         }
     }
+}
+
+// Rewatch starts over on the first regular episode and reloads the episodes, whose progress turns into the rewatch's.
+private fun seriesRewatchBar(
+    detail: TitleDetail,
+    episodes: EpisodesState,
+    seriesViewModel: SeriesViewModel,
+    actions: TitlePageActions,
+    onPlay: (PlayRequest) -> Unit,
+): RewatchBarState {
+    val firstEpisode = episodes.episodes.firstOrNull { episode -> episode.seasonNumber > 0 }
+    return RewatchBarState(
+        offer = rewatchOffer(isSeriesFinished(episodes.episodes), detail.rewatching),
+        onStart = {
+            actions.onStartRewatch {
+                seriesViewModel.loadEpisodes()
+                if (firstEpisode != null) {
+                    onPlay(PlayRequest(firstEpisode.id))
+                }
+            }
+        },
+        onStop = { actions.onStopRewatch { seriesViewModel.loadEpisodes() } },
+    )
 }
 
 @Composable
@@ -144,9 +168,12 @@ private fun upNextDownload(detail: TitleDetail, upNext: UpNext?): DownloadTarget
     return DownloadTarget(upNext.episode.id, "${detail.title} ${upNext.episode.code} ${upNext.episode.displayName}")
 }
 
-private fun seriesPlayLabel(upNext: UpNext?, vpnBlocked: Boolean): String {
+private fun seriesPlayLabel(upNext: UpNext?, vpnBlocked: Boolean, rewatching: Boolean): String {
     if (vpnBlocked) {
         return "Connect to a VPN to watch"
+    }
+    if (rewatching) {
+        return rewatchSeriesPlayLabel(upNext)
     }
     if (upNext == null) {
         return "Play"

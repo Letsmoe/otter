@@ -24,6 +24,7 @@ data class TitlesPageState(
     val featured: FeaturedItem? = null,
     val featuredInMyList: Boolean = false,
     val continueWatching: List<RailItem> = emptyList(),
+    val continueRewatching: List<RailItem> = emptyList(),
     val myList: List<RailItem> = emptyList(),
     val newAndComingSoon: List<RailItem> = emptyList(),
     val recommended: List<RailItem> = emptyList(),
@@ -87,6 +88,7 @@ class TitlesPageViewModel(private val mediaType: MediaType) : ViewModel() {
     /** Rows the profile changes while using the app; reloaded when the page is shown again. */
     fun loadPersonalRows() {
         loadRow({ MediaRepository.continueWatching(profileId).onlyKind(mediaType) }) { items -> copy(continueWatching = items) }
+        loadRow({ MediaRepository.continueRewatching(profileId).onlyKind(mediaType) }) { items -> copy(continueRewatching = items) }
         loadRow({ MediaRepository.watchlist(profileId).onlyKind(mediaType) }) { items -> copy(myList = items) }
         viewModelScope.launch { loadFeatured() }
     }

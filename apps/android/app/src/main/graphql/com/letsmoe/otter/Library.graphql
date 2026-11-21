@@ -19,6 +19,20 @@ query ContinueWatching($profileId: ID!, $limit: Int!) {
   }
 }
 
+query ContinueRewatching($profileId: ID!, $limit: Int!) {
+  continueRewatching(profileId: $profileId, limit: $limit) {
+    title {
+      ...TitleCard
+    }
+    episode {
+      ...EpisodeRef
+    }
+    progress {
+      ...ProgressFields
+    }
+  }
+}
+
 query History($profileId: ID!, $limit: Int!) {
   history(profileId: $profileId, limit: $limit) {
     title {

@@ -21,6 +21,8 @@ type WatchEntry struct {
 	Completed       bool              `json:"completed"`
 	StartedAt       string            `json:"started_at"`
 	UpdatedAt       string            `json:"updated_at"`
+	// Rewatch marks progress of a rewatch run, not of the first watch.
+	Rewatch bool `json:"rewatch"`
 }
 
 func (e WatchEntry) Ref() library.MediaRef {
@@ -46,8 +48,21 @@ func refVars(profileID int, ref library.MediaRef) db.Vars {
 
 // RecordProgress stores playback progress for a movie or episode and emits
 // watch.started / watch.completed when those happen for the first time.
+// During a rewatch of the title the progress goes to the rewatch instead and
+// no events fire.
 func (s *Service) RecordProgress(ctx context.Context, profileID int, ref library.MediaRef, progressSeconds, durationSeconds float64) (*WatchEntry, error) {
-	previous, err := s.WatchEntry(ctx, profileID, ref)
+	rewatch, err := s.activeRewatchFor(ctx, profileID, ref)
+	if err != nil {
+		return nil, err
+	}
+	if rewatch != nil {
+		return s.recordRewatchProgress(ctx, rewatch, ref, progressSeconds, durationSeconds)
+	}
+	return s.recordFirstWatchProgress(ctx, profileID, ref, progressSeconds, durationSeconds)
+}
+
+func (s *Service) recordFirstWatchProgress(ctx context.Context, profileID int, ref library.MediaRef, progressSeconds, durationSeconds float64) (*WatchEntry, error) {
+	previous, err := s.historyEntry(ctx, profileID, ref)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +79,7 @@ func (s *Service) RecordProgress(ctx context.Context, profileID int, ref library
 	if err != nil {
 		return nil, err
 	}
-	current, err := s.WatchEntry(ctx, profileID, ref)
+	current, err := s.historyEntry(ctx, profileID, ref)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +104,20 @@ func (s *Service) emitWatchEvents(previous, current *WatchEntry) {
 }
 
 // WatchEntry returns the profile's progress on one title; nil when unwatched.
+// During a rewatch of the title it is the rewatch's progress.
 func (s *Service) WatchEntry(ctx context.Context, profileID int, ref library.MediaRef) (*WatchEntry, error) {
+	rewatch, err := s.activeRewatchFor(ctx, profileID, ref)
+	if err != nil {
+		return nil, err
+	}
+	if rewatch != nil {
+		return s.rewatchEntry(ctx, profileID, ref)
+	}
+	return s.historyEntry(ctx, profileID, ref)
+}
+
+// historyEntry is the progress of the first watch, whatever a rewatch says.
+func (s *Service) historyEntry(ctx context.Context, profileID int, ref library.MediaRef) (*WatchEntry, error) {
 	return db.QueryOneAs[WatchEntry](ctx, s.database, `SELECT * FROM watch_history
 		WHERE profile_id = $profile_id AND media_type = $media_type AND media_id = $media_id`,
 		refVars(profileID, ref))
@@ -102,13 +130,27 @@ func (s *Service) History(ctx context.Context, profileID, limit int) ([]WatchEnt
 		db.Vars{"profile_id": profileID, "limit": limit})
 }
 
-// EpisodeProgress lists the profile's progress on a series' episodes.
+// EpisodeProgress lists the profile's progress on a series' episodes; during
+// a rewatch of the series it is the rewatch's progress.
 func (s *Service) EpisodeProgress(ctx context.Context, profileID, seriesID int) ([]WatchEntry, error) {
-	return db.QueryAs[WatchEntry](ctx, s.database, `SELECT watch_history.* FROM watch_history
-		JOIN episode ON episode.tmdb_id = watch_history.media_id
-		WHERE watch_history.profile_id = $profile_id AND watch_history.media_type = 'episode'
+	table := "watch_history"
+	series := library.MediaRef{MediaType: library.MediaTypeSeries, MediaID: seriesID}
+	rewatch, err := s.Rewatch(ctx, profileID, series)
+	if err != nil {
+		return nil, err
+	}
+	if rewatch != nil && rewatch.Active() {
+		table = "rewatch_progress"
+	}
+	entries, err := db.QueryAs[WatchEntry](ctx, s.database, `SELECT progress.* FROM `+table+` AS progress
+		JOIN episode ON episode.tmdb_id = progress.media_id
+		WHERE progress.profile_id = $profile_id AND progress.media_type = 'episode'
 		AND episode.series_id = $series_id`,
 		db.Vars{"profile_id": profileID, "series_id": seriesID})
+	for index := range entries {
+		entries[index].Rewatch = table == "rewatch_progress"
+	}
+	return entries, err
 }
 
 // SetRating stores a 1-10 rating and emits rating.set (payload: the rating
