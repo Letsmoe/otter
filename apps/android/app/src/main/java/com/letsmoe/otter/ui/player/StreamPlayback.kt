@@ -113,6 +113,9 @@ class StreamPlayback(private val scope: CoroutineScope) {
     /** Whether the screen is expected to play a link; autoplay tries the others last. A TV sets it. */
     var fitsScreen: (SourceStream) -> Boolean = { true }
 
+    /** The hoster (see [hosterOf]) that played this title's series before; autoplay tries its links first within a language. */
+    var preferredHoster: () -> String? = { null }
+
     private var mediaId: String? = null
     private var autoplayAttempted = false
     // A link picked before the stream list arrived (e.g. handed over to the TV); it plays once listed.
@@ -346,11 +349,14 @@ class StreamPlayback(private val scope: CoroutineScope) {
         }
     }
 
-    // Each race group splits into the links the screen is expected to play, then the rest.
+    // Each race group splits into the links the screen is expected to play, then the rest;
+    // each of those tries the preferred hoster's links before the others.
     private fun autoplayGroups(candidates: List<SourceStream>): List<List<SourceStream>> {
+        val hoster = preferredHoster()
         return raceGroups(candidates)
             .flatMap { group -> group.partition(fitsScreen).toList() }
             .filter { group -> group.isNotEmpty() }
+            .flatMap { group -> preferredFirst(group, hoster) }
     }
 
     private suspend fun tryPlay(stream: SourceStream): Boolean {
