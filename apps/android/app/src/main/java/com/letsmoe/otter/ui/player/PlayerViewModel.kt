@@ -599,6 +599,13 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         togetherSync.announceLocalAction()
     }
 
+    /** Plays or pauses like the play button does; nothing happens when it already is so. */
+    fun setPlaying(shouldPlay: Boolean) {
+        if (intendedPlaying() != shouldPlay) {
+            togglePlay()
+        }
+    }
+
     fun skip(seconds: Int) {
         seekToSeconds(positionSeconds + seconds)
         togetherSync.announceLocalAction()

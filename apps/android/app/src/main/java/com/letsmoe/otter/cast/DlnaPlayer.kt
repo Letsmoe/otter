@@ -6,6 +6,7 @@ import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import androidx.media3.common.C
+import androidx.media3.common.DeviceInfo
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
@@ -88,6 +89,23 @@ private val dlnaCommands = Player.Commands.Builder().addAll(
     Player.COMMAND_RELEASE,
 ).build()
 
+// Only for TVs with a volume control: a media session then routes the phone's volume keys to the TV.
+private val volumeCommands = Player.Commands.Builder().addAll(
+    Player.COMMAND_GET_DEVICE_VOLUME,
+    Player.COMMAND_SET_DEVICE_VOLUME_WITH_FLAGS,
+    Player.COMMAND_ADJUST_DEVICE_VOLUME_WITH_FLAGS,
+).build()
+
+// UPnP volumes run from 0 to 100.
+private const val MAX_VOLUME = 100
+
+private val remoteVolumeInfo = DeviceInfo.Builder(DeviceInfo.PLAYBACK_TYPE_REMOTE).setMaxVolume(MAX_VOLUME).build()
+
+// How much one press of a volume button changes the TV's volume (0 to 100).
+private const val VOLUME_BUTTON_STEP = 3
+// The TV's volume is read again this often (in polls), for changes made with its own remote.
+private const val VOLUME_READ_EVERY_POLLS = 5
+
 /** The caption file the TV shows: [srtPath] is the backend path of its SRT. */
 data class TelevisionSubtitleFile(val id: String, val srtPath: String)
 
@@ -166,6 +184,8 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     private var loadedAtMilliseconds = 0L
     private var lastCommandAtMilliseconds = 0L
     private var pollFailures = 0
+    private var televisionVolume = 0
+    private var pollsSinceVolumeRead = VOLUME_READ_EVERY_POLLS
     // The latest seek asked for and not sent yet; null when none is waiting.
     private var seekTargetSeconds: Double? = null
     private var televisionErrorAtMilliseconds: Long? = null
@@ -179,9 +199,12 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
 
     override fun getState(): State {
         val builder = State.Builder()
-            .setAvailableCommands(dlnaCommands)
+            .setAvailableCommands(availableCommands())
             .setPlayWhenReady(playWhenReady, Player.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST)
             .setPlayerError(playerError)
+        if (supportsVolume) {
+            builder.setDeviceInfo(remoteVolumeInfo).setDeviceVolume(televisionVolume)
+        }
         val item = mediaItem ?: return builder.setPlaybackState(Player.STATE_IDLE).build()
         var state = playbackState
         if (playerError != null) {
@@ -193,6 +216,13 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
             .setPlaybackState(state)
             .setContentPositionMs { currentPositionMilliseconds() }
             .build()
+    }
+
+    private fun availableCommands(): Player.Commands {
+        if (!supportsVolume) {
+            return dlnaCommands
+        }
+        return dlnaCommands.buildUpon().addAll(volumeCommands).build()
     }
 
     private fun itemData(item: MediaItem): MediaItemData {
@@ -281,8 +311,42 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
 
     /** Sets the TV's volume, never above the night's limit. */
     fun changeVolume(volume: Int) {
-        val allowed = NightVolume.capped(volume, PlaybackSettings.televisionVolumeMaximum)
+        val allowed = NightVolume.capped(volume, PlaybackSettings.televisionVolumeMaximum).coerceIn(0, MAX_VOLUME)
+        televisionVolume = allowed
+        invalidateState()
         sendCommand { client.setVolume(allowed) }
+    }
+
+    override fun handleSetDeviceVolume(deviceVolume: Int, flags: Int): ListenableFuture<*> {
+        changeVolume(deviceVolume)
+        return Futures.immediateVoidFuture()
+    }
+
+    override fun handleIncreaseDeviceVolume(flags: Int): ListenableFuture<*> {
+        changeVolume(televisionVolume + VOLUME_BUTTON_STEP)
+        return Futures.immediateVoidFuture()
+    }
+
+    override fun handleDecreaseDeviceVolume(flags: Int): ListenableFuture<*> {
+        changeVolume(televisionVolume - VOLUME_BUTTON_STEP)
+        return Futures.immediateVoidFuture()
+    }
+
+    // Reads the volume now and then, so the session shows what the TV's own remote changed.
+    private suspend fun refreshVolume() {
+        if (!supportsVolume) {
+            return
+        }
+        pollsSinceVolumeRead++
+        if (pollsSinceVolumeRead < VOLUME_READ_EVERY_POLLS) {
+            return
+        }
+        pollsSinceVolumeRead = 0
+        val volume = readVolume() ?: return
+        if (volume != televisionVolume) {
+            televisionVolume = volume
+            invalidateState()
+        }
     }
 
     // Commands -----------------------------------------------------------------
@@ -850,6 +914,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
             val transport = client.transportInfo()
             val position = client.position()
             pollFailures = 0
+            refreshVolume()
             if (transport.errorOccurred) {
                 televisionErrorAtMilliseconds = SystemClock.elapsedRealtime()
             }

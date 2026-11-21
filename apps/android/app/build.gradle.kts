@@ -131,6 +131,7 @@ dependencies {
     implementation(libs.media3.ui)
     implementation(libs.media3.ui.compose)
     implementation(libs.media3.cast)
+    implementation(libs.media3.session)
     implementation(libs.media3.transformer)
     implementation(libs.media3.effect)
     implementation(libs.media3.muxer)
