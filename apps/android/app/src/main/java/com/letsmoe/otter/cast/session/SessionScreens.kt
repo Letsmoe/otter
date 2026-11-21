@@ -49,16 +49,26 @@ fun sessionPictureSize(height: Int): Size {
     return Size(width - width % 2, evenHeight)
 }
 
-/** Draws [screen]'s still picture at [size] into a PNG in the cache and returns it. */
-fun renderScreenPicture(context: Context, screen: SessionScreen, size: Size, name: String): File {
+/**
+ * A PNG of the session's background colour at [size], in the cache: what a still job encodes,
+ * with its screens drawn over it (see [LiveStillOverlay]).
+ */
+fun renderBlankPicture(context: Context, size: Size): File {
+    val file = File(context.cacheDir, "tv-screen-blank-${size.width}x${size.height}.png")
+    if (file.exists()) {
+        return file
+    }
     val bitmap = Bitmap.createBitmap(size.width, size.height, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(bitmap)
-    canvas.drawColor(BACKGROUND)
-    drawScreen(canvas, context, screen)
-    val file = File(context.cacheDir, "tv-screen-$name.png")
+    Canvas(bitmap).drawColor(BACKGROUND)
     file.outputStream().use { stream -> bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream) }
     bitmap.recycle()
     return file
+}
+
+/** Paints [screen] over the session's background; the phone's pictures and the screensaver are drawn elsewhere. */
+fun drawStillScreen(canvas: Canvas, context: Context, screen: SessionScreen) {
+    canvas.drawColor(BACKGROUND)
+    drawScreen(canvas, context, screen)
 }
 
 // The screensaver paints all of its picture live; titles and the phone's pictures aren't drawn here.
@@ -124,13 +134,15 @@ private fun textPaint(textSize: Float, color: Int, style: Int): TextPaint {
 
 /**
  * The loading screen's spinner: a small bitmap drawn anew for every frame from
- * its presentation time, so it turns in the TV's picture.
+ * its presentation time, so it turns in the TV's picture. While [visible] says
+ * no, it stays cleared and isn't drawn (or uploaded) again.
  */
 @UnstableApi
-class SpinnerOverlay : BitmapOverlay() {
+class SpinnerOverlay(private val visible: () -> Boolean = { true }) : BitmapOverlay() {
 
     private var bitmap: Bitmap? = null
     private var scale = 1f
+    private var cleared = false
 
     override fun configure(videoSize: Size) {
         super.configure(videoSize)
@@ -141,7 +153,15 @@ class SpinnerOverlay : BitmapOverlay() {
 
     override fun getBitmap(presentationTimeUs: Long): Bitmap {
         val spinner = checkNotNull(bitmap) { "configure() comes first" }
-        drawSpinner(Canvas(spinner), spinnerAngle(presentationTimeUs), SPINNER_STROKE * scale)
+        if (visible()) {
+            drawSpinner(Canvas(spinner), spinnerAngle(presentationTimeUs), SPINNER_STROKE * scale)
+            cleared = false
+            return spinner
+        }
+        if (!cleared) {
+            Canvas(spinner).drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+            cleared = true
+        }
         return spinner
     }
 

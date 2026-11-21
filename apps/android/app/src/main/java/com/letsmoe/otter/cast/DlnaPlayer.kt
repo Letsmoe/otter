@@ -33,6 +33,7 @@ import com.letsmoe.otter.cast.session.TelevisionSession
 import com.letsmoe.otter.cast.session.TelevisionSessions
 import com.letsmoe.otter.cast.session.idleScreenOf
 import com.letsmoe.otter.together.TogetherSession
+import com.letsmoe.otter.cast.overlay.loadCaptionCues
 import com.letsmoe.otter.cast.overlay.loadOverlayPlan
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.reporting.ErrorReporting
@@ -276,7 +277,10 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
         reportedAtMilliseconds = SystemClock.elapsedRealtime()
     }
 
-    /** Shows another caption file (or none) from the current position on; the TV loads the stream again. */
+    /**
+     * Shows another caption file (or none) from the current position on. A title in the session gets
+     * them drawn in from the next frame; otherwise the TV loads the stream again.
+     */
     fun showSubtitle(file: TelevisionSubtitleFile?) {
         if (file == subtitleFile) {
             return
@@ -285,7 +289,31 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
         if (mediaItem == null || playbackState == Player.STATE_IDLE) {
             return
         }
+        if (swapCaptionsInSession()) {
+            return
+        }
         startLoad(currentPositionMilliseconds() / 1000.0)
+    }
+
+    // The session's title keeps playing; only the captions its painter draws change.
+    private fun swapCaptionsInSession(): Boolean {
+        val overlay = sessionTitleOverlay() ?: return false
+        val mainPath = subtitleFile?.srtPath
+        val secondPath = secondSubtitleFile?.srtPath
+        scope.launch {
+            val captions = loadCaptionCues(mainPath)
+            val secondCaptions = loadCaptionCues(secondPath)
+            overlay.plan = overlay.plan.copy(captions = captions, secondCaptions = secondCaptions)
+        }
+        return true
+    }
+
+    private fun sessionTitleOverlay(): OverlayJob? {
+        val screen = sessionTitle?.screen
+        if (screen is SessionScreen.Title) {
+            return screen.overlay
+        }
+        return null
     }
 
     /**
@@ -302,7 +330,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
         replayUntilSeconds = null
     }
 
-    /** Draws a second caption language under the main one (or none); the TV loads the stream again. */
+    /** Draws a second caption language under the main one (or none); without a session the TV loads the stream again. */
     fun showSecondSubtitle(file: TelevisionSubtitleFile?) {
         if (file == secondSubtitleFile) {
             return
@@ -312,6 +340,9 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
             return
         }
         if (overlayJobId == null && session == null) {
+            return
+        }
+        if (swapCaptionsInSession()) {
             return
         }
         startLoad(currentPositionMilliseconds() / 1000.0)
@@ -1014,7 +1045,21 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
             heights.recordPlayed(renderer.id, created.pictureHeight)
         }
         followSessionRemote(created, playing)
+        if (playing) {
+            alignSessionClock(created)
+        }
         return true
+    }
+
+    // The session's clock follows the TV's picture; a TV that can't say where it is keeps the phone's clock.
+    private suspend fun alignSessionClock(created: TelevisionSession) {
+        try {
+            created.followTelevision(client.position().positionSeconds)
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Exception) {
+            Log.w(TAG, "reading the TV's position failed", error)
+        }
     }
 
     // Play and pause pressed on the TV's own remote show up in the app; the session's clock follows the TV.
@@ -1071,7 +1116,9 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
             return
         }
         val loading = loadJob?.isActive == true || seekJob?.isActive == true
-        if (playbackState == Player.STATE_BUFFERING && !loading && SessionTimeline.hasReached(title.startMicroseconds, shown)) {
+        // A title that takes long to start is still asked for at its provisional start; only its first sample counts.
+        val reached = title.inStream && SessionTimeline.hasReached(title.startMicroseconds, shown)
+        if (playbackState == Player.STATE_BUFFERING && !loading && reached) {
             playbackState = Player.STATE_READY
         }
     }

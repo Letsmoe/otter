@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import java.io.File
 import java.util.UUID
+import kotlin.math.abs
 
 const val SESSION_TAG = "OtterSession"
 
@@ -16,10 +17,14 @@ const val SESSION_TAG = "OtterSession"
 fun logSeconds(microseconds: Long): String = "%.1f s".format(microseconds / 1_000_000.0)
 
 // The encoder runs this far ahead of the TV's picture: what the TV has buffered, and how long a switch takes to show.
-const val SESSION_LEAD_MICROSECONDS = 2_500_000L
+const val SESSION_LEAD_MICROSECONDS = 1_500_000L
 
-// The TV plays a sample this long after the encoder took it: it is written a lead ahead of the clock and shown a lead behind.
-const val SESSION_SOUND_LEAD_MILLISECONDS = 2 * SESSION_LEAD_MICROSECONDS / 1000
+// The TV plays a sample this long after the encoder took it: it is written a lead ahead of the clock, the TV's picture.
+const val SESSION_SOUND_LEAD_MILLISECONDS = SESSION_LEAD_MICROSECONDS / 1000
+
+// TVs report their position in whole seconds: closer than this, the clock is left alone.
+private const val TELEVISION_ALIGN_TOLERANCE_MICROSECONDS = 750_000L
+private const val HALF_SECOND_MICROSECONDS = 500_000L
 
 /** What one job of a TV session shows. */
 sealed interface SessionScreen {
@@ -53,6 +58,11 @@ sealed interface SessionScreen {
  * while it waits for an answer, else the screen [chosen] for it (the idle screen, the title being
  * browsed or the screensaver).
  */
+/** Whether [screen] is drawn by a still job (everything but a title and the bridge clip). */
+fun isStillScreen(screen: SessionScreen): Boolean {
+    return screen !is SessionScreen.Title && screen !is SessionScreen.Bridge
+}
+
 fun idleScreenOf(askingStillWatching: Boolean, chosen: SessionScreen): SessionScreen {
     if (askingStillWatching) {
         return SessionScreen.StillWatching
@@ -65,8 +75,13 @@ fun idleScreenOf(askingStillWatching: Boolean, chosen: SessionScreen): SessionSc
  * session's timeline on (set when the backend takes the job). [endMicroseconds]
  * is set when the job ran to its end on its own.
  */
-class SessionJob(val screen: SessionScreen) {
+class SessionJob(initialScreen: SessionScreen) {
     val id: String = UUID.randomUUID().toString()
+
+    /** What the job shows; a still job's screen changes while it runs (see [TelevisionSession.show]). */
+    @Volatile
+    var screen: SessionScreen = initialScreen
+        internal set
 
     // For the log: how long a switch takes from asking for a screen to its first sample.
     val shownAtMilliseconds: Long = SystemClock.elapsedRealtime()
@@ -82,6 +97,10 @@ class SessionJob(val screen: SessionScreen) {
 
     @Volatile
     var endMicroseconds: Long? = null
+
+    /** Whether the backend wrote the job's first sample: until then [startMicroseconds] is only where it was asked for. */
+    @Volatile
+    var inStream: Boolean = false
 }
 
 /**
@@ -110,6 +129,7 @@ class TelevisionSession(
     private var closed = false
     private var started = false
     private var playing = true
+    private var alignedToTelevision = false
 
     val currentJob: SessionJob
         @Synchronized get() = current
@@ -117,16 +137,37 @@ class TelevisionSession(
     val isClosed: Boolean
         @Synchronized get() = closed
 
-    /** Shows [screen] from now on and returns its job. */
+    /**
+     * Shows [screen] from now on and returns its job. A still screen that follows another still
+     * screen goes into the job that runs already: the TV sees it with its next frame, with no
+     * encoder to restart and no gap in the stream.
+     */
     fun show(screen: SessionScreen): SessionJob {
+        val running = showInStillJob(screen)
+        if (running != null) {
+            return running
+        }
         val job = SessionJob(screen)
         replace(job)
         return job
     }
 
+    @Synchronized
+    private fun showInStillJob(screen: SessionScreen): SessionJob? {
+        if (closed || !isStillScreen(screen) || !isStillScreen(current.screen)) {
+            return null
+        }
+        Log.i(SESSION_TAG, "show ${screen::class.simpleName} instead of ${current.kind} in the running job")
+        current.screen = screen
+        return current
+    }
+
     /** Whether the TV plays; the clock, and with it the encoder, stand still while it is paused. */
     @Synchronized
     fun setPlaying(isPlaying: Boolean) {
+        if (isPlaying && !playing) {
+            alignedToTelevision = false
+        }
         playing = isPlaying
         updateClock()
     }
@@ -137,7 +178,31 @@ class TelevisionSession(
 
     /** The moment of the session the TV shows now. */
     fun shownMicroseconds(): Long {
-        return SessionTimeline.shownMicroseconds(clock.nowMicroseconds(), SESSION_LEAD_MICROSECONDS)
+        return SessionTimeline.shownMicroseconds(clock.nowMicroseconds())
+    }
+
+    /**
+     * The TV says it plays [positionSeconds] of the stream (whole seconds; its picture is somewhere
+     * in the second after). Once after the stream starts, and after every pause, the clock is set to
+     * it: the time the TV took to start would otherwise stay in its buffer for good, and every switch
+     * would show that much later. Not continuously: a TV that stalls whenever its buffer gets short
+     * (mpv does below about 2.5 s) would be held back again and again and stall on.
+     * A position past what was written yet is a TV's mistake.
+     */
+    @Synchronized
+    fun followTelevision(positionSeconds: Double) {
+        if (alignedToTelevision || !clock.isRunning || positionSeconds <= 0) {
+            return
+        }
+        alignedToTelevision = true
+        val televisionMicroseconds = (positionSeconds * 1_000_000).toLong() + HALF_SECOND_MICROSECONDS
+        val clockMicroseconds = clock.nowMicroseconds()
+        val difference = televisionMicroseconds - clockMicroseconds
+        if (abs(difference) < TELEVISION_ALIGN_TOLERANCE_MICROSECONDS || difference > SESSION_LEAD_MICROSECONDS) {
+            return
+        }
+        Log.i(SESSION_TAG, "clock follows the TV: ${logSeconds(clockMicroseconds)} → ${logSeconds(televisionMicroseconds)}")
+        clock.moveTo(televisionMicroseconds)
     }
 
     /** How long a sample at [sessionMicroseconds] waits before the encoder may write it. */
@@ -189,6 +254,7 @@ class TelevisionSession(
         val job = jobWithId(jobId) ?: return
         val askedMicroseconds = job.startMicroseconds
         job.startMicroseconds = atMicroseconds
+        job.inStream = true
         if (askedMicroseconds != null) {
             val bridgedMicroseconds = atMicroseconds - askedMicroseconds
             Log.i(SESSION_TAG, "${job.kind} starts at ${logSeconds(atMicroseconds)}, after ${logSeconds(bridgedMicroseconds)} of bridge")

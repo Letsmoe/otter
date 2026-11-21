@@ -51,7 +51,8 @@ private const val OVERVIEW_COLLAPSED_LINES = 3
 
 /**
  * Netflix's episode rows: still with a play badge and progress, "1. Name", runtime and a
- * download slot, the description underneath. [downloadButton] gets the episode id and its label.
+ * download slot, the description underneath. [downloadButton] gets the episode id and its label;
+ * [onOverviewExpanded] hears when an episode's description is opened or folded.
  */
 @Composable
 fun EpisodeList(
@@ -60,10 +61,11 @@ fun EpisodeList(
     onShare: (SeasonEpisode) -> Unit,
     modifier: Modifier = Modifier,
     downloadButton: @Composable (mediaId: String, label: String) -> Unit = { _, _ -> },
+    onOverviewExpanded: (SeasonEpisode, Boolean) -> Unit = { _, _ -> },
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(20.dp)) {
         for (episode in episodes) {
-            EpisodeRow(episode, onPlay, onShare, downloadButton)
+            EpisodeRow(episode, onPlay, onShare, downloadButton, onOverviewExpanded)
         }
     }
 }
@@ -74,6 +76,7 @@ private fun EpisodeRow(
     onPlay: (SeasonEpisode) -> Unit,
     onShare: (SeasonEpisode) -> Unit,
     downloadButton: @Composable (mediaId: String, label: String) -> Unit,
+    onOverviewExpanded: (SeasonEpisode, Boolean) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -94,14 +97,14 @@ private fun EpisodeRow(
             downloadButton(episode.id, "${episode.code} ${episode.displayName}")
         }
         if (!episode.overview.isNullOrEmpty()) {
-            EpisodeOverview(episode.overview)
+            EpisodeOverview(episode.overview) { expanded -> onOverviewExpanded(episode, expanded) }
         }
     }
 }
 
-// Tapping the description shows all of it, tapping again folds it back.
+// Tapping the description shows all of it, tapping again folds it back; [onExpandedChange] hears both.
 @Composable
-private fun EpisodeOverview(overview: String) {
+private fun EpisodeOverview(overview: String, onExpandedChange: (Boolean) -> Unit) {
     var expanded by remember(overview) { mutableStateOf(false) }
     var maxLines = OVERVIEW_COLLAPSED_LINES
     if (expanded) {
@@ -116,7 +119,10 @@ private fun EpisodeOverview(overview: String) {
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier
             .animateContentSize()
-            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { expanded = !expanded },
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                expanded = !expanded
+                onExpandedChange(expanded)
+            },
     )
 }
 
