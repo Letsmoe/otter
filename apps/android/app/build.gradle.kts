@@ -149,7 +149,7 @@ dependencies {
     implementation(libs.haze.blur)
     implementation(libs.phosphor.icons)
     testImplementation(libs.junit)
-    // Draws the TV's browse picture, the watch-order artwork and Compose pages on the JVM (native graphics), for previews.
+    // Draws the TV's browse picture, the watch-order artwork, the year-in-review cards and Compose pages on the JVM (native graphics), for previews.
     testImplementation(libs.robolectric)
     testImplementation(platform(libs.compose.bom))
     testImplementation(libs.compose.ui.test.junit4)

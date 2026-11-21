@@ -2,4 +2,6 @@
 <paths>
     <!-- AppUpdater downloads into cacheDir/updates. -->
     <cache-path name="updates" path="updates/" />
+    <!-- Your year in Otter: card images made to be shared. -->
+    <cache-path name="year-in-otter" path="year-in-otter/" />
 </paths>

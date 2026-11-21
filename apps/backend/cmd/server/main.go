@@ -50,6 +50,7 @@ import (
 	"github.com/Letsmoe/otter/internal/together"
 	"github.com/Letsmoe/otter/internal/tracing"
 	"github.com/Letsmoe/otter/internal/vpn"
+	"github.com/Letsmoe/otter/internal/yearinreview"
 )
 
 // config is everything read from the environment.
@@ -213,6 +214,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	resolver := gqlapi.NewResolver(gqlapi.Services{
 		Library:             libraryService,
 		FranchiseGuides:     franchise.NewService(libraryService, database),
+		YearReviews:         yearinreview.NewService(database, libraryService.Store),
 		Profiles:            profileService,
 		Letterboxd:          letterboxdService,
 		Notifications:       notificationStore,

@@ -187,7 +187,7 @@ type Update struct {
 	AgeLimit *int
 	// BedtimeMinutes is minutes after midnight; a negative value removes the bedtime.
 	BedtimeMinutes *int
-	SimpleMode       *bool
+	SimpleMode     *bool
 }
 
 // Update changes a profile's fields and returns the stored result.

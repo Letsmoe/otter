@@ -29,6 +29,7 @@ object Routes {
     const val WATCH_ORDER = "watch-order/{collectionId}"
     const val SHELVES = "shelves"
     const val SHELF = "shelf/{shelfId}"
+    const val YEAR_IN_OTTER = "year-in-otter/{year}"
     const val PLAYER = "player/{mediaId}?streamId={streamId}&downloadId={downloadId}&start={start}"
     const val NOTIFICATIONS = "notifications"
     const val SETTINGS = "settings"
@@ -55,6 +56,7 @@ object Routes {
 
     /** A franchise's watch-order guide; [collectionId] is the backend's id, e.g. "collection:2344". */
     fun watchOrder(collectionId: String) = "watch-order/${android.net.Uri.encode(collectionId)}"
+    fun yearInOtter(year: Int) = "year-in-otter/$year"
 
     /** Plays a movie or episode: on one chosen link, from a finished download, or on its best link. */
     fun player(mediaId: String, streamId: String? = null, downloadId: String? = null, startSeconds: Double? = null): String {

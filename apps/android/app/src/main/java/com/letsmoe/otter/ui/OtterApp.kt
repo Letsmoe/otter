@@ -79,6 +79,7 @@ import com.letsmoe.otter.ui.title.TitleScreen
 import com.letsmoe.otter.ui.upcoming.UpcomingScreen
 import com.letsmoe.otter.ui.watchorder.WatchOrderActions
 import com.letsmoe.otter.ui.watchorder.WatchOrderScreen
+import com.letsmoe.otter.ui.yearinotter.YearInOtterScreen
 import com.letsmoe.otter.ui.updates.UpdateBanner
 
 @Composable
@@ -157,7 +158,7 @@ private fun AppShell(startTab: Tab) {
         Box(Modifier.fillMaxSize()) {
             OtterNavHost(navController, pagerState, openTab, Modifier.fillMaxSize().then(blurSourceFor(currentRoute, glassBackdrop)))
             AppServices(navController)
-            if (currentRoute != Routes.PLAYER) {
+            if (currentRoute != Routes.PLAYER && currentRoute != Routes.YEAR_IN_OTTER) {
                 Column(
                     Modifier.align(Alignment.BottomCenter).padding(bottom = bottomBarClearance()),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -295,6 +296,9 @@ private fun OtterNavHost(navController: NavHostController, pagerState: PagerStat
                 onOpenItem = { item -> navController.openItem(item) },
                 onBack = { navController.popBackStack() },
             )
+        }
+        composable(Routes.YEAR_IN_OTTER, arguments = listOf(navArgument("year") { type = NavType.IntType })) { entry ->
+            YearInOtterScreen(year = entry.arguments?.getInt("year") ?: 0, onBack = { navController.popBackStack() })
         }
         composable(
             Routes.TITLE,
