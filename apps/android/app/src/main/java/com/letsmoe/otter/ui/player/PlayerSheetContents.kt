@@ -185,7 +185,13 @@ private fun MarkSlot(mark: SourceMark) {
 
 /** Audio and subtitle tracks of the current stream, in two columns. Mirrors TracksSheet.svelte. */
 @Composable
-fun TracksSheetContent(state: PlayerUiState, onAudio: (Int) -> Unit, onSubtitle: (Int) -> Unit, onVoiceBoost: () -> Unit) {
+fun TracksSheetContent(
+    state: PlayerUiState,
+    onAudio: (Int) -> Unit,
+    onSubtitle: (Int) -> Unit,
+    onVoiceBoost: () -> Unit,
+    captionTweaks: CaptionTweaksUi?,
+) {
     Row(Modifier.fillMaxSize().padding(horizontal = 40.dp, vertical = 24.dp), horizontalArrangement = Arrangement.spacedBy(40.dp)) {
         TrackColumn("Audio", state.audioTracks, state.selectedAudioIndex, "Original", onAudio, Modifier.weight(1f)) {
             if (state.canBoostVoice) {
@@ -193,7 +199,9 @@ fun TracksSheetContent(state: PlayerUiState, onAudio: (Int) -> Unit, onSubtitle:
             }
         }
         val subtitleOptions = listOf(TrackOption(-1, "Off")) + state.subtitleTracks
-        TrackColumn("Subtitles", subtitleOptions, state.selectedSubtitleIndex, null, onSubtitle, Modifier.weight(1f))
+        TrackColumn("Subtitles", subtitleOptions, state.selectedSubtitleIndex, null, onSubtitle, Modifier.weight(1f)) {
+            captionTweaks?.let { tweaks -> CaptionTweakRows(tweaks) }
+        }
     }
 }
 

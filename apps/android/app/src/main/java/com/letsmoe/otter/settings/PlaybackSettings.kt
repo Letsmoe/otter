@@ -17,6 +17,7 @@ object PlaybackSettings {
     private const val PREFERENCES = "playback"
     private const val KEY_AUTO_SKIP_INTRO = "autoSkipIntro"
     private const val KEY_TELEVISION_OVERLAYS = "televisionOverlays"
+    private const val KEY_TELEVISION_TITLE_CARD = "televisionTitleCard"
 
     private lateinit var preferences: SharedPreferences
 
@@ -41,6 +42,13 @@ object PlaybackSettings {
         get() = preferences.getBoolean(KEY_TELEVISION_OVERLAYS, true)
         set(value) {
             preferences.edit { putBoolean(KEY_TELEVISION_OVERLAYS, value) }
+        }
+
+    /** Whether a TV with drawn-in hints shows the title and episode for a few seconds when a title starts. */
+    var televisionTitleCard: Boolean
+        get() = preferences.getBoolean(KEY_TELEVISION_TITLE_CARD, true)
+        set(value) {
+            preferences.edit { putBoolean(KEY_TELEVISION_TITLE_CARD, value) }
         }
 
     /** Whether to skip on its own, given whether a TV (DLNA or Chromecast) plays. */

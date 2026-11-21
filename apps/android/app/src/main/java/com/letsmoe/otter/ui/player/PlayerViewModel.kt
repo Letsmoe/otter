@@ -23,6 +23,7 @@ import com.letsmoe.otter.cast.TelevisionTarget
 import com.letsmoe.otter.cast.TelevisionUnreachableException
 import com.letsmoe.otter.cast.overlay.SkipHint
 import com.letsmoe.otter.cast.overlay.TelevisionHints
+import com.letsmoe.otter.cast.overlay.TitleText
 import com.letsmoe.otter.cast.overlay.UpNextPreview
 import com.letsmoe.otter.downloads.DownloadItem
 import com.letsmoe.otter.downloads.DownloadsRepository
@@ -97,9 +98,13 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private val togetherSync = PlayerTogetherSync(viewModelScope, this)
     private val skipTracker = SkipTracker()
     private val upNextOffer = UpNext(viewModelScope, ::playNext)
+    private val captionExtras = CaptionExtras(viewModelScope, ::reloadPhoneCaptions)
 
     /** The next episode's card while the credits run. */
     val upNext: StateFlow<UpNextCard?> = upNextOffer.card
+
+    /** Caption timing and the second caption language of the title playing. */
+    val captionTweaks: StateFlow<CaptionExtrasState> = captionExtras.state
 
     private val mutableSkipButton = MutableStateFlow<SkipJump?>(null)
     /** The intro or recap playing now, for its skip button. */
@@ -413,9 +418,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         attachJob = viewModelScope.launch {
             val resumeSeconds = resumeSecondsFor(currentMediaId)
             subtitles = awaitSubtitles()
-            val mediaItem = source.toMediaItem(subtitles).buildUpon()
-                .setMediaMetadata(MediaMetadata.Builder().setTitle(mutableState.value.title).build())
-                .build()
+            val mediaItem = mediaItemOf(source)
             shownSubtitle = defaultSubtitle()
             applyCaptionSelection(player, ProfileSession.activeProfile.value)
             loadIntoPlayers(mediaItem, (resumeSeconds * 1000).toLong())
@@ -428,6 +431,22 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         }
     }
 
+    private fun mediaItemOf(source: PlayingSource): MediaItem {
+        return source.toMediaItem(subtitles, captionExtras.delayMilliseconds).buildUpon()
+            .setMediaMetadata(MediaMetadata.Builder().setTitle(mutableState.value.title).build())
+            .build()
+    }
+
+    // The phone's captions come from files the backend shifts; a TV's picture follows the delay on its own.
+    private fun reloadPhoneCaptions(delayMilliseconds: Long) {
+        val source = playing ?: return
+        if (mutableState.value.isCasting) {
+            return
+        }
+        player.setMediaItem(mediaItemOf(source), player.currentPosition)
+        player.prepare()
+    }
+
     // The phone's player always holds the title, so stopping the TV resumes it; it only loads while it plays.
     private fun loadIntoPlayers(mediaItem: MediaItem, startMilliseconds: Long) {
         player.setMediaItem(mediaItem, startMilliseconds)
@@ -438,8 +457,10 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         }
         television.linkHeight = playingStream()?.let(::qualityHeight)
         television.hints = televisionHints()
+        television.captionDelaySeconds = captionExtras.state.value.delaySeconds
         television.setMediaItem(mediaItem, startMilliseconds)
         television.showSubtitle(televisionSubtitleFile())
+        television.showSecondSubtitle(subtitleFile(secondSubtitle()))
         television.prepare()
         showTelevisionTracks()
     }
@@ -782,10 +803,41 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     // Subtitles -------------------------------------------------------------------
 
+    /** Moves the captions by one step later (positive) or earlier (negative). */
+    fun nudgeCaptions(stepSeconds: Double) {
+        val delaySeconds = captionExtras.nudge(stepSeconds)
+        televisionPlayer?.captionDelaySeconds = delaySeconds
+    }
+
+    /** Index into the caption files for the second language; -1 shows none. */
+    fun chooseSecondSubtitle(index: Int) {
+        val subtitle = subtitles.getOrNull(index)
+        captionExtras.chooseSecond(subtitle)
+        televisionPlayer?.showSecondSubtitle(subtitleFile(subtitle))
+    }
+
+    /** The caption files to pick a second language from: index and label. */
+    fun secondSubtitleOptions(): List<TrackOption> {
+        return subtitles.mapIndexed { index, subtitle -> TrackOption(index, subtitle.label) }
+    }
+
+    /** The second language's index among [secondSubtitleOptions]; -1 for none. */
+    fun selectedSecondSubtitleIndex(): Int {
+        val id = captionExtras.state.value.secondSubtitleId ?: return -1
+        return subtitles.indexOfFirst { subtitle -> subtitle.id == id }
+    }
+
+    private fun secondSubtitle(): PlayerSubtitle? {
+        val id = captionExtras.state.value.secondSubtitleId ?: return null
+        return subtitles.firstOrNull { subtitle -> subtitle.id == id }
+    }
+
     private fun startSubtitleLoad(mediaId: String) {
         subtitlesLoad?.cancel()
         subtitles = emptyList()
         shownSubtitle = null
+        captionExtras.reset()
+        televisionPlayer?.captionDelaySeconds = 0.0
         subtitlesLoad = viewModelScope.async { loadSubtitlesOfProfile(mediaId) }
     }
 
@@ -867,7 +919,12 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     // What the TV's picture shows besides captions: skip hints and, during the credits, the next episode.
     private fun televisionHints(): TelevisionHints {
         val skips = skipTracker.jumps.map { jump -> SkipHint(jump.televisionLabel, jump.startSeconds, jump.endSeconds) }
-        return TelevisionHints(skips, upNextPreview())
+        return TelevisionHints(skips, upNextPreview(), titleText())
+    }
+
+    private fun titleText(): TitleText? {
+        val loaded = media ?: return null
+        return TitleText(loaded.heading, loaded.subheading)
     }
 
     private fun upNextPreview(): UpNextPreview? {

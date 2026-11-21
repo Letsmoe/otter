@@ -1,5 +1,6 @@
 package com.letsmoe.otter.ui.player
 
+import com.letsmoe.otter.settings.PlaybackSettings
 import com.letsmoe.otter.together.TogetherPeer
 
 /** What opens the player: a movie or episode, optionally on one link, or a finished download. */
@@ -74,9 +75,17 @@ data class PlayerUiState(
     val hasTrackChoice: Boolean
         get() = audioTracks.size > 1 || subtitleTracks.isNotEmpty()
 
-    /** The TV plays the stream directly, so the phone can't process its audio. */
+    /** The phone processes the audio itself, or re-encodes it for a TV; a Chromecast plays the stream directly. */
     val canBoostVoice: Boolean
-        get() = !isCasting
+        get() = !isCasting || drawsOnTelevision
+
+    /** Caption timing and a second language: the phone's own captions, or the ones it draws for a TV. */
+    val canTweakCaptions: Boolean
+        get() = !isCasting || drawsOnTelevision
+
+    // A DLNA TV gets the phone's re-encoded picture and sound unless that is switched off.
+    private val drawsOnTelevision: Boolean
+        get() = castsToTelevision && PlaybackSettings.televisionOverlays
 
     val hasAudioSheet: Boolean
         get() = hasTrackChoice || canBoostVoice

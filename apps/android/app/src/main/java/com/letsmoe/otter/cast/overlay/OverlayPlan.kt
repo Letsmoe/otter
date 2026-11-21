@@ -13,11 +13,16 @@ data class SkipHint(val label: String, val startSeconds: Double, val endSeconds:
 /** The next episode's card, from [startSeconds] (the credits) for [durationSeconds], counting down. */
 data class UpNextHint(val episodeLabel: String, val startSeconds: Double, val durationSeconds: Double, val still: Bitmap?)
 
-/** Everything drawn into the TV's picture, on the title's timeline. */
+/** What is playing, shown from [startSeconds] to [endSeconds] when a title starts: "Severance", "S1:E2 · Half Loop". */
+data class TitleCard(val title: String, val detail: String?, val startSeconds: Double, val endSeconds: Double)
+
+/** Everything drawn into the TV's picture, on the title's timeline. [secondCaptions] show smaller, under [captions]. */
 data class OverlayPlan(
     val captions: List<CaptionCue> = emptyList(),
     val skips: List<SkipHint> = emptyList(),
     val upNext: UpNextHint? = null,
+    val secondCaptions: List<CaptionCue> = emptyList(),
+    val titleCard: TitleCard? = null,
 )
 
 // Steps of the card's fill: about one per frame, so it moves smoothly but frames can still repeat.
@@ -32,18 +37,29 @@ data class OverlayFrame(
     val skipLabel: String?,
     val upNextSecondsLeft: Int?,
     val upNextProgress: Float? = null,
+    val secondCaption: String? = null,
+    val titleCard: TitleCard? = null,
 ) {
     val isEmpty: Boolean
-        get() = caption == null && skipLabel == null && upNextSecondsLeft == null
+        get() = caption == null && secondCaption == null && skipLabel == null && upNextSecondsLeft == null && titleCard == null
 }
 
-fun OverlayPlan.frameAt(seconds: Double): OverlayFrame {
-    return OverlayFrame(captionAt(seconds), skipLabelAt(seconds), upNextSecondsLeftAt(seconds), upNextProgressAt(seconds))
+/** The frame at [seconds] of the title; captions show [captionDelaySeconds] later than their file says. */
+fun OverlayPlan.frameAt(seconds: Double, captionDelaySeconds: Double = 0.0): OverlayFrame {
+    val captionSeconds = seconds - captionDelaySeconds
+    return OverlayFrame(
+        caption = captions.textAt(captionSeconds),
+        skipLabel = skipLabelAt(seconds),
+        upNextSecondsLeft = upNextSecondsLeftAt(seconds),
+        upNextProgress = upNextProgressAt(seconds),
+        secondCaption = secondCaptions.textAt(captionSeconds),
+        titleCard = titleCardAt(seconds),
+    )
 }
 
-// Overlapping cues (two speakers) are shown together, earliest on top.
-private fun OverlayPlan.captionAt(seconds: Double): String? {
-    val showing = captions.filter { cue -> seconds >= cue.startSeconds && seconds < cue.endSeconds }
+/** The caption text at [seconds]; overlapping cues (two speakers) are shown together, earliest on top. */
+fun List<CaptionCue>.textAt(seconds: Double): String? {
+    val showing = filter { cue -> seconds >= cue.startSeconds && seconds < cue.endSeconds }
     if (showing.isEmpty()) {
         return null
     }
@@ -53,6 +69,14 @@ private fun OverlayPlan.captionAt(seconds: Double): String? {
 private fun OverlayPlan.skipLabelAt(seconds: Double): String? {
     val skip = skips.firstOrNull { hint -> seconds >= hint.startSeconds && seconds < hint.endSeconds }
     return skip?.label
+}
+
+private fun OverlayPlan.titleCardAt(seconds: Double): TitleCard? {
+    val card = titleCard ?: return null
+    if (seconds < card.startSeconds || seconds >= card.endSeconds) {
+        return null
+    }
+    return card
 }
 
 private fun OverlayPlan.upNextSecondsLeftAt(seconds: Double): Int? {

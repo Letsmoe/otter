@@ -228,7 +228,7 @@ private fun PlaybackGroup() {
     var autoSkip by remember { mutableStateOf(PlaybackSettings.autoSkipIntro) }
     val options = AutoSkipIntro.entries.map { option -> option to option.label }
     val footer = "Intro and recap times come from TheIntroDB. The skip button shows either way. " +
-        "Captions and voice boost belong to the profile; voice boost only works on this phone, not while casting."
+        "Captions and voice boost belong to the profile; voice boost works on this phone and on TVs it draws for, not on a Chromecast."
     SettingsGroup("Playback", footer = footer) {
         Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -242,6 +242,8 @@ private fun PlaybackGroup() {
         }
         SettingsDivider()
         TelevisionOverlaysRow()
+        SettingsDivider()
+        TelevisionTitleCardRow()
         profile?.let { activeProfile ->
             SettingsDivider()
             CaptionSettingsRows(activeProfile)
@@ -260,6 +262,21 @@ private fun TelevisionOverlaysRow() {
         OtterSwitch(drawn) { enabled ->
             drawn = enabled
             PlaybackSettings.televisionOverlays = enabled
+        }
+    }
+}
+
+@Composable
+private fun TelevisionTitleCardRow() {
+    var shown by remember { mutableStateOf(PlaybackSettings.televisionTitleCard) }
+    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("Title on the TV at the start", fontSize = 14.sp)
+            Text("Shows the title and episode for a few seconds", fontSize = 12.sp, color = Color.White.copy(alpha = 0.45f))
+        }
+        OtterSwitch(shown) { enabled ->
+            shown = enabled
+            PlaybackSettings.televisionTitleCard = enabled
         }
     }
 }

@@ -14,6 +14,8 @@ object CaptionColors {
     val OUTLINE = Color.argb(230, 0, 0, 0)
     val BOX = Color.argb(190, 0, 0, 0)
     val YELLOW = Color.rgb(255, 221, 51)
+    /** The second language's captions under white ones. */
+    val SECOND = Color.rgb(205, 205, 205)
 }
 
 /** How the profile wants captions: text height as a fraction of the picture's, and the style. */

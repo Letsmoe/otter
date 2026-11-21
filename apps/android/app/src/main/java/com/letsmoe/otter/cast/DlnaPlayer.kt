@@ -14,9 +14,12 @@ import androidx.media3.common.SimpleBasePlayer
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.letsmoe.otter.backend.EmbeddedBackend
+import com.letsmoe.otter.cast.overlay.CaptionPaths
 import com.letsmoe.otter.cast.overlay.OverlayJob
 import com.letsmoe.otter.cast.overlay.OverlayJobs
+import com.letsmoe.otter.cast.overlay.OverlayLiveInputs
 import com.letsmoe.otter.cast.overlay.TelevisionHints
+import com.letsmoe.otter.cast.overlay.TitleText
 import com.letsmoe.otter.cast.overlay.loadOverlayPlan
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.reporting.ErrorReporting
@@ -122,6 +125,13 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     /** The viewer cancelled the next episode during these credits; the picture drops its card. */
     @Volatile
     var upNextDismissed = false
+    /** The viewer's caption timing in seconds, positive for later; the picture follows within seconds. */
+    @Volatile
+    var captionDelaySeconds = 0.0
+    // A second caption language, drawn smaller under the main one (overlay streams only).
+    private var secondSubtitleFile: TelevisionSubtitleFile? = null
+    // The title the card last introduced: a new source for the same episode shows no card again.
+    private var introducedTitle: TitleText? = null
     // The overlay stream the TV plays; null when it plays a plain one.
     private var overlayJobId: String? = null
     // Set once the phone's encoder failed: this TV gets plain streams from then on.
@@ -200,6 +210,18 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
         }
         subtitleFile = file
         if (mediaItem == null || playbackState == Player.STATE_IDLE) {
+            return
+        }
+        startLoad(currentPositionMilliseconds() / 1000.0)
+    }
+
+    /** Draws a second caption language under the main one (or none); the TV loads the stream again. */
+    fun showSecondSubtitle(file: TelevisionSubtitleFile?) {
+        if (file == secondSubtitleFile) {
+            return
+        }
+        secondSubtitleFile = file
+        if (mediaItem == null || playbackState == Player.STATE_IDLE || overlayJobId == null) {
             return
         }
         startLoad(currentPositionMilliseconds() / 1000.0)
@@ -553,16 +575,31 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
         streamHeight = minOf(linkHeight ?: maxHeight, maxHeight)
         report(startSeconds)
         pendingFileSeekSeconds = null
-        val plan = loadOverlayPlan(context, hints, subtitleFile?.srtPath)
-        val job = OverlayJob(
-            playerUrl, mimeType, startSeconds, maxHeight, plan,
-            captionLook = { captionLookOf(ProfileSession.activeProfile.value) },
-            upNextDismissed = { upNextDismissed },
-            onFailure = ::onOverlayFailed,
-        )
+        val captionPaths = CaptionPaths(subtitleFile?.srtPath, secondSubtitleFile?.srtPath)
+        val plan = loadOverlayPlan(context, hints, captionPaths, titleCardStart(startSeconds))
+        val job = OverlayJob(playerUrl, mimeType, startSeconds, maxHeight, plan, liveInputs(), ::onOverlayFailed)
         overlayJobId = OverlayJobs.register(job)
         journal.note("Drawing into the picture", mapOf("overlay_job" to job.id, "overlay_captions" to plan.captions.size))
         return televisionMediaFor(origin, "/api/stream/overlay?job=${job.id}", title, OVERLAY_MIME_TYPE, seekableBytes = false, captionHints = false)
+    }
+
+    private fun liveInputs(): OverlayLiveInputs {
+        return OverlayLiveInputs(
+            captionLook = { captionLookOf(ProfileSession.activeProfile.value) },
+            upNextDismissed = { upNextDismissed },
+            captionDelaySeconds = { captionDelaySeconds },
+            voiceBoost = { ProfileSession.activeProfile.value?.voiceBoost == true },
+        )
+    }
+
+    // The first stream of a title shows what plays; seeks and new links for the same title don't.
+    private fun titleCardStart(startSeconds: Double): Double? {
+        val text = hints.titleText ?: return null
+        if (!PlaybackSettings.televisionTitleCard || text == introducedTitle) {
+            return null
+        }
+        introducedTitle = text
+        return startSeconds
     }
 
     private fun overlayMaxHeight(): Int {

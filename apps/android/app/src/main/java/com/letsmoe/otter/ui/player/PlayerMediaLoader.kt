@@ -19,6 +19,9 @@ data class PlayerMedia(
     val nextEpisodeId: String?,
     /** Intro, recap and the like, from TheIntroDB; empty for movies and untimed episodes. */
     val skipSegments: List<SkipSegment> = emptyList(),
+    /** The title card on a TV: the movie or series, and for episodes "S1:E2 · Name". */
+    val heading: String = title,
+    val subheading: String? = null,
 )
 
 /** A skippable part; endSeconds is null when it runs to the end. */
@@ -56,11 +59,16 @@ private suspend fun loadEpisodeMedia(mediaId: String, profileId: String): Player
     val episode = data.episode ?: return null
     val seriesId = episode.series.id
     val title = "${episode.series.title} · ${episodeCode(episode.seasonNumber, episode.episodeNumber)} ${episodeName(episode.name, episode.episodeNumber)}"
+    val subheading = "${episodeCode(episode.seasonNumber, episode.episodeNumber)} · ${episodeName(episode.name, episode.episodeNumber)}"
     val episodes = loadSeriesEpisodes(seriesId, profileId)
     val nextId = episode.next?.id
     val nextKnown = episodes.any { candidate -> candidate.id == nextId }
     val skipSegments = episode.skipSegments.map { segment -> SkipSegment(segment.kind, segment.startSeconds, segment.endSeconds) }
-    return PlayerMedia(title, "/series/$seriesId?episode=$mediaId", episodes, nextId.takeIf { nextKnown }, skipSegments)
+    return PlayerMedia(
+        title, "/series/$seriesId?episode=$mediaId", episodes, nextId.takeIf { nextKnown }, skipSegments,
+        heading = episode.series.title,
+        subheading = subheading,
+    )
 }
 
 private suspend fun loadSeriesEpisodes(seriesId: String, profileId: String): List<PlayerEpisode> {

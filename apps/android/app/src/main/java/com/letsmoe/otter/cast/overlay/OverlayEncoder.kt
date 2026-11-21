@@ -30,8 +30,11 @@ import com.google.common.collect.ImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import androidx.media3.common.audio.AudioProcessor
+import com.letsmoe.otter.ui.player.audio.VoiceBoostAudioProcessor
 import java.io.File
 import java.io.OutputStream
+import java.nio.ByteBuffer
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -43,8 +46,8 @@ private const val VIDEO_BITRATE = 8_000_000
 /**
  * Re-encodes one overlay job with Media3 Transformer: the hardware decoder
  * reads the title from the backend on loopback, [OverlayPainter] draws into
- * every frame, the hardware encoder writes H.264, and the audio is copied
- * (AAC) or converted to AAC. The result is fragmented MP4, written as it is
+ * every frame, the hardware encoder writes H.264, and the audio goes through
+ * voice boost to AAC. The result is fragmented MP4, written as it is
  * made; a TV that stops reading holds the encoder back.
  */
 @UnstableApi
@@ -118,14 +121,28 @@ class OverlayEncoder(
             .build()
         val overlays: List<TextureOverlay> = listOf(OverlayPainter(job))
         val overlay = OverlayEffect(overlays)
+        val audioProcessors: List<AudioProcessor> = listOf(LiveVoiceBoost(job))
         return EditedMediaItem.Builder(mediaItem)
-            .setEffects(Effects(emptyList(), listOf(overlay)))
+            .setEffects(Effects(audioProcessors, listOf(overlay)))
             .build()
     }
 
     // Transformer wants a path; the muxer below writes to the TV instead, so nothing is created there.
     private fun placeholderPath(): String {
         return File(context.cacheDir, "overlay-${job.id}.mp4").path
+    }
+}
+
+/**
+ * The phone's voice boost in the TV's sound, switched with the profile while
+ * the stream plays. Always in the chain, so the audio is always re-encoded.
+ */
+@UnstableApi
+private class LiveVoiceBoost(private val job: OverlayJob) : VoiceBoostAudioProcessor() {
+
+    override fun queueInput(inputBuffer: ByteBuffer) {
+        enabled = job.voiceBoost()
+        super.queueInput(inputBuffer)
     }
 }
 

@@ -78,6 +78,7 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
     val position by viewModel.position.collectAsStateWithLifecycle()
     val skipButton by viewModel.skipButton.collectAsStateWithLifecycle()
     val upNext by viewModel.upNext.collectAsStateWithLifecycle()
+    val captionTweaks by viewModel.captionTweaks.collectAsStateWithLifecycle()
     val room by TogetherSession.room.collectAsStateWithLifecycle()
     val chrome = remember { PlayerChrome() }
     var sheet by remember { mutableStateOf<PlayerSheetKind?>(null) }
@@ -117,7 +118,11 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
     val videoBackdrop = rememberHazeState()
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         Box(Modifier.fillMaxSize().hazeSource(videoBackdrop)) {
-            VideoSurface(viewModel.player, state.captionLook)
+            val secondShown = captionTweaks.secondCues.isNotEmpty() && !state.isCasting
+            VideoSurface(viewModel.player, state.captionLook, mainCaptionBottomFraction(state.captionLook, secondShown))
+            if (secondShown) {
+                SecondCaptions(viewModel.player, captionTweaks.secondCues, captionTweaks.delaySeconds, state.captionLook)
+            }
             state.castDeviceName?.let { deviceName -> CastingBackdrop(deviceName) }
         }
         PlayerTapSurface(
@@ -184,7 +189,7 @@ private fun HideControlsAfterIdle(state: PlayerUiState, chrome: PlayerChrome, sh
 }
 
 @Composable
-private fun VideoSurface(player: Player, captionLook: CaptionLook) {
+private fun VideoSurface(player: Player, captionLook: CaptionLook, captionBottomFraction: Float) {
     AndroidView(
         factory = { context ->
             (LayoutInflater.from(context).inflate(R.layout.player_video, null) as PlayerView).apply {
@@ -197,6 +202,7 @@ private fun VideoSurface(player: Player, captionLook: CaptionLook) {
         update = { view ->
             view.subtitleView?.setStyle(phoneCaptionStyle(captionLook.style))
             view.subtitleView?.setFractionalTextSize(captionLook.textFraction)
+            view.subtitleView?.setBottomPaddingFraction(captionBottomFraction)
         },
         modifier = Modifier.fillMaxSize(),
     )
@@ -265,7 +271,13 @@ private fun SheetContent(kind: PlayerSheetKind, state: PlayerUiState, viewModel:
             },
             onSearchAgain = viewModel::searchSourcesAgain,
         )
-        PlayerSheetKind.TRACKS -> TracksSheetContent(state, viewModel::chooseAudio, viewModel::chooseSubtitle, viewModel::toggleVoiceBoost)
+        PlayerSheetKind.TRACKS -> TracksSheetContent(
+            state,
+            viewModel::chooseAudio,
+            viewModel::chooseSubtitle,
+            viewModel::toggleVoiceBoost,
+            rememberCaptionTweaks(state, viewModel),
+        )
         PlayerSheetKind.EPISODES -> EpisodesSheetContent(state.episodes, state.mediaId) { episodeId ->
             closeSheet()
             viewModel.openEpisode(episodeId)
@@ -278,4 +290,20 @@ private fun SheetContent(kind: PlayerSheetKind, state: PlayerUiState, viewModel:
             },
         )
     }
+}
+
+// Timing and a second language work on the phone and on TVs the phone draws for; a Chromecast shows its own captions.
+@Composable
+private fun rememberCaptionTweaks(state: PlayerUiState, viewModel: PlayerViewModel): CaptionTweaksUi? {
+    val tweaks by viewModel.captionTweaks.collectAsStateWithLifecycle()
+    if (!state.canTweakCaptions) {
+        return null
+    }
+    return CaptionTweaksUi(
+        state = tweaks,
+        secondOptions = viewModel.secondSubtitleOptions(),
+        selectedSecondIndex = viewModel.selectedSecondSubtitleIndex(),
+        onNudge = viewModel::nudgeCaptions,
+        onSecond = viewModel::chooseSecondSubtitle,
+    )
 }
