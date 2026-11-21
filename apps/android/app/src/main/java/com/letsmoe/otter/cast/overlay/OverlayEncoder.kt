@@ -32,6 +32,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.Effect
+import com.letsmoe.otter.ui.player.audio.AudioDelayAudioProcessor
 import com.letsmoe.otter.ui.player.audio.EvenVolumeAudioProcessor
 import com.letsmoe.otter.ui.player.audio.VoiceBoostAudioProcessor
 import java.io.File
@@ -121,7 +122,7 @@ class OverlayEncoder(
             .setMimeType(job.sourceMimeType)
             .setClippingConfiguration(clipping)
             .build()
-        val audioProcessors: List<AudioProcessor> = listOf(LiveVoiceBoost(job), LiveEvenVolume(job))
+        val audioProcessors: List<AudioProcessor> = listOf(LiveVoiceBoost(job), LiveEvenVolume(job), LiveAudioDelay(job))
         return EditedMediaItem.Builder(mediaItem)
             .setEffects(Effects(audioProcessors, videoEffects()))
             .build()
@@ -164,6 +165,13 @@ private class LiveEvenVolume(private val job: OverlayJob) : EvenVolumeAudioProce
         enabled = job.evenVolume()
         super.queueInput(inputBuffer)
     }
+}
+
+/** The TV's audio delay: the sound moved against the picture, as set for this TV while the stream plays. */
+@UnstableApi
+private class LiveAudioDelay(private val job: OverlayJob) : AudioDelayAudioProcessor() {
+
+    override fun currentDelayMillis(): Int = job.audioDelayMillis()
 }
 
 /** Drops metadata the muxer refuses (e.g. the source's own tags), as Media3's file muxers do. */

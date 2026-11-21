@@ -29,6 +29,7 @@ import com.adamglin.phosphoricons.bold.Check
 import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.SubtleFill
 import com.letsmoe.otter.ui.components.pressable
+import com.letsmoe.otter.ui.player.AudioDelayRow
 import com.letsmoe.otter.ui.player.PlayerUiState
 import com.letsmoe.otter.ui.player.TrackOption
 
@@ -40,7 +41,7 @@ private const val CAPTIONS_OFF_INDEX = -1
  * Audio shows only when the stream has more than one track to choose from.
  */
 @Composable
-fun TelevisionCaptionsContent(state: PlayerUiState, onAudio: (Int) -> Unit, onSubtitle: (Int) -> Unit) {
+fun TelevisionCaptionsContent(state: PlayerUiState, onAudio: (Int) -> Unit, onSubtitle: (Int) -> Unit, onAudioDelay: (Int) -> Unit) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -51,6 +52,9 @@ fun TelevisionCaptionsContent(state: PlayerUiState, onAudio: (Int) -> Unit, onSu
         if (state.audioTracks.size > 1) {
             Text("Audio", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 14.dp))
             ChoiceGroup(state.audioTracks, state.selectedAudioIndex, onAudio)
+        }
+        if (state.canDelayAudio) {
+            AudioDelayRow(state.audioDelayMillis, onAudioDelay)
         }
     }
 }
