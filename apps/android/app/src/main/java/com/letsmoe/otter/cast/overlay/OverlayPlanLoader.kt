@@ -2,6 +2,7 @@ package com.letsmoe.otter.cast.overlay
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.text.format.DateFormat
 import android.util.Log
 import coil3.SingletonImageLoader
 import coil3.request.ImageRequest
@@ -16,6 +17,7 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.Date
 
 private const val TAG = "OtterOverlay"
 private const val CAPTION_TIMEOUT_MILLISECONDS = 5000
@@ -39,23 +41,31 @@ data class TelevisionHints(
 /** The caption files the picture shows, as backend paths: the main language and, smaller, a second one. */
 data class CaptionPaths(val main: String?, val second: String?)
 
-/**
- * Loads what the picture shows: the caption files and the next episode's
- * still. [titleCardFromSeconds] starts the title card there; null shows none.
- */
-suspend fun loadOverlayPlan(context: Context, hints: TelevisionHints, captionPaths: CaptionPaths, titleCardFromSeconds: Double?): OverlayPlan {
+/** Where the title card starts on the title's timeline, and "Ends at 22:41" when the length is known. */
+data class TitleCardRequest(val fromSeconds: Double, val endsAtLabel: String?)
+
+/** Loads what the picture shows: the caption files, the next episode's still and, when asked for, the title card. */
+suspend fun loadOverlayPlan(context: Context, hints: TelevisionHints, captionPaths: CaptionPaths, titleCard: TitleCardRequest?): OverlayPlan {
     val captions = loadCaptionCues(captionPaths.main)
     val secondCaptions = loadCaptionCues(captionPaths.second)
     val upNext = hints.upNext?.let { preview -> upNextHint(context, preview) }
-    val titleCard = titleCardOf(hints.titleText, titleCardFromSeconds)
-    return OverlayPlan(captions, hints.skips, upNext, secondCaptions, titleCard)
+    return OverlayPlan(captions, hints.skips, upNext, secondCaptions, titleCardOf(hints.titleText, titleCard))
 }
 
-private fun titleCardOf(text: TitleText?, fromSeconds: Double?): TitleCard? {
-    if (text == null || fromSeconds == null) {
+private fun titleCardOf(text: TitleText?, request: TitleCardRequest?): TitleCard? {
+    if (text == null || request == null) {
         return null
     }
-    return TitleCard(text.title, text.detail, fromSeconds, fromSeconds + TITLE_CARD_SECONDS)
+    return TitleCard(text.title, text.detail, request.fromSeconds, request.fromSeconds + TITLE_CARD_SECONDS, request.endsAtLabel)
+}
+
+/** "Ends at 22:41" in the phone's clock format: now plus what is left of the title. */
+fun endsAtLabel(context: Context, secondsLeft: Double): String? {
+    if (secondsLeft <= 0) {
+        return null
+    }
+    val endsAt = Date(System.currentTimeMillis() + (secondsLeft * 1000).toLong())
+    return "Ends at " + DateFormat.getTimeFormat(context).format(endsAt)
 }
 
 private suspend fun upNextHint(context: Context, preview: UpNextPreview): UpNextHint {

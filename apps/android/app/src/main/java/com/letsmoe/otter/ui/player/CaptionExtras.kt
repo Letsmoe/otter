@@ -26,6 +26,9 @@ data class CaptionExtrasState(
     val delaySeconds: Double = 0.0,
     val secondSubtitleId: String? = null,
     val secondCues: List<CaptionCue> = emptyList(),
+    /** While casting, the phone lists what was just said, from this file. */
+    val transcriptSubtitleId: String? = null,
+    val transcriptCues: List<CaptionCue> = emptyList(),
 )
 
 /** Keeps the caption tweaks of one title; [onPhoneDelay] reloads the phone's captions with a new delay. */
@@ -36,6 +39,7 @@ class CaptionExtras(private val scope: CoroutineScope, private val onPhoneDelay:
 
     private var phoneReload: Job? = null
     private var secondLoad: Job? = null
+    private var transcriptLoad: Job? = null
 
     val delayMilliseconds: Long
         get() = (mutableState.value.delaySeconds * 1000).roundToLong()
@@ -44,7 +48,24 @@ class CaptionExtras(private val scope: CoroutineScope, private val onPhoneDelay:
     fun reset() {
         phoneReload?.cancel()
         secondLoad?.cancel()
+        transcriptLoad?.cancel()
         mutableState.value = CaptionExtrasState()
+    }
+
+    /** Lists [subtitle]'s lines while casting; the same file isn't loaded twice. */
+    fun showTranscript(subtitle: PlayerSubtitle?) {
+        if (subtitle?.id == mutableState.value.transcriptSubtitleId) {
+            return
+        }
+        transcriptLoad?.cancel()
+        mutableState.update { current -> current.copy(transcriptSubtitleId = subtitle?.id, transcriptCues = emptyList()) }
+        if (subtitle == null) {
+            return
+        }
+        transcriptLoad = scope.launch {
+            val cues = loadCaptionCues(subtitle.srtPath)
+            mutableState.update { current -> current.copy(transcriptCues = cues) }
+        }
     }
 
     /** Moves the captions by [stepSeconds] (negative: earlier); returns the new delay. */

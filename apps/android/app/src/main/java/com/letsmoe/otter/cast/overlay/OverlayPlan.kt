@@ -13,8 +13,17 @@ data class SkipHint(val label: String, val startSeconds: Double, val endSeconds:
 /** The next episode's card, from [startSeconds] (the credits) for [durationSeconds], counting down. */
 data class UpNextHint(val episodeLabel: String, val startSeconds: Double, val durationSeconds: Double, val still: Bitmap?)
 
-/** What is playing, shown from [startSeconds] to [endSeconds] when a title starts: "Severance", "S1:E2 · Half Loop". */
-data class TitleCard(val title: String, val detail: String?, val startSeconds: Double, val endSeconds: Double)
+/**
+ * What is playing, shown from [startSeconds] to [endSeconds] when a title
+ * starts: "Severance", "S1:E2 · Half Loop" and "Ends at 22:41".
+ */
+data class TitleCard(
+    val title: String,
+    val detail: String?,
+    val startSeconds: Double,
+    val endSeconds: Double,
+    val endsAtLabel: String? = null,
+)
 
 /** Everything drawn into the TV's picture, on the title's timeline. [secondCaptions] show smaller, under [captions]. */
 data class OverlayPlan(

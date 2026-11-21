@@ -19,7 +19,13 @@ import com.letsmoe.otter.cast.overlay.OverlayJob
 import com.letsmoe.otter.cast.overlay.OverlayJobs
 import com.letsmoe.otter.cast.overlay.OverlayLiveInputs
 import com.letsmoe.otter.cast.overlay.TelevisionHints
+import com.letsmoe.otter.cast.overlay.TitleCardRequest
 import com.letsmoe.otter.cast.overlay.TitleText
+import com.letsmoe.otter.cast.overlay.TogetherChatLine
+import com.letsmoe.otter.cast.overlay.TogetherMoments
+import com.letsmoe.otter.cast.overlay.TogetherReaction
+import com.letsmoe.otter.cast.overlay.endsAtLabel
+import com.letsmoe.otter.together.TogetherSession
 import com.letsmoe.otter.cast.overlay.loadOverlayPlan
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.reporting.ErrorReporting
@@ -576,7 +582,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
         report(startSeconds)
         pendingFileSeekSeconds = null
         val captionPaths = CaptionPaths(subtitleFile?.srtPath, secondSubtitleFile?.srtPath)
-        val plan = loadOverlayPlan(context, hints, captionPaths, titleCardStart(startSeconds))
+        val plan = loadOverlayPlan(context, hints, captionPaths, titleCardRequest(startSeconds))
         val job = OverlayJob(playerUrl, mimeType, startSeconds, maxHeight, plan, liveInputs(), ::onOverlayFailed)
         overlayJobId = OverlayJobs.register(job)
         journal.note("Drawing into the picture", mapOf("overlay_job" to job.id, "overlay_captions" to plan.captions.size))
@@ -589,17 +595,27 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
             upNextDismissed = { upNextDismissed },
             captionDelaySeconds = { captionDelaySeconds },
             voiceBoost = { ProfileSession.activeProfile.value?.voiceBoost == true },
+            together = ::togetherMoments,
         )
     }
 
-    // The first stream of a title shows what plays; seeks and new links for the same title don't.
-    private fun titleCardStart(startSeconds: Double): Double? {
+    // The first stream of a title shows what plays and when it ends; seeks and new links for the same title don't.
+    private fun titleCardRequest(startSeconds: Double): TitleCardRequest? {
         val text = hints.titleText ?: return null
         if (!PlaybackSettings.televisionTitleCard || text == introducedTitle) {
             return null
         }
         introducedTitle = text
-        return startSeconds
+        return TitleCardRequest(startSeconds, endsAtLabel(context, durationSeconds - startSeconds))
+    }
+
+    private fun togetherMoments(): TogetherMoments {
+        if (TogetherSession.room.value == null) {
+            return TogetherMoments()
+        }
+        val reactions = TogetherSession.reactions.value.map { reaction -> TogetherReaction(reaction.id, reaction.emoji, reaction.from.name) }
+        val chat = TogetherSession.chat.value.map { line -> TogetherChatLine(line.id, line.from.name, line.text) }
+        return TogetherMoments(reactions, chat)
     }
 
     private fun overlayMaxHeight(): Int {

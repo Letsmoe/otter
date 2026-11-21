@@ -17,6 +17,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.layout.padding
+import com.letsmoe.otter.cast.overlay.CaptionCue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -123,7 +125,11 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
             if (secondShown) {
                 SecondCaptions(viewModel.player, captionTweaks.secondCues, captionTweaks.delaySeconds, state.captionLook)
             }
-            state.castDeviceName?.let { deviceName -> CastingBackdrop(deviceName) }
+            state.castDeviceName?.let { deviceName ->
+                LaunchedEffect(deviceName, state.selectedSubtitleIndex) { viewModel.loadTranscript() }
+                val lines = recentLines(captionTweaks.transcriptCues, position.positionSeconds, captionTweaks.delaySeconds)
+                CastingBackdrop(deviceName, lines)
+            }
         }
         PlayerTapSurface(
             onToggleControls = chrome::toggle,
@@ -210,14 +216,15 @@ private fun VideoSurface(player: Player, captionLook: CaptionLook, captionBottom
 
 // The video runs on the TV; the phone shows where and keeps the controls.
 @Composable
-private fun CastingBackdrop(deviceName: String) {
+private fun CastingBackdrop(deviceName: String, recentLines: List<CaptionCue>) {
     Column(
-        Modifier.fillMaxSize().background(Color.Black),
+        Modifier.fillMaxSize().background(Color.Black).padding(horizontal = 32.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(PhosphorIcons.Regular.Television, contentDescription = null, tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(56.dp))
         Text("Playing on $deviceName", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.85f))
+        RecentLines(recentLines, Modifier.padding(top = 20.dp))
     }
 }
 
