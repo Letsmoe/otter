@@ -45,13 +45,19 @@ class SkipTracker {
         creditsStartSeconds = segments.firstOrNull { segment -> segment.kind == CREDITS_KIND }?.startSeconds
     }
 
-    /** Where to continue when [positionSeconds] entered a jump not taken yet; null otherwise. */
-    fun autoSkipTarget(positionSeconds: Double): Double? {
+    /**
+     * Where to continue when [positionSeconds] entered a jump not taken yet and [allows] it; null
+     * otherwise. Each jump is asked once, so one that isn't allowed stays unless the viewer skips it.
+     */
+    fun autoSkipTarget(positionSeconds: Double, allows: (SkipJump) -> Boolean): Double? {
         val jump = jumpAt(positionSeconds) ?: return null
         if (jump in autoSkipped) {
             return null
         }
         autoSkipped.add(jump)
+        if (!allows(jump)) {
+            return null
+        }
         return jump.endSeconds
     }
 
