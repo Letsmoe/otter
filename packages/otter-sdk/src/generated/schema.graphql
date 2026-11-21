@@ -268,6 +268,11 @@ type Profile {
 
   """Boost dialogue over music and effects"""
   voiceBoost: Boolean!
+
+  """
+  The Android app shows only Continue, My List and Search with big text and buttons
+  """
+  simpleMode: Boolean!
 }
 
 """
@@ -783,7 +788,7 @@ type Mutation {
   """
   Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it.
   """
-  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, subtitleStyle: SubtitleStyle, voiceBoost: Boolean): Profile!
+  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, subtitleStyle: SubtitleStyle, voiceBoost: Boolean, simpleMode: Boolean): Profile!
   deleteProfile(id: ID!): Boolean!
   verifyPin(profileId: ID!, pin: String!): PinCheck!
   updateSettings(input: SettingsInput!): Settings!

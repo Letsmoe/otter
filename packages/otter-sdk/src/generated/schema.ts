@@ -239,6 +239,8 @@ export interface Profile {
     subtitleStyle: SubtitleStyle
     /** Boost dialogue over music and effects */
     voiceBoost: Scalars['Boolean']
+    /** The Android app shows only Continue, My List and Search with big text and buttons */
+    simpleMode: Scalars['Boolean']
     __typename: 'Profile'
 }
 
@@ -867,6 +869,8 @@ export interface ProfileGenqlSelection{
     subtitleStyle?: boolean | number
     /** Boost dialogue over music and effects */
     voiceBoost?: boolean | number
+    /** The Android app shows only Continue, My List and Search with big text and buttons */
+    simpleMode?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1200,7 +1204,7 @@ export interface MutationGenqlSelection{
     /** The first profile's top language also becomes the TMDB language. */
     createProfile?: (ProfileGenqlSelection & { __args: {name: Scalars['String'], avatarUrl?: (Scalars['String'] | null), pin?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), languages?: (Scalars['String'][] | null)} })
     /** Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it. */
-    updateProfile?: (ProfileGenqlSelection & { __args: {id: Scalars['ID'], name?: (Scalars['String'] | null), avatarUrl?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), pin?: (Scalars['String'] | null), languages?: (Scalars['String'][] | null), subtitlesEnabled?: (Scalars['Boolean'] | null), subtitleLanguage?: (Scalars['String'] | null), subtitleSize?: (SubtitleSize | null), subtitleStyle?: (SubtitleStyle | null), voiceBoost?: (Scalars['Boolean'] | null)} })
+    updateProfile?: (ProfileGenqlSelection & { __args: {id: Scalars['ID'], name?: (Scalars['String'] | null), avatarUrl?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), pin?: (Scalars['String'] | null), languages?: (Scalars['String'][] | null), subtitlesEnabled?: (Scalars['Boolean'] | null), subtitleLanguage?: (Scalars['String'] | null), subtitleSize?: (SubtitleSize | null), subtitleStyle?: (SubtitleStyle | null), voiceBoost?: (Scalars['Boolean'] | null), simpleMode?: (Scalars['Boolean'] | null)} })
     deleteProfile?: { __args: {id: Scalars['ID']} }
     verifyPin?: (PinCheckGenqlSelection & { __args: {profileId: Scalars['ID'], pin: Scalars['String']} })
     updateSettings?: (SettingsGenqlSelection & { __args: {input: SettingsInput} })

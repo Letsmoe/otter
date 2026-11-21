@@ -209,3 +209,42 @@ func TestVoiceBoostUpdate(t *testing.T) {
 		t.Fatalf("voice boost should be on: %+v", updated)
 	}
 }
+
+func TestSimpleModeIsOffByDefaultAndKeptAcrossOtherUpdates(t *testing.T) {
+	ctx := context.Background()
+	service := newTestService(t)
+	created, err := service.Create(ctx, "Oma", "", "", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if created.SimpleMode {
+		t.Fatal("simple mode must start off")
+	}
+
+	simple := true
+	updated, err := service.Update(ctx, created.ID, Update{SimpleMode: &simple})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !updated.SimpleMode {
+		t.Fatal("simple mode was not saved")
+	}
+
+	boost := true
+	updated, err = service.Update(ctx, created.ID, Update{VoiceBoost: &boost})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !updated.SimpleMode {
+		t.Error("an unrelated update switched simple mode off")
+	}
+
+	simple = false
+	updated, err = service.Update(ctx, created.ID, Update{SimpleMode: &simple})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.SimpleMode {
+		t.Error("simple mode stayed on")
+	}
+}
