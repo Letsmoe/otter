@@ -15,6 +15,7 @@ phosphor = "1.0.0"
 newPipeExtractor = "v0.26.5"
 desugarJdkLibs = "2.1.5"
 work = "2.12.0"
+hotswan = "2.2.0"
 
 [libraries]
 palette = { group = "androidx.palette", name = "palette-ktx", version = "1.0.0" }
@@ -58,3 +59,5 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }
 posthog-android = { id = "com.posthog.android", version.ref = "posthogGradle" }
+# Hot reload for debug builds; must match the Compose HotSwan IDE plugin's version.
+hotswan-compiler = { id = "com.github.skydoves.compose.hotswan.compiler", version.ref = "hotswan" }

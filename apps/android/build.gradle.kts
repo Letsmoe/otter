@@ -3,4 +3,5 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.apollo) apply false
     alias(libs.plugins.posthog.android) apply false
+    alias(libs.plugins.hotswan.compiler) apply false
 }
