@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Otter</string>
+    <string name="widget_continue_watching_name">Continue watching</string>
+    <string name="widget_continue_watching_description">Pick up your titles where you stopped</string>
 </resources>
