@@ -64,6 +64,7 @@ private fun LoadedTitle(
     slots: TitleSlots,
 ) {
     val rails by titleViewModel.rails.collectAsStateWithLifecycle()
+    TelevisionBrowseEffect(detail)
     val requestNotificationPermission = rememberNotificationPermissionRequest()
     val toggleWatchlist = {
         if (!detail.inWatchlist) {

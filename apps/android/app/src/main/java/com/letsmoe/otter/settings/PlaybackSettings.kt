@@ -19,6 +19,7 @@ object PlaybackSettings {
     private const val KEY_AUTO_SKIP_INTRO = "autoSkipIntro"
     private const val KEY_TELEVISION_OVERLAYS = "televisionOverlays"
     private const val KEY_TELEVISION_TITLE_CARD = "televisionTitleCard"
+    private const val KEY_TELEVISION_BROWSE = "televisionBrowse"
     private const val KEY_EVEN_VOLUME = "evenVolume"
     private const val KEY_BRIGHTEN_DARK_SCENES = "brightenDarkScenes"
     private const val KEY_BEDTIME_MINUTES = "bedtimeMinutes"
@@ -118,6 +119,13 @@ object PlaybackSettings {
         get() = preferences.getBoolean(KEY_BRIGHTEN_DARK_SCENES, false)
         set(value) {
             preferences.edit { putBoolean(KEY_BRIGHTEN_DARK_SCENES, value) }
+        }
+
+    /** Whether a connected DLNA TV shows the title the phone is looking at while nothing plays. */
+    var televisionBrowse: Boolean
+        get() = preferences.getBoolean(KEY_TELEVISION_BROWSE, true)
+        set(value) {
+            preferences.edit { putBoolean(KEY_TELEVISION_BROWSE, value) }
         }
 
     /** Whether a TV with drawn-in hints shows the title and episode for a few seconds when a title starts. */

@@ -590,6 +590,30 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
         return media
     }
 
+    // Stills -------------------------------------------------------------------
+
+    /** The tallest picture the phone's encoder makes for this TV. */
+    val stillHeight: Int
+        get() = overlayMaxHeight()
+
+    /** False once the phone's encoder failed for this TV: it gets no pictures from the phone any more. */
+    val encodesPictures: Boolean
+        get() = !overlaysFailed
+
+    /** Shows the still picture of [streamPath] (an overlay stream path) on the TV; nothing may be playing. */
+    suspend fun showStill(streamPath: String, title: String) {
+        val origin = lanStreamOrigin(context) ?: throw DlnaException("The phone is not on Wi-Fi.")
+        val media = televisionMediaFor(origin, streamPath, title, OVERLAY_MIME_TYPE, seekableBytes = false, captionHints = false)
+        stopBeforeLoading()
+        client.load(media)
+        client.play()
+    }
+
+    /** Takes the still picture off the TV. */
+    suspend fun clearStill() {
+        client.stop()
+    }
+
     // Overlays -----------------------------------------------------------------
 
     // Only streams the backend serves can be re-encoded; a failed encoder isn't tried again on this TV.
