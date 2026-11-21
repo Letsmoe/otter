@@ -3,6 +3,7 @@ package com.letsmoe.otter
 import android.app.Application
 import com.letsmoe.otter.api.ServerSettings
 import com.letsmoe.otter.backend.EmbeddedBackend
+import com.letsmoe.otter.cast.CallPause
 import com.letsmoe.otter.cast.CastSetup
 import com.letsmoe.otter.challenges.ChallengeSolver
 import com.letsmoe.otter.cast.LocalNetworkRouting
@@ -43,6 +44,7 @@ class OtterApplication : Application() {
         TelevisionPlayback.initialize(this)
         TelevisionBrowse.initialize(this)
         TelevisionScreensaver.initialize(this)
+        CallPause.initialize(this)
         OverlayStreamServer.start(this)
         NotificationCheckWorker.schedule(this)
     }

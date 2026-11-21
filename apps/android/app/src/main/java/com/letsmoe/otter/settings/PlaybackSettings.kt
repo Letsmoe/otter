@@ -28,6 +28,7 @@ object PlaybackSettings {
     private const val KEY_BEDTIME_MINUTES = "bedtimeMinutes"
     private const val KEY_NIGHT_VOLUME_LIMIT = "nightVolumeLimit"
     private const val NOT_STORED = -1
+    private const val KEY_PAUSE_FOR_CALLS = "pauseForCalls"
 
     private lateinit var preferences: SharedPreferences
 
@@ -116,6 +117,13 @@ object PlaybackSettings {
     /** Even volume as it applies now: the setting, or the bedtime's. */
     val evenVolumeActive: Boolean
         get() = evenVolume || (evenVolumeFromBedtime && isPastBedtime())
+
+    /** Whether a phone call (ringing or ongoing) pauses the TV until it ends. */
+    var pauseForCalls: Boolean
+        get() = preferences.getBoolean(KEY_PAUSE_FOR_CALLS, true)
+        set(value) {
+            preferences.edit { putBoolean(KEY_PAUSE_FOR_CALLS, value) }
+        }
 
     /** Lifts the shadows of the picture the phone makes for a TV, from its next stream on. */
     var brightenDarkScenes: Boolean
