@@ -38,6 +38,7 @@ fun FocusableSurface(
     focusedScale: Float = 1.08f,
     containerColor: Color = TvColors.subtleFill,
     focusedContainerColor: Color = Color.White.copy(alpha = 0.16f),
+    focusedContentColor: Color = TvColors.baseContent,
     ringWidth: Dp = 2.dp,
     content: @Composable () -> Unit,
 ) {
@@ -50,7 +51,7 @@ fun FocusableSurface(
             containerColor = containerColor,
             contentColor = TvColors.baseContent,
             focusedContainerColor = focusedContainerColor,
-            focusedContentColor = TvColors.baseContent,
+            focusedContentColor = focusedContentColor,
             pressedContainerColor = focusedContainerColor,
         ),
         border = ClickableSurfaceDefaults.border(

@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.tv.ui.home.HomeScreen
+import com.letsmoe.otter.tv.ui.player.TvPlayerScreen
 import com.letsmoe.otter.tv.ui.profiles.ProfileGateScreen
 import com.letsmoe.otter.tv.ui.title.TitleNavigation
 import com.letsmoe.otter.tv.ui.title.TitleScreen
@@ -26,6 +27,10 @@ sealed interface TvRoute {
 
     data class Title(val titleId: String, val linkedEpisode: LinkedEpisode) : TvRoute {
         override val key = "title-$titleId"
+    }
+
+    data class Player(val mediaId: String, val streamId: String?) : TvRoute {
+        override val key = "player-$mediaId"
     }
 }
 
@@ -46,24 +51,31 @@ private fun TvNavigation() {
     // Screens left for a deeper one keep their scroll position, tab and the like for when Back returns.
     val savedStates = rememberSaveableStateHolder()
     val open = { route: TvRoute -> stack = stack + route }
-    BackHandler(enabled = stack.size > 1) { stack = stack.dropLast(1) }
+    val back = { stack = stack.dropLast(1) }
+    BackHandler(enabled = stack.size > 1, onBack = back)
     val current = stack.last()
     savedStates.SaveableStateProvider(current.key) {
-        RouteContent(current, open)
+        RouteContent(current, open, back)
     }
 }
 
 @Composable
-private fun RouteContent(route: TvRoute, open: (TvRoute) -> Unit) {
+private fun RouteContent(route: TvRoute, open: (TvRoute) -> Unit, back: () -> Unit) {
     val openItem = { item: RailItem -> open(titleRouteOf(item)) }
     when (route) {
         TvRoute.Home -> HomeScreen(onOpenItem = openItem, onOpenPerson = {})
         is TvRoute.Title -> TitleScreen(
             route.titleId,
             route.linkedEpisode,
-            // The player and person pages come next; until then Play and actors do nothing.
-            TitleNavigation(onPlay = {}, onOpenItem = openItem, onOpenPerson = {}),
+            // Person pages come later; until then actors do nothing.
+            TitleNavigation(
+                onPlay = { request -> open(TvRoute.Player(request.mediaId, request.streamId)) },
+                onOpenItem = openItem,
+                onOpenPerson = {},
+            ),
         )
+        // The player handles Back itself: it closes its panels and controls first.
+        is TvRoute.Player -> TvPlayerScreen(route.mediaId, route.streamId, onBack = back)
     }
 }
 

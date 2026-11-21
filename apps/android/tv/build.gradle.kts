@@ -62,5 +62,6 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network)
     implementation(libs.phosphor.icons)
+    implementation(libs.media3.ui)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 }

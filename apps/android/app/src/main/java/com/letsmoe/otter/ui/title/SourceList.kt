@@ -158,20 +158,6 @@ private fun sourceDetails(stream: StreamLink): String {
     return parts.joinToString("  ")
 }
 
-/** "2.4 MB/s"; null without a measurement. */
-fun formatSpeed(bytesPerSecond: Double?): String? {
-    if (bytesPerSecond == null || bytesPerSecond <= 0) {
-        return null
-    }
-    if (bytesPerSecond >= 1_000_000) {
-        return "%.1f MB/s".format(bytesPerSecond / 1_000_000)
-    }
-    if (bytesPerSecond >= 1_000) {
-        return "%.0f KB/s".format(bytesPerSecond / 1_000)
-    }
-    return "${Math.round(bytesPerSecond)} B/s"
-}
-
 @Composable
 private fun SearchAgainButton(onClick: () -> Unit) {
     Box(Modifier.fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {

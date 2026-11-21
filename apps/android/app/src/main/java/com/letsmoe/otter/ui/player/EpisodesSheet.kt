@@ -121,8 +121,9 @@ private fun EpisodeCard(episode: PlayerEpisode, current: Boolean, onClick: () ->
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        if (!episode.overview.isNullOrEmpty()) {
-            Text(episode.overview, fontSize = 12.sp, lineHeight = 16.sp, color = Color.White.copy(alpha = 0.6f), maxLines = 3, overflow = TextOverflow.Ellipsis)
+        val overview = episode.overview
+        if (!overview.isNullOrEmpty()) {
+            Text(overview,fontSize = 12.sp, lineHeight = 16.sp, color = Color.White.copy(alpha = 0.6f), maxLines = 3, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -141,9 +142,10 @@ private fun EpisodeStill(episode: PlayerEpisode, current: Boolean) {
         Box(Modifier.align(Alignment.Center).size(40.dp).playerGlass(CircleShape), contentAlignment = Alignment.Center) {
             Icon(PhosphorIcons.Fill.Play, contentDescription = null, modifier = Modifier.size(18.dp))
         }
-        if (episode.progress != null) {
+        val progress = episode.progress
+        if (progress != null) {
             Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(4.dp).background(Color.White.copy(alpha = 0.2f))) {
-                Box(Modifier.fillMaxHeight().fillMaxWidth(episode.progress).background(Color.White))
+                Box(Modifier.fillMaxHeight().fillMaxWidth(progress).background(Color.White))
             }
         }
     }

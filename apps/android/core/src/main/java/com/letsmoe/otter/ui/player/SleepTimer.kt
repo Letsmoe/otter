@@ -9,6 +9,26 @@ const val SLEEP_FADE_MILLISECONDS = 20_000L
 /** What the sleep timer sheet offers, besides "End of episode". */
 val sleepTimerMinutes = listOf(15, 30, 60)
 
+/** What the sleep timer is set to, for the sheet's marks. */
+enum class SleepChoice { OFF, MINUTES, END_OF_EPISODE }
+
+fun sleepChoiceOf(run: SleepTimerRun?, stopsAfterEpisode: Boolean): SleepChoice {
+    if (run != null) {
+        return SleepChoice.MINUTES
+    }
+    if (stopsAfterEpisode) {
+        return SleepChoice.END_OF_EPISODE
+    }
+    return SleepChoice.OFF
+}
+
+fun sleepMinutesLabel(minutes: Int): String {
+    if (minutes == 60) {
+        return "1 hour"
+    }
+    return "$minutes minutes"
+}
+
 // A TV hears the sound this long after the phone encoded it, so its fade starts that much earlier.
 const val TELEVISION_SOUND_LEAD_MILLISECONDS = 5_000L
 

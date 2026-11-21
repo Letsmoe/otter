@@ -58,6 +58,10 @@ dependencies {
     api(platform(libs.compose.bom))
     api(libs.compose.runtime)
     api(libs.lifecycle.viewmodel)
+    // The player's shared parts: stream picking, media items, tracks, captions, audio processors.
+    api(libs.media3.exoplayer)
+    api(libs.media3.exoplayer.hls)
+    api(libs.media3.ui)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     testImplementation(libs.junit)
 }

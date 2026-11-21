@@ -94,6 +94,8 @@ fun topBarFade(): Modifier {
 fun TitlesHome(mediaType: MediaType, onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> Unit) {
     val viewModel = viewModel(key = "tv-titles-$mediaType") { TitlesPageViewModel(mediaType) }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // Back from a title or the player (same activity, no resume), Continue Watching and My List should be current.
+    LaunchedEffect(Unit) { viewModel.loadPersonalRows() }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.loadPersonalRows() }
     val hero = rememberSettledHero(mediaType)
     // The hero cycles while no card has focus; on a card it shows that card's title.

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -104,7 +105,8 @@ private fun SeriesTitle(detail: TitleDetail, viewModel: TitleViewModel, linkedEp
     val episodes by seriesViewModel.state.collectAsStateWithLifecycle()
     val rails by viewModel.rails.collectAsStateWithLifecycle()
     val vpn by VpnStatusStore.status.collectAsStateWithLifecycle()
-    // Back from the player, Resume and the progress bars should be current.
+    // Back from the player (same activity, no resume) or the app, Resume and the progress bars should be current.
+    LaunchedEffect(Unit) { seriesViewModel.loadEpisodes() }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { seriesViewModel.loadEpisodes() }
     val upNext = episodes.upNext
     val play = PlayAction(

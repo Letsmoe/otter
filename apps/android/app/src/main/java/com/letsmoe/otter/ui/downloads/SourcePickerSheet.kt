@@ -120,10 +120,11 @@ private fun StreamRow(stream: SourceStream, onClick: () -> Unit) {
 }
 
 private fun streamName(stream: SourceStream): String {
-    if (stream.label.isNullOrEmpty()) {
+    val label = stream.label
+    if (label.isNullOrEmpty()) {
         return "Link"
     }
-    return stream.label
+    return label
 }
 
 private fun streamDetails(stream: SourceStream): String {

@@ -16,26 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.letsmoe.otter.ui.components.pressable
 
-/** What the sleep timer is set to, for the sheet's marks. */
-enum class SleepChoice { OFF, MINUTES, END_OF_EPISODE }
-
-fun sleepChoiceOf(run: SleepTimerRun?, stopsAfterEpisode: Boolean): SleepChoice {
-    if (run != null) {
-        return SleepChoice.MINUTES
-    }
-    if (stopsAfterEpisode) {
-        return SleepChoice.END_OF_EPISODE
-    }
-    return SleepChoice.OFF
-}
-
-fun sleepMinutesLabel(minutes: Int): String {
-    if (minutes == 60) {
-        return "1 hour"
-    }
-    return "$minutes minutes"
-}
-
 /** Off, 15, 30 or 60 minutes, or the end of the episode; the sound fades out over the last 20 seconds. */
 @Composable
 fun SleepTimerSheetContent(
