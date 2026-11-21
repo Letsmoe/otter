@@ -1,0 +1,62 @@
+1|1|Pilot|8.509
+1|2|Cat's in the Bag...|8.255
+1|3|...And the Bag's in the River|8.408
+1|4|Cancer Man|7.928
+1|5|Gray Matter|8.156
+1|6|Crazy Handful of Nothin'|8.902
+1|7|A No Rough Stuff Type Deal|8.388
+2|1|Seven Thirty-Seven|8.332
+2|2|Grilled|8.843
+2|3|Bit by a Dead Bee|7.97
+2|4|Down|7.9
+2|5|Breakage|8.026
+2|6|Peekaboo|8.47
+2|7|Negro y Azul|8.336
+2|8|Better Call Saul|8.88
+2|9|4 Days Out|8.808
+2|10|Over|8.192
+2|11|Mandala|8.514
+2|12|Phoenix|8.833
+2|13|ABQ|8.753
+3|1|No Más|8.204
+3|2|Caballo sin Nombre|8.333
+3|3|I.F.T.|8.125
+3|4|Green Light|7.939
+3|5|Más|8.274
+3|6|Sunset|8.879
+3|7|One Minute|9.1
+3|8|I See You|8.391
+3|9|Kafkaesque|8.155
+3|10|Fly|7.81
+3|11|Abiquiu|8.14
+3|12|Half Measures|9.04
+3|13|Full Measure|9.23
+4|1|Box Cutter|8.8
+4|2|Thirty-Eight Snub|7.94
+4|3|Open House|7.854
+4|4|Bullet Points|8.174
+4|5|Shotgun|8.1
+4|6|Cornered|8.08
+4|7|Problem Dog|8.447
+4|8|Hermanos|8.792
+4|9|Bug|8.492
+4|10|Salud|9.112
+4|11|Crawl Space|9.347
+4|12|End Times|8.978
+4|13|Face Off|9.323
+5|1|Live Free or Die|8.618
+5|2|Madrigal|8.364
+5|3|Hazard Pay|8.386
+5|4|Fifty-One|8.337
+5|5|Dead Freight|9.173
+5|6|Buyout|8.593
+5|7|Say My Name|9.109
+5|8|Gliding Over All|9.16
+5|9|Blood Money|8.977
+5|10|Buried|8.745
+5|11|Confessions|9.197
+5|12|Rabid Dog|8.771
+5|13|To'hajiilee|9.43
+5|14|Ozymandias|9.353
+5|15|Granite State|9.2
+5|16|Felina|9.293

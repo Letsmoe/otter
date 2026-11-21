@@ -78,6 +78,7 @@ fun TitlePage(
     tabBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     playExtras: @Composable () -> Unit = {},
+    belowDescription: @Composable () -> Unit = {},
     tabContent: @Composable () -> Unit,
 ) {
     val listState = rememberLazyListState()
@@ -98,7 +99,7 @@ fun TitlePage(
             ) {
                 item { TitleBackdropOverlay(trailer, modifier = bannerPlacement) }
                 item {
-                    TitleSummary(detail, facts, playButton, creditLines, shareUrl, actions, slots, downloadTarget, playExtras)
+                    TitleSummary(detail, facts, playButton, creditLines, shareUrl, actions, slots, downloadTarget, playExtras, belowDescription)
                 }
                 item { CastRow(detail.cast, actions.onOpenPerson) }
                 item { Box(Modifier.padding(horizontal = 12.dp).padding(top = 12.dp)) { tabBar() } }
@@ -136,6 +137,7 @@ private fun TitleSummary(
     slots: TitleSlots,
     downloadTarget: DownloadTarget?,
     playExtras: @Composable () -> Unit,
+    belowDescription: @Composable () -> Unit,
 ) {
     Column(Modifier.padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(detail.title, fontSize = 24.sp, lineHeight = 30.sp, fontWeight = FontWeight.Bold)
@@ -148,6 +150,7 @@ private fun TitleSummary(
         playExtras()
         Overview(detail.overview)
         CreditLines(creditLines)
+        belowDescription()
         ActionRow(
             title = detail.title,
             shareUrl = shareUrl,
