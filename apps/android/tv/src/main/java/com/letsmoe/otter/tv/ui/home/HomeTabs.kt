@@ -11,7 +11,9 @@ import androidx.tv.material3.Text
 import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.tv.theme.TvType
 
-enum class HomeTab(val label: String, val mediaType: MediaType) {
+/** The top bar's tabs; Search has no media type, the others are home categories. */
+enum class HomeTab(val label: String, val mediaType: MediaType?) {
+    SEARCH("Search", null),
     MOVIES("Movies", MediaType.MOVIE),
     SHOWS("Shows", MediaType.SERIES),
 }

@@ -43,8 +43,8 @@ class PlayAction(val label: String, val enabled: Boolean, val onClick: () -> Uni
 
 /** The title's backdrop filling the screen, darkened on the left for the text and at the bottom for the rows. */
 @Composable
-fun TitleBackdrop(imageUrl: String?) {
-    Box(Modifier.fillMaxSize()) {
+fun TitleBackdrop(imageUrl: String?, modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxSize()) {
         AsyncImage(
             model = imageUrl,
             contentDescription = null,

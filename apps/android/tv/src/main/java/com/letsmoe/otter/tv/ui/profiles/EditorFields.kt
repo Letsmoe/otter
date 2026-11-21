@@ -37,43 +37,22 @@ import com.letsmoe.otter.profiles.LANGUAGE_CHOICES
 import com.letsmoe.otter.tv.theme.TvColors
 import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.tv.ui.components.FocusableSurface
+import com.letsmoe.otter.tv.ui.components.TextFieldLook
+import com.letsmoe.otter.tv.ui.components.TvTextField
 
-private val FIELD_SHAPE = RoundedCornerShape(10.dp)
-
-/** The profile's name; selecting it opens the TV's on-screen keyboard. */
+/** The profile's name. */
 @Composable
 fun NameField(name: String, onChange: (String) -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val focused by interactionSource.collectIsFocusedAsState()
-    var borderColor = Color.Transparent
-    if (focused) {
-        borderColor = Color.White
-    }
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("Name", fontSize = TvType.detail, color = TvColors.secondaryContent)
-        BasicTextField(
+        TvTextField(
             value = name,
             onValueChange = onChange,
-            singleLine = true,
-            interactionSource = interactionSource,
-            textStyle = TextStyle(fontSize = TvType.sectionTitle, color = TvColors.baseContent),
-            cursorBrush = SolidColor(Color.White),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+            look = TextFieldLook(
+                placeholder = "Name",
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+            ),
             modifier = Modifier.fillMaxWidth(),
-            decorationBox = { innerField ->
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .background(TvColors.subtleFill, FIELD_SHAPE)
-                        .border(2.dp, borderColor, FIELD_SHAPE)
-                        .padding(horizontal = 16.dp, vertical = 11.dp),
-                ) {
-                    if (name.isEmpty()) {
-                        Text("Name", fontSize = TvType.sectionTitle, color = TvColors.neutralContent)
-                    }
-                    innerField()
-                }
-            },
         )
     }
 }

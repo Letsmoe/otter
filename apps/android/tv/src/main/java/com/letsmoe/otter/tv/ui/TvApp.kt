@@ -1,11 +1,33 @@
 package com.letsmoe.otter.tv.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.tv.ui.home.HomeScreen
 import com.letsmoe.otter.tv.ui.profiles.ProfileGateScreen
+import com.letsmoe.otter.tv.ui.title.TitleNavigation
+import com.letsmoe.otter.tv.ui.title.TitleScreen
+import com.letsmoe.otter.ui.media.RailItem
+import com.letsmoe.otter.ui.title.LinkedEpisode
+
+/** A screen of the TV app; the app keeps a stack of them and Back pops one. */
+sealed interface TvRoute {
+    val key: String
+
+    data object Home : TvRoute {
+        override val key = "home"
+    }
+
+    data class Title(val titleId: String, val linkedEpisode: LinkedEpisode) : TvRoute {
+        override val key = "title-$titleId"
+    }
+}
 
 /** The profile gate until someone picks a profile, then the app. */
 @Composable
@@ -15,6 +37,37 @@ fun TvApp() {
         ProfileGateScreen()
         return
     }
-    // Title and person pages come next; until then selecting a card does nothing.
-    HomeScreen(onOpenItem = {}, onOpenPerson = {})
+    TvNavigation()
+}
+
+@Composable
+private fun TvNavigation() {
+    var stack by remember { mutableStateOf(listOf<TvRoute>(TvRoute.Home)) }
+    // Screens left for a deeper one keep their scroll position, tab and the like for when Back returns.
+    val savedStates = rememberSaveableStateHolder()
+    val open = { route: TvRoute -> stack = stack + route }
+    BackHandler(enabled = stack.size > 1) { stack = stack.dropLast(1) }
+    val current = stack.last()
+    savedStates.SaveableStateProvider(current.key) {
+        RouteContent(current, open)
+    }
+}
+
+@Composable
+private fun RouteContent(route: TvRoute, open: (TvRoute) -> Unit) {
+    val openItem = { item: RailItem -> open(titleRouteOf(item)) }
+    when (route) {
+        TvRoute.Home -> HomeScreen(onOpenItem = openItem, onOpenPerson = {})
+        is TvRoute.Title -> TitleScreen(
+            route.titleId,
+            route.linkedEpisode,
+            // The player and person pages come next; until then Play and actors do nothing.
+            TitleNavigation(onPlay = {}, onOpenItem = openItem, onOpenPerson = {}),
+        )
+    }
+}
+
+/** A card opens its title; Continue Watching cards open the series on their episode. */
+private fun titleRouteOf(item: RailItem): TvRoute {
+    return TvRoute.Title(item.id, LinkedEpisode(seasonNumber = item.seasonNumber, episodeId = item.episodeId))
 }

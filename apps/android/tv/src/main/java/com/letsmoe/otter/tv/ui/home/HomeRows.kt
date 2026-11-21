@@ -1,9 +1,5 @@
 package com.letsmoe.otter.tv.ui.home
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
@@ -11,6 +7,7 @@ import com.letsmoe.otter.tv.theme.TvSpacing
 import com.letsmoe.otter.tv.ui.components.ActorCard
 import com.letsmoe.otter.tv.ui.components.CardRow
 import com.letsmoe.otter.tv.ui.components.LARGE_POSTER_WIDTH
+import com.letsmoe.otter.tv.ui.components.PageRow
 import com.letsmoe.otter.tv.ui.components.PosterCard
 import com.letsmoe.otter.tv.ui.components.RANK_NUMBER_WIDTH
 import com.letsmoe.otter.tv.ui.components.REGULAR_POSTER_WIDTH
@@ -31,23 +28,15 @@ class RowActions(
     val onOpenPerson: (String) -> Unit,
 )
 
-/** Adds every home row to the list, each in its own card style; [onRowFocused] gets the 0-based row. */
-fun LazyListScope.homeRows(rows: List<HomeRow>, actors: List<ActorItem>, actions: RowActions, onRowFocused: (Int) -> Unit) {
-    rows.forEachIndexed { index, row ->
-        item(key = row.key) {
-            Box(Modifier.onFocusChanged { state -> reportRowFocus(state.hasFocus, index, onRowFocused) }) {
-                when (row) {
-                    is PosterRow -> PosterRowContent(row, actions)
-                    is ActorsRow -> ActorRow("Stars of What You've Watched", actors, actions)
-                }
+/** Every home row as a page row, each in its own card style. */
+fun homePageRows(rows: List<HomeRow>, actors: List<ActorItem>, actions: RowActions): List<PageRow> {
+    return rows.map { row ->
+        PageRow(row.key) {
+            when (row) {
+                is PosterRow -> PosterRowContent(row, actions)
+                is ActorsRow -> ActorRow("Stars of What You've Watched", actors, actions.onOpenPerson)
             }
         }
-    }
-}
-
-private fun reportRowFocus(hasFocus: Boolean, index: Int, onRowFocused: (Int) -> Unit) {
-    if (hasFocus) {
-        onRowFocused(index)
     }
 }
 
@@ -78,11 +67,12 @@ private fun TitleCardFor(style: RailStyle, item: RailItem, position: Int, action
     }
 }
 
+/** A row of round actor portraits. */
 @Composable
-private fun ActorRow(title: String, actors: List<ActorItem>, actions: RowActions) {
+fun ActorRow(title: String, actors: List<ActorItem>, onOpenPerson: (String) -> Unit) {
     CardRow(title) {
         items(actors, key = { actor -> actor.personId }) { actor ->
-            ActorCard(actor, onClick = { actions.onOpenPerson(actor.personId) })
+            ActorCard(actor, onClick = { onOpenPerson(actor.personId) })
         }
     }
 }
