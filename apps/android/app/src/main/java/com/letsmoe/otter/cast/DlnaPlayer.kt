@@ -958,8 +958,9 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     private suspend fun openSessionOnTelevision(created: TelevisionSession) {
         val origin = lanStreamOrigin(context) ?: throw DlnaException("The phone is not on Wi-Fi.")
         val path = "/api/stream/tv?session=${created.id}"
-        val media = televisionMediaFor(origin, path, "Otter", OVERLAY_MIME_TYPE, seekableBytes = false, captionHints = false)
+        // First: a TV in standby is switched on (Wake-on-LAN) before it is asked for its formats and handed the URL.
         stopBeforeLoading()
+        val media = televisionMediaFor(origin, path, "Otter", OVERLAY_MIME_TYPE, seekableBytes = false, captionHints = false)
         client.load(media)
         client.play()
         created.setPlaying(true)
