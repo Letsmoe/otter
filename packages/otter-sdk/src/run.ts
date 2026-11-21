@@ -3,6 +3,8 @@ import type { PluginDefinition } from "./definition.ts";
 import { OtterError } from "./errors.ts";
 import { handlersOf, isPluginDefinition, type PluginHandlers } from "./runtime.ts";
 import type {
+  FillerArgs,
+  FillerResult,
   LoginArgs,
   LoginResult,
   PluginMeta,
@@ -51,6 +53,11 @@ async function dispatch(handlers: PluginHandlers, input: Invocation): Promise<ne
   if (input.capability === "subtitles") {
     if (!handlers.subtitles) fail("subtitles not implemented");
     respond<SubtitlesResult>(await handlers.subtitles(input.args as unknown as SubtitlesArgs));
+  }
+
+  if (input.capability === "filler") {
+    if (!handlers.filler) fail("filler not implemented");
+    respond<FillerResult>(await handlers.filler(input.args as unknown as FillerArgs));
   }
 
   if (input.capability === "resolve") {

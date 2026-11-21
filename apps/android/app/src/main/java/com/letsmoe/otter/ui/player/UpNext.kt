@@ -23,6 +23,8 @@ data class UpNextCard(
     val pausedRemainingMillis: Long? = null,
     val heading: String = NEXT_EPISODE_HEADING,
     val countsDown: Boolean = true,
+    /** How many filler episodes were jumped over to reach this one. */
+    val skippedFiller: Int = 0,
 )
 
 /** Milliseconds until the next episode plays, between 0 and the whole countdown. */
@@ -58,8 +60,9 @@ class UpNext(private val scope: CoroutineScope, private val playNext: () -> Unit
      * Called with every position update; going back before the credits withdraws the card. [current]
      * is the episode playing: with it, the card names a next season's first episode, and without a
      * [next] one it says the season finale has nothing after it yet. Pass none to offer nothing then.
+     * [skippedFiller] is how many filler episodes were jumped over to reach [next].
      */
-    fun follow(inCredits: Boolean, playing: Boolean, next: PlayerEpisode?, current: PlayerEpisode? = null) {
+    fun follow(inCredits: Boolean, playing: Boolean, next: PlayerEpisode?, current: PlayerEpisode? = null, skippedFiller: Int = 0) {
         if (!inCredits) {
             reset()
             return
@@ -74,7 +77,8 @@ class UpNext(private val scope: CoroutineScope, private val playNext: () -> Unit
         }
         val note = upNextNote(current, next) ?: return
         if (note.countsDown) {
-            startCountdown(UpNextCard(note.label, next?.stillUrl, 0, heading = note.heading), UP_NEXT_MILLISECONDS)
+            val card = UpNextCard(note.label, next?.stillUrl, 0, heading = note.heading, skippedFiller = skippedFiller)
+            startCountdown(card, UP_NEXT_MILLISECONDS)
             return
         }
         showFinale(note)
@@ -132,6 +136,30 @@ class UpNext(private val scope: CoroutineScope, private val playNext: () -> Unit
         countdown = null
         mutableCard.value = null
     }
+}
+
+/** "Skipping 3 filler episodes", under the card's episode when filler was jumped over. */
+fun skippedFillerText(skippedFiller: Int): String? {
+    if (skippedFiller <= 0) {
+        return null
+    }
+    if (skippedFiller == 1) {
+        return "Skipping 1 filler episode"
+    }
+    return "Skipping $skippedFiller filler episodes"
+}
+
+/** The label of the card drawn into a TV's picture: the episode, and "· skips 3 filler" when filler was jumped over. */
+fun upNextLabel(episode: PlayerEpisode, skippedFiller: Int): String {
+    return labelWithSkippedFiller(episodeLabel(episode), skippedFiller)
+}
+
+/** [label] with "· skips 3 filler" when filler episodes were jumped over. */
+fun labelWithSkippedFiller(label: String, skippedFiller: Int): String {
+    if (skippedFiller <= 0) {
+        return label
+    }
+    return "$label · skips $skippedFiller filler"
 }
 
 /** "S1:E2 · Name", as the next episode's card shows it. */

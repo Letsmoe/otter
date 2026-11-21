@@ -1,6 +1,8 @@
 package graphql
 
 import (
+	"strings"
+
 	"github.com/Letsmoe/otter/internal/api/graphql/model"
 	"github.com/Letsmoe/otter/internal/library"
 	"github.com/Letsmoe/otter/internal/plugins"
@@ -96,7 +98,17 @@ func episodeModel(episode library.Episode) *model.Episode {
 		Runtime:       optional(episode.Runtime),
 		StillPath:     optional(episode.StillPath),
 		VoteAverage:   episode.VoteAverage,
+		Filler:        fillerKindModel(episode.Filler),
 	}
+}
+
+// fillerKindModel is nil for an episode no filler list covers.
+func fillerKindModel(kind string) *model.FillerKind {
+	if kind == "" {
+		return nil
+	}
+	value := model.FillerKind(strings.ToUpper(kind))
+	return &value
 }
 
 func personModel(person library.Person) *model.Person {

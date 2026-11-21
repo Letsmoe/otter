@@ -101,6 +101,7 @@ private suspend fun loadSeriesEpisodes(seriesId: String, profileId: String): Lis
                 overview = episode.overview,
                 stillUrl = tmdbImageUrl(episode.stillPath, STILL_SIZE),
                 progress = watchedFraction(episode.progress?.playerProgressFields),
+                filler = episode.filler,
             )
         }
     }

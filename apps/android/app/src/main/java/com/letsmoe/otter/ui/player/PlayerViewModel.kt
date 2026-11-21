@@ -30,6 +30,9 @@ import com.letsmoe.otter.cast.overlay.TitleText
 import com.letsmoe.otter.cast.overlay.UpNextPreview
 import com.letsmoe.otter.downloads.DownloadItem
 import com.letsmoe.otter.downloads.DownloadsRepository
+import com.letsmoe.otter.filler.FillerSkipSettings
+import com.letsmoe.otter.filler.FollowingEpisode
+import com.letsmoe.otter.filler.following
 import com.letsmoe.otter.graphql.fragment.ProfileFields
 import com.letsmoe.otter.profiles.PreferenceChange
 import com.letsmoe.otter.profiles.ProfilePreferences
@@ -118,6 +121,8 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private val finishWatch = FinishWatch()
     private val sleepTimer = SleepTimer.shared
     private val ratingReminder = RatingReminder()
+    // What follows the playing episode, with the filler jumped over when the series skips it.
+    private var upcoming: FollowingEpisode<PlayerEpisode>? = null
     private val upNextOffer = UpNext(viewModelScope, ::playNext)
     private val stillWatching = StillWatching(viewModelScope, onTimeout = { setStopAfterEpisode(true) })
     private val captionExtras = CaptionExtras(viewModelScope, ::reloadPhoneCaptions)
@@ -315,6 +320,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             startWithSeriesMemory(profileId, loaded.seriesId)
             learnSeries(loaded)
             viewModelScope.launch { openRatingReminder(mediaId, profileId, loaded) }
+            upcoming = upcomingAfter(loaded, mediaId, profileId)
             // Reaches the TV's picture with its next load, e.g. the next seek.
             televisionPlayer?.hints = televisionHints()
             mutableState.update { current ->
@@ -345,6 +351,17 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     // Titles lined up for tonight change what comes next.
     private fun refreshHasNextEpisode() {
         mutableState.update { current -> current.copy(hasNextEpisode = nextEpisode() != null) }
+    }
+
+    // The backend's next episode, or when the series skips filler the next one that isn't.
+    private fun upcomingAfter(loaded: PlayerMedia, mediaId: String, profileId: String): FollowingEpisode<PlayerEpisode>? {
+        val seriesId = loaded.seriesId
+        if (seriesId != null && FillerSkipSettings.skips(profileId, seriesId)) {
+            return loaded.episodes.following(mediaId, skipFiller = true)
+        }
+        val nextId = loaded.nextEpisodeId ?: return null
+        val next = loaded.episodes.firstOrNull { episode -> episode.id == nextId } ?: return null
+        return FollowingEpisode(next, 0)
     }
 
     private fun startStreams(mediaId: String, initial: Boolean) {
@@ -1283,7 +1300,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         mutablePostCreditsNotice.value = showsPostCreditsNotice(media?.hasPostCreditsScene == true, positionSeconds, durationSeconds)
         mutableRatingReminder.value = ratingReminder.shows(positionSeconds, durationSeconds, mutableState.value.hasEnded)
         val inCredits = skipTracker.isInCredits(positionSeconds)
-        upNextOffer.follow(inCredits, activePlayer.isPlaying, offeredNextEpisode(), episodeForUpNextCard())
+        upNextOffer.follow(inCredits, activePlayer.isPlaying, offeredNextEpisode(), episodeForUpNextCard(), skippedFillerCount())
         skipHabits.follow(skipTracker.jumps, positionSeconds, activePlayer.isPlaying, inCredits)
         if (activePlayer.isPlaying) {
             preferredHoster.follow(positionSeconds, durationSeconds)
@@ -1347,9 +1364,16 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         if (queued != null) {
             return PlayerEpisode(queued.mediaId, 0, 0, null, null, null, null, cardLabel = queued.label)
         }
-        val loaded = media ?: return null
-        val nextId = loaded.nextEpisodeId ?: return null
-        return loaded.episodes.firstOrNull { episode -> episode.id == nextId }
+        return upcoming?.episode
+    }
+
+    // Filler episodes jumped over to reach the next one; none when tonight's queue comes first.
+    private fun skippedFillerCount(): Int {
+        if (TonightQueue.shared.nextAfter(currentMediaId) != null) {
+            return 0
+        }
+        val following = upcoming ?: return 0
+        return following.skippedFiller
     }
 
     private fun playingEpisode(): PlayerEpisode? {
@@ -1387,7 +1411,8 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         if (!note.countsDown) {
             return UpNextPreview(note.label, null, creditsStart, SEASON_FINALE_MILLISECONDS / 1000.0, note.heading, countsDown = false)
         }
-        return UpNextPreview(note.label, next?.stillUrl, creditsStart, UP_NEXT_MILLISECONDS / 1000.0, note.heading)
+        val label = labelWithSkippedFiller(note.label, skippedFillerCount())
+        return UpNextPreview(label, next?.stillUrl, creditsStart, UP_NEXT_MILLISECONDS / 1000.0, note.heading)
     }
 
     /** The skip button: jumps to the end of the intro or recap playing now. */

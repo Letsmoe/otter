@@ -1,5 +1,7 @@
 package com.letsmoe.otter.ui.player
 
+import com.letsmoe.otter.filler.SeriesEpisode
+import com.letsmoe.otter.graphql.type.FillerKind
 import com.letsmoe.otter.settings.PlaybackSettings
 import com.letsmoe.otter.together.TogetherPeer
 import com.letsmoe.otter.ui.components.LinkReportInfo
@@ -23,9 +25,9 @@ data class PlayerSource(
 )
 
 data class PlayerEpisode(
-    val id: String,
-    val seasonNumber: Int,
-    val episodeNumber: Int,
+    override val id: String,
+    override val seasonNumber: Int,
+    override val episodeNumber: Int,
     val name: String?,
     val overview: String?,
     val stillUrl: String?,
@@ -33,7 +35,9 @@ data class PlayerEpisode(
     val progress: Float?,
     /** Names the up-next card instead of season and episode: a title from tonight's queue. */
     val cardLabel: String? = null,
-)
+    /** What a filler list says about the episode (anime); null when none covers it. */
+    override val filler: FillerKind? = null,
+) : SeriesEpisode
 
 data class TrackOption(val index: Int, val label: String)
 

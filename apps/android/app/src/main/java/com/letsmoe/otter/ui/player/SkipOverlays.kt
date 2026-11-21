@@ -118,6 +118,9 @@ private fun UpNextCardContent(card: UpNextCard, onCancel: () -> Unit, onPlayNow:
             modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.08f)),
         )
         Text(card.episodeLabel, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        skippedFillerText(card.skippedFiller)?.let { note ->
+            Text(note, fontSize = 12.sp, color = Color.White.copy(alpha = 0.6f))
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             CancelButton(onCancel, Modifier.weight(1f))
             PlayNowButton(1f - remainingMilliseconds / UP_NEXT_MILLISECONDS.toFloat(), onPlayNow, Modifier.weight(1f))

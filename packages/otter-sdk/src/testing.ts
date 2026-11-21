@@ -7,6 +7,8 @@ import type { Browser } from "./browser.ts";
 import type { PluginContext, PluginDefinition } from "./definition.ts";
 import type {
   EpisodeRef,
+  FillerEpisodeInput,
+  FillerListParams,
   List,
   MovieRef,
   Source,
@@ -33,6 +35,7 @@ export interface TestPlugin {
   streams: { list(params: StreamListParams): Promise<List<Stream>> };
   sources: { retrieve(params: SourceRetrieveParams): Promise<Source> };
   subtitles: { list(params: SubtitleListParams): Promise<List<Subtitle>> };
+  filler: { list(params: FillerListParams): Promise<List<FillerEpisodeInput>> };
 }
 
 /** Calls the plugin's handlers the way the backend would, and returns the completed objects. */
@@ -43,6 +46,7 @@ export function testPlugin(definition: PluginDefinition, options: TestPluginOpti
     streams: { list: (params) => runtime.listStreams(params) },
     sources: { retrieve: (params) => runtime.retrieveSource(params) },
     subtitles: { list: (params) => runtime.listSubtitles(params) },
+    filler: { list: (params) => runtime.listFiller(params) },
   };
 }
 

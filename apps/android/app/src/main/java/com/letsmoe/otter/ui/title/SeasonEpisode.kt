@@ -1,12 +1,16 @@
 package com.letsmoe.otter.ui.title
 
+import com.letsmoe.otter.filler.SeriesEpisode
+import com.letsmoe.otter.filler.firstToWatch
+import com.letsmoe.otter.filler.following
 import com.letsmoe.otter.graphql.SeriesEpisodesQuery
+import com.letsmoe.otter.graphql.type.FillerKind
 import com.letsmoe.otter.ui.media.progressFraction
 
 data class SeasonEpisode(
-    val id: String,
-    val seasonNumber: Int,
-    val episodeNumber: Int,
+    override val id: String,
+    override val seasonNumber: Int,
+    override val episodeNumber: Int,
     val name: String?,
     val overview: String?,
     val runtime: Int?,
@@ -17,7 +21,9 @@ data class SeasonEpisode(
     val nextEpisodeId: String?,
     /** TMDB's vote average (0..10); 0 when nobody rated it yet. */
     val voteAverage: Double = 0.0,
-) {
+    /** What a filler list says about the episode (anime); null when none covers it. */
+    override val filler: FillerKind? = null,
+) : SeriesEpisode {
     val displayName: String
         get() {
             if (name.isNullOrEmpty()) {
@@ -54,18 +60,19 @@ fun SeriesEpisodesQuery.Title.toEpisodes(): List<SeasonEpisode> =
                 progress = progress,
                 nextEpisodeId = episode.next?.episodeRef?.id,
                 voteAverage = episode.voteAverage,
+                filler = episode.filler,
             )
         }
     }
 
 /**
  * The furthest started episode (in series order), or the one after it when finished,
- * else the first regular episode.
+ * else the first regular episode. With [skipFiller] filler episodes are passed over.
  */
-fun upNextEpisode(episodes: List<SeasonEpisode>): UpNext? {
+fun upNextEpisode(episodes: List<SeasonEpisode>, skipFiller: Boolean = false): UpNext? {
     val furthest = episodes.lastOrNull { episode -> episode.progress != null && episode.seasonNumber > 0 }
     if (furthest == null) {
-        var first = episodes.firstOrNull { episode -> episode.seasonNumber > 0 }
+        var first = episodes.firstToWatch(skipFiller)
         if (first == null) {
             first = episodes.firstOrNull()
         }
@@ -81,9 +88,17 @@ fun upNextEpisode(episodes: List<SeasonEpisode>): UpNext? {
     if (furthestProgress < FINISHED_FRACTION) {
         return UpNext(furthest, resume = true)
     }
-    val following = episodes.firstOrNull { episode -> episode.id == furthest.nextEpisodeId }
+    val following = followingOf(episodes, furthest, skipFiller)
     if (following != null) {
         return UpNext(following, resume = false)
     }
     return UpNext(furthest, resume = false)
+}
+
+// The episode after a finished one: the backend's next, or with [skipFiller] the next that isn't filler.
+private fun followingOf(episodes: List<SeasonEpisode>, finished: SeasonEpisode, skipFiller: Boolean): SeasonEpisode? {
+    if (skipFiller) {
+        return episodes.following(finished.id, skipFiller = true)?.episode
+    }
+    return episodes.firstOrNull { episode -> episode.id == finished.nextEpisodeId }
 }

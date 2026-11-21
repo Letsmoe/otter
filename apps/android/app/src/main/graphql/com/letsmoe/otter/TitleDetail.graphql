@@ -80,6 +80,7 @@ query SeriesEpisodes($id: ID!, $profileId: ID!) {
         runtime
         stillPath
         voteAverage
+        filler
         next {
           ...EpisodeRef
         }

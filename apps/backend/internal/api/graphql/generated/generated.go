@@ -91,6 +91,7 @@ type ComplexityRoot struct {
 	Episode struct {
 		AirDate       func(childComplexity int) int
 		EpisodeNumber func(childComplexity int) int
+		Filler        func(childComplexity int) int
 		ID            func(childComplexity int) int
 		Name          func(childComplexity int) int
 		Next          func(childComplexity int) int
@@ -794,6 +795,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Episode.EpisodeNumber(childComplexity), true
+	case "Episode.filler":
+		if e.ComplexityRoot.Episode.Filler == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Episode.Filler(childComplexity), true
 	case "Episode.id":
 		if e.ComplexityRoot.Episode.ID == nil {
 			break
@@ -3055,6 +3062,15 @@ type Episode {
   next: Episode
   "Parts viewers skip (intro, recap, credits, preview), from TheIntroDB; empty when nobody timed them."
   skipSegments: [SkipSegment!]!
+  "Anime only: whether a filler list calls the episode filler, mixed (canon and filler) or canon; null when no list covers it."
+  filler: FillerKind
+}
+
+"What a filler list says about an episode."
+enum FillerKind {
+  FILLER
+  MIXED
+  CANON
 }
 
 "A skippable part of an episode."
@@ -3810,6 +3826,8 @@ func (ec *executionContext) childFields_Episode(ctx context.Context, field graph
 		return ec.fieldContext_Episode_next(ctx, field)
 	case "skipSegments":
 		return ec.fieldContext_Episode_skipSegments(ctx, field)
+	case "filler":
+		return ec.fieldContext_Episode_filler(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Episode", field.Name)
 }
@@ -7225,6 +7243,29 @@ func (ec *executionContext) fieldContext_Episode_skipSegments(_ context.Context,
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _Episode_filler(ctx context.Context, field graphql.CollectedField, obj *model.Episode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Episode_filler(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Filler, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.FillerKind) graphql.Marshaler {
+			return ec.marshalOFillerKind2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐFillerKind(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Episode_filler(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Episode", field, false, false, errors.New("field of type FillerKind does not have child fields"))
 }
 
 func (ec *executionContext) _HistoryEntry_title(ctx context.Context, field graphql.CollectedField, obj *model.HistoryEntry) (ret graphql.Marshaler) {
@@ -17088,6 +17129,8 @@ func (ec *executionContext) _Episode(ctx context.Context, sel ast.SelectionSet, 
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "filler":
+			out.Values[i] = ec._Episode_filler(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -21983,6 +22026,22 @@ func (ec *executionContext) marshalOEpisode2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋ
 		return graphql.Null
 	}
 	return ec._Episode(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOFillerKind2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐFillerKind(ctx context.Context, v any) (*model.FillerKind, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.FillerKind)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOFillerKind2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐFillerKind(ctx context.Context, sel ast.SelectionSet, v *model.FillerKind) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v any) (*float64, error) {

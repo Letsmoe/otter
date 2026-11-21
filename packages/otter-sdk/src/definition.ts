@@ -4,6 +4,8 @@ import type { Extractor } from "./extract.ts";
 import type { HttpClient } from "./http-client.ts";
 import type { Matcher } from "./match.ts";
 import type {
+  FillerEpisodeInput,
+  FillerListParams,
   List,
   MediaKind,
   SourceInput,
@@ -54,6 +56,11 @@ export interface SubtitlesCapability {
   list(params: SubtitleListParams, ctx: PluginContext): Promise<List<SubtitleInput>>;
 }
 
+export interface FillerCapability {
+  /** Tells which episodes of a series are filler. Not knowing the series is an empty list, not an error. */
+  list(params: FillerListParams, ctx: PluginContext): Promise<List<FillerEpisodeInput>>;
+}
+
 export interface SourcesCapability {
   /** Hostnames of the links this plugin can turn into media URLs. */
   domains: string[];
@@ -94,6 +101,7 @@ export interface PluginDefinition {
   streams?: StreamsCapability;
   sources?: SourcesCapability;
   subtitles?: SubtitlesCapability;
+  filler?: FillerCapability;
   /** The site only works with the user's login. */
   account?: AccountCapability;
 }

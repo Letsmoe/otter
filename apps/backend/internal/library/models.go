@@ -93,6 +93,8 @@ type Episode struct {
 	StillPath        string  `json:"still_path"`
 	VoteAverage      float64 `json:"vote_average"`
 	StreamsFetchedAt string  `json:"streams_fetched_at"`
+	// Filler is "filler", "mixed" or "canon" when a filler list covers the episode, else empty.
+	Filler string `json:"filler"`
 }
 
 type Person struct {

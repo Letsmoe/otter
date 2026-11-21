@@ -75,6 +75,7 @@ fun SeriesPage(
         playExtras = {
             UpNextBar(upNext)
             TonightRow(upNext?.let { next -> tonightEntryOf(detail, next.episode) }, onPlay)
+            SkipFillerRow(episodes.skipFiller, episodes.fillerCount, seriesViewModel::setSkipFiller)
         },
         rewatch = seriesRewatchBar(detail, episodes, seriesViewModel, actions, onPlay),
         belowDescription = { SeasonHeatmap(episodes.episodes, onPlay = { episode -> onPlay(PlayRequest(episode.id)) }) },

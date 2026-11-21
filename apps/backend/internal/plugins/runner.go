@@ -300,6 +300,19 @@ func (r *Runner) Subtitles(ctx context.Context, p *Plugin, args SubtitlesArgs) (
 	return &result, json.Unmarshal(raw, &result)
 }
 
+// Filler asks a plugin which episodes of a series are filler.
+func (r *Runner) Filler(ctx context.Context, p *Plugin, args FillerArgs) (*FillerResult, error) {
+	if !p.Meta.Has(CapabilityFiller) {
+		return nil, fmt.Errorf("plugin %q does not support filler", p.Meta.Name)
+	}
+	raw, err := r.invokeWithAccount(ctx, p, CapabilityFiller, args)
+	if err != nil {
+		return nil, err
+	}
+	var result FillerResult
+	return &result, json.Unmarshal(raw, &result)
+}
+
 // Resolve turns a hoster link into a playable media URL.
 func (r *Runner) Resolve(ctx context.Context, p *Plugin, url string) (*ResolveResult, error) {
 	if !p.Meta.Has(CapabilityResolve) {
