@@ -14,10 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.Text
 import com.letsmoe.otter.tv.theme.TvColors
+import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.vpn.VpnStatus
 import com.letsmoe.otter.vpn.VpnStatusStore
 
@@ -31,12 +31,12 @@ fun VpnIndicator(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .background(Color.Black.copy(alpha = 0.45f), CircleShape)
-            .padding(horizontal = 14.dp, vertical = 7.dp),
+            .padding(horizontal = 10.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Box(Modifier.size(9.dp).background(look.color, CircleShape))
-        Text(look.label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.85f))
+        Box(Modifier.size(6.dp).background(look.color, CircleShape))
+        Text(look.label, fontSize = TvType.caption, fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.85f))
     }
 }
 

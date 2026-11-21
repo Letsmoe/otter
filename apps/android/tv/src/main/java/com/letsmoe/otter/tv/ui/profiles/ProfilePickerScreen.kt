@@ -36,7 +36,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Icon
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
@@ -51,13 +50,15 @@ import com.letsmoe.otter.profiles.Spotlight
 import com.letsmoe.otter.profiles.avatarImage
 import com.letsmoe.otter.tv.theme.TvColors
 import com.letsmoe.otter.tv.theme.TvSpacing
+import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.tv.ui.components.FailedNotice
 import com.letsmoe.otter.tv.ui.components.FocusableSurface
 import com.letsmoe.otter.tv.ui.components.PillButton
 import com.letsmoe.otter.ui.LoadState
 
-private val TILE_SIZE = 148.dp
-private val TILE_SHAPE = RoundedCornerShape(22.dp)
+private val TILE_SIZE = 96.dp
+private val TILE_SHAPE = RoundedCornerShape(14.dp)
+private val TILE_RING = 3.dp
 
 /** "Who's watching?": a row of profiles, then a button to manage them. */
 @Composable
@@ -90,7 +91,7 @@ private fun PickerContent(profiles: List<ProfileFields>, gate: ProfileGateViewMo
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(heading, fontSize = 40.sp, fontWeight = FontWeight.Bold, color = TvColors.baseContent)
+        Text(heading, fontSize = TvType.screenTitle, fontWeight = FontWeight.Bold, color = TvColors.baseContent)
         ProfileRow(profiles, gate, firstTile)
         ManageButton(gate)
     }
@@ -99,8 +100,8 @@ private fun PickerContent(profiles: List<ProfileFields>, gate: ProfileGateViewMo
 @Composable
 private fun ProfileRow(profiles: List<ProfileFields>, gate: ProfileGateViewModel, firstTile: FocusRequester) {
     LazyRow(
-        modifier = Modifier.padding(top = 48.dp, bottom = 40.dp),
-        horizontalArrangement = Arrangement.spacedBy(36.dp),
+        modifier = Modifier.padding(top = 28.dp, bottom = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(22.dp),
     ) {
         items(profiles, key = { profile -> profile.id }) { profile ->
             var tileModifier: Modifier = Modifier
@@ -127,7 +128,7 @@ private fun ProfileTile(profile: ProfileFields, managing: Boolean, onClick: () -
             onClick = onClick,
             shape = TILE_SHAPE,
             focusedScale = 1.1f,
-            ringWidth = 4.dp,
+            ringWidth = TILE_RING,
             modifier = modifier.size(TILE_SIZE).onFocusChanged { state -> focused = state.isFocused },
         ) {
             Box {
@@ -148,7 +149,7 @@ private fun ProfileTile(profile: ProfileFields, managing: Boolean, onClick: () -
 private fun TileBadge(profile: ProfileFields, managing: Boolean, modifier: Modifier) {
     if (managing) {
         Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f)))
-        Icon(PhosphorIcons.Fill.PencilSimple, contentDescription = "Edit", modifier = modifier.size(40.dp))
+        Icon(PhosphorIcons.Fill.PencilSimple, contentDescription = "Edit", modifier = modifier.size(26.dp))
         return
     }
     if (profile.hasPin) {
@@ -157,10 +158,10 @@ private fun TileBadge(profile: ProfileFields, managing: Boolean, modifier: Modif
                 PhosphorIcons.Fill.LockSimple,
                 contentDescription = "Locked",
                 modifier = Modifier
-                    .padding(10.dp)
-                    .background(Color.Black.copy(alpha = 0.55f), CircleShape)
                     .padding(6.dp)
-                    .size(16.dp),
+                    .background(Color.Black.copy(alpha = 0.55f), CircleShape)
+                    .padding(4.dp)
+                    .size(11.dp),
             )
         }
     }
@@ -174,7 +175,7 @@ private fun AddTile(onClick: () -> Unit, modifier: Modifier = Modifier) {
             onClick = onClick,
             shape = TILE_SHAPE,
             focusedScale = 1.1f,
-            ringWidth = 4.dp,
+            ringWidth = TILE_RING,
             modifier = modifier.size(TILE_SIZE).onFocusChanged { state -> focused = state.isFocused },
         ) {
             TileIcon(PhosphorIcons.Bold.Plus)
@@ -185,7 +186,7 @@ private fun AddTile(onClick: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 private fun TileIcon(icon: ImageVector) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(48.dp))
+        Icon(icon, contentDescription = null, modifier = Modifier.size(30.dp))
     }
 }
 
@@ -198,14 +199,14 @@ private fun TileColumn(label: String, focused: Boolean, tile: @Composable () -> 
     }
     val labelAlpha by animateFloatAsState(targetAlpha, label = "labelAlpha")
     Column(
-        modifier = Modifier.width(TILE_SIZE + 24.dp),
+        modifier = Modifier.width(TILE_SIZE + 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         tile()
         Text(
             label,
-            fontSize = 20.sp,
+            fontSize = TvType.body,
             fontWeight = FontWeight.Medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -233,18 +234,18 @@ private fun SpotlightCaption(spotlight: Spotlight?, modifier: Modifier) {
     Column(
         modifier = modifier
             .padding(horizontal = TvSpacing.screenHorizontal, vertical = TvSpacing.screenVertical)
-            .width(360.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+            .width(260.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text("Trending now", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TvColors.secondaryContent)
+        Text("Trending now", fontSize = TvType.caption, fontWeight = FontWeight.SemiBold, color = TvColors.secondaryContent)
         if (spotlight.logoUrl != null) {
-            AsyncImage(spotlight.logoUrl, contentDescription = spotlight.title, modifier = Modifier.heightIn(max = 56.dp))
+            AsyncImage(spotlight.logoUrl, contentDescription = spotlight.title, modifier = Modifier.heightIn(max = 36.dp))
         } else {
-            Text(spotlight.title, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text(spotlight.title, fontSize = TvType.sectionTitle, fontWeight = FontWeight.Bold)
         }
         val tagline = spotlight.tagline
         if (tagline != null) {
-            Text(tagline, fontSize = 14.sp, color = TvColors.secondaryContent, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(tagline, fontSize = TvType.detail, color = TvColors.secondaryContent, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }
 }

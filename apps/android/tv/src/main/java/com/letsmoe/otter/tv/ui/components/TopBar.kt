@@ -20,14 +20,14 @@ fun TopBar(modifier: Modifier = Modifier, center: @Composable () -> Unit = {}, t
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = TvSpacing.screenHorizontal, vertical = TvSpacing.screenVertical),
+            .padding(horizontal = TvSpacing.screenHorizontal, vertical = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(24.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Image(
             painter = painterResource(R.drawable.otter_wordmark),
             contentDescription = "Otter",
-            modifier = Modifier.height(26.dp),
+            modifier = Modifier.height(16.dp),
         )
         Row(Modifier.weight(1f), horizontalArrangement = Arrangement.Center) {
             center()

@@ -5,11 +5,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Tab
 import androidx.tv.material3.TabRow
 import androidx.tv.material3.Text
 import com.letsmoe.otter.graphql.type.MediaType
+import com.letsmoe.otter.tv.theme.TvType
 
 enum class HomeTab(val label: String, val mediaType: MediaType) {
     MOVIES("Movies", MediaType.MOVIE),
@@ -25,9 +25,9 @@ fun HomeTabs(selected: HomeTab, onSelect: (HomeTab) -> Unit) {
             Tab(selected = tab == selected, onFocus = { onSelect(tab) }) {
                 Text(
                     tab.label,
-                    fontSize = 17.sp,
+                    fontSize = TvType.body,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp),
                 )
             }
         }

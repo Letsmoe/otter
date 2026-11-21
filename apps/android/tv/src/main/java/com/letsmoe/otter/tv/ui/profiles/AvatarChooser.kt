@@ -21,7 +21,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import com.letsmoe.otter.profiles.AVATAR_SETS
@@ -29,10 +28,11 @@ import com.letsmoe.otter.profiles.AvatarSet
 import com.letsmoe.otter.profiles.PRESET_AVATARS
 import com.letsmoe.otter.profiles.avatarImage
 import com.letsmoe.otter.tv.theme.TvColors
+import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.tv.ui.components.FocusableSurface
 
-private val AVATAR_SIZE = 112.dp
-private val AVATAR_SHAPE = RoundedCornerShape(18.dp)
+private val AVATAR_SIZE = 72.dp
+private val AVATAR_SHAPE = RoundedCornerShape(12.dp)
 
 /** Every preset icon, one row per set; focus starts on the profile's current icon. */
 @Composable
@@ -50,13 +50,13 @@ fun AvatarChooser(selected: String, onPick: (String) -> Unit) {
     LazyColumn(
         state = listState,
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 96.dp, vertical = 56.dp),
-        verticalArrangement = Arrangement.spacedBy(32.dp),
+        contentPadding = PaddingValues(horizontal = 64.dp, vertical = 56.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Choose an icon", fontSize = 36.sp, fontWeight = FontWeight.Bold)
-                Text("Back keeps the current one.", fontSize = 16.sp, color = TvColors.secondaryContent)
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Choose an icon", fontSize = TvType.screenTitle, fontWeight = FontWeight.Bold)
+                Text("Back keeps the current one.", fontSize = TvType.detail, color = TvColors.secondaryContent)
             }
         }
         items(AVATAR_SETS, key = { set -> set.key }) { set ->
@@ -67,10 +67,10 @@ fun AvatarChooser(selected: String, onPick: (String) -> Unit) {
 
 @Composable
 private fun AvatarSetRow(set: AvatarSet, focusTarget: String, focusRequester: FocusRequester, onPick: (String) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Text(set.label, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(set.label, fontSize = TvType.rowTitle, fontWeight = FontWeight.SemiBold)
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
             contentPadding = PaddingValues(vertical = 8.dp),
         ) {
             items(set.avatars, key = { avatarId -> avatarId }) { avatarId ->

@@ -24,7 +24,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
@@ -34,12 +33,13 @@ import com.adamglin.phosphoricons.regular.Trash
 import com.letsmoe.otter.graphql.fragment.ProfileFields
 import com.letsmoe.otter.profiles.avatarImage
 import com.letsmoe.otter.tv.theme.TvColors
+import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.tv.ui.components.FocusableSurface
 import com.letsmoe.otter.tv.ui.components.PillButton
 import com.letsmoe.otter.ui.profiles.EditorStep
 import com.letsmoe.otter.ui.profiles.ProfileEditorViewModel
 
-private val AVATAR_SHAPE = RoundedCornerShape(28.dp)
+private val AVATAR_SHAPE = RoundedCornerShape(18.dp)
 
 /** Add or edit a profile; [profile] is null for a new one. */
 @Composable
@@ -77,19 +77,19 @@ private fun EditorForm(editor: ProfileEditorViewModel, onDone: () -> Unit) {
         heading = "Add profile"
     }
     Row(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 120.dp, vertical = 64.dp),
-        horizontalArrangement = Arrangement.spacedBy(72.dp),
+        modifier = Modifier.fillMaxSize().padding(start = 96.dp, end = 96.dp, top = 64.dp),
+        horizontalArrangement = Arrangement.spacedBy(48.dp),
     ) {
         AvatarColumn(editor)
         Column(
-            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 40.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(heading, fontSize = 36.sp, fontWeight = FontWeight.Bold)
+            Text(heading, fontSize = TvType.screenTitle, fontWeight = FontWeight.Bold)
             NameField(editor.name, onChange = { name -> editor.name = name })
             ProfileOptions(editor)
             if (editor.error.isNotEmpty()) {
-                Text(editor.error, fontSize = 16.sp, color = TvColors.error)
+                Text(editor.error, fontSize = TvType.detail, color = TvColors.error)
             }
             EditorActions(editor, onDone)
         }
@@ -102,8 +102,8 @@ private fun AvatarColumn(editor: ProfileEditorViewModel) {
         FocusableSurface(
             onClick = { editor.step = EditorStep.AVATAR },
             shape = AVATAR_SHAPE,
-            ringWidth = 4.dp,
-            modifier = Modifier.size(220.dp),
+            ringWidth = 3.dp,
+            modifier = Modifier.size(132.dp),
         ) {
             AsyncImage(
                 model = avatarImage(editor.avatarId, editor.name),
@@ -112,7 +112,7 @@ private fun AvatarColumn(editor: ProfileEditorViewModel) {
                 modifier = Modifier.fillMaxSize().clip(AVATAR_SHAPE),
             )
         }
-        Text("Change icon", fontSize = 16.sp, color = TvColors.secondaryContent)
+        Text("Change icon", fontSize = TvType.detail, color = TvColors.secondaryContent)
     }
 }
 
@@ -126,7 +126,7 @@ private fun EditorActions(editor: ProfileEditorViewModel, onDone: () -> Unit) {
     if (editor.saving) {
         saveLabel = "Saving…"
     }
-    Row(Modifier.padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         PillButton(saveLabel, onClick = { editor.save(onDone) }, primary = true)
         PillButton("Cancel", onClick = onDone)
         if (!editor.isNew) {
@@ -139,13 +139,13 @@ private fun EditorActions(editor: ProfileEditorViewModel, onDone: () -> Unit) {
 private fun DeleteConfirmation(editor: ProfileEditorViewModel, onDone: () -> Unit) {
     val cancelButton = remember { FocusRequester() }
     LaunchedEffect(Unit) { cancelButton.requestFocus() }
-    Column(Modifier.padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(Modifier.padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
             "Delete ${editor.name}? Their history, ratings and list go with it.",
-            fontSize = 18.sp,
-            modifier = Modifier.width(520.dp),
+            fontSize = TvType.body,
+            modifier = Modifier.width(400.dp),
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             PillButton("Keep profile", onClick = { editor.confirmingDelete = false }, modifier = Modifier.focusRequester(cancelButton))
             PillButton("Delete", onClick = { editor.delete(onDone) }, icon = PhosphorIcons.Regular.Trash)
         }
@@ -154,7 +154,7 @@ private fun DeleteConfirmation(editor: ProfileEditorViewModel, onDone: () -> Uni
 
 @Composable
 private fun ProfileOptions(editor: ProfileEditorViewModel) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ToggleRow(
             title = "Kids profile",
             description = "Marks this as a child's profile. Titles aren't filtered yet.",
@@ -177,8 +177,8 @@ private fun ProfileOptions(editor: ProfileEditorViewModel) {
 @Composable
 private fun ActionRow(title: String, onClick: () -> Unit) {
     FocusableSurface(onClick = onClick, focusedScale = 1.02f, modifier = Modifier.fillMaxWidth()) {
-        Box(Modifier.padding(horizontal = 24.dp, vertical = 18.dp)) {
-            Text(title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+        Box(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Text(title, fontSize = TvType.body, fontWeight = FontWeight.SemiBold)
         }
     }
 }

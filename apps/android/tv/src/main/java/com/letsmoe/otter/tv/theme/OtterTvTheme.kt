@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.darkColorScheme
@@ -24,10 +25,24 @@ object TvColors {
     val subtleFill = Color.White.copy(alpha = 0.08f)
 }
 
-/** TV-safe area: content stays clear of the screen edges that some TVs crop (5 % of 1920×1080 dp at 2×). */
+/** TV-safe area: content stays clear of the screen edges that some TVs crop (5 % of a 960×540 dp TV screen). */
 object TvSpacing {
     val screenHorizontal = 48.dp
     val screenVertical = 27.dp
+}
+
+/**
+ * Text sizes for a 960×540 dp TV screen (every Android TV, whatever its pixels), read from
+ * a sofa: a 14 sp body is about the smallest that stays readable at that distance.
+ */
+object TvType {
+    val heroTitle = 30.sp
+    val screenTitle = 24.sp
+    val sectionTitle = 16.sp
+    val rowTitle = 15.sp
+    val body = 14.sp
+    val detail = 12.sp
+    val caption = 11.sp
 }
 
 private val otterColors = darkColorScheme(

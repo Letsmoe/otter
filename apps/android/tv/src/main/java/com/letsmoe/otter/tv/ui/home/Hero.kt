@@ -27,6 +27,7 @@ import coil3.request.crossfade
 import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.tv.theme.TvColors
 import com.letsmoe.otter.tv.theme.TvSpacing
+import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.ui.media.RailItem
 
 /** What the top of the home screen shows: the focused title, or the featured one before anything is focused. */
@@ -64,18 +65,18 @@ fun HeroInfo(hero: HeroTitle?, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .padding(horizontal = TvSpacing.screenHorizontal)
-            .width(720.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+            .width(480.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
             hero.item.title,
-            fontSize = 44.sp,
+            fontSize = TvType.heroTitle,
             fontWeight = FontWeight.Bold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            lineHeight = 50.sp,
+            lineHeight = 34.sp,
         )
-        Text(heroDetails(hero), fontSize = 17.sp, color = TvColors.secondaryContent, maxLines = 1)
+        Text(heroDetails(hero), fontSize = TvType.detail, color = TvColors.secondaryContent, maxLines = 1)
     }
 }
 

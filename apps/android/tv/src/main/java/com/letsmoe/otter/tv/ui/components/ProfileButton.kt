@@ -14,7 +14,7 @@ import coil3.compose.AsyncImage
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.profiles.avatarImage
 
-private val AVATAR_SHAPE = RoundedCornerShape(10.dp)
+private val AVATAR_SHAPE = RoundedCornerShape(7.dp)
 
 /** The active profile's icon in the top right; selecting it goes back to "Who's watching?". */
 @Composable
@@ -25,7 +25,8 @@ fun ProfileButton() {
         onClick = ProfileSession::logout,
         shape = AVATAR_SHAPE,
         focusedScale = 1.15f,
-        modifier = Modifier.size(40.dp),
+        ringWidth = 2.dp,
+        modifier = Modifier.size(28.dp),
     ) {
         AsyncImage(
             model = avatarImage(activeProfile.avatarUrl, activeProfile.name),

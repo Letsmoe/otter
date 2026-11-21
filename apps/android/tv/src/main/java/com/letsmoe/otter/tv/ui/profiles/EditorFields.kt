@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -31,13 +32,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.letsmoe.otter.profiles.LANGUAGE_CHOICES
 import com.letsmoe.otter.tv.theme.TvColors
+import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.tv.ui.components.FocusableSurface
 
-private val FIELD_SHAPE = RoundedCornerShape(16.dp)
+private val FIELD_SHAPE = RoundedCornerShape(10.dp)
 
 /** The profile's name; selecting it opens the TV's on-screen keyboard. */
 @Composable
@@ -48,14 +49,14 @@ fun NameField(name: String, onChange: (String) -> Unit) {
     if (focused) {
         borderColor = Color.White
     }
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Name", fontSize = 15.sp, color = TvColors.secondaryContent)
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text("Name", fontSize = TvType.detail, color = TvColors.secondaryContent)
         BasicTextField(
             value = name,
             onValueChange = onChange,
             singleLine = true,
             interactionSource = interactionSource,
-            textStyle = TextStyle(fontSize = 22.sp, color = TvColors.baseContent),
+            textStyle = TextStyle(fontSize = TvType.sectionTitle, color = TvColors.baseContent),
             cursorBrush = SolidColor(Color.White),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
             modifier = Modifier.fillMaxWidth(),
@@ -64,11 +65,11 @@ fun NameField(name: String, onChange: (String) -> Unit) {
                     Modifier
                         .fillMaxWidth()
                         .background(TvColors.subtleFill, FIELD_SHAPE)
-                        .border(3.dp, borderColor, FIELD_SHAPE)
-                        .padding(horizontal = 24.dp, vertical = 18.dp),
+                        .border(2.dp, borderColor, FIELD_SHAPE)
+                        .padding(horizontal = 16.dp, vertical = 11.dp),
                 ) {
                     if (name.isEmpty()) {
-                        Text("Name", fontSize = 22.sp, color = TvColors.neutralContent)
+                        Text("Name", fontSize = TvType.sectionTitle, color = TvColors.neutralContent)
                     }
                     innerField()
                 }
@@ -82,13 +83,13 @@ fun NameField(name: String, onChange: (String) -> Unit) {
 fun ToggleRow(title: String, description: String, checked: Boolean, onToggle: () -> Unit) {
     FocusableSurface(onClick = onToggle, focusedScale = 1.02f, modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                Text(description, fontSize = 14.sp, color = TvColors.secondaryContent)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, fontSize = TvType.body, fontWeight = FontWeight.SemiBold)
+                Text(description, fontSize = TvType.detail, color = TvColors.secondaryContent)
             }
             SwitchLook(checked)
         }
@@ -104,24 +105,27 @@ private fun SwitchLook(checked: Boolean) {
         alignment = Alignment.CenterEnd
     }
     Box(
-        modifier = Modifier.width(52.dp).height(30.dp).background(track, CircleShape).padding(4.dp),
+        modifier = Modifier.width(36.dp).height(20.dp).background(track, CircleShape).padding(3.dp),
         contentAlignment = alignment,
     ) {
-        Box(Modifier.size(22.dp).background(Color.White, CircleShape))
+        Box(Modifier.size(14.dp).background(Color.White, CircleShape))
     }
 }
 
 /** Audio languages in the profile's order; selecting one adds it at the end or removes it. */
 @Composable
 fun LanguageOptions(languages: List<String>, onToggle: (String) -> Unit) {
-    Column(Modifier.padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Languages", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+    Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text("Languages", fontSize = TvType.body, fontWeight = FontWeight.SemiBold)
         Text(
             "Sources in these languages are tried first, in this order.",
-            fontSize = 14.sp,
+            fontSize = TvType.detail,
             color = TvColors.secondaryContent,
         )
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(vertical = 6.dp),
+        ) {
             items(LANGUAGE_CHOICES, key = { choice -> choice.code }) { choice ->
                 LanguageChip(choice.name, languages.indexOf(choice.code), onClick = { onToggle(choice.code) })
             }
@@ -143,10 +147,10 @@ private fun LanguageChip(name: String, position: Int, onClick: () -> Unit) {
     FocusableSurface(onClick = onClick, shape = CircleShape, containerColor = container, ringWidth = 2.dp) {
         Text(
             label,
-            fontSize = 16.sp,
+            fontSize = TvType.detail,
             fontWeight = FontWeight.Medium,
             color = textColor,
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
         )
     }
 }

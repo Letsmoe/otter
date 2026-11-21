@@ -33,10 +33,15 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import com.letsmoe.otter.tv.theme.TvColors
+import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.ui.components.ActorItem
 import com.letsmoe.otter.ui.media.RailItem
 
-private val CARD_SHAPE = RoundedCornerShape(12.dp)
+private val CARD_SHAPE = RoundedCornerShape(8.dp)
+private val TOP_TEN_POSTER_WIDTH = 104.dp
+
+/** Room a Top 10 rank number takes left of its poster ("10" is the widest). */
+val RANK_NUMBER_WIDTH = 80.dp
 
 /** A 2:3 poster; [onFocus] fires when the D-pad lands on it. */
 @Composable
@@ -81,14 +86,10 @@ fun WideCard(item: RailItem, width: Dp, onFocus: () -> Unit, onClick: () -> Unit
 
 /** A poster with its Top 10 place as a large outlined number on its left. */
 @Composable
-fun TopTenCard(item: RailItem, onFocus: () -> Unit, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    var rank = ""
-    if (item.rank != null) {
-        rank = item.rank.toString()
-    }
+fun TopTenCard(item: RailItem, rank: Int, onFocus: () -> Unit, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(verticalAlignment = Alignment.Bottom) {
-        RankNumber(rank)
-        PosterCard(item, width = 150.dp, onFocus = onFocus, onClick = onClick, modifier = modifier)
+        RankNumber(rank.toString())
+        PosterCard(item, width = TOP_TEN_POSTER_WIDTH, onFocus = onFocus, onClick = onClick, modifier = modifier)
     }
 }
 
@@ -96,11 +97,11 @@ fun TopTenCard(item: RailItem, onFocus: () -> Unit, onClick: () -> Unit, modifie
 @Composable
 fun ActorCard(actor: ActorItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier.width(140.dp),
+        modifier = Modifier.width(96.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        FocusableSurface(onClick = onClick, shape = CircleShape, focusedScale = 1.1f, modifier = modifier.size(120.dp)) {
+        FocusableSurface(onClick = onClick, shape = CircleShape, focusedScale = 1.1f, modifier = modifier.size(80.dp)) {
             AsyncImage(
                 model = actor.portraitUrl,
                 contentDescription = actor.name,
@@ -110,7 +111,7 @@ fun ActorCard(actor: ActorItem, onClick: () -> Unit, modifier: Modifier = Modifi
         }
         Text(
             actor.name,
-            fontSize = 15.sp,
+            fontSize = TvType.detail,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
@@ -140,10 +141,10 @@ private fun CardImage(url: String?, title: String) {
         // Shown until the image loads, and for titles without one.
         Text(
             title,
-            fontSize = 14.sp,
+            fontSize = TvType.detail,
             textAlign = TextAlign.Center,
             color = TvColors.neutralContent,
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(8.dp),
         )
         AsyncImage(model = url, contentDescription = title, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
     }
@@ -156,13 +157,13 @@ private fun WideCardCaption(item: RailItem, modifier: Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .background(shade)
-            .padding(horizontal = 14.dp)
-            .padding(top = 24.dp, bottom = 14.dp),
+            .padding(horizontal = 10.dp)
+            .padding(top = 16.dp, bottom = 9.dp),
     ) {
-        Text(item.title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(item.title, fontSize = TvType.detail, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         val subtitle = item.subtitle
         if (subtitle != null) {
-            Text(subtitle, fontSize = 13.sp, color = TvColors.secondaryContent, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(subtitle, fontSize = TvType.caption, color = TvColors.secondaryContent, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -174,13 +175,13 @@ private fun CardBadge(badge: String?, modifier: Modifier) {
     }
     Text(
         badge,
-        fontSize = 12.sp,
+        fontSize = TvType.caption,
         fontWeight = FontWeight.SemiBold,
         modifier = modifier
-            .padding(8.dp)
-            .clip(RoundedCornerShape(6.dp))
+            .padding(6.dp)
+            .clip(RoundedCornerShape(4.dp))
             .background(Color.Black.copy(alpha = 0.75f))
-            .padding(horizontal = 8.dp, vertical = 3.dp),
+            .padding(horizontal = 6.dp, vertical = 2.dp),
     )
 }
 
@@ -189,18 +190,18 @@ private fun CardProgress(progress: Float?, modifier: Modifier) {
     if (progress == null) {
         return
     }
-    Box(modifier.fillMaxWidth().height(4.dp).background(Color.White.copy(alpha = 0.25f))) {
-        Box(Modifier.fillMaxWidth(progress).height(4.dp).background(TvColors.accent))
+    Box(modifier.fillMaxWidth().height(3.dp).background(Color.White.copy(alpha = 0.25f))) {
+        Box(Modifier.fillMaxWidth(progress).height(3.dp).background(TvColors.accent))
     }
 }
 
 @Composable
 private fun RankNumber(rank: String) {
-    Box(Modifier.padding(end = 4.dp)) {
+    Box(Modifier.padding(end = 2.dp)) {
         Text(
             rank,
             // Outlined, so the poster next to it stays the focus.
-            style = TextStyle(fontSize = 120.sp, fontWeight = FontWeight.Black, drawStyle = Stroke(width = 5f)),
+            style = TextStyle(fontSize = 80.sp, fontWeight = FontWeight.Black, drawStyle = Stroke(width = 4f)),
             color = Color.White.copy(alpha = 0.7f),
         )
     }

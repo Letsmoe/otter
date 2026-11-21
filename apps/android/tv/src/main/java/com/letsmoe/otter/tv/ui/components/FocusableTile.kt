@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -17,13 +18,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.letsmoe.otter.tv.theme.TvColors
+import com.letsmoe.otter.tv.theme.TvType
 
 /**
  * A focusable surface for the D-pad: grows and gets a white ring while focused.
@@ -33,11 +34,11 @@ import com.letsmoe.otter.tv.theme.TvColors
 fun FocusableSurface(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(16.dp),
+    shape: Shape = RoundedCornerShape(10.dp),
     focusedScale: Float = 1.08f,
     containerColor: Color = TvColors.subtleFill,
     focusedContainerColor: Color = Color.White.copy(alpha = 0.16f),
-    ringWidth: Dp = 3.dp,
+    ringWidth: Dp = 2.dp,
     content: @Composable () -> Unit,
 ) {
     Surface(
@@ -53,7 +54,7 @@ fun FocusableSurface(
             pressedContainerColor = focusedContainerColor,
         ),
         border = ClickableSurfaceDefaults.border(
-            focusedBorder = Border(BorderStroke(ringWidth, Color.White), inset = 2.dp, shape = shape),
+            focusedBorder = Border(BorderStroke(ringWidth, Color.White), inset = 1.dp, shape = shape),
         ),
     ) {
         content()
@@ -90,14 +91,14 @@ fun PillButton(
         ),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 22.dp, vertical = 11.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
         ) {
             if (icon != null) {
-                Icon(icon, contentDescription = null)
+                Icon(icon, contentDescription = null, modifier = Modifier.size(15.dp))
             }
-            Text(label, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            Text(label, fontSize = TvType.detail, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -108,13 +109,13 @@ fun FailedNotice(title: String, message: String, onRetry: () -> Unit, modifier: 
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Text(title, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = TvColors.baseContent)
+        Text(title, fontSize = TvType.screenTitle, fontWeight = FontWeight.SemiBold, color = TvColors.baseContent)
         if (message.isNotEmpty()) {
-            Text(message, fontSize = 16.sp, color = TvColors.secondaryContent)
+            Text(message, fontSize = TvType.body, color = TvColors.secondaryContent)
         }
-        Box(Modifier.padding(top = 8.dp)) {
+        Box(Modifier.padding(top = 6.dp)) {
             PillButton("Try again", onClick = onRetry, primary = true)
         }
     }

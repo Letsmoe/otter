@@ -50,8 +50,8 @@ import com.letsmoe.otter.ui.media.RailItem
 import kotlinx.coroutines.delay
 
 // Room for the top bar above the hero text.
-private val TOP_BAR_SPACE = 84.dp
-private val HERO_INFO_HEIGHT = 120.dp
+private val TOP_BAR_SPACE = 60.dp
+private val HERO_INFO_HEIGHT = 96.dp
 // Scrolling fast through a row shouldn't reload the backdrop for every card it passes.
 private const val HERO_SETTLE_MILLISECONDS = 250L
 
@@ -118,11 +118,11 @@ private fun RowsList(
 ) {
     val profileName = ProfileSession.activeProfile.value?.name.orEmpty()
     val rows = state.toRows(pageLabels(mediaType, profileName)).withActorsRow(state.actors.isNotEmpty())
-    FocusPivot(0.dp) {
+    FocusPivot(ROW_FOCUS_LINE) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 20.dp, bottom = 240.dp),
-            verticalArrangement = Arrangement.spacedBy(28.dp),
+            contentPadding = PaddingValues(top = 14.dp, bottom = 200.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item(key = "featured") {
                 FeaturedActions(state, actions, onToggleMyList, onFocusFeatured)
@@ -132,19 +132,28 @@ private fun RowsList(
     }
 }
 
-/** Open and My List for the featured title; focus starts here when the page opens. */
+/**
+ * Open and My List for the featured title. Focus starts here once, when the featured title first
+ * arrives; it reloads on resume and may change, which must not pull focus back from the rows.
+ */
 @Composable
 private fun FeaturedActions(state: TitlesPageState, actions: RowActions, onToggleMyList: () -> Unit, onFocusFeatured: () -> Unit) {
     val featured = state.featured ?: return
     val openButton = remember { FocusRequester() }
-    LaunchedEffect(featured.item.id) { openButton.requestFocus() }
+    var focusedOnce by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!focusedOnce) {
+            focusedOnce = true
+            openButton.requestFocus()
+        }
+    }
     var myListIcon = PhosphorIcons.Bold.Plus
     if (state.featuredInMyList) {
         myListIcon = PhosphorIcons.Bold.Check
     }
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = TvSpacing.screenHorizontal),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         PillButton(
             "More info",

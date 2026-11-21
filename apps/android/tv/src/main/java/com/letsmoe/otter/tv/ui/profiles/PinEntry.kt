@@ -45,10 +45,12 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
 import com.adamglin.phosphoricons.bold.Backspace
 import com.letsmoe.otter.tv.theme.TvColors
+import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.tv.ui.components.FocusableSurface
 import kotlinx.coroutines.launch
 
 private const val PIN_LENGTH = 4
+private val KEY_SIZE = 48.dp
 private const val DELETE_KEY = "delete"
 private val KEYPAD_ROWS = listOf(
     listOf("1", "2", "3"),
@@ -113,22 +115,22 @@ fun PinEntry(
 
     Row(
         modifier = Modifier.fillMaxSize().onPreviewKeyEvent { event -> handleRemoteKey(event, ::press) },
-        horizontalArrangement = Arrangement.spacedBy(96.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(72.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (avatarModel != null) {
                 AsyncImage(
                     avatarModel,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(112.dp).clip(RoundedCornerShape(20.dp)),
+                    modifier = Modifier.size(72.dp).clip(RoundedCornerShape(12.dp)),
                 )
             }
-            Text(title, fontSize = 32.sp, fontWeight = FontWeight.Bold)
-            Text(message, fontSize = 18.sp, color = TvColors.secondaryContent)
-            PinDots(digits.length, Modifier.padding(top = 12.dp).offset { IntOffset(shake.value.dp.roundToPx(), 0) })
-            Text(error, fontSize = 16.sp, color = TvColors.error)
+            Text(title, fontSize = TvType.screenTitle, fontWeight = FontWeight.Bold)
+            Text(message, fontSize = TvType.body, color = TvColors.secondaryContent)
+            PinDots(digits.length, Modifier.padding(top = 8.dp).offset { IntOffset(shake.value.dp.roundToPx(), 0) })
+            Text(error, fontSize = TvType.detail, color = TvColors.error)
         }
         Keypad(onPress = ::press)
     }
@@ -156,7 +158,7 @@ private suspend fun shakeOnce(shake: Animatable<Float, *>) {
 
 @Composable
 private fun PinDots(filled: Int, modifier: Modifier) {
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         for (index in 0 until PIN_LENGTH) {
             var fill = Color.Transparent
             if (index < filled) {
@@ -164,8 +166,8 @@ private fun PinDots(filled: Int, modifier: Modifier) {
             }
             Box(
                 Modifier
-                    .size(20.dp)
-                    .border(2.dp, Color.White.copy(alpha = 0.7f), CircleShape)
+                    .size(14.dp)
+                    .border(1.5.dp, Color.White.copy(alpha = 0.7f), CircleShape)
                     .background(fill, CircleShape),
             )
         }
@@ -176,9 +178,9 @@ private fun PinDots(filled: Int, modifier: Modifier) {
 private fun Keypad(onPress: (String) -> Unit) {
     val firstKey = remember { FocusRequester() }
     LaunchedEffect(Unit) { firstKey.requestFocus() }
-    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         for (row in KEYPAD_ROWS) {
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 for (key in row) {
                     var keyModifier: Modifier = Modifier
                     if (key == "1") {
@@ -194,15 +196,15 @@ private fun Keypad(onPress: (String) -> Unit) {
 @Composable
 private fun KeypadKey(key: String, onPress: (String) -> Unit, modifier: Modifier) {
     if (key.isEmpty()) {
-        Box(Modifier.size(72.dp))
+        Box(Modifier.size(KEY_SIZE))
         return
     }
-    FocusableSurface(onClick = { onPress(key) }, shape = CircleShape, modifier = modifier.size(72.dp)) {
+    FocusableSurface(onClick = { onPress(key) }, shape = CircleShape, modifier = modifier.size(KEY_SIZE)) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (key == DELETE_KEY) {
-                Icon(PhosphorIcons.Bold.Backspace, contentDescription = "Delete", modifier = Modifier.size(26.dp))
+                Icon(PhosphorIcons.Bold.Backspace, contentDescription = "Delete", modifier = Modifier.size(18.dp))
             } else {
-                Text(key, fontSize = 26.sp, fontWeight = FontWeight.Medium)
+                Text(key, fontSize = 18.sp, fontWeight = FontWeight.Medium)
             }
         }
     }
