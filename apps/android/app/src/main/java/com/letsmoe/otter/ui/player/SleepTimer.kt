@@ -32,7 +32,7 @@ fun sleepGainAt(remainingMillis: Long): Float {
  * The sleep timer: after the chosen minutes the sound fades out and playback pauses. One timer for
  * the whole app, so it carries over when playback moves between the phone and a TV.
  */
-class SleepTimer(private val clockMillis: () -> Long = System::currentTimeMillis) {
+class SleepTimer(private val clockMillis: () -> Long = { System.currentTimeMillis() }) {
 
     private val mutableRun = MutableStateFlow<SleepTimerRun?>(null)
     val run: StateFlow<SleepTimerRun?> = mutableRun

@@ -150,7 +150,7 @@ internal fun highestVariantSelector(maxHeight: Int): TrackSelector.Factory {
  * the stream plays. Always in the chain, so the audio is always re-encoded.
  */
 @UnstableApi
-internal class LiveVoiceBoost(private val job: OverlayJob) : VoiceBoostAudioProcessor() {
+private class LiveVoiceBoost(private val job: OverlayJob) : VoiceBoostAudioProcessor() {
 
     override fun queueInput(inputBuffer: ByteBuffer) {
         enabled = job.voiceBoost()
@@ -160,7 +160,7 @@ internal class LiveVoiceBoost(private val job: OverlayJob) : VoiceBoostAudioProc
 
 /** Even volume in the TV's sound, switched with the phone's setting while the stream plays. */
 @UnstableApi
-internal class LiveEvenVolume(private val job: OverlayJob) : EvenVolumeAudioProcessor() {
+private class LiveEvenVolume(private val job: OverlayJob) : EvenVolumeAudioProcessor() {
 
     override fun queueInput(inputBuffer: ByteBuffer) {
         enabled = job.evenVolume()

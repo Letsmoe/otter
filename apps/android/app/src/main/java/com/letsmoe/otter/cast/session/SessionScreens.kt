@@ -22,6 +22,9 @@ private const val REFERENCE_HEIGHT = 1080f
 private const val BRAND_SIZE = 132f
 private const val STATUS_SIZE = 40f
 private const val TITLE_SIZE = 64f
+private const val QUESTION_SIZE = 96f
+private const val STILL_WATCHING_QUESTION = "Still watching?"
+private const val STILL_WATCHING_HINT = "Answer on your phone"
 private const val STATUS_GAP = 36f
 private const val STATUS_DOT_RADIUS = 9f
 private const val TITLE_MAX_WIDTH_FRACTION = 0.7f
@@ -63,6 +66,7 @@ private fun drawScreen(canvas: Canvas, screen: SessionScreen) {
     when (screen) {
         is SessionScreen.Loading -> drawLoading(canvas, screen.title)
         is SessionScreen.Idle -> drawIdle(canvas)
+        is SessionScreen.StillWatching -> drawStillWatching(canvas)
         is SessionScreen.Screensaver, is SessionScreen.Picture, is SessionScreen.Title -> Unit
     }
 }
@@ -83,6 +87,18 @@ private fun drawIdle(canvas: Canvas) {
     val dotX = centerX - status.measureText(label) / 2f - STATUS_DOT_RADIUS * scale
     val dotY = statusBaseline + (status.ascent() + status.descent()) / 2f
     canvas.drawCircle(dotX, dotY, STATUS_DOT_RADIUS * scale, dot)
+}
+
+// The question large in the middle, where to answer it under it.
+private fun drawStillWatching(canvas: Canvas) {
+    val scale = canvas.height / REFERENCE_HEIGHT
+    val question = textPaint(QUESTION_SIZE * scale, TEXT, Typeface.BOLD)
+    val centerX = canvas.width / 2f
+    val questionBaseline = canvas.height / 2f - question.descent()
+    canvas.drawText(STILL_WATCHING_QUESTION, centerX, questionBaseline, question)
+    val hint = textPaint(STATUS_SIZE * scale, SECONDARY_TEXT, Typeface.NORMAL)
+    val hintBaseline = questionBaseline + question.descent() + STATUS_GAP * scale - hint.ascent()
+    canvas.drawText(STILL_WATCHING_HINT, centerX, hintBaseline, hint)
 }
 
 // The title above where the spinner turns; just the spinner when the title isn't known yet.

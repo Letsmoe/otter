@@ -25,11 +25,13 @@ import com.letsmoe.otter.cast.overlay.TogetherChatLine
 import com.letsmoe.otter.cast.overlay.TogetherMoments
 import com.letsmoe.otter.cast.overlay.TogetherReaction
 import com.letsmoe.otter.cast.overlay.endsAtLabel
+import com.letsmoe.otter.cast.session.SESSION_SOUND_LEAD_MILLISECONDS
 import com.letsmoe.otter.cast.session.SessionJob
 import com.letsmoe.otter.cast.session.SessionScreen
 import com.letsmoe.otter.cast.session.SessionTimeline
 import com.letsmoe.otter.cast.session.TelevisionSession
 import com.letsmoe.otter.cast.session.TelevisionSessions
+import com.letsmoe.otter.cast.session.idleScreenOf
 import com.letsmoe.otter.together.TogetherSession
 import com.letsmoe.otter.cast.overlay.loadOverlayPlan
 import com.letsmoe.otter.profiles.ProfileSession
@@ -163,9 +165,16 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     /** Nothing plays after this episode; the picture says so during the credits. */
     @Volatile
     var stopsAfterEpisode = false
-    /** The next episode waits for "Still watching?"; the picture asks the viewer to answer on the phone. */
+    /**
+     * The next episode waits for "Still watching?"; the picture asks the viewer to answer on the
+     * phone, during the credits or, once the title is over, as the session's screen.
+     */
     @Volatile
     var askingStillWatching = false
+        set(value) {
+            field = value
+            refreshIdleScreen()
+        }
     // A replay with captions shows them until this second of the title; null when none runs.
     @Volatile
     private var replayUntilSeconds: Double? = null
@@ -687,7 +696,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     }
 
     private fun idleScreen(): SessionScreen {
-        return chosenIdleScreen
+        return idleScreenOf(askingStillWatching, chosenIdleScreen)
     }
 
     private fun playsPlainStream(): Boolean {
@@ -757,6 +766,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     }
 
     private fun liveInputs(): OverlayLiveInputs {
+        val soundLeadMilliseconds = soundLeadMilliseconds()
         return OverlayLiveInputs(
             captionLook = { captionLookOf(ProfileSession.activeProfile.value) },
             upNextDismissed = { upNextDismissed },
@@ -767,9 +777,17 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
             replayUntilSeconds = { replayUntilSeconds },
             stopsAfterEpisode = { stopsAfterEpisode },
             askingStillWatching = { askingStillWatching },
-            audioGain = { SleepTimer.shared.gain(TELEVISION_SOUND_LEAD_MILLISECONDS) },
+            audioGain = { SleepTimer.shared.gain(soundLeadMilliseconds) },
             audioDelayMillis = { audioDelayMillis },
         )
+    }
+
+    // How long after the phone encodes a sample the TV plays it, so the sleep timer's fade ends on time.
+    private fun soundLeadMilliseconds(): Long {
+        if (session == null) {
+            return TELEVISION_SOUND_LEAD_MILLISECONDS
+        }
+        return SESSION_SOUND_LEAD_MILLISECONDS
     }
 
     // Only needed while a replay runs and the main captions are off.

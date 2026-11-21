@@ -31,15 +31,14 @@ import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.Transformer
 import androidx.media3.transformer.VideoEncoderSettings
-import com.letsmoe.otter.cast.overlay.LiveEvenVolume
 import com.letsmoe.otter.cast.overlay.LiveFrameOverlay
-import com.letsmoe.otter.cast.overlay.LiveVoiceBoost
 import com.letsmoe.otter.cast.overlay.OVERLAY_VIDEO_BITRATE
 import com.letsmoe.otter.cast.overlay.OverlayJob
 import com.letsmoe.otter.cast.overlay.OverlayPainter
 import com.letsmoe.otter.cast.overlay.StreamMuxerFactory
 import com.letsmoe.otter.cast.overlay.darkSceneLift
 import com.letsmoe.otter.cast.overlay.highestVariantSelector
+import com.letsmoe.otter.cast.overlay.titleSoundProcessors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -155,9 +154,8 @@ class SessionEncoder(
             .setMimeType(overlay.sourceMimeType)
             .setClippingConfiguration(clipping)
             .build()
-        val audioProcessors = listOf(LiveVoiceBoost(overlay), LiveEvenVolume(overlay)) + uniformSound()
         return EditedMediaItem.Builder(mediaItem)
-            .setEffects(Effects(audioProcessors, titleEffects(overlay)))
+            .setEffects(Effects(titleSoundProcessors(overlay, uniformSound()), titleEffects(overlay)))
             .build()
     }
 
