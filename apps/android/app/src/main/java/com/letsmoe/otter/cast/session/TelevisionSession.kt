@@ -1,6 +1,7 @@
 package com.letsmoe.otter.cast.session
 
 import android.os.SystemClock
+import android.util.Log
 import com.letsmoe.otter.cast.overlay.LiveFrames
 import com.letsmoe.otter.cast.overlay.OverlayJob
 import kotlinx.coroutines.Job
@@ -8,6 +9,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import java.io.File
 import java.util.UUID
+
+const val SESSION_TAG = "OtterSession"
+
+/** [microseconds] of the session as seconds with one decimal, for the log. */
+fun logSeconds(microseconds: Long): String = "%.1f s".format(microseconds / 1_000_000.0)
 
 // The encoder runs this far ahead of the TV's picture: what the TV has buffered, and how long a switch takes to show.
 const val SESSION_LEAD_MICROSECONDS = 2_500_000L
@@ -34,6 +40,12 @@ sealed interface SessionScreen {
 
     /** "Still watching?" while the next episode waits for an answer on the phone. */
     data object StillWatching : SessionScreen
+
+    /**
+     * A second of spinner, encoded once per session: the backend plays it while a new job
+     * hasn't sent anything yet and the TV's buffer would otherwise run dry.
+     */
+    data object Bridge : SessionScreen
 }
 
 /**
@@ -55,6 +67,15 @@ fun idleScreenOf(askingStillWatching: Boolean, chosen: SessionScreen): SessionSc
  */
 class SessionJob(val screen: SessionScreen) {
     val id: String = UUID.randomUUID().toString()
+
+    // For the log: how long a switch takes from asking for a screen to its first sample.
+    val shownAtMilliseconds: Long = SystemClock.elapsedRealtime()
+
+    /** The kind of screen, e.g. "Title" or "Loading", for the log. */
+    val kind: String
+        get() = screen::class.simpleName.orEmpty()
+
+    fun millisecondsSinceShown(): Long = SystemClock.elapsedRealtime() - shownAtMilliseconds
 
     @Volatile
     var startMicroseconds: Long? = null
@@ -152,11 +173,42 @@ class TelevisionSession(
             return null
         }
         current.startMicroseconds = atMicroseconds
+        Log.i(SESSION_TAG, "backend takes ${current.kind} at ${logSeconds(atMicroseconds)}, ${current.millisecondsSinceShown()} ms after it was shown")
         handedOut = current
         started = true
         updateClock()
         return current
     }
+
+    /**
+     * The backend wrote the first sample of the job [jobId] at [atMicroseconds] of the session,
+     * later than it asked for it when it bridged a slow start; pacing and positions follow.
+     */
+    @Synchronized
+    fun onJobStarted(jobId: String, atMicroseconds: Long) {
+        val job = jobWithId(jobId) ?: return
+        val askedMicroseconds = job.startMicroseconds
+        job.startMicroseconds = atMicroseconds
+        if (askedMicroseconds != null) {
+            val bridgedMicroseconds = atMicroseconds - askedMicroseconds
+            Log.i(SESSION_TAG, "${job.kind} starts at ${logSeconds(atMicroseconds)}, after ${logSeconds(bridgedMicroseconds)} of bridge")
+        }
+    }
+
+    private fun jobWithId(jobId: String): SessionJob? {
+        if (current.id == jobId) {
+            return current
+        }
+        val previous = handedOut
+        if (previous != null && previous.id == jobId) {
+            return previous
+        }
+        return null
+    }
+
+    /** The bridge clip once it was encoded (fragmented MP4), else null. */
+    @Volatile
+    var bridgeClip: ByteArray? = null
 
     /** [encoderJob] encodes [job]; it is stopped when the job is replaced. */
     @Synchronized
@@ -172,6 +224,7 @@ class TelevisionSession(
     @Synchronized
     fun onCompleted(job: SessionJob, endMicroseconds: Long) {
         job.endMicroseconds = endMicroseconds
+        Log.i(SESSION_TAG, "${job.kind} ran to its end at ${logSeconds(endMicroseconds)}")
         if (job !== current) {
             return
         }
@@ -186,6 +239,7 @@ class TelevisionSession(
         if (job !== current) {
             return
         }
+        Log.i(SESSION_TAG, "backend stopped reading ${job.kind}; it starts again")
         encoder = null
         restartCurrent()
     }
@@ -200,6 +254,7 @@ class TelevisionSession(
 
     /** Ends the session: the backend's stream to the TV ends too. */
     fun close() {
+        Log.i(SESSION_TAG, "session $id closed")
         synchronized(this) {
             closed = true
             encoder?.cancel()
@@ -215,6 +270,7 @@ class TelevisionSession(
             if (closed) {
                 return
             }
+            Log.i(SESSION_TAG, "show ${job.kind} instead of ${current.kind}")
             current = job
             encoder?.cancel()
             encoder = null

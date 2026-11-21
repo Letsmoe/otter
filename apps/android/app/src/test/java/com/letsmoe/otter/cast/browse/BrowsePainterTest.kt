@@ -9,6 +9,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
@@ -25,6 +26,8 @@ private const val PREVIEW_DIRECTORY_VARIABLE = "OTTER_PREVIEW_DIR"
 // A plain Application: the app's own would start the backend and the encoders.
 @Config(sdk = [36], application = Application::class)
 class BrowsePainterTest {
+
+    private val context = RuntimeEnvironment.getApplication()
 
     private val interstellar = BrowsePreview(
         titleId = "movie:157336",
@@ -55,7 +58,7 @@ class BrowsePainterTest {
 
     @Test
     fun theFrameHasTheTelevisionsSize() {
-        val frame = renderBrowseFrame(interstellar, backdrop(), 1080)
+        val frame = renderBrowseFrame(context, interstellar, backdrop(), 1080)
 
         assertEquals(1920, frame.width)
         assertEquals(1080, frame.height)
@@ -63,7 +66,7 @@ class BrowsePainterTest {
 
     @Test
     fun theTitleIsDrawnWhiteOverTheShadedLowerLeft() {
-        val frame = renderBrowseFrame(interstellar, backdrop(), 1080)
+        val frame = renderBrowseFrame(context, interstellar, backdrop(), 1080)
 
         val titleArea = brightPixels(frame, left = 128, top = 600, right = 900, bottom = 760)
         val emptyCorner = brightPixels(frame, left = 1500, top = 900, right = 1900, bottom = 1060)
@@ -73,7 +76,7 @@ class BrowsePainterTest {
 
     @Test
     fun aTitleWithoutBackdropOrOverviewStillDraws() {
-        val frame = renderBrowseFrame(longTitleWithoutOverview, null, 720)
+        val frame = renderBrowseFrame(context, longTitleWithoutOverview, null, 720)
 
         assertEquals(1280, frame.width)
         assertTrue(brightPixels(frame, left = 80, top = 400, right = 900, bottom = 700) > 100)
@@ -84,7 +87,7 @@ class BrowsePainterTest {
         val poster = Bitmap.createBitmap(200, 300, Bitmap.Config.ARGB_8888)
         poster.eraseColor(Color.rgb(200, 40, 40))
 
-        val frame = renderBrowseFrame(interstellar, poster, 1080)
+        val frame = renderBrowseFrame(context, interstellar, poster, 1080)
 
         val pixel = frame.getPixel(1500, 540)
         assertTrue("poster pixel is $pixel", Color.red(pixel) > 190 && Color.green(pixel) < 50)
@@ -97,8 +100,8 @@ class BrowsePainterTest {
             return
         }
         File(directory).mkdirs()
-        writePng(renderBrowseFrame(interstellar, backdrop("interstellar"), 1080), File(directory, "interstellar.png"))
-        writePng(renderBrowseFrame(breakingBad, backdrop("breaking-bad"), 1080), File(directory, "breaking-bad.png"))
+        writePng(renderBrowseFrame(context, interstellar, backdrop("interstellar"), 1080), File(directory, "interstellar.png"))
+        writePng(renderBrowseFrame(context, breakingBad, backdrop("breaking-bad"), 1080), File(directory, "breaking-bad.png"))
     }
 
     private fun backdrop(name: String = "interstellar"): Bitmap {

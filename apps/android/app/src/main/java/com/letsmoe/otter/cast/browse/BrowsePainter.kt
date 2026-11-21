@@ -1,5 +1,6 @@
 package com.letsmoe.otter.cast.browse
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -14,6 +15,7 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.text.TextUtils
+import com.letsmoe.otter.cast.session.drawWordmark
 
 // Sizes are in pixels of a 1080-line picture and scale with the real one.
 private const val REFERENCE_HEIGHT = 1080f
@@ -32,29 +34,28 @@ private const val OVERVIEW_LINE_SPACING = 1.3f
 private const val FACTS_GAP = 26f
 private const val OVERVIEW_GAP = 30f
 private const val ELLIPSIS = "…"
-private const val BRAND_SIZE = 28f
-private const val BRAND_LETTER_SPACING = 0.3f
+private const val BRAND_HEIGHT = 30f
+private const val BRAND_ALPHA = 150
 private const val POSTER_HEIGHT_FRACTION = 0.74f
 private const val POSTER_RADIUS = 28f
 private val BASE_COLOR = Color.rgb(11, 11, 13)
 private val MUTED_WHITE = Color.argb(184, 255, 255, 255)
 private val SOFT_WHITE = Color.argb(214, 255, 255, 255)
-private val BRAND_WHITE = Color.argb(150, 255, 255, 255)
 
 /** Renders the TV's picture of [preview] over its [backdrop], [height] lines tall (16:9). */
-fun renderBrowseFrame(preview: BrowsePreview, backdrop: Bitmap?, height: Int): Bitmap {
+fun renderBrowseFrame(context: Context, preview: BrowsePreview, backdrop: Bitmap?, height: Int): Bitmap {
     val width = (height * PICTURE_RATIO).toInt()
     val picture = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    drawBrowseFrame(Canvas(picture), preview, backdrop)
+    drawBrowseFrame(Canvas(picture), context, preview, backdrop)
     return picture
 }
 
 /**
  * A calm big-screen preview: the backdrop full screen under a dark shade, the
  * title large at the bottom left with its facts and the start of its overview,
- * and the app's name at the top.
+ * and the app's wordmark at the top.
  */
-fun drawBrowseFrame(canvas: Canvas, preview: BrowsePreview, backdrop: Bitmap?) {
+fun drawBrowseFrame(canvas: Canvas, context: Context, preview: BrowsePreview, backdrop: Bitmap?) {
     val scale = canvas.height / REFERENCE_HEIGHT
     canvas.drawColor(BASE_COLOR)
     if (backdrop != null && !isPortrait(backdrop)) {
@@ -64,7 +65,7 @@ fun drawBrowseFrame(canvas: Canvas, preview: BrowsePreview, backdrop: Bitmap?) {
     if (backdrop != null && isPortrait(backdrop)) {
         drawPoster(canvas, backdrop, scale)
     }
-    drawBrand(canvas, scale)
+    drawWordmark(canvas, context, SIDE_MARGIN * scale, TOP_MARGIN * scale, BRAND_HEIGHT * scale, BRAND_ALPHA)
     drawTitleBlock(canvas, preview, scale)
 }
 
@@ -113,16 +114,6 @@ private fun drawShade(canvas: Canvas) {
     val fromTop = Paint()
     fromTop.shader = LinearGradient(0f, 0f, 0f, height * 0.22f, Color.argb(150, 8, 8, 10), Color.TRANSPARENT, Shader.TileMode.CLAMP)
     canvas.drawRect(0f, 0f, width, height * 0.22f, fromTop)
-}
-
-private fun drawBrand(canvas: Canvas, scale: Float) {
-    val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
-    paint.textSize = BRAND_SIZE * scale
-    paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-    paint.letterSpacing = BRAND_LETTER_SPACING
-    paint.color = BRAND_WHITE
-    val baseline = TOP_MARGIN * scale - paint.ascent()
-    canvas.drawText("OTTER", SIDE_MARGIN * scale, baseline, paint)
 }
 
 /** The text block, its last line ending [BOTTOM_MARGIN] above the picture's bottom. */

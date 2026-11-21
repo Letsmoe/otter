@@ -183,10 +183,16 @@ class TelevisionSessionTest {
         assertEquals(listOf(title), failures)
     }
 
+    private fun jobStartingAt(startMicroseconds: Long): SessionJob {
+        val job = SessionJob(SessionScreen.Idle)
+        job.startMicroseconds = startMicroseconds
+        return job
+    }
+
     @Test
     fun aJobsFirstSampleSitsWhereTheJobStartsWhateverItsTimestamp() {
         take(0)
-        val pacing = JobPacing(session, jobStartMicroseconds = 4_000_000)
+        val pacing = JobPacing(session, jobStartingAt(4_000_000))
         // The clock at 2 s lets the encoder write up to 4.5 s of the session.
         elapsedMicroseconds = 2_000_000
 
@@ -196,9 +202,42 @@ class TelevisionSessionTest {
     }
 
     @Test
+    fun aStartMovedLaterByABridgeHoldsTheJobsLaterSamplesBack() {
+        take(0)
+        val job = jobStartingAt(4_000_000)
+        val pacing = JobPacing(session, job)
+        elapsedMicroseconds = 2_000_000
+        assertTrue(pacing.awaitTurn(0))
+
+        job.startMicroseconds = 6_000_000
+        pacing.cancel()
+
+        // 6.4 s of the session is past what the clock at 2 s allows (4.5 s): the sample waits, and a cancel drops it.
+        assertFalse(pacing.awaitTurn(400_000))
+    }
+
+    @Test
+    fun theBackendsStartMovesTheHandedOutJob() {
+        val idle = take(0)!!
+
+        session.onJobStarted(idle.id, 1_500_000)
+
+        assertEquals(1_500_000L, idle.startMicroseconds)
+    }
+
+    @Test
+    fun aStartForAnUnknownJobChangesNothing() {
+        val idle = take(0)!!
+
+        session.onJobStarted("someone-else", 1_500_000)
+
+        assertEquals(0L, idle.startMicroseconds)
+    }
+
+    @Test
     fun aCancelledJobDropsItsSamples() {
         take(0)
-        val pacing = JobPacing(session, jobStartMicroseconds = 60_000_000)
+        val pacing = JobPacing(session, jobStartingAt(60_000_000))
 
         pacing.cancel()
 

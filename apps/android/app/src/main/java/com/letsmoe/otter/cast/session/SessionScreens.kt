@@ -19,7 +19,7 @@ import java.io.File
 
 // Sizes are in pixels of a 1080-line picture and scale with the real one.
 private const val REFERENCE_HEIGHT = 1080f
-private const val BRAND_SIZE = 132f
+private const val WORDMARK_HEIGHT = 104f
 private const val STATUS_SIZE = 40f
 private const val TITLE_SIZE = 64f
 private const val QUESTION_SIZE = 96f
@@ -54,7 +54,7 @@ fun renderScreenPicture(context: Context, screen: SessionScreen, size: Size, nam
     val bitmap = Bitmap.createBitmap(size.width, size.height, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     canvas.drawColor(BACKGROUND)
-    drawScreen(canvas, screen)
+    drawScreen(canvas, context, screen)
     val file = File(context.cacheDir, "tv-screen-$name.png")
     file.outputStream().use { stream -> bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream) }
     bitmap.recycle()
@@ -62,24 +62,25 @@ fun renderScreenPicture(context: Context, screen: SessionScreen, size: Size, nam
 }
 
 // The screensaver paints all of its picture live; titles and the phone's pictures aren't drawn here.
-private fun drawScreen(canvas: Canvas, screen: SessionScreen) {
+private fun drawScreen(canvas: Canvas, context: Context, screen: SessionScreen) {
     when (screen) {
         is SessionScreen.Loading -> drawLoading(canvas, screen.title)
-        is SessionScreen.Idle -> drawIdle(canvas)
+        is SessionScreen.Idle -> drawIdle(canvas, context)
         is SessionScreen.StillWatching -> drawStillWatching(canvas)
-        is SessionScreen.Screensaver, is SessionScreen.Picture, is SessionScreen.Title -> Unit
+        is SessionScreen.Screensaver, is SessionScreen.Picture, is SessionScreen.Title, is SessionScreen.Bridge -> Unit
     }
 }
 
-// "Otter" large in the middle, "● Connected" under it.
-private fun drawIdle(canvas: Canvas) {
+// Otter's wordmark large, ending at the middle, "● Connected" under it.
+private fun drawIdle(canvas: Canvas, context: Context) {
     val scale = canvas.height / REFERENCE_HEIGHT
-    val brand = textPaint(BRAND_SIZE * scale, TEXT, Typeface.BOLD)
+    val wordmarkHeight = WORDMARK_HEIGHT * scale
+    val wordmarkBottom = canvas.height / 2f
+    val wordmarkLeft = (canvas.width - wordmarkWidth(wordmarkHeight)) / 2f
+    drawWordmark(canvas, context, wordmarkLeft, wordmarkBottom - wordmarkHeight, wordmarkHeight)
     val centerX = canvas.width / 2f
-    val brandBaseline = canvas.height / 2f - brand.descent()
-    canvas.drawText("Otter", centerX, brandBaseline, brand)
     val status = textPaint(STATUS_SIZE * scale, SECONDARY_TEXT, Typeface.NORMAL)
-    val statusBaseline = brandBaseline + brand.descent() + STATUS_GAP * scale - status.ascent()
+    val statusBaseline = wordmarkBottom + STATUS_GAP * scale - status.ascent()
     val label = "Connected"
     canvas.drawText(label, centerX + STATUS_DOT_RADIUS * scale * 1.5f, statusBaseline, status)
     val dot = Paint(Paint.ANTI_ALIAS_FLAG)

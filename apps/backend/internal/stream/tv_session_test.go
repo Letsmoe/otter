@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/bluenviron/mediacommon/v2/pkg/codecs/h264"
 	"github.com/bluenviron/mediacommon/v2/pkg/formats/mpegts"
@@ -23,44 +24,105 @@ const (
 )
 
 // sessionPhone stands in for the app's loopback server: it hands out the given jobs in order,
-// then says the session is over. It records the at= of every request.
+// then says the session is over. It records the at= of every request. With a bridge it serves
+// that as the session's bridge clip; firstJobDelay holds the first job's answer back that long.
 type sessionPhone struct {
-	jobs  [][]byte
-	mutex sync.Mutex
-	asked []int64
+	jobs          [][]byte
+	bridge        []byte
+	firstJobDelay time.Duration
+	mutex         sync.Mutex
+	asked         []int64
+	started       map[string]int64
 }
 
 func (phone *sessionPhone) serve(t *testing.T) *httptest.Server {
 	t.Helper()
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if request.URL.Path != "/session/tv-1/next" {
+		switch request.URL.Path {
+		case "/session/tv-1/next":
+			phone.serveNext(writer, request)
+		case "/session/tv-1/bridge":
+			phone.serveBridge(writer, request)
+		case "/session/tv-1/started":
+			phone.recordStarted(request)
+			writer.WriteHeader(http.StatusNoContent)
+		default:
 			http.NotFound(writer, request)
-			return
 		}
-		at, err := strconv.ParseInt(request.URL.Query().Get("at"), 10, 64)
-		if err != nil {
-			http.Error(writer, "bad at", http.StatusBadRequest)
-			return
-		}
-		job := phone.next(at)
-		if job == nil {
-			http.NotFound(writer, request)
-			return
-		}
-		writer.Write(job)
 	}))
 	t.Cleanup(server.Close)
 	return server
 }
 
-func (phone *sessionPhone) next(at int64) []byte {
+func (phone *sessionPhone) serveNext(writer http.ResponseWriter, request *http.Request) {
+	at, err := strconv.ParseInt(request.URL.Query().Get("at"), 10, 64)
+	if err != nil {
+		http.Error(writer, "bad at", http.StatusBadRequest)
+		return
+	}
+	job, number := phone.next(at)
+	if job == nil {
+		http.NotFound(writer, request)
+		return
+	}
+	writer.Header().Set(sessionJobHeader, "job-"+strconv.Itoa(number))
+	writer.WriteHeader(http.StatusOK)
+	if number == 1 {
+		time.Sleep(phone.firstJobDelay)
+	}
+	writer.Write(job)
+}
+
+func (phone *sessionPhone) serveBridge(writer http.ResponseWriter, request *http.Request) {
+	if phone.bridge == nil {
+		http.NotFound(writer, request)
+		return
+	}
+	writer.Write(phone.bridge)
+}
+
+func (phone *sessionPhone) recordStarted(request *http.Request) {
+	at, _ := strconv.ParseInt(request.URL.Query().Get("at"), 10, 64)
+	phone.mutex.Lock()
+	defer phone.mutex.Unlock()
+	if phone.started == nil {
+		phone.started = map[string]int64{}
+	}
+	phone.started[request.URL.Query().Get("job")] = at
+}
+
+// startedAt waits a moment for the backend's report of where a job started; false when none came.
+func (phone *sessionPhone) startedAt(jobID string) (int64, bool) {
+	for attempt := 0; attempt < 100; attempt++ {
+		phone.mutex.Lock()
+		at, found := phone.started[jobID]
+		phone.mutex.Unlock()
+		if found {
+			return at, true
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	return 0, false
+}
+
+// next hands out the jobs in order with their number, counted from 1; nil once they ran out.
+func (phone *sessionPhone) next(at int64) ([]byte, int) {
 	phone.mutex.Lock()
 	defer phone.mutex.Unlock()
 	phone.asked = append(phone.asked, at)
-	if len(phone.asked) > len(phone.jobs) {
-		return nil
+	number := len(phone.asked)
+	if number > len(phone.jobs) {
+		return nil, number
 	}
-	return phone.jobs[len(phone.asked)-1]
+	return phone.jobs[number-1], number
+}
+
+// withBridgeAfter shortens how long a job may be silent before the TV gets the bridge, for one test.
+func withBridgeAfter(t *testing.T, wait time.Duration) {
+	t.Helper()
+	previous := bridgeAfter
+	bridgeAfter = wait
+	t.Cleanup(func() { bridgeAfter = previous })
 }
 
 func media3Sample(t *testing.T) []byte {
@@ -263,4 +325,58 @@ func withChangedSPS(t *testing.T, stream []byte) []byte {
 	// The avcC's own copy of the level follows the SPS's.
 	changed[avcC+4+3] ^= 0x01
 	return changed
+}
+
+func TestASlowJobIsBridgedAndTheBridgeMovesItsStart(t *testing.T) {
+	withBridgeAfter(t, 50*time.Millisecond)
+	sample := media3Sample(t)
+	phone := &sessionPhone{jobs: [][]byte{sample}, bridge: sample, firstJobDelay: 400 * time.Millisecond}
+
+	response := sessionRequest(t, phone, http.MethodGet)
+
+	video := decodeSessionVideo(t, response.Body.Bytes())
+	if len(video.decodeTimes) != 2*media3SampleFrames {
+		t.Fatalf("%d video frames, want one bridge and the job, %d", len(video.decodeTimes), 2*media3SampleFrames)
+	}
+	assertRisingDecodeTimes(t, video.decodeTimes, media3SampleFrameTicks)
+	started, found := phone.startedAt("job-1")
+	if !found {
+		t.Fatal("the phone wasn't told where the job started")
+	}
+	jobTicks := video.decodeTimes[media3SampleFrames] - timestampOffset
+	if started != jobTicks*1_000_000/mpegtsClockRate {
+		t.Errorf("the phone was told the job starts at %d µs, its first frame is at %d ticks", started, jobTicks)
+	}
+	if phone.asked[0] != 0 || started < 3_900_000 {
+		t.Errorf("asked at %d µs, started at %d µs: the bridge should come first", phone.asked[0], started)
+	}
+}
+
+func TestQuickJobsAreNotBridged(t *testing.T) {
+	sample := media3Sample(t)
+	phone := &sessionPhone{jobs: [][]byte{sample, sample}, bridge: sample}
+
+	response := sessionRequest(t, phone, http.MethodGet)
+
+	video := decodeSessionVideo(t, response.Body.Bytes())
+	if len(video.decodeTimes) != 2*media3SampleFrames {
+		t.Fatalf("%d video frames, want just the two jobs' %d", len(video.decodeTimes), 2*media3SampleFrames)
+	}
+	if _, found := phone.startedAt("job-2"); !found {
+		t.Error("the phone wasn't told where the second job started")
+	}
+}
+
+func TestTheBridgeClipIsSplitIntoItsFragments(t *testing.T) {
+	clip, err := parseBridgeClip(media3Sample(t))
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(clip.fragments) == 0 {
+		t.Fatal("no fragments")
+	}
+	if clip.duration != 4*time.Second {
+		t.Errorf("the clip lasts %s, want its 40 frames at 10 fps, 4s", clip.duration)
+	}
 }
