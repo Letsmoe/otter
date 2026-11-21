@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.letsmoe.otter.AppScope
 import com.letsmoe.otter.cast.CastKeepAliveService
 import com.letsmoe.otter.cast.TelevisionConnection
+import com.letsmoe.otter.cast.localNetwork
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +37,10 @@ object TelevisionPlayback {
     private val mutableLostTelevision = MutableStateFlow<LostTelevision?>(null)
     /** The TV that was disconnected because it stopped answering; null once the user decided. */
     val lostTelevision: StateFlow<LostTelevision?> = mutableLostTelevision
+
+    private val mutableCarryOn = MutableStateFlow<PlayerRequest?>(null)
+    /** A title to carry on on the phone because it left the Wi-Fi; the app opens its player when it is in front. */
+    val carryOn: StateFlow<PlayerRequest?> = mutableCarryOn
 
     fun initialize(application: Application) {
         this.application = application
@@ -90,12 +95,28 @@ object TelevisionPlayback {
         return request
     }
 
-    /** The TV stopped answering while playing [request]: it is disconnected and the user asked how to go on. */
+    /**
+     * The TV stopped answering while playing [request]: it is disconnected and the user asked how to go on.
+     * A phone that is off the Wi-Fi has left the TV, so the title carries on on the phone without asking.
+     */
     fun onTelevisionLost(request: PlayerRequest) {
         val target = TelevisionConnection.target.value ?: return
-        mutableLostTelevision.value = LostTelevision(target.name, request)
+        if (localNetwork(application) == null) {
+            mutableCarryOn.value = request
+        } else {
+            mutableLostTelevision.value = LostTelevision(target.name, request)
+        }
         // Posted: the failing TV player is still notifying its listeners and is released by disconnect().
         AppScope.launch(Dispatchers.Main) { disconnect() }
+    }
+
+    /** The phone left the Wi-Fi: the title carries on on the phone from where the TV was. */
+    fun carryOnOnPhone() {
+        mutableCarryOn.value = continueOnPhone()
+    }
+
+    fun carryOnHandled() {
+        mutableCarryOn.value = null
     }
 
     /** The title of the lost TV, to open on the phone's player screen. */
