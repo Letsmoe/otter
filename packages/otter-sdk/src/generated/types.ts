@@ -6,15 +6,15 @@ export default {
         4,
         5,
         6,
-        25,
-        26,
+        27,
         28,
-        36,
+        30,
         38,
         40,
-        45,
-        46,
-        51
+        42,
+        47,
+        48,
+        53
     ],
     "types": {
         "MediaType": {},
@@ -106,7 +106,7 @@ export default {
                 13
             ],
             "progress": [
-                16,
+                18,
                 {
                     "profileId": [
                         2,
@@ -217,7 +217,7 @@ export default {
                 13
             ],
             "progress": [
-                16,
+                18,
                 {
                     "profileId": [
                         2,
@@ -374,6 +374,70 @@ export default {
             "foundAt": [
                 4
             ],
+            "report": [
+                14
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "LinkReport": {
+            "claimedHeight": [
+                3
+            ],
+            "measuredHeight": [
+                3
+            ],
+            "overclaimed": [
+                6
+            ],
+            "bitrateBps": [
+                3
+            ],
+            "stalls": [
+                3
+            ],
+            "stallMillis": [
+                3
+            ],
+            "firstFrameMillis": [
+                3
+            ],
+            "plays": [
+                3
+            ],
+            "roughPlays": [
+                3
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "LinkReportInput": {
+            "streamId": [
+                2
+            ],
+            "widthPixels": [
+                3
+            ],
+            "heightPixels": [
+                3
+            ],
+            "bitrateBps": [
+                3
+            ],
+            "stalls": [
+                3
+            ],
+            "stallMillis": [
+                3
+            ],
+            "firstFrameMillis": [
+                3
+            ],
+            "playedMillis": [
+                3
+            ],
             "__typename": [
                 4
             ]
@@ -434,7 +498,7 @@ export default {
                 8
             ],
             "progress": [
-                16
+                18
             ],
             "__typename": [
                 4
@@ -448,7 +512,7 @@ export default {
                 8
             ],
             "progress": [
-                16
+                18
             ],
             "__typename": [
                 4
@@ -545,10 +609,10 @@ export default {
                 4
             ],
             "subtitleSize": [
-                25
+                27
             ],
             "subtitleStyle": [
-                26
+                28
             ],
             "voiceBoost": [
                 6
@@ -608,7 +672,7 @@ export default {
                 4
             ],
             "tmdbKeyStatus": [
-                28
+                30
             ],
             "usesDefaultTmdbKey": [
                 6
@@ -721,10 +785,10 @@ export default {
                 6
             ],
             "settings": [
-                31
+                33
             ],
             "account": [
-                34
+                36
             ],
             "__typename": [
                 4
@@ -773,7 +837,7 @@ export default {
                 2
             ],
             "kind": [
-                36
+                38
             ],
             "heading": [
                 4
@@ -803,7 +867,7 @@ export default {
                 2
             ],
             "status": [
-                38
+                40
             ],
             "progress": [
                 5
@@ -856,13 +920,13 @@ export default {
                 6
             ],
             "status": [
-                40
+                42
             ],
             "self": [
-                41
+                43
             ],
             "peers": [
-                41
+                43
             ],
             "__typename": [
                 4
@@ -870,7 +934,7 @@ export default {
         },
         "TogetherMessage": {
             "from": [
-                41
+                43
             ],
             "payload": [
                 4
@@ -881,10 +945,10 @@ export default {
         },
         "TogetherUpdate": {
             "room": [
-                42
+                44
             ],
             "message": [
-                43
+                45
             ],
             "__typename": [
                 4
@@ -945,7 +1009,7 @@ export default {
                         3
                     ],
                     "filter": [
-                        20
+                        22
                     ]
                 }
             ],
@@ -983,7 +1047,7 @@ export default {
                 }
             ],
             "moreWith": [
-                21,
+                23,
                 {
                     "profileId": [
                         2,
@@ -1024,7 +1088,7 @@ export default {
                         "MediaType!"
                     ],
                     "sort": [
-                        45
+                        47
                     ]
                 }
             ],
@@ -1036,13 +1100,13 @@ export default {
                         "MediaType!"
                     ],
                     "theme": [
-                        46,
+                        48,
                         "CatalogTheme!"
                     ]
                 }
             ],
             "catalogRows": [
-                47,
+                49,
                 {
                     "mediaType": [
                         0,
@@ -1058,7 +1122,7 @@ export default {
                 }
             ],
             "recommendations": [
-                19,
+                21,
                 {
                     "profileId": [
                         2,
@@ -1079,7 +1143,7 @@ export default {
                 }
             ],
             "recommendationRows": [
-                22,
+                24,
                 {
                     "profileId": [
                         2,
@@ -1094,7 +1158,7 @@ export default {
                 }
             ],
             "continueWatching": [
-                17,
+                19,
                 {
                     "profileId": [
                         2,
@@ -1106,7 +1170,7 @@ export default {
                 }
             ],
             "history": [
-                18,
+                20,
                 {
                     "profileId": [
                         2,
@@ -1139,7 +1203,7 @@ export default {
                 }
             ],
             "notifications": [
-                37,
+                39,
                 {
                     "profileId": [
                         2,
@@ -1160,7 +1224,7 @@ export default {
                 }
             ],
             "downloads": [
-                39,
+                41,
                 {
                     "profileId": [
                         2,
@@ -1172,10 +1236,10 @@ export default {
                 4
             ],
             "togetherRoom": [
-                42
+                44
             ],
             "subtitles": [
-                24,
+                26,
                 {
                     "mediaId": [
                         2,
@@ -1187,10 +1251,10 @@ export default {
                 }
             ],
             "profiles": [
-                23
+                25
             ],
             "settings": [
-                29
+                31
             ],
             "checkTmdbKey": [
                 6,
@@ -1202,13 +1266,13 @@ export default {
                 }
             ],
             "plugins": [
-                33
-            ],
-            "status": [
                 35
             ],
+            "status": [
+                37
+            ],
             "neoworksAccount": [
-                49
+                51
             ],
             "__typename": [
                 4
@@ -1225,7 +1289,7 @@ export default {
                 4
             ],
             "lastSync": [
-                50
+                52
             ],
             "__typename": [
                 4
@@ -1254,7 +1318,7 @@ export default {
                 2
             ],
             "kind": [
-                51
+                53
             ],
             "url": [
                 4
@@ -1322,7 +1386,7 @@ export default {
                 }
             ],
             "resolveStream": [
-                15,
+                17,
                 {
                     "streamId": [
                         2,
@@ -1331,7 +1395,7 @@ export default {
                 }
             ],
             "resolveBestStream": [
-                15,
+                17,
                 {
                     "streamIds": [
                         2,
@@ -1339,8 +1403,17 @@ export default {
                     ]
                 }
             ],
+            "reportLinkPlayback": [
+                6,
+                {
+                    "input": [
+                        15,
+                        "LinkReportInput!"
+                    ]
+                }
+            ],
             "recordProgress": [
-                16,
+                18,
                 {
                     "profileId": [
                         2,
@@ -1446,7 +1519,7 @@ export default {
                 6
             ],
             "startDownload": [
-                39,
+                41,
                 {
                     "profileId": [
                         2,
@@ -1474,7 +1547,7 @@ export default {
                 6
             ],
             "hostTogether": [
-                42,
+                44,
                 {
                     "profileId": [
                         2,
@@ -1483,7 +1556,7 @@ export default {
                 }
             ],
             "joinTogether": [
-                42,
+                44,
                 {
                     "profileId": [
                         2,
@@ -1528,7 +1601,7 @@ export default {
                 }
             ],
             "createProfile": [
-                23,
+                25,
                 {
                     "name": [
                         4,
@@ -1550,7 +1623,7 @@ export default {
                 }
             ],
             "updateProfile": [
-                23,
+                25,
                 {
                     "id": [
                         2,
@@ -1579,10 +1652,10 @@ export default {
                         4
                     ],
                     "subtitleSize": [
-                        25
+                        27
                     ],
                     "subtitleStyle": [
-                        26
+                        28
                     ],
                     "voiceBoost": [
                         6
@@ -1599,7 +1672,7 @@ export default {
                 }
             ],
             "verifyPin": [
-                27,
+                29,
                 {
                     "profileId": [
                         2,
@@ -1612,10 +1685,10 @@ export default {
                 }
             ],
             "updateSettings": [
-                29,
+                31,
                 {
                     "input": [
-                        30,
+                        32,
                         "SettingsInput!"
                     ]
                 }
@@ -1624,7 +1697,7 @@ export default {
                 6
             ],
             "setPluginEnabled": [
-                33,
+                35,
                 {
                     "name": [
                         4,
@@ -1637,20 +1710,20 @@ export default {
                 }
             ],
             "setPluginSettings": [
-                33,
+                35,
                 {
                     "name": [
                         4,
                         "String!"
                     ],
                     "values": [
-                        32,
+                        34,
                         "[PluginSettingInput!]!"
                     ]
                 }
             ],
             "loginPlugin": [
-                33,
+                35,
                 {
                     "name": [
                         4,
@@ -1667,7 +1740,7 @@ export default {
                 }
             ],
             "logoutPlugin": [
-                33,
+                35,
                 {
                     "name": [
                         4,
@@ -1676,7 +1749,7 @@ export default {
                 }
             ],
             "updatePlugins": [
-                55
+                57
             ],
             "startNeoworksSignIn": [
                 4,
@@ -1687,7 +1760,7 @@ export default {
                 }
             ],
             "completeNeoworksSignIn": [
-                49,
+                51,
                 {
                     "code": [
                         4,
@@ -1700,10 +1773,10 @@ export default {
                 }
             ],
             "signOutOfNeoworks": [
-                49
+                51
             ],
             "syncNeoworks": [
-                49
+                51
             ],
             "syncNeoworksSoon": [
                 6
@@ -1728,7 +1801,7 @@ export default {
         },
         "PluginUpdateReport": {
             "updated": [
-                54
+                56
             ],
             "failed": [
                 4
@@ -1739,7 +1812,7 @@ export default {
         },
         "Subscription": {
             "streams": [
-                14,
+                16,
                 {
                     "id": [
                         2,
@@ -1748,10 +1821,10 @@ export default {
                 }
             ],
             "together": [
-                44
+                46
             ],
             "challenges": [
-                52
+                54
             ],
             "__typename": [
                 4

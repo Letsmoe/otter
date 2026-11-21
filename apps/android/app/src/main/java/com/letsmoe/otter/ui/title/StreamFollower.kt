@@ -3,6 +3,8 @@ package com.letsmoe.otter.ui.title
 import com.letsmoe.otter.api.OtterApi
 import com.letsmoe.otter.graphql.StreamsSubscription
 import com.letsmoe.otter.graphql.fragment.StreamLink
+import com.letsmoe.otter.ui.components.linkReportRank
+import com.letsmoe.otter.ui.components.toInfo
 import com.letsmoe.otter.profiles.languageRank
 import com.letsmoe.otter.profiles.preferredLanguages
 import com.letsmoe.otter.toasts.ToastKind
@@ -110,6 +112,7 @@ fun rankStreams(streams: List<StreamLink>): List<StreamLink> {
             { stream -> stream.playable == false },
             { stream -> languageRank(stream.language, preferred) },
             { stream -> playableRank(stream) },
+            { stream -> linkReportRank(stream.report?.linkReportFields?.toInfo()) },
         ),
     )
 }

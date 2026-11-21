@@ -73,11 +73,12 @@ func (s *Store) ForgetDeadLink(ctx context.Context, url string) error {
 
 func upsertStream(ctx context.Context, tx *db.DB, ref MediaRef, pluginName string, download plugins.Download) error {
 	_, err := tx.Exec(ctx, `INSERT INTO stream (media_type, media_id, plugin, url, label,
-		quality, language, format, size_bytes, speed_bps, found_at)
-	VALUES ($media_type, $media_id, $plugin, $url, $label, $quality, $language, $format,
+		quality, claimed_quality, language, format, size_bytes, speed_bps, found_at)
+	VALUES ($media_type, $media_id, $plugin, $url, $label, $quality, $quality, $language, $format,
 		$size_bytes, $speed_bps, $now)
 	ON CONFLICT (media_type, media_id, url) DO UPDATE SET plugin = excluded.plugin,
-		label = excluded.label, quality = COALESCE(excluded.quality, stream.quality), language = excluded.language,
+		label = excluded.label, quality = COALESCE(excluded.quality, stream.quality),
+		claimed_quality = COALESCE(excluded.claimed_quality, stream.claimed_quality), language = excluded.language,
 		format = excluded.format, size_bytes = excluded.size_bytes,
 		speed_bps = COALESCE(excluded.speed_bps, stream.speed_bps)`,
 		db.Vars{
@@ -91,21 +92,27 @@ func upsertStream(ctx context.Context, tx *db.DB, ref MediaRef, pluginName strin
 }
 
 // Streams lists a title's streams: known-playable first, then untried, then
-// failed; faster before slower within each group.
+// failed; faster before slower within each group. Each carries what the app
+// reported about its last plays.
 func (s *Store) Streams(ctx context.Context, ref MediaRef) ([]Stream, error) {
-	return db.QueryAs[Stream](ctx, s.database, `SELECT * FROM stream
+	streams, err := db.QueryAs[Stream](ctx, s.database, `SELECT * FROM stream
 	WHERE media_type = $media_type AND media_id = $media_id
 	ORDER BY CASE playable WHEN 1 THEN 0 WHEN 0 THEN 2 ELSE 1 END,
 		COALESCE(speed_bps, 0) DESC, id`,
 		db.Vars{"media_type": ref.MediaType, "media_id": ref.MediaID})
+	if err != nil {
+		return nil, err
+	}
+	return streams, s.AttachReports(ctx, streams)
 }
 
 // MarkPlayable records whether resolving a stream URL worked, and what a
 // probe measured: speed and, when known, the resolution, which replaces what
-// the site claimed.
+// the site claimed (that stays in claimed_quality).
 func (s *Store) MarkPlayable(ctx context.Context, url string, playable bool, speedBps float64, quality string) error {
 	_, err := s.database.Exec(ctx, `UPDATE stream SET playable = $playable,
-		speed_bps = COALESCE($speed_bps, speed_bps), quality = COALESCE($quality, quality) WHERE url = $url`,
+		speed_bps = COALESCE($speed_bps, speed_bps), claimed_quality = COALESCE(claimed_quality, quality),
+		quality = COALESCE($quality, quality) WHERE url = $url`,
 		db.Vars{"url": url, "playable": playable, "speed_bps": nullableNumber(speedBps), "quality": nullable(quality)})
 	return err
 }
@@ -152,9 +159,17 @@ func nullableNumber(value float64) any {
 	return value
 }
 
-// Stream loads one stream by id; nil when it does not exist.
+// Stream loads one stream by id, with its report; nil when it does not exist.
 func (s *Store) Stream(ctx context.Context, id int) (*Stream, error) {
-	return db.QueryOneAs[Stream](ctx, s.database, "SELECT * FROM stream WHERE id = $id", db.Vars{"id": id})
+	stream, err := db.QueryOneAs[Stream](ctx, s.database, "SELECT * FROM stream WHERE id = $id", db.Vars{"id": id})
+	if err != nil || stream == nil {
+		return stream, err
+	}
+	streams := []Stream{*stream}
+	if err := s.AttachReports(ctx, streams); err != nil {
+		return nil, err
+	}
+	return &streams[0], nil
 }
 
 // AddStream stores one link someone else found (Watch Together shares the
