@@ -388,6 +388,8 @@ type Title struct {
 	TrailerKey *string  `json:"trailerKey,omitempty"`
 	Genres     []string `json:"genres"`
 	Keywords   []string `json:"keywords"`
+	// Whether TMDB tags the title with a scene during or after the credits (the duringcreditsstinger and aftercreditsstinger keywords).
+	HasPostCreditsScene bool `json:"hasPostCreditsScene"`
 	// False for titles only seen in lists; reading them through Query.title fetches the rest.
 	DetailFetched bool      `json:"detailFetched"`
 	Credits       []*Credit `json:"credits"`

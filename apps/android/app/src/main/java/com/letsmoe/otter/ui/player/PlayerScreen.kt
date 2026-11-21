@@ -79,6 +79,7 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
     val position by viewModel.position.collectAsStateWithLifecycle()
     val skipButton by viewModel.skipButton.collectAsStateWithLifecycle()
     val upNext by viewModel.upNext.collectAsStateWithLifecycle()
+    val postCreditsNotice by viewModel.postCreditsNotice.collectAsStateWithLifecycle()
     val captionTweaks by viewModel.captionTweaks.collectAsStateWithLifecycle()
     val room by TogetherSession.room.collectAsStateWithLifecycle()
     val chrome = remember { PlayerChrome() }
@@ -155,6 +156,7 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
         if (!state.hasEnded) {
             PlayerControlsLayer(state, position, chrome, actions) { viewModel.previewPlayer }
             SkipSegmentButton(skipButton.takeIf { upNext == null }, chrome.visible, viewModel::skipSegment)
+            PostCreditsSceneNotice(postCreditsNotice, chrome.visible)
             // Out of the controls' way; the countdown keeps running and the card returns with it.
             UpNextOverlay(upNext.takeIf { !chrome.visible }, chrome.visible, viewModel::cancelUpNext, viewModel::playUpNextNow)
         }

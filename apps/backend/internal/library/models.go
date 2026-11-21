@@ -3,6 +3,11 @@
 // Everything lands in SQLite, where recommendations are computed from it.
 package library
 
+import (
+	"slices"
+	"strings"
+)
+
 // MediaType discriminates rows that can point at several kinds of title.
 type MediaType string
 
@@ -47,6 +52,19 @@ func (t Title) Ref() MediaRef {
 // Year returns the release year, or 0 when the date is unknown.
 func (t Title) Year() int {
 	return yearOf(t.ReleaseDate)
+}
+
+// TMDB keywords for a scene during or after the credits.
+var postCreditsKeywords = []string{"duringcreditsstinger", "aftercreditsstinger"}
+
+// HasPostCreditsScene reports whether TMDB tags the title with a scene during or after the credits.
+func (t Title) HasPostCreditsScene() bool {
+	for _, keyword := range t.Keywords {
+		if slices.Contains(postCreditsKeywords, strings.ToLower(strings.TrimSpace(keyword))) {
+			return true
+		}
+	}
+	return false
 }
 
 type Season struct {

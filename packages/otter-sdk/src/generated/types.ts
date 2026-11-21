@@ -82,6 +82,9 @@ export default {
             "keywords": [
                 4
             ],
+            "hasPostCreditsScene": [
+                6
+            ],
             "detailFetched": [
                 6
             ],
