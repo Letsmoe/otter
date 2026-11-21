@@ -46,7 +46,7 @@ import kotlinx.coroutines.delay
 private const val COUNTDOWN_TICK_MILLISECONDS = 100L
 
 // Above the bottom bar while the controls show, near the edge otherwise.
-private fun bottomOffset(controlsVisible: Boolean): Dp {
+internal fun bottomOffset(controlsVisible: Boolean): Dp {
     if (controlsVisible) {
         return 112.dp
     }
