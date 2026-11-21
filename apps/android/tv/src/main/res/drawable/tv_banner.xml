@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The home screen's 320×180 dp launcher banner: the wordmark on black. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp">
+    <item>
+        <color android:color="#000000" />
+    </item>
+    <item
+        android:left="56dp"
+        android:right="56dp"
+        android:gravity="center"
+        android:drawable="@drawable/otter_wordmark" />
+</layer-list>

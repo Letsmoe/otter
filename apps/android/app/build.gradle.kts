@@ -65,6 +65,10 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // The x86_64 backend in :core is only for emulators.
+            ndk {
+                abiFilters += "arm64-v8a"
+            }
             // Sideloaded personal builds: the debug key lets them install over debug builds.
             signingConfig = signingConfigs.getByName("debug")
             if (releaseKeystore != null) {

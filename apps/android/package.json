@@ -11,6 +11,10 @@
 		"android:ui": "./gradlew :app:installDebug && adb shell am start -S -n com.letsmoe.otter/com.letsmoe.otter.MainActivity",
 		"android:watch": "bun scripts/watch.ts",
 		"android:release": "bun run build && ./gradlew :app:installRelease && adb shell am start -n com.letsmoe.otter/com.letsmoe.otter.MainActivity",
-		"logs": "adb logcat -s OtterBackend:* AndroidRuntime:E"
+		"build:backend:emulator": "bun ../backend/scripts/build-server.ts --out core/src/main/jniLibs/x86/libotter.so --arch x86",
+		"tv": "bun run build && ./gradlew :tv:installDebug && adb shell am start -n com.letsmoe.otter.tv/.TvActivity",
+		"tv:emulator": "bun run build:backend:emulator && bun run build:plugins && ./gradlew :tv:installDebug && adb -e shell am start -S -n com.letsmoe.otter.tv/.TvActivity",
+		"tv:apk": "bun run build && ./gradlew :tv:assembleRelease",
+		"logs":"adb logcat -s OtterBackend:* AndroidRuntime:E"
 	}
 }

@@ -8,7 +8,9 @@
  * the Android NDK's clang: $ANDROID_NDK_HOME, $ANDROID_NDK_LATEST_HOME (GitHub
  * runners), else the newest NDK under $ANDROID_HOME, $ANDROID_SDK_ROOT or ~/Android/Sdk.
  *
- * Usage: bun scripts/build-server.ts --out <file>
+ * Usage: bun scripts/build-server.ts --out <file> [--arch arm64|x86_64|x86]
+ *
+ * --arch defaults to arm64 (phones, TVs); x86_64 and x86 are for emulators on a computer.
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
@@ -19,6 +21,25 @@ const ENV_FILE = resolve(BACKEND_DIR, '../../.env');
 const KEY_VARIABLE = 'github.com/Letsmoe/otter/internal/settings.DefaultTMDBApiKey';
 // The app's minSdk; the NDK names its compilers after it.
 const ANDROID_API_LEVEL = 26;
+
+type Architecture = { goArch: string; clangTarget: string };
+
+const ARCHITECTURES: Record<string, Architecture> = {
+	arm64: { goArch: 'arm64', clangTarget: 'aarch64-linux-android' },
+	x86_64: { goArch: 'amd64', clangTarget: 'x86_64-linux-android' },
+	x86: { goArch: '386', clangTarget: 'i686-linux-android' }
+};
+
+function targetArchitecture(): Architecture {
+	const index = process.argv.indexOf('--arch');
+	if (index < 0) return ARCHITECTURES.arm64;
+	const architecture = ARCHITECTURES[process.argv[index + 1]];
+	if (!architecture) {
+		console.error('build-server: --arch must be arm64, x86_64 or x86');
+		process.exit(1);
+	}
+	return architecture;
+}
 
 function outputPath(): string {
 	const index = process.argv.indexOf('--out');
@@ -72,11 +93,11 @@ function ndkDirectory(): string {
 	process.exit(1);
 }
 
-/** The NDK's clang for arm64 Android at the app's API level. */
-function ndkCompilers(): { cc: string; cxx: string } {
+/** The NDK's clang for the target architecture at the app's API level. */
+function ndkCompilers(architecture: Architecture): { cc: string; cxx: string } {
 	const hostTag = `${process.platform}-x86_64`;
 	const binDirectory = join(ndkDirectory(), 'toolchains/llvm/prebuilt', hostTag, 'bin');
-	const prefix = join(binDirectory, `aarch64-linux-android${ANDROID_API_LEVEL}-clang`);
+	const prefix = join(binDirectory, `${architecture.clangTarget}${ANDROID_API_LEVEL}-clang`);
 	return { cc: prefix, cxx: `${prefix}++` };
 }
 
@@ -98,7 +119,8 @@ if (!key) console.warn('build-server: no TMDB_API_KEY found, building without a 
 const flags = ['-s', '-w', '-checklinkname=0'];
 if (key) flags.push(`-X ${KEY_VARIABLE}=${key}`);
 
-const compilers = ndkCompilers();
+const architecture = targetArchitecture();
+const compilers = ndkCompilers(architecture);
 const build = Bun.spawnSync(
 	['go', 'build', '-trimpath', `-ldflags=${flags.join(' ')}`, '-o', outputPath(), './cmd/server'],
 	{
@@ -110,7 +132,7 @@ const build = Bun.spawnSync(
 			CXX: compilers.cxx,
 			CGO_LDFLAGS: `-L${emptyPthreadDirectory()}`,
 			GOOS: 'android',
-			GOARCH: 'arm64'
+			GOARCH: architecture.goArch
 		},
 		stdout: 'inherit',
 		stderr: 'inherit'

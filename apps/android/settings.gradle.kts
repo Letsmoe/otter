@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 rootProject.name = "otter"
 include(":core")
 include(":app")
+include(":tv")
