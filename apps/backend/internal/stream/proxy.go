@@ -39,6 +39,7 @@ type sessionData struct {
 //	GET /api/stream/mp4?s=<session>&u=<encodedURL>&c=<cacheID>[&direct=1]
 //	GET /api/stream/continuous?s=<session>&u=<encodedURL>&start=<seconds> (continuous.go)
 //	GET /api/stream/overlay?job=<id> (overlay.go)
+//	GET /api/stream/tv?session=<id> (tv_session.go)
 type Proxy struct {
 	cache   *CacheService
 	kv      *cache.Client
@@ -105,6 +106,8 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		p.serveContinuous(w, r)
 	case strings.HasSuffix(r.URL.Path, "/overlay"):
 		p.serveOverlay(w, r)
+	case strings.HasSuffix(r.URL.Path, "/tv"):
+		p.serveTelevisionSession(w, r)
 	default:
 		http.NotFound(w, r)
 	}

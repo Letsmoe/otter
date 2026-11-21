@@ -205,6 +205,8 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         skipTracker.reset(emptyList())
         mutableSkipButton.value = null
         clearPlayers()
+        // A TV with a session stream shows the loading screen while the new title's links resolve.
+        televisionPlayer?.showLoading(null)
         trackCatalog = TrackCatalog.Empty
         startSubtitleLoad(mediaId)
         televisionPlayer?.stopsAfterEpisode = false

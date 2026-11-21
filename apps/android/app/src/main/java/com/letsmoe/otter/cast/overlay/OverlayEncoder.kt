@@ -43,7 +43,7 @@ import kotlin.coroutines.resumeWithException
 // Short fragments reach the TV sooner after a (re)start.
 private const val FRAGMENT_MILLISECONDS = 1000L
 // The TV sits on the phone's Wi-Fi: picture quality matters more than size.
-private const val VIDEO_BITRATE = 8_000_000
+const val OVERLAY_VIDEO_BITRATE = 8_000_000
 
 /**
  * Re-encodes one overlay job with Media3 Transformer: the hardware decoder
@@ -56,7 +56,7 @@ private const val VIDEO_BITRATE = 8_000_000
 class OverlayEncoder(
     private val context: Context,
     private val job: OverlayJob,
-    private val videoBitrate: Int = VIDEO_BITRATE,
+    private val videoBitrate: Int = OVERLAY_VIDEO_BITRATE,
 ) {
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -85,7 +85,7 @@ class OverlayEncoder(
 
     private fun buildTransformer(output: OutputStream, listener: Transformer.Listener): Transformer {
         val decoderFactory = DefaultDecoderFactory.Builder(context).build()
-        val assetLoaderFactory = ExoPlayerAssetLoader.Factory(context, decoderFactory, Clock.DEFAULT, null, trackSelectorFactory(), null, null)
+        val assetLoaderFactory = ExoPlayerAssetLoader.Factory(context, decoderFactory, Clock.DEFAULT, null, highestVariantSelector(job.maxHeight), null, null)
         val encoderSettings = VideoEncoderSettings.Builder().setBitrate(videoBitrate).build()
         val encoderFactory = DefaultEncoderFactory.Builder(context).setRequestedVideoEncoderSettings(encoderSettings).build()
         return Transformer.Builder(context)
@@ -97,19 +97,6 @@ class OverlayEncoder(
             .setMaxDelayBetweenMuxerSamplesMs(C.TIME_UNSET)
             .addListener(listener)
             .build()
-    }
-
-    // The best variant the TV takes, as the TV's continuous streams pick it.
-    private fun trackSelectorFactory(): TrackSelector.Factory {
-        return TrackSelector.Factory { selectorContext ->
-            val selector = DefaultTrackSelector(selectorContext)
-            selector.parameters = selector.buildUponParameters()
-                .setForceHighestSupportedBitrate(true)
-                .setMaxVideoSize(Int.MAX_VALUE, job.maxHeight)
-                .setConstrainAudioChannelCountToDeviceCapabilities(false)
-                .build()
-            selector
-        }
     }
 
     private fun editedMediaItem(): EditedMediaItem {
@@ -143,12 +130,26 @@ class OverlayEncoder(
     }
 }
 
+/** The best variant at most [maxHeight] lines tall, as the TV's continuous streams pick it. */
+@UnstableApi
+internal fun highestVariantSelector(maxHeight: Int): TrackSelector.Factory {
+    return TrackSelector.Factory { selectorContext ->
+        val selector = DefaultTrackSelector(selectorContext)
+        selector.parameters = selector.buildUponParameters()
+            .setForceHighestSupportedBitrate(true)
+            .setMaxVideoSize(Int.MAX_VALUE, maxHeight)
+            .setConstrainAudioChannelCountToDeviceCapabilities(false)
+            .build()
+        selector
+    }
+}
+
 /**
  * The phone's voice boost in the TV's sound, switched with the profile while
  * the stream plays. Always in the chain, so the audio is always re-encoded.
  */
 @UnstableApi
-private class LiveVoiceBoost(private val job: OverlayJob) : VoiceBoostAudioProcessor() {
+internal class LiveVoiceBoost(private val job: OverlayJob) : VoiceBoostAudioProcessor() {
 
     override fun queueInput(inputBuffer: ByteBuffer) {
         enabled = job.voiceBoost()
@@ -158,7 +159,7 @@ private class LiveVoiceBoost(private val job: OverlayJob) : VoiceBoostAudioProce
 
 /** Even volume in the TV's sound, switched with the phone's setting while the stream plays. */
 @UnstableApi
-private class LiveEvenVolume(private val job: OverlayJob) : EvenVolumeAudioProcessor() {
+internal class LiveEvenVolume(private val job: OverlayJob) : EvenVolumeAudioProcessor() {
 
     override fun queueInput(inputBuffer: ByteBuffer) {
         enabled = job.evenVolume()
@@ -177,13 +178,19 @@ private class SupportedMetadataMuxer(private val muxer: Muxer) : Muxer by muxer 
     }
 }
 
-/** Hands Transformer a fragmented-MP4 muxer that writes to the TV's connection. */
+/**
+ * Hands Transformer a fragmented-MP4 muxer that writes to the TV's connection,
+ * through [wrap] (e.g. one that paces the samples).
+ */
 @UnstableApi
-private class StreamMuxerFactory(private val output: OutputStream) : Muxer.Factory {
+internal class StreamMuxerFactory(
+    private val output: OutputStream,
+    private val wrap: (Muxer) -> Muxer = { muxer -> muxer },
+) : Muxer.Factory {
 
     override fun create(path: String): Muxer {
         val muxer = FragmentedMp4Muxer.Builder(output).setFragmentDurationMs(FRAGMENT_MILLISECONDS).build()
-        return SupportedMetadataMuxer(muxer)
+        return wrap(SupportedMetadataMuxer(muxer))
     }
 
     // What MPEG-TS carries to every TV; other audio is converted to AAC.

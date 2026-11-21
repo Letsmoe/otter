@@ -72,7 +72,10 @@ object TelevisionPlayback {
         mutablePlayer.value = null
         store.clear()
         store = ViewModelStore()
-        CastKeepAliveService.stop(application)
+        // A TV with its own session stream still needs the phone awake; disconnecting lets it sleep.
+        if (!TelevisionConnection.streamsContinuously) {
+            CastKeepAliveService.stop(application)
+        }
     }
 
     /** Stops the title and the connection. */

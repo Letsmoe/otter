@@ -62,9 +62,10 @@ func contentFeatures(request *http.Request) string {
 	return operations + ";DLNA.ORG_CI=0;" + dlnaFlags
 }
 
-// isRestartedOnSeek tells streams the TV can't seek in by bytes: continuous and overlay streams start again at the new position.
+// isRestartedOnSeek tells streams the TV can't seek in by bytes: continuous and overlay streams start again at the
+// new position, and a TV session's stream is live.
 func isRestartedOnSeek(path string) bool {
-	return strings.HasSuffix(path, "/continuous") || strings.HasSuffix(path, "/overlay")
+	return strings.HasSuffix(path, "/continuous") || strings.HasSuffix(path, "/overlay") || strings.HasSuffix(path, "/tv")
 }
 
 type contentTypeWriter struct {
