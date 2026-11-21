@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.apollo)
+    // Debug builds only (its default): release builds compile without it.
+    alias(libs.plugins.hotswan.compiler)
 }
 
 // Uploads the R8 mapping to PostHog, so error reports show real class names and lines. Only CI
