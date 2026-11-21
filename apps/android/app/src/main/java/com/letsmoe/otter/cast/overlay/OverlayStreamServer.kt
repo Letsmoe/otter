@@ -69,24 +69,32 @@ object OverlayStreamServer {
                 return
             }
             val job = OverlayJobs.find(request.jobId)
-            if (job == null) {
+            val still = StillJobs.find(request.jobId)
+            if (job == null && still == null) {
                 respond(socket.getOutputStream(), "404 Not Found")
                 return
             }
             respond(socket.getOutputStream(), "200 OK")
-            if (request.method == "GET") {
-                streamTakingOver(job, socket.getOutputStream())
+            if (request.method != "GET") {
+                return
+            }
+            if (job != null) {
+                streamTakingOver(job.id) { stream(job, socket.getOutputStream()) }
+                return
+            }
+            if (still != null) {
+                streamTakingOver(still.id) { streamStill(still, socket.getOutputStream()) }
             }
         }
     }
 
-    private suspend fun streamTakingOver(job: OverlayJob, output: OutputStream) {
+    private suspend fun streamTakingOver(jobId: String, streaming: suspend () -> Unit) {
         val current = currentJob() ?: return
-        replaceRunning(job.id, current)?.cancel()
+        replaceRunning(jobId, current)?.cancel()
         try {
-            stream(job, output)
+            streaming()
         } finally {
-            forgetRunning(job.id, current)
+            forgetRunning(jobId, current)
         }
     }
 
@@ -119,6 +127,21 @@ object OverlayStreamServer {
             }
             Log.w(TAG, "encoding overlay job ${job.id} failed", error)
             job.onFailure(job, error)
+        }
+    }
+
+    private suspend fun streamStill(still: StillJob, output: OutputStream) {
+        val watched = WatchedOutputStream(output)
+        try {
+            StillEncoder(applicationContext, still).encode(watched)
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Exception) {
+            if (watched.failed) {
+                return
+            }
+            Log.w(TAG, "encoding still ${still.id} failed", error)
+            still.onFailure(error)
         }
     }
 }
