@@ -29,6 +29,7 @@ import com.letsmoe.otter.together.TogetherSession
 import com.letsmoe.otter.cast.overlay.loadOverlayPlan
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.reporting.ErrorReporting
+import com.letsmoe.otter.settings.NightVolume
 import com.letsmoe.otter.settings.PlaybackSettings
 import com.letsmoe.otter.ui.player.captionLookOf
 import kotlinx.coroutines.CancellationException
@@ -109,6 +110,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     private var client = DlnaClient(initialRenderer, journal)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val heights = TelevisionHeights(context)
+    private val nightVolumeGuard = NightVolumeGuard(scope, ::readVolume) { volume -> client.setVolume(volume) }
 
     /** The height of the link set next (from its quality, e.g. 1080 for "1080p"); null when unknown. */
     var linkHeight: Int? = null
@@ -277,8 +279,10 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
         }
     }
 
+    /** Sets the TV's volume, never above the night's limit. */
     fun changeVolume(volume: Int) {
-        sendCommand { client.setVolume(volume) }
+        val allowed = NightVolume.capped(volume, PlaybackSettings.televisionVolumeMaximum)
+        sendCommand { client.setVolume(allowed) }
     }
 
     // Commands -----------------------------------------------------------------
@@ -448,6 +452,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     }
 
     private fun stopWork() {
+        nightVolumeGuard.stop()
         loadJob?.cancel()
         pollJob?.cancel()
         seekJob?.cancel()
@@ -807,6 +812,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
 
     private fun startPolling() {
         pollFailures = 0
+        nightVolumeGuard.start()
         pollJob = scope.launch {
             while (true) {
                 poll()
