@@ -1,0 +1,58 @@
+fragment LetterboxdImportFields on LetterboxdImport {
+  state
+  total
+  processed
+  matched
+  watched
+  rated
+  watchlisted
+  unmatchedCount
+  notMatched {
+    name
+    year
+    reason
+  }
+  error
+}
+
+fragment LetterboxdAccountFields on LetterboxdAccount {
+  username
+  lastSyncedAt
+  lastError
+  lastWatched
+  lastRated
+}
+
+query LetterboxdImportStatus($profileId: ID!) {
+  letterboxdImport(profileId: $profileId) {
+    ...LetterboxdImportFields
+  }
+}
+
+query LetterboxdFollowed($profileId: ID!) {
+  letterboxdAccount(profileId: $profileId) {
+    ...LetterboxdAccountFields
+  }
+}
+
+mutation ImportLetterboxd($profileId: ID!, $zipBase64: String!) {
+  importLetterboxd(profileId: $profileId, zipBase64: $zipBase64) {
+    ...LetterboxdImportFields
+  }
+}
+
+mutation ConnectLetterboxd($profileId: ID!, $username: String!) {
+  connectLetterboxd(profileId: $profileId, username: $username) {
+    ...LetterboxdAccountFields
+  }
+}
+
+mutation DisconnectLetterboxd($profileId: ID!) {
+  disconnectLetterboxd(profileId: $profileId)
+}
+
+mutation SyncLetterboxd($profileId: ID!) {
+  syncLetterboxd(profileId: $profileId) {
+    ...LetterboxdAccountFields
+  }
+}
