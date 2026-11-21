@@ -20,6 +20,7 @@ object PlaybackSettings {
     private const val KEY_TELEVISION_OVERLAYS = "televisionOverlays"
     private const val KEY_TELEVISION_TITLE_CARD = "televisionTitleCard"
     private const val KEY_TELEVISION_BROWSE = "televisionBrowse"
+    private const val KEY_TELEVISION_SCREENSAVER = "televisionScreensaver"
     private const val KEY_EVEN_VOLUME = "evenVolume"
     private const val KEY_BRIGHTEN_DARK_SCENES = "brightenDarkScenes"
     private const val KEY_BEDTIME_MINUTES = "bedtimeMinutes"
@@ -126,6 +127,13 @@ object PlaybackSettings {
         get() = preferences.getBoolean(KEY_TELEVISION_BROWSE, true)
         set(value) {
             preferences.edit { putBoolean(KEY_TELEVISION_BROWSE, value) }
+        }
+
+    /** Whether an idle connected DLNA TV cycles through backdrops of My List and what is being watched. */
+    var televisionScreensaver: Boolean
+        get() = preferences.getBoolean(KEY_TELEVISION_SCREENSAVER, true)
+        set(value) {
+            preferences.edit { putBoolean(KEY_TELEVISION_SCREENSAVER, value) }
         }
 
     /** Whether a TV with drawn-in hints shows the title and episode for a few seconds when a title starts. */
