@@ -9,10 +9,9 @@ private const val KEPT_JOBS = 4
 /**
  * One overlay stream a TV was handed: the title's stream on loopback
  * ([sourceUrl], played from [startSeconds]), at most [maxHeight] lines tall,
- * with [plan] drawn in. [captionLook] and [upNextDismissed] are asked while
- * encoding, so a changed caption setting or a cancelled card reaches the
- * picture without a restart. [onFailure] hears when encoding fails, so the TV
- * can get the plain stream instead.
+ * with [plan] drawn in. The live inputs are asked while encoding, so a
+ * changed setting reaches the TV without a restart. [onFailure] hears when
+ * encoding fails, so the TV can get the plain stream instead.
  */
 class OverlayJob(
     val sourceUrl: String,
@@ -20,12 +19,30 @@ class OverlayJob(
     val startSeconds: Double,
     val maxHeight: Int,
     val plan: OverlayPlan,
-    val captionLook: () -> CaptionLook = { CaptionLook.DEFAULT },
-    val upNextDismissed: () -> Boolean = { false },
+    val live: OverlayLiveInputs = OverlayLiveInputs(),
     val onFailure: (OverlayJob, Exception) -> Unit,
 ) {
     val id: String = UUID.randomUUID().toString()
+
+    fun captionLook(): CaptionLook = live.captionLook()
+
+    fun upNextDismissed(): Boolean = live.upNextDismissed()
+
+    fun captionDelaySeconds(): Double = live.captionDelaySeconds()
+
+    fun voiceBoost(): Boolean = live.voiceBoost()
 }
+
+/**
+ * What can change while a stream plays: the profile's caption look, a cancelled next-episode
+ * card, the viewer's caption timing (positive: later) and voice boost.
+ */
+class OverlayLiveInputs(
+    val captionLook: () -> CaptionLook = { CaptionLook.DEFAULT },
+    val upNextDismissed: () -> Boolean = { false },
+    val captionDelaySeconds: () -> Double = { 0.0 },
+    val voiceBoost: () -> Boolean = { false },
+)
 
 /** The overlay streams the loopback server can encode, by id. */
 object OverlayJobs {

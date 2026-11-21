@@ -14,7 +14,7 @@ private const val PCM_16_SCALE = 32768f
  * switched live with [enabled]: while off, samples pass through unchanged.
  */
 @UnstableApi
-class VoiceBoostAudioProcessor : BaseAudioProcessor() {
+open class VoiceBoostAudioProcessor : BaseAudioProcessor() {
 
     @Volatile
     var enabled = false

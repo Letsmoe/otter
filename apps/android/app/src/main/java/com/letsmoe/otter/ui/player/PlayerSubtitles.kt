@@ -45,14 +45,22 @@ suspend fun loadSubtitles(mediaId: String, profileId: String): List<PlayerSubtit
     }
 }
 
-fun PlayerSubtitle.toSubtitleConfiguration(): MediaItem.SubtitleConfiguration {
-    return MediaItem.SubtitleConfiguration.Builder(Uri.parse(ServerSettings.baseUrl + vttPath))
+/** The file as a side-loaded track; [delayMilliseconds] has the backend shift its cues (positive: later). */
+fun PlayerSubtitle.toSubtitleConfiguration(delayMilliseconds: Long = 0): MediaItem.SubtitleConfiguration {
+    return MediaItem.SubtitleConfiguration.Builder(Uri.parse(ServerSettings.baseUrl + vttPathWithDelay(vttPath, delayMilliseconds)))
         .setId(id)
         .setMimeType(MimeTypes.TEXT_VTT)
         .setLanguage(language)
         .setLabel(label)
         .setSelectionFlags(0)
         .build()
+}
+
+private fun vttPathWithDelay(vttPath: String, delayMilliseconds: Long): String {
+    if (delayMilliseconds == 0L) {
+        return vttPath
+    }
+    return "$vttPath?offset=$delayMilliseconds"
 }
 
 /** Whether a track of the player is this subtitle: local tracks carry its id, Chromecast tracks its file URL. */

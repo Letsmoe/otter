@@ -21,18 +21,41 @@ private const val TAG = "OtterOverlay"
 private const val CAPTION_TIMEOUT_MILLISECONDS = 5000
 private const val STILL_WIDTH = 640
 private const val STILL_HEIGHT = 360
+private const val TITLE_CARD_SECONDS = 6.0
 
 /** The next episode as its card in the picture shows it; it counts down from the credits. */
 data class UpNextPreview(val episodeLabel: String, val stillUrl: String?, val creditsStartSeconds: Double, val countdownSeconds: Double)
 
-/** What the player knows to draw besides captions: the title's skippable parts and what plays next. */
-data class TelevisionHints(val skips: List<SkipHint> = emptyList(), val upNext: UpNextPreview? = null)
+/** What is playing, for the title card: "Severance" and "S1:E2 · Half Loop" (null for movies). */
+data class TitleText(val title: String, val detail: String?)
 
-/** Loads what the picture shows: the caption file at [captionPath] (a backend path) and the next episode's still. */
-suspend fun loadOverlayPlan(context: Context, hints: TelevisionHints, captionPath: String?): OverlayPlan {
-    val captions = loadCaptions(captionPath)
+/** What the player knows to draw besides captions: the title's skippable parts, what plays next and what plays now. */
+data class TelevisionHints(
+    val skips: List<SkipHint> = emptyList(),
+    val upNext: UpNextPreview? = null,
+    val titleText: TitleText? = null,
+)
+
+/** The caption files the picture shows, as backend paths: the main language and, smaller, a second one. */
+data class CaptionPaths(val main: String?, val second: String?)
+
+/**
+ * Loads what the picture shows: the caption files and the next episode's
+ * still. [titleCardFromSeconds] starts the title card there; null shows none.
+ */
+suspend fun loadOverlayPlan(context: Context, hints: TelevisionHints, captionPaths: CaptionPaths, titleCardFromSeconds: Double?): OverlayPlan {
+    val captions = loadCaptionCues(captionPaths.main)
+    val secondCaptions = loadCaptionCues(captionPaths.second)
     val upNext = hints.upNext?.let { preview -> upNextHint(context, preview) }
-    return OverlayPlan(captions, hints.skips, upNext)
+    val titleCard = titleCardOf(hints.titleText, titleCardFromSeconds)
+    return OverlayPlan(captions, hints.skips, upNext, secondCaptions, titleCard)
+}
+
+private fun titleCardOf(text: TitleText?, fromSeconds: Double?): TitleCard? {
+    if (text == null || fromSeconds == null) {
+        return null
+    }
+    return TitleCard(text.title, text.detail, fromSeconds, fromSeconds + TITLE_CARD_SECONDS)
 }
 
 private suspend fun upNextHint(context: Context, preview: UpNextPreview): UpNextHint {
@@ -40,8 +63,8 @@ private suspend fun upNextHint(context: Context, preview: UpNextPreview): UpNext
     return UpNextHint(preview.episodeLabel, preview.creditsStartSeconds, preview.countdownSeconds, still)
 }
 
-// Without the file the title still plays, just without captions.
-private suspend fun loadCaptions(captionPath: String?): List<CaptionCue> {
+/** The cues of the caption file at [captionPath] (a backend .srt path); empty without one or when it can't be read. */
+suspend fun loadCaptionCues(captionPath: String?): List<CaptionCue> {
     val path = captionPath ?: return emptyList()
     return try {
         parseSrt(fetchText(EmbeddedBackend.BASE_URL + path))

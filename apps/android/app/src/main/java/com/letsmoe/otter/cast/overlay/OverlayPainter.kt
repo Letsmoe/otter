@@ -3,7 +3,9 @@ package com.letsmoe.otter.cast.overlay
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.Shader
 import android.graphics.Path
 import android.graphics.PorterDuff
 import android.graphics.Rect
@@ -26,6 +28,14 @@ private const val REFERENCE_HEIGHT = 1080f
 private const val CAPTION_OUTLINE_FRACTION = 0.14f
 private const val CAPTION_BOX_PADDING_FRACTION = 0.3f
 private const val CAPTION_MAX_WIDTH_FRACTION = 0.62f
+// The second language: its size relative to the main captions, and the gap between them.
+private const val SECOND_CAPTION_SCALE = 0.8f
+private const val SECOND_CAPTION_GAP_FRACTION = 0.25f
+private const val TITLE_CARD_TOP = 64f
+private const val TITLE_CARD_TITLE_SIZE = 58f
+private const val TITLE_CARD_DETAIL_SIZE = 32f
+private const val TITLE_CARD_MAX_WIDTH_FRACTION = 0.6f
+private const val TITLE_SHADE_HEIGHT = 300f
 private const val BOTTOM_MARGIN = 72f
 private const val SIDE_MARGIN = 64f
 private const val HINT_TEXT_SIZE = 30f
@@ -75,7 +85,7 @@ class OverlayPainter(private val job: OverlayJob) : BitmapOverlay() {
 
     // A card the viewer cancelled on the phone leaves the picture too.
     private fun visibleFrameAt(seconds: Double): OverlayFrame {
-        val frame = job.plan.frameAt(seconds)
+        val frame = job.plan.frameAt(seconds, job.captionDelaySeconds())
         if (frame.upNextSecondsLeft == null || !job.upNextDismissed()) {
             return frame
         }
@@ -92,7 +102,8 @@ class OverlayPainter(private val job: OverlayJob) : BitmapOverlay() {
 fun drawFrame(canvas: Canvas, frame: OverlayFrame, captionLook: CaptionLook, upNext: UpNextHint?) {
     val scale = canvas.height / REFERENCE_HEIGHT
     canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
-    frame.caption?.let { caption -> drawCaption(canvas, caption, captionLook) }
+    frame.titleCard?.let { card -> drawTitleCard(canvas, card, scale) }
+    drawCaptions(canvas, CaptionLines(frame.caption, frame.secondCaption), captionLook)
     val secondsLeft = frame.upNextSecondsLeft
     if (secondsLeft != null && upNext != null) {
         drawUpNextCard(canvas, upNext, UpNextCountdown(secondsLeft, frame.upNextProgress ?: 0f), scale)
@@ -101,30 +112,63 @@ fun drawFrame(canvas: Canvas, frame: OverlayFrame, captionLook: CaptionLook, upN
     frame.skipLabel?.let { label -> drawSkipPill(canvas, label, scale) }
 }
 
-// The profile's size (as on the phone) and style, bottom center.
-private fun drawCaption(canvas: Canvas, caption: String, captionLook: CaptionLook) {
+/** The main captions and, smaller under them, the second language's. */
+private data class CaptionLines(val main: String?, val second: String?)
+
+/** One block of caption text, laid out and ready to draw in its colour. */
+private class CaptionBlock(val layout: StaticLayout, val paint: TextPaint, val textColor: Int)
+
+// The profile's size (as on the phone) and style, bottom center; the second language sits under the main one.
+private fun drawCaptions(canvas: Canvas, lines: CaptionLines, captionLook: CaptionLook) {
+    val mainSize = captionLook.textFraction * canvas.height
+    var bottom = canvas.height - BOTTOM_MARGIN * canvas.height / REFERENCE_HEIGHT
+    lines.second?.let { second ->
+        val block = captionBlock(canvas, second, mainSize * SECOND_CAPTION_SCALE, secondCaptionColor(captionLook.style))
+        drawCaptionBlock(canvas, block, bottom, captionLook.style)
+        bottom -= block.layout.height + mainSize * SECOND_CAPTION_GAP_FRACTION
+    }
+    lines.main?.let { main ->
+        val block = captionBlock(canvas, main, mainSize, mainCaptionColor(captionLook.style))
+        drawCaptionBlock(canvas, block, bottom, captionLook.style)
+    }
+}
+
+private fun captionBlock(canvas: Canvas, text: String, textSize: Float, textColor: Int): CaptionBlock {
     val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
-    paint.textSize = captionLook.textFraction * canvas.height
+    paint.textSize = textSize
     paint.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
     val width = (canvas.width * CAPTION_MAX_WIDTH_FRACTION).toInt()
-    val layout = StaticLayout.Builder.obtain(caption, 0, caption.length, paint, width)
+    val layout = StaticLayout.Builder.obtain(text, 0, text.length, paint, width)
         .setAlignment(Layout.Alignment.ALIGN_CENTER)
         .build()
+    return CaptionBlock(layout, paint, textColor)
+}
+
+// Draws the block centered, its last line ending at [bottom].
+private fun drawCaptionBlock(canvas: Canvas, block: CaptionBlock, bottom: Float, style: SubtitleStyle) {
     canvas.save()
-    canvas.translate((canvas.width - width) / 2f, canvas.height - BOTTOM_MARGIN * canvas.height / REFERENCE_HEIGHT - layout.height)
-    if (captionLook.style == SubtitleStyle.BOX) {
-        drawBoxedCaption(canvas, layout, paint)
+    canvas.translate((canvas.width - block.layout.width) / 2f, bottom - block.layout.height)
+    if (style == SubtitleStyle.BOX) {
+        drawBoxedCaption(canvas, block.layout, block.paint, block.textColor)
     } else {
-        drawOutlinedCaption(canvas, layout, paint, captionTextColor(captionLook.style))
+        drawOutlinedCaption(canvas, block.layout, block.paint, block.textColor)
     }
     canvas.restore()
 }
 
-private fun captionTextColor(style: SubtitleStyle): Int {
+private fun mainCaptionColor(style: SubtitleStyle): Int {
     if (style == SubtitleStyle.YELLOW) {
         return CaptionColors.YELLOW
     }
     return Color.WHITE
+}
+
+// Set apart from the main captions: white under yellow ones, light grey under white ones.
+private fun secondCaptionColor(style: SubtitleStyle): Int {
+    if (style == SubtitleStyle.YELLOW) {
+        return Color.WHITE
+    }
+    return CaptionColors.SECOND
 }
 
 private fun drawOutlinedCaption(canvas: Canvas, layout: StaticLayout, paint: TextPaint, textColor: Int) {
@@ -139,7 +183,7 @@ private fun drawOutlinedCaption(canvas: Canvas, layout: StaticLayout, paint: Tex
 }
 
 // A dark box behind each line, as TV captions often look.
-private fun drawBoxedCaption(canvas: Canvas, layout: StaticLayout, paint: TextPaint) {
+private fun drawBoxedCaption(canvas: Canvas, layout: StaticLayout, paint: TextPaint, textColor: Int) {
     val box = Paint(Paint.ANTI_ALIAS_FLAG)
     box.color = CaptionColors.BOX
     val padding = paint.textSize * CAPTION_BOX_PADDING_FRACTION
@@ -152,8 +196,37 @@ private fun drawBoxedCaption(canvas: Canvas, layout: StaticLayout, paint: TextPa
         )
         canvas.drawRect(lineBox, box)
     }
-    paint.color = Color.WHITE
+    paint.color = textColor
     layout.draw(canvas)
+}
+
+// "Severance" large with "S1:E2 · Half Loop" under it, top left, over a shade that keeps it readable.
+private fun drawTitleCard(canvas: Canvas, card: TitleCard, scale: Float) {
+    val shade = Paint()
+    val shadeHeight = TITLE_SHADE_HEIGHT * scale
+    shade.shader = LinearGradient(0f, 0f, 0f, shadeHeight, CARD_FILL, Color.TRANSPARENT, Shader.TileMode.CLAMP)
+    canvas.drawRect(0f, 0f, canvas.width.toFloat(), shadeHeight, shade)
+    val title = titleCardPaint(TITLE_CARD_TITLE_SIZE * scale, Color.WHITE, Typeface.BOLD)
+    val left = SIDE_MARGIN * scale
+    val maxWidth = canvas.width * TITLE_CARD_MAX_WIDTH_FRACTION
+    val titleBaseline = TITLE_CARD_TOP * scale - title.ascent()
+    canvas.drawText(ellipsized(card.title, title, maxWidth), left, titleBaseline, title)
+    val detail = card.detail ?: return
+    val detailPaint = titleCardPaint(TITLE_CARD_DETAIL_SIZE * scale, LABEL_COLOR, Typeface.NORMAL)
+    val detailBaseline = titleBaseline + title.descent() + CARD_LINE_GAP * scale - detailPaint.ascent()
+    canvas.drawText(ellipsized(detail, detailPaint, maxWidth), left, detailBaseline, detailPaint)
+}
+
+private fun titleCardPaint(textSize: Float, color: Int, style: Int): TextPaint {
+    val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
+    paint.textSize = textSize
+    paint.color = color
+    paint.typeface = Typeface.create(Typeface.SANS_SERIF, style)
+    return paint
+}
+
+private fun ellipsized(text: String, paint: TextPaint, maxWidth: Float): String {
+    return TextUtils.ellipsize(text, paint, maxWidth, TextUtils.TruncateAt.END).toString()
 }
 
 // Looks like the app's filled pill buttons: white with dark text, bottom right.

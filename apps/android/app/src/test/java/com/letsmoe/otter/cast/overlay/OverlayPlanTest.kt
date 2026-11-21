@@ -72,6 +72,37 @@ class OverlayPlanTest {
     }
 
     @Test
+    fun aDelayMovesBothCaptionLanguagesButNotTheHints() {
+        val plan = OverlayPlan(
+            captions = listOf(CaptionCue(10.0, 12.0, "Where were you?")),
+            skips = listOf(SkipHint("Skip intro on your phone", 10.0, 12.0)),
+            secondCaptions = listOf(CaptionCue(10.0, 12.0, "Wo warst du?")),
+        )
+
+        val later = plan.frameAt(10.5, captionDelaySeconds = 1.0)
+        assertNull(later.caption)
+        assertNull(later.secondCaption)
+        assertEquals("Skip intro on your phone", later.skipLabel)
+
+        val shifted = plan.frameAt(11.5, captionDelaySeconds = 1.0)
+        assertEquals("Where were you?", shifted.caption)
+        assertEquals("Wo warst du?", shifted.secondCaption)
+
+        assertEquals("Where were you?", plan.frameAt(9.5, captionDelaySeconds = -1.0).caption)
+    }
+
+    @Test
+    fun theTitleCardShowsForItsSecondsOnly() {
+        val card = TitleCard("Severance", "S1:E2 · Half Loop", 300.0, 306.0)
+        val plan = OverlayPlan(titleCard = card)
+
+        assertNull(plan.frameAt(299.9).titleCard)
+        assertEquals(card, plan.frameAt(300.0).titleCard)
+        assertEquals(card, plan.frameAt(305.9).titleCard)
+        assertNull(plan.frameAt(306.0).titleCard)
+    }
+
+    @Test
     fun theCardFillsAsItCountsDown() {
         val plan = OverlayPlan(upNext = UpNextHint("S1:E2 · Pilot", 1200.0, 10.0, null))
 
