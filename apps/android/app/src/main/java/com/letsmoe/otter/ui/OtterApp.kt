@@ -66,6 +66,7 @@ import com.letsmoe.otter.ui.player.PlayerRequest
 import com.letsmoe.otter.ui.setup.TmdbConnectionOverlay
 import com.letsmoe.otter.ui.setup.TmdbSetupOverlay
 import com.letsmoe.otter.ui.setup.WelcomeOverlay
+import com.letsmoe.otter.ui.television.CarryOnHost
 import com.letsmoe.otter.ui.television.LostTelevisionHost
 import com.letsmoe.otter.ui.television.TelevisionNowPlayingBar
 import com.letsmoe.otter.ui.television.TelevisionRemoteHost
@@ -152,6 +153,9 @@ private fun AppShell(startTab: Tab) {
                 navController.navigate(Routes.player(request.mediaId, request.streamId, startSeconds = request.startSeconds))
             })
             LostTelevisionHost(onContinueOnPhone = { request ->
+                navController.navigate(Routes.player(request.mediaId, request.streamId, startSeconds = request.startSeconds))
+            })
+            CarryOnHost(onContinueOnPhone = { request ->
                 navController.navigate(Routes.player(request.mediaId, request.streamId, startSeconds = request.startSeconds))
             })
             ChallengeSheetHost()

@@ -5,6 +5,7 @@ import com.letsmoe.otter.api.ServerSettings
 import com.letsmoe.otter.backend.EmbeddedBackend
 import com.letsmoe.otter.cast.CallPause
 import com.letsmoe.otter.cast.CastSetup
+import com.letsmoe.otter.cast.LeavingHome
 import com.letsmoe.otter.challenges.ChallengeSolver
 import com.letsmoe.otter.cast.LocalNetworkRouting
 import com.letsmoe.otter.cast.TelevisionConnection
@@ -45,6 +46,7 @@ class OtterApplication : Application() {
         TelevisionBrowse.initialize(this)
         TelevisionScreensaver.initialize(this)
         CallPause.initialize(this)
+        LeavingHome.initialize(this)
         OverlayStreamServer.start(this)
         NotificationCheckWorker.schedule(this)
     }
