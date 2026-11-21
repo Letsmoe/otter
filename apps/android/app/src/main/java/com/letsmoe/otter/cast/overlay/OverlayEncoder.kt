@@ -211,10 +211,11 @@ private class SupportedMetadataMuxer(private val muxer: Muxer) : Muxer by muxer 
 internal class StreamMuxerFactory(
     private val output: OutputStream,
     private val wrap: (Muxer) -> Muxer = { muxer -> muxer },
+    private val fragmentMilliseconds: Long = FRAGMENT_MILLISECONDS,
 ) : Muxer.Factory {
 
     override fun create(path: String): Muxer {
-        val muxer = FragmentedMp4Muxer.Builder(output).setFragmentDurationMs(FRAGMENT_MILLISECONDS).build()
+        val muxer = FragmentedMp4Muxer.Builder(output).setFragmentDurationMs(fragmentMilliseconds).build()
         return wrap(SupportedMetadataMuxer(muxer))
     }
 

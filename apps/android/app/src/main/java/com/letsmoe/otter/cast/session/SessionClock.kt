@@ -29,6 +29,17 @@ class SessionClock(private val elapsedMicroseconds: () -> Long) {
         runningSinceMicroseconds = null
     }
 
+    /** Sets the clock to [targetMicroseconds], running or not. */
+    @Synchronized
+    fun moveTo(targetMicroseconds: Long) {
+        val since = runningSinceMicroseconds
+        if (since == null) {
+            accumulatedMicroseconds = targetMicroseconds
+            return
+        }
+        accumulatedMicroseconds = targetMicroseconds - (elapsedMicroseconds() - since)
+    }
+
     @Synchronized
     fun nowMicroseconds(): Long {
         val since = runningSinceMicroseconds ?: return accumulatedMicroseconds
@@ -38,8 +49,9 @@ class SessionClock(private val elapsedMicroseconds: () -> Long) {
 
 /**
  * How the phone's encoder, the session's clock and the TV's picture relate.
- * The encoder may run [the lead][leadMicroseconds] ahead of the clock; the TV
- * shows the moment the lead behind it.
+ * The clock is the moment the TV shows (it follows the TV's reported position);
+ * the encoder may run [the lead][leadMicroseconds] ahead of it, which is all
+ * the TV has buffered and how long a switch takes to show.
  */
 object SessionTimeline {
 
@@ -49,8 +61,8 @@ object SessionTimeline {
     }
 
     /** The moment of the session the TV shows. */
-    fun shownMicroseconds(clockMicroseconds: Long, leadMicroseconds: Long): Long {
-        return max(0L, clockMicroseconds - leadMicroseconds)
+    fun shownMicroseconds(clockMicroseconds: Long): Long {
+        return max(0L, clockMicroseconds)
     }
 
     /** Whether the TV shows a job that starts at [jobStartMicroseconds] yet; not before the job was handed out (null). */

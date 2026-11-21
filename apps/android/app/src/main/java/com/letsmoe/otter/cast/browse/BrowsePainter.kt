@@ -30,6 +30,9 @@ private const val TITLE_MAX_LINES = 2
 private const val FACTS_SIZE = 38f
 private const val OVERVIEW_SIZE = 36f
 private const val OVERVIEW_MAX_LINES = 3
+// An opened description: as many lines as fit above the bottom margin under a two-line title.
+private val FULL_OVERVIEW_SIZES = floatArrayOf(36f, 31f, 27f)
+private const val FULL_OVERVIEW_MAX_LINES = 11
 private const val OVERVIEW_LINE_SPACING = 1.3f
 private const val FACTS_GAP = 26f
 private const val OVERVIEW_GAP = 30f
@@ -120,7 +123,7 @@ private fun drawShade(canvas: Canvas) {
 private fun drawTitleBlock(canvas: Canvas, preview: BrowsePreview, scale: Float) {
     val title = titleLayout(preview.title, scale)
     val facts = factsLayout(preview.factsLine, scale)
-    val overview = overviewLayout(preview.overview, scale)
+    val overview = overviewLayout(preview.overview, preview.fullOverview, scale)
     var top = canvas.height - BOTTOM_MARGIN * scale - blockHeight(title, facts, overview, scale)
     top = drawLayout(canvas, title, top)
     if (facts != null) {
@@ -164,18 +167,38 @@ private fun factsLayout(factsLine: String, scale: Float): StaticLayout? {
     return textLayout(factsLine, textPaint(FACTS_SIZE * scale, MUTED_WHITE, Typeface.BOLD), TEXT_MAX_WIDTH * scale, 1)
 }
 
-private fun overviewLayout(overview: String?, scale: Float): StaticLayout? {
+private fun overviewLayout(overview: String?, full: Boolean, scale: Float): StaticLayout? {
     if (overview.isNullOrEmpty()) {
         return null
     }
-    val paint = textPaint(OVERVIEW_SIZE * scale, SOFT_WHITE, Typeface.NORMAL)
-    val width = OVERVIEW_MAX_WIDTH * scale
+    if (full) {
+        return fullOverviewLayout(overview, scale)
+    }
+    return cutOverviewLayout(overview, OVERVIEW_SIZE * scale, OVERVIEW_MAX_WIDTH * scale, OVERVIEW_MAX_LINES)
+}
+
+// An opened description: the largest size that shows all of it; a very long one is cut at the smallest.
+private fun fullOverviewLayout(overview: String, scale: Float): StaticLayout {
+    val width = TEXT_MAX_WIDTH * scale
+    for (size in FULL_OVERVIEW_SIZES) {
+        val paint = textPaint(size * scale, SOFT_WHITE, Typeface.NORMAL)
+        val fitted = textLayout(overview, paint, width, Int.MAX_VALUE, OVERVIEW_LINE_SPACING)
+        if (fitted.lineCount <= FULL_OVERVIEW_MAX_LINES) {
+            return fitted
+        }
+    }
+    return cutOverviewLayout(overview, FULL_OVERVIEW_SIZES.last() * scale, width, FULL_OVERVIEW_MAX_LINES)
+}
+
+// The first [maxLines] lines of the description, ending in an ellipsis after a whole word.
+private fun cutOverviewLayout(overview: String, textSize: Float, width: Float, maxLines: Int): StaticLayout {
+    val paint = textPaint(textSize, SOFT_WHITE, Typeface.NORMAL)
     val fitted = textLayout(overview, paint, width, Int.MAX_VALUE, OVERVIEW_LINE_SPACING)
-    if (fitted.lineCount <= OVERVIEW_MAX_LINES) {
+    if (fitted.lineCount <= maxLines) {
         return fitted
     }
-    val shortened = shortenedAtWord(overview, fitted.getLineEnd(OVERVIEW_MAX_LINES - 1))
-    return textLayout(shortened, paint, width, OVERVIEW_MAX_LINES, OVERVIEW_LINE_SPACING)
+    val shortened = shortenedAtWord(overview, fitted.getLineEnd(maxLines - 1))
+    return textLayout(shortened, paint, width, maxLines, OVERVIEW_LINE_SPACING)
 }
 
 // The text up to [end] without its last word, which makes room for the ellipsis.

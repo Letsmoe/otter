@@ -2,6 +2,7 @@ package com.letsmoe.otter.cast.browse
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.SystemClock
 import android.util.Log
 import com.letsmoe.otter.AppScope
 import com.letsmoe.otter.cast.DlnaPlayer
@@ -24,7 +25,7 @@ import java.io.File
 
 private const val TAG = "OtterBrowse"
 // The title page changes often while the user flicks through titles; drawing each one is wasted work.
-private const val SETTLE_MILLISECONDS = 1200L
+private const val SETTLE_MILLISECONDS = 300L
 
 /**
  * Shows the title the phone is looking at on the connected DLNA TV while
@@ -125,7 +126,9 @@ object TelevisionBrowse {
         // Unknown from here on: a cancelled drawing can leave the TV on either title.
         shown = null
         try {
+            val startedAt = SystemClock.elapsedRealtime()
             val picture = drawPicture(player, preview)
+            Log.i(TAG, "${preview.title} drawn in ${SystemClock.elapsedRealtime() - startedAt} ms")
             player.showIdleScreen(SessionScreen.Picture(picture))
             replaceShownPicture(picture)
             shown = ShownPreview(player.renderer.id, preview)

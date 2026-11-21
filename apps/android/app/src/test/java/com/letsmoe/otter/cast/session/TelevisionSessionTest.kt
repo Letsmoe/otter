@@ -212,8 +212,20 @@ class TelevisionSessionTest {
         job.startMicroseconds = 6_000_000
         pacing.cancel()
 
-        // 6.4 s of the session is past what the clock at 2 s allows (4.5 s): the sample waits, and a cancel drops it.
-        assertFalse(pacing.awaitTurn(400_000))
+        // 7.4 s of the session is past what the clock at 2 s allows (4.5 s): the sample waits, and a cancel drops it.
+        assertFalse(pacing.awaitTurn(1_400_000))
+    }
+
+    @Test
+    fun aJobsFirstSecondGoesOutWithoutWaitingForTheClock() {
+        take(0)
+        // The clock at 0 s allows up to 2.5 s; the job starts at 10 s, far ahead.
+        val pacing = JobPacing(session, jobStartingAt(10_000_000))
+
+        assertTrue(pacing.awaitTurn(0))
+        assertTrue(pacing.awaitTurn(900_000))
+        pacing.cancel()
+        assertFalse(pacing.awaitTurn(1_000_000))
     }
 
     @Test

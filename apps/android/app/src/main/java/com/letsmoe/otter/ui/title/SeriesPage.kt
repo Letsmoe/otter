@@ -112,6 +112,7 @@ private fun EpisodesTab(detail: TitleDetail, episodes: EpisodesState, seriesView
                 onPlay = { episode -> onPlay(PlayRequest(episode.id)) },
                 onShare = shareEpisode,
                 downloadButton = slots.episodeDownloadButton,
+                onOverviewExpanded = { episode, expanded -> showEpisodeOnTelevision(detail, episode, expanded) },
             )
         }
     }

@@ -32,7 +32,6 @@ import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.Transformer
 import androidx.media3.transformer.VideoEncoderSettings
-import com.letsmoe.otter.cast.overlay.LiveFrameOverlay
 import com.letsmoe.otter.cast.overlay.OVERLAY_VIDEO_BITRATE
 import com.letsmoe.otter.cast.overlay.OverlayJob
 import com.letsmoe.otter.cast.overlay.OverlayPainter
@@ -56,14 +55,20 @@ private const val SESSION_SAMPLE_RATE = 48_000
 private const val SESSION_CHANNELS = 2
 // The most channels a source may have; 5.1 is mixed down to stereo.
 private const val MAX_SOURCE_CHANNELS = 6
-// Still screens cost the phone a full encode per frame: as few frames as each kind of screen allows.
-private const val MOTIONLESS_FRAME_RATE = 5
-private const val ANIMATED_FRAME_RATE = 15
-// Still screens end and start again after this long, so the stream never runs dry.
-private const val IDLE_SCREEN_MILLISECONDS = 30 * 60 * 1000L
-private const val LOADING_SCREEN_MILLISECONDS = 2 * 60 * 1000L
+// Still jobs cost the phone a full encode per frame: enough for the spinner and the screensaver's fades.
+private const val STILL_FRAME_RATE = 10
+// A still job ends and starts again after this long, so the stream never runs dry.
+private const val STILL_JOB_MILLISECONDS = 30 * 60 * 1000L
 // The backend repeats the bridge once a second while a switch is slower than the TV's buffer.
 private const val BRIDGE_MILLISECONDS = 1000L
+private const val TITLE_KEYFRAME_SECONDS = 1f
+private const val STILL_KEYFRAME_SECONDS = 0.25f
+// The backend passes on whole fragments: short ones keep the TV's buffer filled steadily, not in
+// one-second bursts it would run dry between. A fragment can only end at a keyframe, though.
+private const val SESSION_FRAGMENT_MILLISECONDS = 250L
+private const val MAX_FRAMES_IN_ENCODER = 2
+// A job's first second goes out unpaced, so its first fragment reaches the TV as soon as it is encoded.
+private const val UNPACED_START_MICROSECONDS = 1_000_000L
 // A paced sample looks at the clock again at least this often, so a cancelled job stops quickly.
 private const val MAX_PACING_SLEEP_MILLISECONDS = 100L
 
@@ -114,6 +119,15 @@ class SessionEncoder(
         }
     }
 
+    // A fragment ends only at a keyframe, and the backend passes on whole fragments: frequent
+    // keyframes get a switch to the TV quickly. Titles keep them sparser for their picture quality.
+    private fun keyframeIntervalSeconds(): Float {
+        if (job.screen is SessionScreen.Title) {
+            return TITLE_KEYFRAME_SECONDS
+        }
+        return STILL_KEYFRAME_SECONDS
+    }
+
     // The bridge is encoded ahead in one go; the backend plays it out at the TV's pace.
     private fun pacedMuxer(muxer: Muxer): Muxer {
         if (job.screen is SessionScreen.Bridge) {
@@ -128,15 +142,20 @@ class SessionEncoder(
     }
 
     private fun buildTransformer(output: OutputStream, listener: Transformer.Listener): Transformer {
-        val encoderSettings = VideoEncoderSettings.Builder().setBitrate(OVERLAY_VIDEO_BITRATE).build()
+        val encoderSettings = VideoEncoderSettings.Builder()
+            .setBitrate(OVERLAY_VIDEO_BITRATE)
+            .setiFrameIntervalSeconds(keyframeIntervalSeconds())
+            .build()
         val encoderFactory = DefaultEncoderFactory.Builder(context).setRequestedVideoEncoderSettings(encoderSettings).build()
         val builder = Transformer.Builder(context)
             .setVideoMimeType(MimeTypes.VIDEO_H264)
             .setAudioMimeType(MimeTypes.AUDIO_AAC)
             .setEncoderFactory(encoderFactory)
-            .setMuxerFactory(StreamMuxerFactory(output, ::pacedMuxer))
+            .setMuxerFactory(StreamMuxerFactory(output, ::pacedMuxer, SESSION_FRAGMENT_MILLISECONDS))
             // Pacing and a paused TV hold samples back for as long as they like.
             .setMaxDelayBetweenMuxerSamplesMs(C.TIME_UNSET)
+            // Frames drawn ahead wait in the encoder; a still screen swapped meanwhile shows only after them.
+            .experimentalSetMaxFramesInEncoder(MAX_FRAMES_IN_ENCODER)
             .addListener(listener)
         val screen = job.screen
         if (screen is SessionScreen.Title) {
@@ -189,66 +208,33 @@ class SessionEncoder(
         return effects
     }
 
+    // The session's background, with the job's screens drawn over it frame by frame.
     private fun stillItem(screen: SessionScreen): EditedMediaItem {
         val mediaItem = MediaItem.Builder()
-            .setUri(Uri.fromFile(stillPicture(screen)))
-            .setMimeType(stillMimeType(screen))
+            .setUri(Uri.fromFile(renderBlankPicture(context, size)))
+            .setMimeType(MimeTypes.IMAGE_PNG)
             .setImageDurationMs(stillMilliseconds(screen))
             .build()
-        val effects = mutableListOf<Effect>(letterbox())
-        val overlay = stillOverlay(screen)
-        if (overlay != null) {
-            val overlays: List<TextureOverlay> = listOf(overlay)
-            effects.add(OverlayEffect(overlays))
-        }
+        val effects = listOf(letterbox(), OverlayEffect(stillOverlays(screen)))
         return EditedMediaItem.Builder(mediaItem)
-            .setFrameRate(stillFrameRate(screen))
+            .setFrameRate(STILL_FRAME_RATE)
             .setEffects(Effects(uniformSound(), effects))
             .build()
     }
 
-    // A browse picture was drawn by the phone already; the other screens are drawn here.
-    private fun stillPicture(screen: SessionScreen): File {
-        if (screen is SessionScreen.Picture) {
-            return screen.imageFile
+    // The bridge is only the spinner; any other still job shows whatever screen it has right now.
+    private fun stillOverlays(screen: SessionScreen): List<TextureOverlay> {
+        if (screen is SessionScreen.Bridge) {
+            return listOf(SpinnerOverlay())
         }
-        return renderScreenPicture(context, screen, size, job.id)
-    }
-
-    private fun stillMimeType(screen: SessionScreen): String {
-        if (screen is SessionScreen.Picture) {
-            return MimeTypes.IMAGE_JPEG
-        }
-        return MimeTypes.IMAGE_PNG
-    }
-
-    // What moves in a still screen: the loading spinner, the screensaver's backdrops.
-    private fun stillOverlay(screen: SessionScreen): TextureOverlay? {
-        if (screen is SessionScreen.Loading || screen is SessionScreen.Bridge) {
-            return SpinnerOverlay()
-        }
-        if (screen is SessionScreen.Screensaver) {
-            return LiveFrameOverlay(screen.frames)
-        }
-        return null
-    }
-
-    // The spinner and the screensaver's fades move; the other screens never change.
-    private fun stillFrameRate(screen: SessionScreen): Int {
-        if (screen is SessionScreen.Loading || screen is SessionScreen.Bridge || screen is SessionScreen.Screensaver) {
-            return ANIMATED_FRAME_RATE
-        }
-        return MOTIONLESS_FRAME_RATE
+        return listOf(LiveStillOverlay(context, job), SpinnerOverlay { job.screen is SessionScreen.Loading })
     }
 
     private fun stillMilliseconds(screen: SessionScreen): Long {
         if (screen is SessionScreen.Bridge) {
             return BRIDGE_MILLISECONDS
         }
-        if (screen is SessionScreen.Loading) {
-            return LOADING_SCREEN_MILLISECONDS
-        }
-        return IDLE_SCREEN_MILLISECONDS
+        return STILL_JOB_MILLISECONDS
     }
 
     private fun letterbox(): Presentation {
@@ -293,6 +279,10 @@ class JobPacing(private val session: TelevisionSession, private val job: Session
     /** Waits for the sample's turn; false when the job was cancelled meanwhile and the sample is dropped. */
     fun awaitTurn(sampleMicroseconds: Long): Boolean {
         val offsetMicroseconds = sampleMicroseconds - firstSample(sampleMicroseconds)
+        if (offsetMicroseconds < UNPACED_START_MICROSECONDS && !cancelled) {
+            lastSessionMicroseconds = max(lastSessionMicroseconds, jobStartMicroseconds() + offsetMicroseconds)
+            return true
+        }
         while (!cancelled) {
             val sessionMicroseconds = jobStartMicroseconds() + offsetMicroseconds
             val waitMicroseconds = session.pacingWaitMicroseconds(sessionMicroseconds)

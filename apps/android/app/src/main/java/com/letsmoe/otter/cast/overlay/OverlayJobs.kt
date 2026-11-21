@@ -10,7 +10,8 @@ private const val KEPT_JOBS = 4
  * One overlay stream a TV was handed: the title's stream on loopback
  * ([sourceUrl], played from [startSeconds]), at most [maxHeight] lines tall,
  * with [plan] drawn in. The live inputs are asked while encoding, so a
- * changed setting reaches the TV without a restart. [onFailure] hears when
+ * changed setting reaches the TV without a restart; so is the plan, which
+ * changes when the viewer picks other captions. [onFailure] hears when
  * encoding fails, so the TV can get the plain stream instead.
  */
 class OverlayJob(
@@ -18,12 +19,15 @@ class OverlayJob(
     val sourceMimeType: String?,
     val startSeconds: Double,
     val maxHeight: Int,
-    val plan: OverlayPlan,
+    initialPlan: OverlayPlan,
     val live: OverlayLiveInputs = OverlayLiveInputs(),
     val brightensDarkScenes: Boolean = false,
     val onFailure: (OverlayJob, Exception) -> Unit,
 ) {
     val id: String = UUID.randomUUID().toString()
+
+    @Volatile
+    var plan: OverlayPlan = initialPlan
 
     fun captionLook(): CaptionLook = live.captionLook()
 

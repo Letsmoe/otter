@@ -30,20 +30,52 @@ type announcer struct {
 	httpPort int
 }
 
+// run listens for searches on every interface: left to the system, the group is joined only on the
+// default route's interface, which on a computer with a VPN isn't the one the phone is on.
 func (tv *announcer) run() error {
-	listener, err := net.ListenMulticastUDP("udp4", nil, ssdpGroup)
-	if err != nil {
-		return fmt.Errorf("joining SSDP: %w", err)
+	listeners := 0
+	for _, networkInterface := range multicastInterfaces() {
+		listener, err := net.ListenMulticastUDP("udp4", &networkInterface, ssdpGroup)
+		if err != nil {
+			log.Printf("SSDP: not listening on %s: %v", networkInterface.Name, err)
+			continue
+		}
+		listeners++
+		go tv.listen(listener)
 	}
-	go tv.notifyAlive()
+	if listeners == 0 {
+		return fmt.Errorf("joining SSDP on no interface")
+	}
+	tv.notifyAlive()
+	return nil
+}
+
+func (tv *announcer) listen(listener *net.UDPConn) {
 	buffer := make([]byte, 4096)
 	for {
 		count, sender, err := listener.ReadFromUDP(buffer)
 		if err != nil {
-			return err
+			log.Printf("SSDP: %v", err)
+			return
 		}
 		tv.answerSearch(buffer[:count], sender)
 	}
+}
+
+// multicastInterfaces are the interfaces that are up and can carry multicast, loopback left out.
+func multicastInterfaces() []net.Interface {
+	found := []net.Interface{}
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return found
+	}
+	for _, networkInterface := range interfaces {
+		usable := networkInterface.Flags&net.FlagUp != 0 && networkInterface.Flags&net.FlagMulticast != 0
+		if usable && networkInterface.Flags&net.FlagLoopback == 0 {
+			found = append(found, networkInterface)
+		}
+	}
+	return found
 }
 
 func (tv *announcer) answerSearch(packet []byte, sender *net.UDPAddr) {
