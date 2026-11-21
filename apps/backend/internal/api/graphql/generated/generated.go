@@ -61,6 +61,26 @@ type ComplexityRoot struct {
 		SharedTitles func(childComplexity int) int
 	}
 
+	Collection struct {
+		BackdropPath func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Name         func(childComplexity int) int
+		Next         func(childComplexity int) int
+		Overview     func(childComplexity int) int
+		Parts        func(childComplexity int) int
+		PosterPath   func(childComplexity int) int
+		TmdbID       func(childComplexity int) int
+		WatchedCount func(childComplexity int) int
+	}
+
+	CollectionPart struct {
+		Number   func(childComplexity int) int
+		Progress func(childComplexity int) int
+		Released func(childComplexity int) int
+		Status   func(childComplexity int) int
+		Title    func(childComplexity int) int
+	}
+
 	ContinueItem struct {
 		Episode  func(childComplexity int) int
 		Progress func(childComplexity int) int
@@ -264,10 +284,12 @@ type ComplexityRoot struct {
 		CatalogRows             func(childComplexity int, mediaType model.MediaType, count *int, exclude []string) int
 		CatalogTheme            func(childComplexity int, mediaType model.MediaType, theme model.CatalogTheme) int
 		CheckTmdbKey            func(childComplexity int, key string) int
+		Collection              func(childComplexity int, id string, profileID string) int
 		ContinueWatching        func(childComplexity int, profileID string, limit *int) int
 		Downloads               func(childComplexity int, profileID string) int
 		DownloadsFolder         func(childComplexity int) int
 		Episode                 func(childComplexity int, id string) int
+		Franchises              func(childComplexity int, profileID string, limit *int) int
 		Genres                  func(childComplexity int) int
 		History                 func(childComplexity int, profileID string, limit *int) int
 		LikedTitles             func(childComplexity int, profileID string, limit *int) int
@@ -388,6 +410,7 @@ type ComplexityRoot struct {
 
 	Title struct {
 		BackdropPath  func(childComplexity int) int
+		CollectionID  func(childComplexity int) int
 		Credits       func(childComplexity int) int
 		DetailFetched func(childComplexity int) int
 		Genres        func(childComplexity int) int
@@ -512,6 +535,8 @@ type QueryResolver interface {
 	Trending(ctx context.Context, mediaType *model.MediaType) ([]*model.Title, error)
 	NewAndComingSoon(ctx context.Context, mediaType model.MediaType) ([]*model.Title, error)
 	WatchedActors(ctx context.Context, profileID string, mediaType model.MediaType, limit *int) ([]*model.Person, error)
+	Collection(ctx context.Context, id string, profileID string) (*model.Collection, error)
+	Franchises(ctx context.Context, profileID string, limit *int) ([]*model.Collection, error)
 	MoreWith(ctx context.Context, profileID string, mediaType model.MediaType) (*model.MoreWithRow, error)
 	Browse(ctx context.Context, mediaType model.MediaType, genre *string, limit *int, offset *int) ([]*model.Title, error)
 	Genres(ctx context.Context) ([]string, error)
@@ -639,6 +664,92 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.CoStar.SharedTitles(childComplexity), true
+
+	case "Collection.backdropPath":
+		if e.ComplexityRoot.Collection.BackdropPath == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Collection.BackdropPath(childComplexity), true
+	case "Collection.id":
+		if e.ComplexityRoot.Collection.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Collection.ID(childComplexity), true
+	case "Collection.name":
+		if e.ComplexityRoot.Collection.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Collection.Name(childComplexity), true
+	case "Collection.next":
+		if e.ComplexityRoot.Collection.Next == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Collection.Next(childComplexity), true
+	case "Collection.overview":
+		if e.ComplexityRoot.Collection.Overview == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Collection.Overview(childComplexity), true
+	case "Collection.parts":
+		if e.ComplexityRoot.Collection.Parts == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Collection.Parts(childComplexity), true
+	case "Collection.posterPath":
+		if e.ComplexityRoot.Collection.PosterPath == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Collection.PosterPath(childComplexity), true
+	case "Collection.tmdbId":
+		if e.ComplexityRoot.Collection.TmdbID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Collection.TmdbID(childComplexity), true
+	case "Collection.watchedCount":
+		if e.ComplexityRoot.Collection.WatchedCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Collection.WatchedCount(childComplexity), true
+
+	case "CollectionPart.number":
+		if e.ComplexityRoot.CollectionPart.Number == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CollectionPart.Number(childComplexity), true
+	case "CollectionPart.progress":
+		if e.ComplexityRoot.CollectionPart.Progress == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CollectionPart.Progress(childComplexity), true
+	case "CollectionPart.released":
+		if e.ComplexityRoot.CollectionPart.Released == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CollectionPart.Released(childComplexity), true
+	case "CollectionPart.status":
+		if e.ComplexityRoot.CollectionPart.Status == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CollectionPart.Status(childComplexity), true
+	case "CollectionPart.title":
+		if e.ComplexityRoot.CollectionPart.Title == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CollectionPart.Title(childComplexity), true
 
 	case "ContinueItem.episode":
 		if e.ComplexityRoot.ContinueItem.Episode == nil {
@@ -1736,6 +1847,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.CheckTmdbKey(childComplexity, args["key"].(string)), true
+	case "Query.collection":
+		if e.ComplexityRoot.Query.Collection == nil {
+			break
+		}
+
+		args, err := ec.field_Query_collection_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Collection(childComplexity, args["id"].(string), args["profileId"].(string)), true
 	case "Query.continueWatching":
 		if e.ComplexityRoot.Query.ContinueWatching == nil {
 			break
@@ -1775,6 +1897,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.Episode(childComplexity, args["id"].(string)), true
+	case "Query.franchises":
+		if e.ComplexityRoot.Query.Franchises == nil {
+			break
+		}
+
+		args, err := ec.field_Query_franchises_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Franchises(childComplexity, args["profileId"].(string), args["limit"].(*int)), true
 	case "Query.genres":
 		if e.ComplexityRoot.Query.Genres == nil {
 			break
@@ -2372,6 +2505,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Title.BackdropPath(childComplexity), true
+	case "Title.collectionId":
+		if e.ComplexityRoot.Title.CollectionID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Title.CollectionID(childComplexity), true
 	case "Title.credits":
 		if e.ComplexityRoot.Title.Credits == nil {
 			break
@@ -2825,6 +2964,8 @@ type Title {
   keywords: [String!]!
   "False for titles only seen in lists; reading them through Query.title fetches the rest."
   detailFetched: Boolean!
+  "Movies only: the franchise (TMDB collection) the film belongs to, for Query.collection."
+  collectionId: ID
 
   credits: [Credit!]!
   "TMDB recommendations first, then other work of the director and leads."
@@ -2990,6 +3131,39 @@ type MoreWithRow {
   person: Person!
   becauseOf: Title!
   items: [Title!]!
+}
+
+"How far a profile got through one film of a franchise."
+enum WatchStatus {
+  WATCHED
+  IN_PROGRESS
+  NOT_YET
+}
+
+"A franchise (TMDB collection) with its films in release order, and one profile's progress through them."
+type Collection {
+  id: ID!
+  tmdbId: Int!
+  name: String!
+  overview: String
+  posterPath: String
+  backdropPath: String
+  parts: [CollectionPart!]!
+  "Films the profile finished."
+  watchedCount: Int!
+  "The film to continue with: the first released one not finished yet. Null when everything out is watched."
+  next: CollectionPart
+}
+
+type CollectionPart {
+  "Place in the watch order, from 1."
+  number: Int!
+  title: Title!
+  status: WatchStatus!
+  "Watched share (0..1) of a film in progress."
+  progress: Float!
+  "False for films that are announced but not out yet."
+  released: Boolean!
 }
 
 type RecommendationRow {
@@ -3264,6 +3438,10 @@ type Query {
   newAndComingSoon(mediaType: MediaType!): [Title!]!
   "Lead actors of the profile's most recently watched titles of one type, the most frequent first; empty before any history."
   watchedActors(profileId: ID!, mediaType: MediaType!, limit: Int = 15): [Person!]!
+  "A franchise's watch-order guide for a profile; the film list is fetched from TMDB when missing or stale."
+  collection(id: ID!, profileId: ID!): Collection
+  "Franchises the library knows (two or more films): the ones the profile is in the middle of first, finished ones last."
+  franchises(profileId: ID!, limit: Int = 12): [Collection!]!
   "More titles with the lead actor of the profile's latest well-rated title; null before any good rating."
   moreWith(profileId: ID!, mediaType: MediaType!): MoreWithRow
   "Stored titles of one type, most popular first."
@@ -3483,6 +3661,46 @@ func (ec *executionContext) childFields_CoStar(ctx context.Context, field graphq
 		return ec.fieldContext_CoStar_sharedTitles(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type CoStar", field.Name)
+}
+
+func (ec *executionContext) childFields_Collection(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_Collection_id(ctx, field)
+	case "tmdbId":
+		return ec.fieldContext_Collection_tmdbId(ctx, field)
+	case "name":
+		return ec.fieldContext_Collection_name(ctx, field)
+	case "overview":
+		return ec.fieldContext_Collection_overview(ctx, field)
+	case "posterPath":
+		return ec.fieldContext_Collection_posterPath(ctx, field)
+	case "backdropPath":
+		return ec.fieldContext_Collection_backdropPath(ctx, field)
+	case "parts":
+		return ec.fieldContext_Collection_parts(ctx, field)
+	case "watchedCount":
+		return ec.fieldContext_Collection_watchedCount(ctx, field)
+	case "next":
+		return ec.fieldContext_Collection_next(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Collection", field.Name)
+}
+
+func (ec *executionContext) childFields_CollectionPart(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "number":
+		return ec.fieldContext_CollectionPart_number(ctx, field)
+	case "title":
+		return ec.fieldContext_CollectionPart_title(ctx, field)
+	case "status":
+		return ec.fieldContext_CollectionPart_status(ctx, field)
+	case "progress":
+		return ec.fieldContext_CollectionPart_progress(ctx, field)
+	case "released":
+		return ec.fieldContext_CollectionPart_released(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type CollectionPart", field.Name)
 }
 
 func (ec *executionContext) childFields_ContinueItem(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -4021,6 +4239,8 @@ func (ec *executionContext) childFields_Title(ctx context.Context, field graphql
 		return ec.fieldContext_Title_keywords(ctx, field)
 	case "detailFetched":
 		return ec.fieldContext_Title_detailFetched(ctx, field)
+	case "collectionId":
+		return ec.fieldContext_Title_collectionId(ctx, field)
 	case "credits":
 		return ec.fieldContext_Title_credits(ctx, field)
 	case "related":
@@ -5161,6 +5381,28 @@ func (ec *executionContext) field_Query_checkTmdbKey_args(ctx context.Context, r
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_collection_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_continueWatching_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -5208,6 +5450,28 @@ func (ec *executionContext) field_Query_episode_args(ctx context.Context, rawArg
 		return nil, err
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_franchises_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "limit",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg1
 	return args, nil
 }
 
@@ -5966,6 +6230,355 @@ func (ec *executionContext) _CoStar_sharedTitles(ctx context.Context, field grap
 }
 func (ec *executionContext) fieldContext_CoStar_sharedTitles(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("CoStar", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _Collection_id(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Collection_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Collection_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Collection", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _Collection_tmdbId(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Collection_tmdbId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TmdbID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Collection_tmdbId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Collection", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _Collection_name(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Collection_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Collection_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Collection", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Collection_overview(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Collection_overview(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Overview, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Collection_overview(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Collection", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Collection_posterPath(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Collection_posterPath(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PosterPath, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Collection_posterPath(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Collection", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Collection_backdropPath(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Collection_backdropPath(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BackdropPath, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Collection_backdropPath(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Collection", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Collection_parts(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Collection_parts(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Parts, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.CollectionPart) graphql.Marshaler {
+			return ec.marshalNCollectionPart2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCollectionPartᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Collection_parts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Collection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_CollectionPart(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Collection_watchedCount(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Collection_watchedCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.WatchedCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Collection_watchedCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Collection", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _Collection_next(ctx context.Context, field graphql.CollectedField, obj *model.Collection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Collection_next(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Next, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.CollectionPart) graphql.Marshaler {
+			return ec.marshalOCollectionPart2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCollectionPart(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Collection_next(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Collection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_CollectionPart(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CollectionPart_number(ctx context.Context, field graphql.CollectedField, obj *model.CollectionPart) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CollectionPart_number(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Number, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CollectionPart_number(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CollectionPart", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _CollectionPart_title(ctx context.Context, field graphql.CollectedField, obj *model.CollectionPart) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CollectionPart_title(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Title, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Title) graphql.Marshaler {
+			return ec.marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CollectionPart_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CollectionPart",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Title(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CollectionPart_status(ctx context.Context, field graphql.CollectedField, obj *model.CollectionPart) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CollectionPart_status(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.WatchStatus) graphql.Marshaler {
+			return ec.marshalNWatchStatus2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchStatus(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CollectionPart_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CollectionPart", field, false, false, errors.New("field of type WatchStatus does not have child fields"))
+}
+
+func (ec *executionContext) _CollectionPart_progress(ctx context.Context, field graphql.CollectedField, obj *model.CollectionPart) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CollectionPart_progress(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Progress, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CollectionPart_progress(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CollectionPart", field, false, false, errors.New("field of type Float does not have child fields"))
+}
+
+func (ec *executionContext) _CollectionPart_released(ctx context.Context, field graphql.CollectedField, obj *model.CollectionPart) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CollectionPart_released(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Released, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CollectionPart_released(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CollectionPart", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _ContinueItem_title(ctx context.Context, field graphql.CollectedField, obj *model.ContinueItem) (ret graphql.Marshaler) {
@@ -10483,6 +11096,94 @@ func (ec *executionContext) fieldContext_Query_watchedActors(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_collection(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_collection(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Collection(ctx, fc.Args["id"].(string), fc.Args["profileId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Collection) graphql.Marshaler {
+			return ec.marshalOCollection2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCollection(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Query_collection(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Collection(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_collection_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_franchises(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_franchises(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Franchises(ctx, fc.Args["profileId"].(string), fc.Args["limit"].(*int))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Collection) graphql.Marshaler {
+			return ec.marshalNCollection2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCollectionᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_franchises(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Collection(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_franchises_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_moreWith(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -13485,6 +14186,29 @@ func (ec *executionContext) fieldContext_Title_detailFetched(_ context.Context, 
 	return graphql.NewScalarFieldContext("Title", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
+func (ec *executionContext) _Title_collectionId(ctx context.Context, field graphql.CollectedField, obj *model.Title) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Title_collectionId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CollectionID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOID2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Title_collectionId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Title", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
 func (ec *executionContext) _Title_credits(ctx context.Context, field graphql.CollectedField, obj *model.Title) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -15638,6 +16362,132 @@ func (ec *executionContext) _CoStar(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
+var collectionImplementors = []string{"Collection"}
+
+func (ec *executionContext) _Collection(ctx context.Context, sel ast.SelectionSet, obj *model.Collection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, collectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Collection")
+		case "id":
+			out.Values[i] = ec._Collection_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "tmdbId":
+			out.Values[i] = ec._Collection_tmdbId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Collection_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "overview":
+			out.Values[i] = ec._Collection_overview(ctx, field, obj)
+		case "posterPath":
+			out.Values[i] = ec._Collection_posterPath(ctx, field, obj)
+		case "backdropPath":
+			out.Values[i] = ec._Collection_backdropPath(ctx, field, obj)
+		case "parts":
+			out.Values[i] = ec._Collection_parts(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "watchedCount":
+			out.Values[i] = ec._Collection_watchedCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "next":
+			out.Values[i] = ec._Collection_next(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var collectionPartImplementors = []string{"CollectionPart"}
+
+func (ec *executionContext) _CollectionPart(ctx context.Context, sel ast.SelectionSet, obj *model.CollectionPart) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, collectionPartImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CollectionPart")
+		case "number":
+			out.Values[i] = ec._CollectionPart_number(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "title":
+			out.Values[i] = ec._CollectionPart_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._CollectionPart_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "progress":
+			out.Values[i] = ec._CollectionPart_progress(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "released":
+			out.Values[i] = ec._CollectionPart_released(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var continueItemImplementors = []string{"ContinueItem"}
 
 func (ec *executionContext) _ContinueItem(ctx context.Context, sel ast.SelectionSet, obj *model.ContinueItem) graphql.Marshaler {
@@ -17339,6 +18189,47 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "collection":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_collection(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "franchises":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_franchises(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "moreWith":
 			field := field
 
@@ -18614,6 +19505,8 @@ func (ec *executionContext) _Title(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "collectionId":
+			out.Values[i] = ec._Title_collectionId(ctx, field, obj)
 		case "credits":
 			field := field
 
@@ -19638,6 +20531,58 @@ func (ec *executionContext) marshalNCoStar2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋi
 	return ec._CoStar(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNCollection2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCollectionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Collection) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNCollection2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCollection(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCollection2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCollection(ctx context.Context, sel ast.SelectionSet, v *model.Collection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Collection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCollectionPart2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCollectionPartᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CollectionPart) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNCollectionPart2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCollectionPart(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCollectionPart2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCollectionPart(ctx context.Context, sel ast.SelectionSet, v *model.CollectionPart) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CollectionPart(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNContinueItem2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐContinueItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ContinueItem) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
@@ -20511,6 +21456,16 @@ func (ec *executionContext) marshalNWatchProgress2ᚖgithubᚗcomᚋLetsmoeᚋot
 	return ec._WatchProgress(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNWatchStatus2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchStatus(ctx context.Context, v any) (model.WatchStatus, error) {
+	var res model.WatchStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNWatchStatus2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchStatus(ctx context.Context, sel ast.SelectionSet, v model.WatchStatus) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
 	return ec.___Directive(ctx, sel, &v)
 }
@@ -20696,6 +21651,20 @@ func (ec *executionContext) marshalOCatalogSort2ᚖgithubᚗcomᚋLetsmoeᚋotte
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalOCollection2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCollection(ctx context.Context, sel ast.SelectionSet, v *model.Collection) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Collection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOCollectionPart2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCollectionPart(ctx context.Context, sel ast.SelectionSet, v *model.CollectionPart) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._CollectionPart(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOEpisode2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx context.Context, sel ast.SelectionSet, v *model.Episode) graphql.Marshaler {

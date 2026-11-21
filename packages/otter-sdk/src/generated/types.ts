@@ -6,15 +6,16 @@ export default {
         4,
         5,
         6,
-        25,
-        26,
+        22,
         28,
-        36,
-        38,
-        40,
-        45,
-        46,
-        51
+        29,
+        31,
+        39,
+        41,
+        43,
+        48,
+        49,
+        54
     ],
     "types": {
         "MediaType": {},
@@ -84,6 +85,9 @@ export default {
             ],
             "detailFetched": [
                 6
+            ],
+            "collectionId": [
+                2
             ],
             "credits": [
                 12
@@ -505,6 +509,59 @@ export default {
                 4
             ]
         },
+        "WatchStatus": {},
+        "Collection": {
+            "id": [
+                2
+            ],
+            "tmdbId": [
+                3
+            ],
+            "name": [
+                4
+            ],
+            "overview": [
+                4
+            ],
+            "posterPath": [
+                4
+            ],
+            "backdropPath": [
+                4
+            ],
+            "parts": [
+                24
+            ],
+            "watchedCount": [
+                3
+            ],
+            "next": [
+                24
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "CollectionPart": {
+            "number": [
+                3
+            ],
+            "title": [
+                1
+            ],
+            "status": [
+                22
+            ],
+            "progress": [
+                5
+            ],
+            "released": [
+                6
+            ],
+            "__typename": [
+                4
+            ]
+        },
         "RecommendationRow": {
             "key": [
                 4
@@ -545,10 +602,10 @@ export default {
                 4
             ],
             "subtitleSize": [
-                25
+                28
             ],
             "subtitleStyle": [
-                26
+                29
             ],
             "voiceBoost": [
                 6
@@ -608,7 +665,7 @@ export default {
                 4
             ],
             "tmdbKeyStatus": [
-                28
+                31
             ],
             "usesDefaultTmdbKey": [
                 6
@@ -721,10 +778,10 @@ export default {
                 6
             ],
             "settings": [
-                31
+                34
             ],
             "account": [
-                34
+                37
             ],
             "__typename": [
                 4
@@ -773,7 +830,7 @@ export default {
                 2
             ],
             "kind": [
-                36
+                39
             ],
             "heading": [
                 4
@@ -803,7 +860,7 @@ export default {
                 2
             ],
             "status": [
-                38
+                41
             ],
             "progress": [
                 5
@@ -856,13 +913,13 @@ export default {
                 6
             ],
             "status": [
-                40
+                43
             ],
             "self": [
-                41
+                44
             ],
             "peers": [
-                41
+                44
             ],
             "__typename": [
                 4
@@ -870,7 +927,7 @@ export default {
         },
         "TogetherMessage": {
             "from": [
-                41
+                44
             ],
             "payload": [
                 4
@@ -881,10 +938,10 @@ export default {
         },
         "TogetherUpdate": {
             "room": [
-                42
+                45
             ],
             "message": [
-                43
+                46
             ],
             "__typename": [
                 4
@@ -982,6 +1039,31 @@ export default {
                     ]
                 }
             ],
+            "collection": [
+                23,
+                {
+                    "id": [
+                        2,
+                        "ID!"
+                    ],
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
+            "franchises": [
+                23,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "limit": [
+                        3
+                    ]
+                }
+            ],
             "moreWith": [
                 21,
                 {
@@ -1024,7 +1106,7 @@ export default {
                         "MediaType!"
                     ],
                     "sort": [
-                        45
+                        48
                     ]
                 }
             ],
@@ -1036,13 +1118,13 @@ export default {
                         "MediaType!"
                     ],
                     "theme": [
-                        46,
+                        49,
                         "CatalogTheme!"
                     ]
                 }
             ],
             "catalogRows": [
-                47,
+                50,
                 {
                     "mediaType": [
                         0,
@@ -1079,7 +1161,7 @@ export default {
                 }
             ],
             "recommendationRows": [
-                22,
+                25,
                 {
                     "profileId": [
                         2,
@@ -1139,7 +1221,7 @@ export default {
                 }
             ],
             "notifications": [
-                37,
+                40,
                 {
                     "profileId": [
                         2,
@@ -1160,7 +1242,7 @@ export default {
                 }
             ],
             "downloads": [
-                39,
+                42,
                 {
                     "profileId": [
                         2,
@@ -1172,10 +1254,10 @@ export default {
                 4
             ],
             "togetherRoom": [
-                42
+                45
             ],
             "subtitles": [
-                24,
+                27,
                 {
                     "mediaId": [
                         2,
@@ -1187,10 +1269,10 @@ export default {
                 }
             ],
             "profiles": [
-                23
+                26
             ],
             "settings": [
-                29
+                32
             ],
             "checkTmdbKey": [
                 6,
@@ -1202,13 +1284,13 @@ export default {
                 }
             ],
             "plugins": [
-                33
+                36
             ],
             "status": [
-                35
+                38
             ],
             "neoworksAccount": [
-                49
+                52
             ],
             "__typename": [
                 4
@@ -1225,7 +1307,7 @@ export default {
                 4
             ],
             "lastSync": [
-                50
+                53
             ],
             "__typename": [
                 4
@@ -1254,7 +1336,7 @@ export default {
                 2
             ],
             "kind": [
-                51
+                54
             ],
             "url": [
                 4
@@ -1446,7 +1528,7 @@ export default {
                 6
             ],
             "startDownload": [
-                39,
+                42,
                 {
                     "profileId": [
                         2,
@@ -1474,7 +1556,7 @@ export default {
                 6
             ],
             "hostTogether": [
-                42,
+                45,
                 {
                     "profileId": [
                         2,
@@ -1483,7 +1565,7 @@ export default {
                 }
             ],
             "joinTogether": [
-                42,
+                45,
                 {
                     "profileId": [
                         2,
@@ -1528,7 +1610,7 @@ export default {
                 }
             ],
             "createProfile": [
-                23,
+                26,
                 {
                     "name": [
                         4,
@@ -1550,7 +1632,7 @@ export default {
                 }
             ],
             "updateProfile": [
-                23,
+                26,
                 {
                     "id": [
                         2,
@@ -1579,10 +1661,10 @@ export default {
                         4
                     ],
                     "subtitleSize": [
-                        25
+                        28
                     ],
                     "subtitleStyle": [
-                        26
+                        29
                     ],
                     "voiceBoost": [
                         6
@@ -1599,7 +1681,7 @@ export default {
                 }
             ],
             "verifyPin": [
-                27,
+                30,
                 {
                     "profileId": [
                         2,
@@ -1612,10 +1694,10 @@ export default {
                 }
             ],
             "updateSettings": [
-                29,
+                32,
                 {
                     "input": [
-                        30,
+                        33,
                         "SettingsInput!"
                     ]
                 }
@@ -1624,7 +1706,7 @@ export default {
                 6
             ],
             "setPluginEnabled": [
-                33,
+                36,
                 {
                     "name": [
                         4,
@@ -1637,20 +1719,20 @@ export default {
                 }
             ],
             "setPluginSettings": [
-                33,
+                36,
                 {
                     "name": [
                         4,
                         "String!"
                     ],
                     "values": [
-                        32,
+                        35,
                         "[PluginSettingInput!]!"
                     ]
                 }
             ],
             "loginPlugin": [
-                33,
+                36,
                 {
                     "name": [
                         4,
@@ -1667,7 +1749,7 @@ export default {
                 }
             ],
             "logoutPlugin": [
-                33,
+                36,
                 {
                     "name": [
                         4,
@@ -1676,7 +1758,7 @@ export default {
                 }
             ],
             "updatePlugins": [
-                55
+                58
             ],
             "startNeoworksSignIn": [
                 4,
@@ -1687,7 +1769,7 @@ export default {
                 }
             ],
             "completeNeoworksSignIn": [
-                49,
+                52,
                 {
                     "code": [
                         4,
@@ -1700,10 +1782,10 @@ export default {
                 }
             ],
             "signOutOfNeoworks": [
-                49
+                52
             ],
             "syncNeoworks": [
-                49
+                52
             ],
             "syncNeoworksSoon": [
                 6
@@ -1728,7 +1810,7 @@ export default {
         },
         "PluginUpdateReport": {
             "updated": [
-                54
+                57
             ],
             "failed": [
                 4
@@ -1748,10 +1830,10 @@ export default {
                 }
             ],
             "together": [
-                44
+                47
             ],
             "challenges": [
-                52
+                55
             ],
             "__typename": [
                 4
