@@ -52,6 +52,7 @@ object TelevisionConnection {
     fun initialize(context: Context) {
         applicationContext = context.applicationContext
         WakeableTelevisions.initialize(applicationContext)
+        KnownTelevisions.initialize(applicationContext)
         val castContext = castContext() ?: return
         castContext.sessionManager.addSessionManagerListener(castSessionListener, CastSession::class.java)
         castContext.sessionManager.currentCastSession?.let(::onChromecastConnected)
@@ -63,6 +64,7 @@ object TelevisionConnection {
     fun connectDlna(renderer: DlnaRenderer) {
         disconnect()
         WakeableTelevisions.learn(renderer)
+        KnownTelevisions.remember(renderer)
         val player = DlnaPlayer(applicationContext, renderer)
         mutableTarget.value = TelevisionTarget.Dlna(renderer, player)
         // The phone encodes the TV's one stream from now on, also while nothing plays.
