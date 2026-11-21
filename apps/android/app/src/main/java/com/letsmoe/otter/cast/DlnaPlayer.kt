@@ -37,6 +37,7 @@ import com.letsmoe.otter.reporting.ErrorReporting
 import com.letsmoe.otter.settings.PlaybackSettings
 import com.letsmoe.otter.ui.player.SleepTimer
 import com.letsmoe.otter.ui.player.TELEVISION_SOUND_LEAD_MILLISECONDS
+import com.letsmoe.otter.ui.player.audio.steppedAudioDelay
 import com.letsmoe.otter.ui.player.captionLookOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -121,6 +122,19 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     private var client = DlnaClient(initialRenderer, journal)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val heights = TelevisionHeights(context)
+    private val audioDelays = TelevisionAudioDelays(context)
+
+    /** How far this TV's sound is moved against the picture, in milliseconds (positive: later); kept per TV. */
+    @Volatile
+    var audioDelayMillis = audioDelays.delayMillis(initialRenderer.id)
+        private set
+
+    /** Moves the TV's sound by one more step (negative: earlier) and remembers it for this TV; returns the new delay. */
+    fun changeAudioDelay(stepMillis: Int): Int {
+        audioDelayMillis = steppedAudioDelay(audioDelayMillis, stepMillis)
+        audioDelays.save(renderer.id, audioDelayMillis)
+        return audioDelayMillis
+    }
 
     /** The height of the link set next (from its quality, e.g. 1080 for "1080p"); null when unknown. */
     var linkHeight: Int? = null
@@ -754,6 +768,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
             stopsAfterEpisode = { stopsAfterEpisode },
             askingStillWatching = { askingStillWatching },
             audioGain = { SleepTimer.shared.gain(TELEVISION_SOUND_LEAD_MILLISECONDS) },
+            audioDelayMillis = { audioDelayMillis },
         )
     }
 
