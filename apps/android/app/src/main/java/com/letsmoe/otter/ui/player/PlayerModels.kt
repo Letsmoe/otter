@@ -1,5 +1,7 @@
 package com.letsmoe.otter.ui.player
 
+import com.letsmoe.otter.filler.SeriesEpisode
+import com.letsmoe.otter.graphql.type.FillerKind
 import com.letsmoe.otter.settings.PlaybackSettings
 import com.letsmoe.otter.together.TogetherPeer
 
@@ -14,15 +16,17 @@ data class PlayerRequest(val mediaId: String, val streamId: String? = null, val 
 data class PlayerSource(val id: String, val label: String, val details: String, val plugin: String, val playable: Boolean?)
 
 data class PlayerEpisode(
-    val id: String,
-    val seasonNumber: Int,
-    val episodeNumber: Int,
+    override val id: String,
+    override val seasonNumber: Int,
+    override val episodeNumber: Int,
     val name: String?,
     val overview: String?,
     val stillUrl: String?,
     /** Watch fraction (0..1); null when unwatched. */
     val progress: Float?,
-)
+    /** What a filler list says about the episode (anime); null when none covers it. */
+    override val filler: FillerKind? = null,
+) : SeriesEpisode
 
 data class TrackOption(val index: Int, val label: String)
 

@@ -83,6 +83,15 @@ type Episode {
   next: Episode
   "Parts viewers skip (intro, recap, credits, preview), from TheIntroDB; empty when nobody timed them."
   skipSegments: [SkipSegment!]!
+  "Anime only: whether a filler list calls the episode filler, mixed (canon and filler) or canon; null when no list covers it."
+  filler: FillerKind
+}
+
+"What a filler list says about an episode."
+enum FillerKind {
+  FILLER
+  MIXED
+  CANON
 }
 
 "A skippable part of an episode."

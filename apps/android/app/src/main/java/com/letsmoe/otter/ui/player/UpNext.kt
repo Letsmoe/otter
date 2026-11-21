@@ -18,6 +18,8 @@ data class UpNextCard(
     val stillUrl: String?,
     val endsAtMillis: Long,
     val pausedRemainingMillis: Long? = null,
+    /** How many filler episodes were jumped over to reach this one. */
+    val skippedFiller: Int = 0,
 )
 
 /** Milliseconds until the next episode plays, between 0 and the whole countdown. */
@@ -50,7 +52,7 @@ class UpNext(private val scope: CoroutineScope, private val playNext: () -> Unit
     }
 
     /** Called with every position update; going back before the credits withdraws the card. */
-    fun follow(inCredits: Boolean, playing: Boolean, next: PlayerEpisode?) {
+    fun follow(inCredits: Boolean, playing: Boolean, next: PlayerEpisode?, skippedFiller: Int = 0) {
         if (!inCredits) {
             reset()
             return
@@ -63,7 +65,7 @@ class UpNext(private val scope: CoroutineScope, private val playNext: () -> Unit
         if (dismissed || !playing || next == null) {
             return
         }
-        startCountdown(UpNextCard(episodeLabel(next), next.stillUrl, 0), UP_NEXT_MILLISECONDS)
+        startCountdown(UpNextCard(episodeLabel(next), next.stillUrl, 0, skippedFiller = skippedFiller), UP_NEXT_MILLISECONDS)
     }
 
     fun cancel() {
@@ -102,6 +104,25 @@ class UpNext(private val scope: CoroutineScope, private val playNext: () -> Unit
         countdown = null
         mutableCard.value = null
     }
+}
+
+/** "Skipping 3 filler episodes", under the card's episode when filler was jumped over. */
+fun skippedFillerText(skippedFiller: Int): String? {
+    if (skippedFiller <= 0) {
+        return null
+    }
+    if (skippedFiller == 1) {
+        return "Skipping 1 filler episode"
+    }
+    return "Skipping $skippedFiller filler episodes"
+}
+
+/** The label of the card drawn into a TV's picture: the episode, and "· skips 3 filler" when filler was jumped over. */
+fun upNextLabel(episode: PlayerEpisode, skippedFiller: Int): String {
+    if (skippedFiller <= 0) {
+        return episodeLabel(episode)
+    }
+    return "${episodeLabel(episode)} · skips $skippedFiller filler"
 }
 
 /** "S1:E2 · Name", as the next episode's card shows it. */

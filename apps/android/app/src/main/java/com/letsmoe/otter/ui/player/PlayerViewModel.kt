@@ -27,6 +27,9 @@ import com.letsmoe.otter.cast.overlay.TitleText
 import com.letsmoe.otter.cast.overlay.UpNextPreview
 import com.letsmoe.otter.downloads.DownloadItem
 import com.letsmoe.otter.downloads.DownloadsRepository
+import com.letsmoe.otter.filler.FillerSkipSettings
+import com.letsmoe.otter.filler.FollowingEpisode
+import com.letsmoe.otter.filler.following
 import com.letsmoe.otter.graphql.fragment.ProfileFields
 import com.letsmoe.otter.profiles.captionLanguage
 import com.letsmoe.otter.profiles.PreferenceChange
@@ -102,6 +105,8 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private val progressReporter = ProgressReporter()
     private val togetherSync = PlayerTogetherSync(viewModelScope, this)
     private val skipTracker = SkipTracker()
+    // What follows the playing episode, with the filler jumped over when the series skips it.
+    private var upcoming: FollowingEpisode<PlayerEpisode>? = null
     private val upNextOffer = UpNext(viewModelScope, ::playNext)
     private val captionExtras = CaptionExtras(viewModelScope, ::reloadPhoneCaptions)
 
@@ -244,13 +249,25 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             val loaded = loadPlayerMedia(mediaId, profileId) ?: return@launch
             media = loaded
             skipTracker.reset(loaded.skipSegments)
+            upcoming = upcomingAfter(loaded, mediaId, profileId)
             // Reaches the TV's picture with its next load, e.g. the next seek.
             televisionPlayer?.hints = televisionHints()
             mutableState.update { current ->
-                current.copy(title = loaded.title, episodes = loaded.episodes, hasNextEpisode = loaded.nextEpisodeId != null)
+                current.copy(title = loaded.title, episodes = loaded.episodes, hasNextEpisode = upcoming != null)
             }
             announceToTogether()
         }
+    }
+
+    // The backend's next episode, or when the series skips filler the next one that isn't.
+    private fun upcomingAfter(loaded: PlayerMedia, mediaId: String, profileId: String): FollowingEpisode<PlayerEpisode>? {
+        val seriesId = loaded.seriesId
+        if (seriesId != null && FillerSkipSettings.skips(profileId, seriesId)) {
+            return loaded.episodes.following(mediaId, skipFiller = true)
+        }
+        val nextId = loaded.nextEpisodeId ?: return null
+        val next = loaded.episodes.firstOrNull { episode -> episode.id == nextId } ?: return null
+        return FollowingEpisode(next, 0)
     }
 
     private fun startStreams(mediaId: String, initial: Boolean) {
@@ -297,7 +314,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     }
 
     fun playNext() {
-        val nextId = media?.nextEpisodeId ?: return
+        val nextId = nextEpisode()?.id ?: return
         openMedia(nextId, initial = false)
     }
 
@@ -521,7 +538,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     // The end screen counts down in animation frames, which stop while the phone is locked;
     // the next episode starts regardless, on the phone or on a TV.
     private fun continueWithNextEpisode() {
-        if (media?.nextEpisodeId == null || mutableState.value.stopsAfterEpisode) {
+        if (nextEpisode() == null || mutableState.value.stopsAfterEpisode) {
             return
         }
         nextEpisodeJob?.cancel()
@@ -967,7 +984,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private fun followSegments(positionSeconds: Double) {
         mutableSkipButton.value = skipTracker.jumpAt(positionSeconds)
         val inCredits = skipTracker.isInCredits(positionSeconds)
-        upNextOffer.follow(inCredits, activePlayer.isPlaying, offeredNextEpisode())
+        upNextOffer.follow(inCredits, activePlayer.isPlaying, offeredNextEpisode(), skippedFillerCount())
         skipIntroAt(positionSeconds)
         endReplayAt(positionSeconds)
         // Back before the credits, the TV's card may show again, like the phone's.
@@ -995,9 +1012,12 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     }
 
     private fun nextEpisode(): PlayerEpisode? {
-        val loaded = media ?: return null
-        val nextId = loaded.nextEpisodeId ?: return null
-        return loaded.episodes.firstOrNull { episode -> episode.id == nextId }
+        return upcoming?.episode
+    }
+
+    private fun skippedFillerCount(): Int {
+        val following = upcoming ?: return 0
+        return following.skippedFiller
     }
 
     // What the TV's picture shows besides captions: skip hints and, during the credits, the next episode.
@@ -1014,7 +1034,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private fun upNextPreview(): UpNextPreview? {
         val next = nextEpisode() ?: return null
         val creditsStart = skipTracker.creditsStartSeconds ?: return null
-        return UpNextPreview(episodeLabel(next), next.stillUrl, creditsStart, UP_NEXT_MILLISECONDS / 1000.0)
+        return UpNextPreview(upNextLabel(next, skippedFillerCount()), next.stillUrl, creditsStart, UP_NEXT_MILLISECONDS / 1000.0)
     }
 
     /** The skip button: jumps to the end of the intro or recap playing now. */

@@ -94,6 +94,7 @@ Plugins are TypeScript packages in `apps/backend/plugins/<name>/`. `bun scripts/
 
 - `streams` — receives `StreamsArgs` (TMDB-known title: title, original title, year, tmdb/imdb id, season/episode numbers), locates it on the site and returns `{ downloads: Download[] }`
 - `resolve` — receives a hoster URL (matched by `meta.domains`, `"*"` = fallback) and returns a playable `ResolveResult` (url, mime type, headers)
+- `filler` — receives `FillerArgs` (title, original title, year, TMDB/IMDb id of a series) and returns `{ episodes: [{ number, kind: "filler" | "mixed" | "canon", season_number? }] }`; numbers are absolute across the series unless `season_number` is set. `internal/library` (`filler.go`) asks it for animated series once their episodes are fetched, keeps the answer in `series_filler`, maps it onto TMDB's seasons (the Nth regular episode in season order; nothing when the list reaches past what TMDB has) and stores the kind per `episode.filler`, exposed as `Episode.filler`. The `animefillerlist` plugin reads animefillerlist.com
 - `subtitles` — receives `SubtitlesArgs` (`StreamsArgs` + preferred `languages`) and returns `{ subtitles: SubtitleFile[] }` (url, ISO 639-1 language, format, release, headers). `internal/subtitles` asks all of them in parallel, ranks by the profile's caption language, cleans the files (encoding, broken timestamps, ad cues) and serves them as `/api/subtitles/<id>.vtt|.srt[?offset=ms]` on the API and LAN servers
 
 **Protocol** (stdin/stdout JSON):

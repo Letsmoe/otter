@@ -90,8 +90,14 @@ export interface Episode {
     next: (Episode | null)
     /** Parts viewers skip (intro, recap, credits, preview), from TheIntroDB; empty when nobody timed them. */
     skipSegments: SkipSegment[]
+    /** Anime only: whether a filler list calls the episode filler, mixed (canon and filler) or canon; null when no list covers it. */
+    filler: (FillerKind | null)
     __typename: 'Episode'
 }
+
+
+/** What a filler list says about an episode. */
+export type FillerKind = 'FILLER' | 'MIXED' | 'CANON'
 
 
 /** A skippable part of an episode. */
@@ -700,6 +706,8 @@ export interface EpisodeGenqlSelection{
     next?: EpisodeGenqlSelection
     /** Parts viewers skip (intro, recap, credits, preview), from TheIntroDB; empty when nobody timed them. */
     skipSegments?: SkipSegmentGenqlSelection
+    /** Anime only: whether a filler list calls the episode filler, mixed (canon and filler) or canon; null when no list covers it. */
+    filler?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1572,6 +1580,12 @@ export const enumMediaType = {
    MOVIE: 'MOVIE' as const,
    SERIES: 'SERIES' as const,
    EPISODE: 'EPISODE' as const
+}
+
+export const enumFillerKind = {
+   FILLER: 'FILLER' as const,
+   MIXED: 'MIXED' as const,
+   CANON: 'CANON' as const
 }
 
 export const enumSubtitleSize = {
