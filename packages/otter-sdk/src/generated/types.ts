@@ -14,7 +14,8 @@ export default {
         40,
         45,
         46,
-        51
+        49,
+        55
     ],
     "types": {
         "MediaType": {},
@@ -1208,7 +1209,98 @@ export default {
                 35
             ],
             "neoworksAccount": [
+                53
+            ],
+            "letterboxdImport": [
+                50,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
+            "letterboxdAccount": [
+                52,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "LetterboxdImportState": {},
+        "LetterboxdImport": {
+            "state": [
                 49
+            ],
+            "total": [
+                3
+            ],
+            "processed": [
+                3
+            ],
+            "matched": [
+                3
+            ],
+            "watched": [
+                3
+            ],
+            "rated": [
+                3
+            ],
+            "watchlisted": [
+                3
+            ],
+            "unmatchedCount": [
+                3
+            ],
+            "notMatched": [
+                51
+            ],
+            "error": [
+                4
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "LetterboxdFilm": {
+            "name": [
+                4
+            ],
+            "year": [
+                3
+            ],
+            "uri": [
+                4
+            ],
+            "reason": [
+                4
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "LetterboxdAccount": {
+            "username": [
+                4
+            ],
+            "lastSyncedAt": [
+                4
+            ],
+            "lastError": [
+                4
+            ],
+            "lastWatched": [
+                3
+            ],
+            "lastRated": [
+                3
             ],
             "__typename": [
                 4
@@ -1225,7 +1317,7 @@ export default {
                 4
             ],
             "lastSync": [
-                50
+                54
             ],
             "__typename": [
                 4
@@ -1254,7 +1346,7 @@ export default {
                 2
             ],
             "kind": [
-                51
+                55
             ],
             "url": [
                 4
@@ -1676,7 +1768,7 @@ export default {
                 }
             ],
             "updatePlugins": [
-                55
+                59
             ],
             "startNeoworksSignIn": [
                 4,
@@ -1687,7 +1779,7 @@ export default {
                 }
             ],
             "completeNeoworksSignIn": [
-                49,
+                53,
                 {
                     "code": [
                         4,
@@ -1700,13 +1792,57 @@ export default {
                 }
             ],
             "signOutOfNeoworks": [
-                49
+                53
             ],
             "syncNeoworks": [
-                49
+                53
             ],
             "syncNeoworksSoon": [
                 6
+            ],
+            "importLetterboxd": [
+                50,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "zipBase64": [
+                        4,
+                        "String!"
+                    ]
+                }
+            ],
+            "connectLetterboxd": [
+                52,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "username": [
+                        4,
+                        "String!"
+                    ]
+                }
+            ],
+            "disconnectLetterboxd": [
+                6,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
+            "syncLetterboxd": [
+                52,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ]
+                }
             ],
             "__typename": [
                 4
@@ -1728,7 +1864,7 @@ export default {
         },
         "PluginUpdateReport": {
             "updated": [
-                54
+                58
             ],
             "failed": [
                 4
@@ -1751,7 +1887,7 @@ export default {
                 44
             ],
             "challenges": [
-                52
+                56
             ],
             "__typename": [
                 4

@@ -3,6 +3,7 @@ package graphql
 import (
 	"github.com/Letsmoe/otter/internal/accounts"
 	"github.com/Letsmoe/otter/internal/challenge"
+	"github.com/Letsmoe/otter/internal/letterboxd"
 	"github.com/Letsmoe/otter/internal/downloads"
 	"github.com/Letsmoe/otter/internal/library"
 	"github.com/Letsmoe/otter/internal/neoworks"
@@ -47,6 +48,8 @@ type Services struct {
 	Neoworks *neoworks.Service
 	// Challenges are sites' bot checks the phone app solves in a WebView.
 	Challenges *challenge.Service
+	// Letterboxd imports exports and follows public diary feeds.
+	Letterboxd *letterboxd.Service
 }
 
 // Resolver is the root gqlgen resolver.

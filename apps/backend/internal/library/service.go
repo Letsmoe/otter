@@ -158,6 +158,16 @@ func (s *Service) saveRecommendations(ctx context.Context, from MediaRef, mediaT
 	return s.Store.ReplaceRelated(ctx, from, RelatedSourceTMDB, refs)
 }
 
+// SaveMovieStub stores a TMDB search hit as a stub movie and returns its ref,
+// so activity recorded for it (history, ratings, My List) has a title to show.
+func (s *Service) SaveMovieStub(ctx context.Context, result tmdb.SearchResult) (MediaRef, error) {
+	refs, err := s.saveStubs(ctx, MediaTypeMovie, []tmdb.SearchResult{result})
+	if err != nil || len(refs) == 0 {
+		return MediaRef{}, err
+	}
+	return refs[0], nil
+}
+
 // saveStubs stores list entries as stub titles and returns their refs.
 func (s *Service) saveStubs(ctx context.Context, mediaType MediaType, results []tmdb.SearchResult) ([]MediaRef, error) {
 	refs := make([]MediaRef, 0, len(results))

@@ -4,20 +4,22 @@ package tmdb
 // append credits, videos, images, keywords and recommendations in one call.
 
 type SearchResult struct {
-	ID           int     `json:"id"`
-	MediaType    string  `json:"media_type"` // set by multi-search and trending only
-	Title        string  `json:"title"`
-	Name         string  `json:"name"`
-	ReleaseDate  string  `json:"release_date"`
-	FirstAirDate string  `json:"first_air_date"`
-	PosterPath   string  `json:"poster_path"`
-	Overview     string  `json:"overview"`
-	VoteAverage  float64 `json:"vote_average"`
-	VoteCount    int     `json:"vote_count"`
-	Popularity   float64 `json:"popularity"`
-	BackdropPath string  `json:"backdrop_path"`
-	GenreIDs     []int   `json:"genre_ids"`
-	Adult        bool    `json:"adult"`
+	ID        int    `json:"id"`
+	MediaType string `json:"media_type"` // set by multi-search and trending only
+	Title     string `json:"title"`
+	// OriginalTitle is the title in the film's own language.
+	OriginalTitle string  `json:"original_title"`
+	Name          string  `json:"name"`
+	ReleaseDate   string  `json:"release_date"`
+	FirstAirDate  string  `json:"first_air_date"`
+	PosterPath    string  `json:"poster_path"`
+	Overview      string  `json:"overview"`
+	VoteAverage   float64 `json:"vote_average"`
+	VoteCount     int     `json:"vote_count"`
+	Popularity    float64 `json:"popularity"`
+	BackdropPath  string  `json:"backdrop_path"`
+	GenreIDs      []int   `json:"genre_ids"`
+	Adult         bool    `json:"adult"`
 }
 
 type SearchResponse struct {

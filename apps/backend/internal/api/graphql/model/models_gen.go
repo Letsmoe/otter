@@ -95,6 +95,42 @@ type HistoryEntry struct {
 	Progress *WatchProgress `json:"progress"`
 }
 
+// A Letterboxd account whose public diary feed a profile follows. Otter only reads from Letterboxd; writing needs API access Letterboxd has not given.
+type LetterboxdAccount struct {
+	Username     string  `json:"username"`
+	LastSyncedAt *string `json:"lastSyncedAt,omitempty"`
+	// Why the last sync failed; null after a good one.
+	LastError *string `json:"lastError,omitempty"`
+	// Watches and ratings the last sync added.
+	LastWatched int `json:"lastWatched"`
+	LastRated   int `json:"lastRated"`
+}
+
+type LetterboxdFilm struct {
+	Name   string  `json:"name"`
+	Year   *int    `json:"year,omitempty"`
+	URI    *string `json:"uri,omitempty"`
+	Reason string  `json:"reason"`
+}
+
+// An import of a Letterboxd export (watched, ratings, diary, watchlist) into a profile.
+type LetterboxdImport struct {
+	State LetterboxdImportState `json:"state"`
+	// Films in the export, and how many were looked up on TMDB so far.
+	Total     int `json:"total"`
+	Processed int `json:"processed"`
+	// Films that found their TMDB movie.
+	Matched int `json:"matched"`
+	// What the import added; what Otter already had is not counted.
+	Watched     int `json:"watched"`
+	Rated       int `json:"rated"`
+	Watchlisted int `json:"watchlisted"`
+	// Films TMDB had no match for; notMatched lists the first few hundred.
+	UnmatchedCount int               `json:"unmatchedCount"`
+	NotMatched     []*LetterboxdFilm `json:"notMatched"`
+	Error          *string           `json:"error,omitempty"`
+}
+
 // Titles featuring the lead actor of a title the profile rated well.
 type MoreWithRow struct {
 	Person    *Person  `json:"person"`
@@ -680,6 +716,65 @@ func (e *DownloadStatus) UnmarshalJSON(b []byte) error {
 }
 
 func (e DownloadStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type LetterboxdImportState string
+
+const (
+	LetterboxdImportStateIdle    LetterboxdImportState = "IDLE"
+	LetterboxdImportStateRunning LetterboxdImportState = "RUNNING"
+	LetterboxdImportStateDone    LetterboxdImportState = "DONE"
+	LetterboxdImportStateFailed  LetterboxdImportState = "FAILED"
+)
+
+var AllLetterboxdImportState = []LetterboxdImportState{
+	LetterboxdImportStateIdle,
+	LetterboxdImportStateRunning,
+	LetterboxdImportStateDone,
+	LetterboxdImportStateFailed,
+}
+
+func (e LetterboxdImportState) IsValid() bool {
+	switch e {
+	case LetterboxdImportStateIdle, LetterboxdImportStateRunning, LetterboxdImportStateDone, LetterboxdImportStateFailed:
+		return true
+	}
+	return false
+}
+
+func (e LetterboxdImportState) String() string {
+	return string(e)
+}
+
+func (e *LetterboxdImportState) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = LetterboxdImportState(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid LetterboxdImportState", str)
+	}
+	return nil
+}
+
+func (e LetterboxdImportState) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *LetterboxdImportState) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e LetterboxdImportState) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil
