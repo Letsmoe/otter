@@ -41,6 +41,7 @@ fun HomeScreen(
     onPlayMedia: (String) -> Unit,
     onOpenPerson: (String) -> Unit,
     onSearch: () -> Unit,
+    onOpenUpcoming: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var category by rememberSaveable { mutableStateOf(HomeCategory.MOVIES) }
@@ -70,6 +71,7 @@ fun HomeScreen(
                 onSelect = { chosen -> category = chosen },
                 onOpenCategories = { categoriesOpen = true },
                 onClearGenre = { selectedGenre = null },
+                onOpenUpcoming = onOpenUpcoming,
             )
         },
     )

@@ -12,6 +12,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.CalendarBlank
 import com.adamglin.phosphoricons.regular.CaretDown
 import com.adamglin.phosphoricons.regular.X
 import androidx.compose.foundation.layout.Row
@@ -34,7 +35,7 @@ import com.letsmoe.otter.ui.components.pressable
 private val chipShape = CircleShape
 
 /**
- * Pill chips: Movies, TV Shows and a Categories chip that opens the genre sheet. With a genre
+ * Pill chips: Movies, TV Shows, Upcoming (on the TV Shows page) and a Categories chip that opens the genre sheet. With a genre
  * picked the last chip shows its name and an X to clear it. Padding sits inside the scroll so
  * chips and their glass shadow reach the screen edge unclipped.
  */
@@ -45,6 +46,7 @@ fun CategoryChips(
     onSelect: (HomeCategory) -> Unit,
     onOpenCategories: () -> Unit,
     onClearGenre: () -> Unit,
+    onOpenUpcoming: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -55,6 +57,9 @@ fun CategoryChips(
             CategoryChip(category.label, category == selected, null, { onSelect(category) })
         }
         if (selectedGenre == null) {
+            if (selected == HomeCategory.TV) {
+                CategoryChip("Upcoming", false, PhosphorIcons.Regular.CalendarBlank, onOpenUpcoming)
+            }
             CategoryChip("Categories", false, PhosphorIcons.Regular.CaretDown, onOpenCategories)
             return@Row
         }

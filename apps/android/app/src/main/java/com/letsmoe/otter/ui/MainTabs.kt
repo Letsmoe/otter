@@ -61,6 +61,7 @@ private fun TabPage(tab: Tab, navController: NavHostController, openTab: (Tab) -
             onPlayMedia = { mediaId -> navController.play(PlayerRequest(mediaId)) },
             onOpenPerson = { personId -> navController.navigate(Routes.person(personId)) },
             onSearch = { navController.navigate(Routes.SEARCH) },
+            onOpenUpcoming = { navController.navigate(Routes.UPCOMING) },
         )
         Tab.MY_LIST -> WatchlistScreen(onOpenItem = onOpenItem, onSearch = { navController.navigate(Routes.SEARCH) })
         Tab.DOWNLOADS -> WithoutBackdrop {

@@ -185,6 +185,13 @@ type TimeSlotItem {
   reason: String!
 }
 
+"An episode that has not aired yet."
+type UpcomingEpisode {
+  series: Title!
+  "Its airDate (yyyy-MM-dd, TMDB's) is today or within the asked days."
+  episode: Episode!
+}
+
 type HistoryEntry {
   title: Title!
   episode: Episode
@@ -508,6 +515,8 @@ type Query {
   continueWatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
   "What fits into the given minutes: what the profile is in the middle of (next episodes, movies not finished), then short films from My List and recommendations. Items that use the time best come first within each group."
   timeSlot(profileId: ID!, minutes: Int!, limit: Int = 12): [TimeSlotItem!]!
+  "Episodes airing from today within days (default four weeks, at most 90), soonest first, of the series on the profile's My List or watched in the last months; air dates from TMDB."
+  upcomingEpisodes(profileId: ID!, days: Int = 28): [UpcomingEpisode!]!
   history(profileId: ID!, limit: Int = 50): [HistoryEntry!]!
   watchlist(profileId: ID!): [Title!]!
   "Titles the profile rated well (I like this, Love this), latest rating first."

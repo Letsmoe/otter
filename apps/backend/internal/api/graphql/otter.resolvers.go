@@ -789,6 +789,15 @@ func (r *queryResolver) TimeSlot(ctx context.Context, profileID string, minutes 
 	return r.timeSlot(ctx, profile, minutes, clamp(valueOr(limit, 12), 30))
 }
 
+// UpcomingEpisodes is the resolver for the upcomingEpisodes field.
+func (r *queryResolver) UpcomingEpisodes(ctx context.Context, profileID string, days *int) ([]*model.UpcomingEpisode, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return nil, err
+	}
+	return r.upcomingEpisodes(ctx, profile, clamp(valueOr(days, 28), 90))
+}
+
 // History is the resolver for the history field.
 func (r *queryResolver) History(ctx context.Context, profileID string, limit *int) ([]*model.HistoryEntry, error) {
 	profile, err := parseProfile(profileID)
