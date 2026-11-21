@@ -19,6 +19,7 @@ val CARD_SPACING = 14.dp
 val REGULAR_POSTER_WIDTH = 104.dp
 val LARGE_POSTER_WIDTH = 136.dp
 val WIDE_CARD_WIDTH = 200.dp
+val REGULAR_LANDSCAPE_WIDTH = 168.dp
 
 /** Where a focused card's top lands in a list of rows: just below its row's title. */
 val ROW_FOCUS_LINE = 34.dp

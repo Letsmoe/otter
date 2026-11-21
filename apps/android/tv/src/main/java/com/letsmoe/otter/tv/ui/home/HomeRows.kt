@@ -10,7 +10,11 @@ import com.letsmoe.otter.tv.ui.components.LARGE_POSTER_WIDTH
 import com.letsmoe.otter.tv.ui.components.PageRow
 import com.letsmoe.otter.tv.ui.components.PosterCard
 import com.letsmoe.otter.tv.ui.components.RANK_NUMBER_WIDTH
-import com.letsmoe.otter.tv.ui.components.REGULAR_POSTER_WIDTH
+import com.letsmoe.otter.tv.ui.components.REGULAR_LANDSCAPE_WIDTH
+import com.letsmoe.otter.tv.ui.components.ROW_SPACING
+import com.letsmoe.otter.tv.ui.components.TOP_TEN_POSTER_WIDTH
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.letsmoe.otter.tv.ui.components.TopTenCard
 import com.letsmoe.otter.tv.ui.components.WIDE_CARD_WIDTH
 import com.letsmoe.otter.tv.ui.components.WideCard
@@ -27,6 +31,29 @@ class RowActions(
     val onOpenItem: (RailItem) -> Unit,
     val onOpenPerson: (String) -> Unit,
 )
+
+// A row's title and the padding that leaves room for the focused card to grow.
+private val ROW_CHROME_HEIGHT = 42.dp
+// How much of the second row shows under the first one on the first screen.
+private val SECOND_ROW_PEEK = 46.dp
+
+/** Room under the hero for the first row and the top of the second, like Prime Video's home. */
+fun firstScreenRowSpace(firstRow: HomeRow?): Dp {
+    return ROW_CHROME_HEIGHT + cardHeightOf(firstRow) + ROW_SPACING + SECOND_ROW_PEEK
+}
+
+private fun cardHeightOf(row: HomeRow?): Dp {
+    if (row !is PosterRow) {
+        // The actor row, or no rows yet.
+        return 120.dp
+    }
+    return when (row.style) {
+        RailStyle.REGULAR -> REGULAR_LANDSCAPE_WIDTH * 9f / 16f
+        RailStyle.WIDE -> WIDE_CARD_WIDTH * 9f / 16f
+        RailStyle.LARGE -> LARGE_POSTER_WIDTH * 3f / 2f
+        RailStyle.TOP_TEN -> TOP_TEN_POSTER_WIDTH * 3f / 2f
+    }
+}
 
 /** Every home row as a page row, each in its own card style. */
 fun homePageRows(rows: List<HomeRow>, actors: List<ActorItem>, actions: RowActions): List<PageRow> {
@@ -60,7 +87,8 @@ private fun TitleCardFor(style: RailStyle, item: RailItem, position: Int, action
     val onFocus = { actions.onFocusItem(item) }
     val onClick = { actions.onOpenItem(item) }
     when (style) {
-        RailStyle.REGULAR -> PosterCard(item, REGULAR_POSTER_WIDTH, onFocus, onClick)
+        // Landscape like Prime Video's rows; large and Top 10 rows stay posters for variety.
+        RailStyle.REGULAR -> WideCard(item, REGULAR_LANDSCAPE_WIDTH, onFocus, onClick)
         RailStyle.LARGE -> PosterCard(item, LARGE_POSTER_WIDTH, onFocus, onClick)
         RailStyle.WIDE -> WideCard(item, WIDE_CARD_WIDTH, onFocus, onClick)
         RailStyle.TOP_TEN -> TopTenCard(item, position, onFocus, onClick)

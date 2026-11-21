@@ -28,6 +28,7 @@ import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.tv.theme.TvColors
 import com.letsmoe.otter.tv.theme.TvSpacing
 import com.letsmoe.otter.tv.theme.TvType
+import com.letsmoe.otter.tv.ui.components.TitleName
 import com.letsmoe.otter.ui.media.RailItem
 
 /** What the top of the home screen shows: the focused title, or the featured one before anything is focused. */
@@ -56,7 +57,7 @@ fun HeroBackdrop(hero: HeroTitle?, modifier: Modifier = Modifier) {
     }
 }
 
-/** Title, year, kind and genres of the hero title. */
+/** The hero title's logo (or name), its label like "Recently Added", then year, kind and genres. */
 @Composable
 fun HeroInfo(hero: HeroTitle?, modifier: Modifier = Modifier) {
     if (hero == null) {
@@ -68,16 +69,25 @@ fun HeroInfo(hero: HeroTitle?, modifier: Modifier = Modifier) {
             .width(480.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text(
-            hero.item.title,
-            fontSize = TvType.heroTitle,
-            fontWeight = FontWeight.Bold,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            lineHeight = 34.sp,
-        )
+        TitleName(hero.item.id, hero.item.title)
+        HeroLabel(hero.item)
         Text(heroDetails(hero), fontSize = TvType.detail, color = TvColors.secondaryContent, maxLines = 1)
     }
+}
+
+@Composable
+private fun HeroLabel(item: RailItem) {
+    val label = heroLabelOf(item) ?: return
+    Text(label, fontSize = TvType.detail, fontWeight = FontWeight.SemiBold, color = TvColors.accent, modifier = Modifier.padding(top = 4.dp))
+}
+
+// The tag a card shows ("Recently Added") or its badge (an upcoming release date).
+private fun heroLabelOf(item: RailItem): String? {
+    val label = item.label
+    if (label != null) {
+        return label
+    }
+    return item.badge
 }
 
 // "2024 · Movie · Drama, Thriller", or the episode for continue watching.

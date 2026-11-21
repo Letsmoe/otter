@@ -38,11 +38,11 @@ import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.tv.theme.TvSpacing
 import com.letsmoe.otter.tv.ui.components.HeroRowsPage
-import com.letsmoe.otter.tv.ui.components.PageRow
 import com.letsmoe.otter.tv.ui.components.PillButton
 import com.letsmoe.otter.tv.ui.components.ProfileButton
 import com.letsmoe.otter.tv.ui.components.TopBar
 import com.letsmoe.otter.tv.ui.search.SearchScreen
+import com.letsmoe.otter.ui.home.HomeRow
 import com.letsmoe.otter.ui.home.TitlesPageState
 import com.letsmoe.otter.ui.home.TitlesPageViewModel
 import com.letsmoe.otter.ui.home.pageLabels
@@ -51,8 +51,6 @@ import com.letsmoe.otter.ui.home.withActorsRow
 import com.letsmoe.otter.ui.media.RailItem
 import kotlinx.coroutines.delay
 
-// What's left under the hero at the top of the page: one row of posters.
-private val FIRST_ROW_SPACE = 222.dp
 // Scrolling fast through a row shouldn't reload the backdrop for every card it passes.
 private const val HERO_SETTLE_MILLISECONDS = 250L
 // Rows wait this long for the featured title, so focus starts on its buttons rather than a card.
@@ -68,7 +66,7 @@ fun HomeScreen(onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> Unit) {
         }
         TopBar(
             modifier = topBarFade(),
-            center = { HomeTabs(tab, onSelect = { selected -> tab = selected }) },
+            tabs = { HomeTabs(tab, onSelect = { selected -> tab = selected }) },
             trailing = { ProfileButton() },
         )
     }
@@ -102,9 +100,10 @@ fun TitlesHome(mediaType: MediaType, onOpenItem: (RailItem) -> Unit, onOpenPerso
         onOpenItem = onOpenItem,
         onOpenPerson = onOpenPerson,
     )
+    val rows = rowsOnceFeaturedArrives(mediaType, state)
     HeroRowsPage(
-        firstRowSpace = FIRST_ROW_SPACE,
-        rows = rowsOnceFeaturedArrives(mediaType, state, actions),
+        firstRowSpace = firstScreenRowSpace(rows.firstOrNull()),
+        rows = homePageRows(rows, state.actors, actions),
         backdrop = { modifier -> HeroBackdrop(heroTitle, modifier) },
     ) {
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.Bottom)) {
@@ -144,7 +143,7 @@ private fun heroFor(focused: RailItem?, state: TitlesPageState): HeroTitle? {
  * before it would be pushed down by rows loading above it, and the page would follow.
  */
 @Composable
-private fun rowsOnceFeaturedArrives(mediaType: MediaType, state: TitlesPageState, actions: RowActions): List<PageRow> {
+private fun rowsOnceFeaturedArrives(mediaType: MediaType, state: TitlesPageState): List<HomeRow> {
     var waitedForFeatured by remember(mediaType) { mutableStateOf(false) }
     LaunchedEffect(mediaType) {
         delay(FEATURED_WAIT_MILLISECONDS)
@@ -154,8 +153,7 @@ private fun rowsOnceFeaturedArrives(mediaType: MediaType, state: TitlesPageState
         return emptyList()
     }
     val profileName = ProfileSession.activeProfile.value?.name.orEmpty()
-    val rows = state.toRows(pageLabels(mediaType, profileName)).withActorsRow(state.actors.isNotEmpty())
-    return homePageRows(rows, state.actors, actions)
+    return state.toRows(pageLabels(mediaType, profileName)).withActorsRow(state.actors.isNotEmpty())
 }
 
 /**

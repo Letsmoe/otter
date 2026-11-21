@@ -36,6 +36,7 @@ import com.letsmoe.otter.tv.theme.TvColors
 import com.letsmoe.otter.tv.theme.TvSpacing
 import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.tv.ui.components.PillButton
+import com.letsmoe.otter.tv.ui.components.TitleName
 import com.letsmoe.otter.ui.title.TitleDetail
 
 /** What the Play button says and does; disabled while there's nothing to play. */
@@ -63,14 +64,7 @@ fun TitleHeader(detail: TitleDetail, facts: List<String>, creditLines: List<Stri
         modifier = Modifier.padding(horizontal = TvSpacing.screenHorizontal).width(500.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(
-            detail.title,
-            fontSize = TvType.heroTitle,
-            fontWeight = FontWeight.Bold,
-            lineHeight = 34.sp,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
+        TitleName(detail.id, detail.title)
         Text(facts.joinToString("  ·  "), fontSize = TvType.detail, color = TvColors.secondaryContent, maxLines = 1)
         Overview(detail.overview)
         for (line in creditLines) {

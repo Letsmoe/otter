@@ -14,9 +14,9 @@ import androidx.compose.ui.unit.dp
 import com.letsmoe.otter.tv.R
 import com.letsmoe.otter.tv.theme.TvSpacing
 
-/** The wordmark on the left, [center] in the middle (the app's tabs) and the VPN state on the right. */
+/** The wordmark with the app's [tabs] right after it on the left, the VPN state and [trailing] on the right. */
 @Composable
-fun TopBar(modifier: Modifier = Modifier, center: @Composable () -> Unit = {}, trailing: @Composable () -> Unit = {}) {
+fun TopBar(modifier: Modifier = Modifier, tabs: @Composable () -> Unit = {}, trailing: @Composable () -> Unit = {}) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -29,8 +29,8 @@ fun TopBar(modifier: Modifier = Modifier, center: @Composable () -> Unit = {}, t
             contentDescription = "Otter",
             modifier = Modifier.height(16.dp),
         )
-        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.Center) {
-            center()
+        Row(Modifier.weight(1f).padding(start = 8.dp)) {
+            tabs()
         }
         VpnIndicator()
         trailing()

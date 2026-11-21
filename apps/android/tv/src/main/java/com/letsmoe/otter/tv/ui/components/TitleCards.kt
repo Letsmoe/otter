@@ -38,7 +38,7 @@ import com.letsmoe.otter.ui.components.ActorItem
 import com.letsmoe.otter.ui.media.RailItem
 
 private val CARD_SHAPE = RoundedCornerShape(8.dp)
-private val TOP_TEN_POSTER_WIDTH = 104.dp
+val TOP_TEN_POSTER_WIDTH = 104.dp
 
 /** Room a Top 10 rank number takes left of its poster ("10" is the widest). */
 val RANK_NUMBER_WIDTH = 80.dp

@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 
 // Rows below the first scroll to just under the top bar.
 private val ROWS_TOP_LINE = 56.dp
-private val ROW_SPACING = 12.dp
+val ROW_SPACING = 12.dp
 // The backdrop moves at this share of the scroll speed: the parallax.
 private const val PARALLAX_FACTOR = 0.5f
 // Focus is in the hero; rows count from 0.
