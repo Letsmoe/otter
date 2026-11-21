@@ -163,6 +163,8 @@ func profileModel(profile profiles.Profile) *model.Profile {
 		SubtitleSize:     modelSubtitleSize(profile.SubtitleSize),
 		SubtitleStyle:    modelSubtitleStyle(profile.SubtitleStyle),
 		VoiceBoost:       profile.VoiceBoost,
+		AgeLimit:         profile.AgeLimit,
+		BedtimeMinutes:   profile.BedtimeMinutes,
 	}
 }
 

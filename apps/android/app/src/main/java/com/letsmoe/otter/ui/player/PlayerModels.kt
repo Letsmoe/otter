@@ -70,6 +70,8 @@ data class PlayerUiState(
     val evenVolume: Boolean = false,
     /** Nothing plays after the episode playing now. */
     val stopsAfterEpisode: Boolean = false,
+    /** A child profile's bedtime has started: stopping after the episode is on and can't be switched off. */
+    val stopLocked: Boolean = false,
     /** The profile's caption size and style. */
     val captionLook: CaptionLook = CaptionLook.DEFAULT,
 ) {

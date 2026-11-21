@@ -40,6 +40,14 @@ func (r *mutationResolver) candidateLinks(ctx context.Context, streamIDs []strin
 	return candidates, nil
 }
 
+func (links candidateLinks) mediaRefs() []library.MediaRef {
+	refs := make([]library.MediaRef, 0, len(links.media))
+	for ref := range links.media {
+		refs = append(refs, ref)
+	}
+	return refs
+}
+
 // withoutChecksFirst keeps the order but moves links on sites that showed a
 // bot check lately to the end: they race only when nothing else plays.
 func (r *mutationResolver) withoutChecksFirst(links []library.Stream) []library.Stream {
@@ -85,6 +93,9 @@ func (r *mutationResolver) resolveBest(ctx context.Context, streamIDs []string) 
 	}
 	candidates, err := r.candidateLinks(ctx, streamIDs)
 	if err != nil {
+		return nil, err
+	}
+	if err := r.requireAllowedMedia(ctx, candidates.mediaRefs()); err != nil {
 		return nil, err
 	}
 	// Someone waits to play: a bot check the app can't pass hidden may be shown to them.
