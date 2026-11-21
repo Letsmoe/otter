@@ -55,6 +55,7 @@ query SeriesEpisodes($id: ID!, $profileId: ID!) {
         airDate
         runtime
         stillPath
+        filler
         next {
           ...EpisodeRef
         }

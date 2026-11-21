@@ -187,6 +187,7 @@ func (s *Service) EnsureSeason(ctx context.Context, seriesID, seasonNumber int) 
 			return nil, err
 		}
 	}
+	s.fillerFollowUp(seriesID)
 	return s.Store.Episodes(ctx, seriesID, seasonNumber)
 }
 
@@ -195,7 +196,14 @@ func (s *Service) fetchSeason(ctx context.Context, seriesID, seasonNumber int) e
 	if err != nil {
 		return err
 	}
-	return s.Store.SaveEpisodes(ctx, seriesID, seasonNumber, episodeRows(seriesID, detail.Episodes))
+	if err := s.Store.SaveEpisodes(ctx, seriesID, seasonNumber, episodeRows(seriesID, detail.Episodes)); err != nil {
+		return err
+	}
+	// A list stored earlier can only be mapped once the last season is here.
+	if err := s.applyFiller(ctx, seriesID); err != nil {
+		log.Printf("library: filler of series %d: %v", seriesID, err)
+	}
+	return nil
 }
 
 // isStale reports whether a fetch timestamp is missing or older than ttl.

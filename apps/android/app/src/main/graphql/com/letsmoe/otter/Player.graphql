@@ -70,6 +70,7 @@ query PlayerSeriesEpisodes($id: ID!, $profileId: ID!) {
         name
         overview
         stillPath
+        filler
         next {
           id
         }

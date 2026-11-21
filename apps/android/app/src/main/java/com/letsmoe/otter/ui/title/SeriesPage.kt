@@ -69,7 +69,10 @@ fun SeriesPage(
         slots = slots,
         downloadTarget = upNextDownload(detail, upNext),
         tabBar = { SegmentedBar(seriesTabs, tab, onSelect = { chosen -> tab = chosen }) },
-        playExtras = { UpNextBar(upNext) },
+        playExtras = {
+            UpNextBar(upNext)
+            SkipFillerRow(episodes.skipFiller, episodes.fillerCount, seriesViewModel::setSkipFiller)
+        },
     ) {
         when (tab) {
             SeriesTab.EPISODES -> EpisodesTab(detail, episodes, seriesViewModel, slots, onPlay)

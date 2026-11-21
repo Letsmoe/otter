@@ -71,6 +71,7 @@ runPlugin(plugin);
 | `settings?` | extra fields; values arrive in `ctx.settings` |
 | `streams?` | `{ list(params, ctx) }` returning `ctx.list(items)` |
 | `subtitles?` | `{ list({ media, languages }, ctx) }` returning `ctx.list(SubtitleInput[])`; `SubtitleInput` is `{ url, language (ISO 639-1), format? ("srt" default | "vtt"), label?, release?, hearing_impaired?, headers? }` |
+| `filler?` | `{ list({ series }, ctx) }` returning `ctx.list(FillerEpisode[])`; `FillerEpisode` is `{ number, kind ("filler" | "mixed" | "canon"), season_number? }`, numbers absolute across the series unless `season_number` is set |
 | `sources?` | `{ domains, fallback?, retrieve(params, ctx) }`; `fallback: true` also takes any other domain |
 
 ### Objects
@@ -180,7 +181,7 @@ bun run codegen   # concatenates apps/backend SDL -> runs genql -> src/generated
 
 ## Protocol
 
-The backend runs a plugin by writing `{ "capability": "meta" | "streams" | "resolve" | "subtitles", "args": {...} }` to its stdin and reads one line from stdout: `{ "result": ... }` or `{ "error": "...", "code"?: "blocked" | "source_offline" | "extraction_failed" | "rate_limited" | "dead_link" }`. The wire types (`PluginMeta`, `StreamsArgs`, `Download`, `ResolveResult`) in `src/types.ts` mirror `apps/backend/internal/plugins/types.go`.
+The backend runs a plugin by writing `{ "capability": "meta" | "streams" | "resolve" | "subtitles" | "filler", "args": {...} }` to its stdin and reads one line from stdout: `{ "result": ... }` or `{ "error": "...", "code"?: "blocked" | "source_offline" | "extraction_failed" | "rate_limited" | "dead_link" }`. The wire types (`PluginMeta`, `StreamsArgs`, `Download`, `ResolveResult`) in `src/types.ts` mirror `apps/backend/internal/plugins/types.go`.
 
 ## License
 
