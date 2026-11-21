@@ -77,7 +77,7 @@ fun WideCard(item: RailItem, width: Dp, onFocus: () -> Unit, onClick: () -> Unit
     ) {
         Box(Modifier.fillMaxSize()) {
             CardImage(wideImage(item), item.title)
-            WideCardCaption(item, Modifier.align(Alignment.BottomStart))
+            WideCardCaption(item, hasProgress = item.progress != null, Modifier.align(Alignment.BottomStart))
             CardBadge(item.badge, Modifier.align(Alignment.TopStart))
             CardProgress(item.progress, Modifier.align(Alignment.BottomStart))
         }
@@ -151,14 +151,19 @@ private fun CardImage(url: String?, title: String) {
 }
 
 @Composable
-private fun WideCardCaption(item: RailItem, modifier: Modifier) {
+private fun WideCardCaption(item: RailItem, hasProgress: Boolean, modifier: Modifier) {
     val shade = Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.85f))
+    // The progress bar sits below the text, not over it.
+    var bottomPadding = 9.dp
+    if (hasProgress) {
+        bottomPadding = 18.dp
+    }
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(shade)
             .padding(horizontal = 10.dp)
-            .padding(top = 16.dp, bottom = 9.dp),
+            .padding(top = 16.dp, bottom = bottomPadding),
     ) {
         Text(item.title, fontSize = TvType.detail, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         val subtitle = item.subtitle
@@ -190,8 +195,15 @@ private fun CardProgress(progress: Float?, modifier: Modifier) {
     if (progress == null) {
         return
     }
-    Box(modifier.fillMaxWidth().height(3.dp).background(Color.White.copy(alpha = 0.25f))) {
-        Box(Modifier.fillMaxWidth(progress).height(3.dp).background(TvColors.accent))
+    val track = RoundedCornerShape(2.dp)
+    Box(
+        modifier
+            .padding(horizontal = 10.dp, vertical = 8.dp)
+            .fillMaxWidth()
+            .height(4.dp)
+            .background(Color.White.copy(alpha = 0.3f), track),
+    ) {
+        Box(Modifier.fillMaxWidth(progress).height(4.dp).background(TvColors.accent, track))
     }
 }
 

@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
@@ -20,7 +21,13 @@ private val LOGO_MAX_HEIGHT = 80.dp
 
 /** A title's logo artwork, like streaming apps show over their hero; the name in large text when it has none. */
 @Composable
-fun TitleName(titleId: String, title: String, modifier: Modifier = Modifier) {
+fun TitleName(
+    titleId: String,
+    title: String,
+    modifier: Modifier = Modifier,
+    logoMaxWidth: Dp = LOGO_MAX_WIDTH,
+    logoMaxHeight: Dp = LOGO_MAX_HEIGHT,
+) {
     val logoUrl by rememberTitleLogo(titleId)
     val logo = logoUrl
     if (logo != null) {
@@ -29,7 +36,7 @@ fun TitleName(titleId: String, title: String, modifier: Modifier = Modifier) {
             contentDescription = title,
             contentScale = ContentScale.Fit,
             alignment = Alignment.BottomStart,
-            modifier = modifier.widthIn(max = LOGO_MAX_WIDTH).heightIn(max = LOGO_MAX_HEIGHT),
+            modifier = modifier.widthIn(max = logoMaxWidth).heightIn(max = logoMaxHeight),
         )
         return
     }

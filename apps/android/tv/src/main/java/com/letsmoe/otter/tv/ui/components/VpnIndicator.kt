@@ -23,7 +23,10 @@ import com.letsmoe.otter.vpn.VpnStatusStore
 
 private data class VpnLook(val label: String, val color: Color)
 
-/** A pill in the top right: whether Otter's traffic goes through a VPN. Hidden until the backend answers. */
+/**
+ * A pill in the top right: whether Otter's traffic goes through a VPN. Hidden until the backend
+ * answers, and when no VPN is on and none is required: nothing to act on then.
+ */
 @Composable
 fun VpnIndicator(modifier: Modifier = Modifier) {
     val status by VpnStatusStore.status.collectAsStateWithLifecycle()
@@ -53,5 +56,5 @@ private fun vpnLook(status: VpnStatus): VpnLook? {
     if (status.required) {
         return VpnLook("No VPN", TvColors.error)
     }
-    return VpnLook("No VPN", TvColors.neutralContent)
+    return null
 }

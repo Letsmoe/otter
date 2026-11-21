@@ -28,7 +28,6 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.profiles.ProfileSession
-import com.letsmoe.otter.tv.theme.TvSpacing
 import com.letsmoe.otter.ui.home.TitlesPageState
 import com.letsmoe.otter.ui.media.TitleActions
 import kotlinx.coroutines.CoroutineScope
@@ -143,12 +142,12 @@ fun carouselKeys(event: KeyEvent, direction: Key, move: () -> Unit): Boolean {
 
 /** One dot per title; the current one is a wider pill, like Prime Video's hero. */
 @Composable
-fun CarouselDots(carousel: HeroCarousel) {
+fun CarouselDots(carousel: HeroCarousel, modifier: Modifier = Modifier) {
     if (carousel.titles.size < 2) {
         return
     }
     Row(
-        modifier = Modifier.padding(horizontal = TvSpacing.screenHorizontal),
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(5.dp),
     ) {
         carousel.titles.forEachIndexed { position, _ ->

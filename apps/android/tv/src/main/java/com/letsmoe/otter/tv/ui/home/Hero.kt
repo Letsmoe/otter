@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,7 +36,10 @@ import com.letsmoe.otter.ui.media.RailItem
 /** What the top of the home screen shows: the focused title, or the featured one before anything is focused. */
 data class HeroTitle(val item: RailItem, val genres: List<String> = emptyList())
 
-/** The hero title's backdrop across the top right, fading into black towards the text and the rows. */
+/**
+ * The hero title's backdrop across the top right, fading into black towards the text on the left
+ * and into a dark band at the bottom that the rows sit on.
+ */
 @Composable
 fun HeroBackdrop(hero: HeroTitle?, modifier: Modifier = Modifier) {
     Box(modifier.fillMaxSize()) {
@@ -48,14 +53,21 @@ fun HeroBackdrop(hero: HeroTitle?, modifier: Modifier = Modifier) {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .fillMaxWidth(0.82f)
-                    .fillMaxHeight(0.86f),
+                    .fillMaxWidth(0.78f)
+                    .fillMaxHeight(0.8f),
             )
         }
-        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0.18f to Color.Black, 0.6f to Color.Transparent)))
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.5f to Color.Transparent, 0.86f to Color.Black)))
+        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0.2f to Color.Black, 0.62f to Color.Transparent)))
+        Box(Modifier.fillMaxSize().background(bottomBand))
     }
 }
+
+// Opaque enough under the rows that cards and titles never sit on a busy picture.
+private val bottomBand = Brush.verticalGradient(
+    0.3f to Color.Transparent,
+    0.56f to Color.Black.copy(alpha = 0.88f),
+    0.72f to Color.Black,
+)
 
 /** The hero title's logo (or name), its label like "Recently Added", then year, kind and genres. */
 @Composable
@@ -67,18 +79,30 @@ fun HeroInfo(hero: HeroTitle?, modifier: Modifier = Modifier) {
         modifier = modifier
             .padding(horizontal = TvSpacing.screenHorizontal)
             .width(480.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        TitleName(hero.item.id, hero.item.title)
-        HeroLabel(hero.item)
-        Text(heroDetails(hero), fontSize = TvType.detail, color = TvColors.secondaryContent, maxLines = 1)
+        TitleName(hero.item.id, hero.item.title, logoMaxWidth = HERO_LOGO_MAX_WIDTH, logoMaxHeight = HERO_LOGO_MAX_HEIGHT)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            HeroLabel(hero.item)
+            Text(heroDetails(hero), fontSize = TvType.body, color = TvColors.secondaryContent, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
     }
 }
+
+private val HERO_LOGO_MAX_WIDTH = 380.dp
+private val HERO_LOGO_MAX_HEIGHT = 110.dp
 
 @Composable
 private fun HeroLabel(item: RailItem) {
     val label = heroLabelOf(item) ?: return
-    Text(label, fontSize = TvType.detail, fontWeight = FontWeight.SemiBold, color = TvColors.accent, modifier = Modifier.padding(top = 4.dp))
+    Text(
+        label,
+        fontSize = TvType.caption,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier
+            .background(Color.White.copy(alpha = 0.16f), RoundedCornerShape(4.dp))
+            .padding(horizontal = 7.dp, vertical = 2.dp),
+    )
 }
 
 // The tag a card shows ("Recently Added") or its badge (an upcoming release date).

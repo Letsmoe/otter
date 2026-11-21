@@ -11,10 +11,6 @@ import com.letsmoe.otter.tv.ui.components.PageRow
 import com.letsmoe.otter.tv.ui.components.PosterCard
 import com.letsmoe.otter.tv.ui.components.RANK_NUMBER_WIDTH
 import com.letsmoe.otter.tv.ui.components.REGULAR_LANDSCAPE_WIDTH
-import com.letsmoe.otter.tv.ui.components.ROW_SPACING
-import com.letsmoe.otter.tv.ui.components.TOP_TEN_POSTER_WIDTH
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.letsmoe.otter.tv.ui.components.TopTenCard
 import com.letsmoe.otter.tv.ui.components.WIDE_CARD_WIDTH
 import com.letsmoe.otter.tv.ui.components.WideCard
@@ -31,29 +27,6 @@ class RowActions(
     val onOpenItem: (RailItem) -> Unit,
     val onOpenPerson: (String) -> Unit,
 )
-
-// A row's title and the padding that leaves room for the focused card to grow.
-private val ROW_CHROME_HEIGHT = 42.dp
-// How much of the second row shows under the first one on the first screen.
-private val SECOND_ROW_PEEK = 46.dp
-
-/** Room under the hero for the first row and the top of the second, like Prime Video's home. */
-fun firstScreenRowSpace(firstRow: HomeRow?): Dp {
-    return ROW_CHROME_HEIGHT + cardHeightOf(firstRow) + ROW_SPACING + SECOND_ROW_PEEK
-}
-
-private fun cardHeightOf(row: HomeRow?): Dp {
-    if (row !is PosterRow) {
-        // The actor row, or no rows yet.
-        return 120.dp
-    }
-    return when (row.style) {
-        RailStyle.REGULAR -> REGULAR_LANDSCAPE_WIDTH * 9f / 16f
-        RailStyle.WIDE -> WIDE_CARD_WIDTH * 9f / 16f
-        RailStyle.LARGE -> LARGE_POSTER_WIDTH * 3f / 2f
-        RailStyle.TOP_TEN -> TOP_TEN_POSTER_WIDTH * 3f / 2f
-    }
-}
 
 /** Every home row as a page row, each in its own card style. */
 fun homePageRows(rows: List<HomeRow>, actors: List<ActorItem>, actions: RowActions): List<PageRow> {

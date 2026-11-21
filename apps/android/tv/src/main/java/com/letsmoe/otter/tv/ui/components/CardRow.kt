@@ -17,7 +17,8 @@ import com.letsmoe.otter.tv.theme.TvType
 
 val CARD_SPACING = 14.dp
 val REGULAR_POSTER_WIDTH = 104.dp
-val LARGE_POSTER_WIDTH = 136.dp
+// Large posters still fit the home's row band (below its hero) when focused and grown.
+val LARGE_POSTER_WIDTH = 128.dp
 val WIDE_CARD_WIDTH = 200.dp
 val REGULAR_LANDSCAPE_WIDTH = 168.dp
 
@@ -30,7 +31,7 @@ val ROW_FOCUS_LINE = 34.dp
  */
 @Composable
 fun CardRow(title: String, focusLine: Dp = TvSpacing.screenHorizontal, cards: LazyListScope.() -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             title,
             fontSize = TvType.rowTitle,

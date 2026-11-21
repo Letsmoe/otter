@@ -1,5 +1,6 @@
 package com.letsmoe.otter.tv.ui.home
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +26,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -39,7 +41,7 @@ import com.adamglin.phosphoricons.fill.Info
 import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.tv.theme.TvSpacing
-import com.letsmoe.otter.tv.ui.components.HeroRowsPage
+import com.letsmoe.otter.tv.ui.components.BackdropRowsPage
 import com.letsmoe.otter.tv.ui.components.PillButton
 import com.letsmoe.otter.tv.ui.components.ProfileButton
 import com.letsmoe.otter.tv.ui.components.TopBar
@@ -107,15 +109,21 @@ fun TitlesHome(mediaType: MediaType, onOpenItem: (RailItem) -> Unit, onOpenPerso
         onOpenPerson = onOpenPerson,
     )
     val rows = rowsOnceFeaturedArrives(mediaType, state)
-    HeroRowsPage(
-        firstRowSpace = firstScreenRowSpace(rows.firstOrNull()),
+    BackdropRowsPage(
         rows = homePageRows(rows, state.actors, actions),
-        backdrop = { modifier -> HeroBackdrop(heroTitle, modifier) },
+        backdrop = { HeroBackdrop(heroTitle) },
     ) {
-        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.Bottom)) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(bottom = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.Bottom),
+        ) {
             HeroInfo(heroTitle)
-            FeaturedActions(carousel, actions, onFocusFeatured = { hero.focusedItem = null })
-            CarouselDots(carousel)
+            FeaturedActions(
+                carousel,
+                actions,
+                browsingRows = hero.focusedItem != null,
+                onFocusFeatured = { hero.focusedItem = null },
+            )
         }
     }
 }
@@ -166,9 +174,17 @@ private fun rowsOnceFeaturedArrives(mediaType: MediaType, state: TitlesPageState
  * More info and My List for the carousel's current title; left on More info and right on My List
  * move through the carousel. Focus starts here once, when the featured title first arrives; it
  * reloads on resume and may change, which must not pull focus back from the rows.
+ *
+ * While [browsingRows], the buttons fade out but stay focusable, so Up from the first row still
+ * lands on them.
  */
 @Composable
-private fun FeaturedActions(carousel: HeroCarousel, actions: RowActions, onFocusFeatured: () -> Unit) {
+private fun FeaturedActions(
+    carousel: HeroCarousel,
+    actions: RowActions,
+    browsingRows: Boolean,
+    onFocusFeatured: () -> Unit,
+) {
     val current = carousel.current ?: return
     val openButton = remember { FocusRequester() }
     var focusedOnce by rememberSaveable { mutableStateOf(false) }
@@ -182,9 +198,18 @@ private fun FeaturedActions(carousel: HeroCarousel, actions: RowActions, onFocus
     if (carousel.isInMyList(current.item.id)) {
         myListIcon = PhosphorIcons.Bold.Check
     }
+    var targetAlpha = 1f
+    if (browsingRows) {
+        targetAlpha = 0f
+    }
+    val alpha by animateFloatAsState(targetAlpha, label = "featuredActionsAlpha")
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = TvSpacing.screenHorizontal),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = TvSpacing.screenHorizontal)
+            .graphicsLayer { this.alpha = alpha },
         horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         PillButton(
             "More info",
@@ -204,6 +229,7 @@ private fun FeaturedActions(carousel: HeroCarousel, actions: RowActions, onFocus
                 .onFocusGained(onFocusFeatured)
                 .onPreviewKeyEvent { event -> carouselKeys(event, Key.DirectionRight, carousel::next) },
         )
+        CarouselDots(carousel, Modifier.padding(start = 10.dp))
     }
 }
 
