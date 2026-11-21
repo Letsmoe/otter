@@ -15,7 +15,7 @@ data class UpNextHint(val episodeLabel: String, val startSeconds: Double, val du
 
 /**
  * What is playing, shown from [startSeconds] to [endSeconds] when a title
- * starts: "Severance", "S1:E2 · Half Loop" and "Ends at 22:41".
+ * starts: "Severance", "S1:E2 · Half Loop", "Episode 2 of 9" and "Ends at 22:41".
  */
 data class TitleCard(
     val title: String,
@@ -23,6 +23,7 @@ data class TitleCard(
     val startSeconds: Double,
     val endSeconds: Double,
     val endsAtLabel: String? = null,
+    val episodeCountLabel: String? = null,
 )
 
 /** Everything drawn into the TV's picture, on the title's timeline. [secondCaptions] show smaller, under [captions]. */

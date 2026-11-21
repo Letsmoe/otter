@@ -219,7 +219,7 @@ private fun drawBoxedCaption(canvas: Canvas, layout: StaticLayout, paint: TextPa
     layout.draw(canvas)
 }
 
-// "Severance" large with "S1:E2 · Half Loop" under it, top left, over a shade that keeps it readable.
+// "Severance" large with "S1:E2 · Half Loop", "Episode 2 of 9" and "Ends at 22:41" under it, top left, over a shade that keeps it readable.
 private fun drawTitleCard(canvas: Canvas, card: TitleCard, scale: Float) {
     val shade = Paint()
     val shadeHeight = TITLE_SHADE_HEIGHT * scale
@@ -232,7 +232,7 @@ private fun drawTitleCard(canvas: Canvas, card: TitleCard, scale: Float) {
     canvas.drawText(ellipsized(card.title, title, maxWidth), left, titleBaseline, title)
     val detailPaint = titleCardPaint(TITLE_CARD_DETAIL_SIZE * scale, LABEL_COLOR, Typeface.NORMAL)
     var baseline = titleBaseline + title.descent() + CARD_LINE_GAP * scale - detailPaint.ascent()
-    for (line in listOfNotNull(card.detail, card.endsAtLabel)) {
+    for (line in listOfNotNull(card.detail, card.episodeCountLabel, card.endsAtLabel)) {
         canvas.drawText(ellipsized(line, detailPaint, maxWidth), left, baseline, detailPaint)
         baseline += detailPaint.fontSpacing
     }
