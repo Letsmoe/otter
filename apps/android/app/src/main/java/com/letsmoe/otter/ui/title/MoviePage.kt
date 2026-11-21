@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.letsmoe.otter.links.movieLink
 import com.letsmoe.otter.links.tmdbIdOf
+import com.letsmoe.otter.tonight.TonightEntry
 import com.letsmoe.otter.ui.components.SegmentedBar
 import com.letsmoe.otter.ui.media.RailItem
 
@@ -53,6 +54,7 @@ fun MoviePage(
         slots = slots,
         downloadTarget = DownloadTarget(detail.id, detail.title),
         tabBar = { SegmentedBar(movieTabs, tab, onSelect = { chosen -> tab = chosen }) },
+        playExtras = { TonightRow(TonightEntry(detail.id, detail.title), onPlay) },
     ) {
         when (tab) {
             MovieTab.RELATED -> RelatedTab(rails, onOpenItem)
