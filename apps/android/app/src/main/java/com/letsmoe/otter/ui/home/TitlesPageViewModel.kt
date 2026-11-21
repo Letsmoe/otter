@@ -15,6 +15,7 @@ import com.letsmoe.otter.ui.media.MoreWithRail
 import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.media.TitleActions
 import com.letsmoe.otter.ui.media.onlyKind
+import com.letsmoe.otter.ui.shelves.ShelfStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -89,6 +90,7 @@ class TitlesPageViewModel(private val mediaType: MediaType) : ViewModel() {
         loadRow({ MediaRepository.continueWatching(profileId).onlyKind(mediaType) }) { items -> copy(continueWatching = items) }
         loadRow({ MediaRepository.watchlist(profileId).onlyKind(mediaType) }) { items -> copy(myList = items) }
         viewModelScope.launch { loadFeatured() }
+        viewModelScope.launch { ShelfStore.refresh() }
     }
 
     // A new profile has no recommendations yet; TMDB's popular and top-rated lists stand in.

@@ -1,8 +1,11 @@
 package com.letsmoe.otter.ui.home
 
 import com.letsmoe.otter.graphql.type.CatalogTheme
+import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.media.RepeatFilter
+import com.letsmoe.otter.ui.media.onlyKind
+import com.letsmoe.otter.ui.shelves.Shelf
 
 enum class RailStyle { REGULAR, LARGE, WIDE, TOP_TEN }
 
@@ -34,14 +37,15 @@ private class RowSpec(
 )
 
 /**
- * The page's rows in order: personal rows, Top 10, then themed, recommendation and genre rows
- * interleaved so styles and topics vary. Each row loses titles an earlier row shows;
- * rows left with too few titles are dropped.
+ * The page's rows in order: personal rows, the profile's pinned shelves (their titles of this
+ * page's kind), Top 10, then themed, recommendation and genre rows interleaved so styles and
+ * topics vary. Each generated row loses titles an earlier row shows; rows left with too few
+ * titles are dropped.
  */
-fun TitlesPageState.toRows(labels: PageLabels): List<HomeRow> {
+fun TitlesPageState.toRows(labels: PageLabels, shelves: List<Shelf> = emptyList(), mediaType: MediaType = MediaType.MOVIE): List<HomeRow> {
     val filter = RepeatFilter(featuredIds())
     val rows = mutableListOf<HomeRow>()
-    for (spec in orderedSpecs(labels)) {
+    for (spec in orderedSpecs(labels, shelves, mediaType)) {
         val row = spec.toRow(filter)
         if (row != null) {
             rows.add(row)
@@ -58,6 +62,9 @@ private fun TitlesPageState.featuredIds(): List<String> {
 }
 
 private fun RowSpec.toRow(filter: RepeatFilter): PosterRow? {
+    if (keepsAllItems && items.isEmpty()) {
+        return null
+    }
     if (keepsAllItems) {
         filter.markSeen(items)
         return PosterRow(key, title, items, style)
@@ -69,11 +76,18 @@ private fun RowSpec.toRow(filter: RepeatFilter): PosterRow? {
     return PosterRow(key, title, unique, style)
 }
 
-private fun TitlesPageState.orderedSpecs(labels: PageLabels): List<RowSpec> {
+private fun shelfSpecs(shelves: List<Shelf>, mediaType: MediaType): List<RowSpec> =
+    shelves.map { shelf ->
+        RowSpec("shelf-${shelf.id}", shelf.name, shelf.items.onlyKind(mediaType), minimumItems = 1, keepsAllItems = true)
+    }
+
+private fun TitlesPageState.orderedSpecs(labels: PageLabels, shelves: List<Shelf>, mediaType: MediaType): List<RowSpec> {
     val plural = labels.plural
-    val head = listOf(
+    val personal = listOf(
         RowSpec("continue", labels.continueTitle, continueWatching, minimumItems = 1),
         RowSpec("my-list", "My List", myList, minimumItems = 1),
+    ) + shelfSpecs(shelves, mediaType)
+    val head = personal + listOf(
         RowSpec("top-ten", "Top 10 $plural Today", topTenItems(), RailStyle.TOP_TEN, keepsAllItems = true),
         RowSpec("new", labels.newRow, newAndComingSoon, RailStyle.WIDE),
         RowSpec("recommended", "Recommended $plural", recommended, RailStyle.LARGE),

@@ -1,0 +1,45 @@
+fragment ShelfFields on Shelf {
+  id
+  name
+  titles {
+    ...TitleCard
+  }
+}
+
+query Shelves($profileId: ID!) {
+  shelves(profileId: $profileId) {
+    ...ShelfFields
+  }
+}
+
+mutation CreateShelf($profileId: ID!, $name: String!) {
+  createShelf(profileId: $profileId, name: $name) {
+    ...ShelfFields
+  }
+}
+
+mutation RenameShelf($profileId: ID!, $shelfId: ID!, $name: String!) {
+  renameShelf(profileId: $profileId, shelfId: $shelfId, name: $name) {
+    ...ShelfFields
+  }
+}
+
+mutation DeleteShelf($profileId: ID!, $shelfId: ID!) {
+  deleteShelf(profileId: $profileId, shelfId: $shelfId)
+}
+
+mutation AddToShelf($profileId: ID!, $shelfId: ID!, $mediaId: ID!) {
+  addToShelf(profileId: $profileId, shelfId: $shelfId, mediaId: $mediaId)
+}
+
+mutation RemoveFromShelf($profileId: ID!, $shelfId: ID!, $mediaId: ID!) {
+  removeFromShelf(profileId: $profileId, shelfId: $shelfId, mediaId: $mediaId)
+}
+
+mutation ReorderShelves($profileId: ID!, $shelfIds: [ID!]!) {
+  reorderShelves(profileId: $profileId, shelfIds: $shelfIds)
+}
+
+mutation ReorderShelfTitles($profileId: ID!, $shelfId: ID!, $mediaIds: [ID!]!) {
+  reorderShelfTitles(profileId: $profileId, shelfId: $shelfId, mediaIds: $mediaIds)
+}

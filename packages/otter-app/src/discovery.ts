@@ -204,6 +204,27 @@ export async function fetchRecommendationRows(
 	}
 }
 
+/** The profile's own Home rows (pinned shelves), in their order; each key is the shelf id. */
+export async function fetchShelves(profileId: string): Promise<RecommendationRail[]> {
+	try {
+		const data = await otter.query({
+			shelves: {
+				__args: { profileId },
+				id: true,
+				name: true,
+				titles: TITLE_CARD_SELECT
+			}
+		});
+		return data.shelves.map((shelf) => ({
+			key: shelf.id,
+			title: shelf.name,
+			items: shelf.titles.map(toRailItem)
+		}));
+	} catch {
+		return [];
+	}
+}
+
 /** Trending titles from TMDB; both kinds when no kind is given. */
 export async function fetchTrending(kind?: MediaKind): Promise<RailItem[]> {
 	let mediaType: MediaType | undefined;
