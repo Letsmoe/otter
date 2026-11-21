@@ -1,10 +1,13 @@
 package com.letsmoe.otter.cast
 
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+
+private const val TAG = "OtterDlna"
 
 /** UPnP AVTransport transport states, as the TV reports them. */
 enum class TransportState { PLAYING, PAUSED, STOPPED, TRANSITIONING, NO_MEDIA, UNKNOWN }
@@ -50,6 +53,8 @@ class StreamUnavailableException(message: String) : IOException(message)
 class DlnaClient(private val renderer: DlnaRenderer, private val journal: CastJournal? = null) {
 
     suspend fun load(media: TelevisionMedia) {
+        // Every new URL makes the TV load and buffer from scratch: worth seeing in the log.
+        Log.i(TAG, "SetAVTransportURI ${media.url}")
         val arguments = "$INSTANCE<CurrentURI>${escapeXml(media.url)}</CurrentURI><CurrentURIMetaData>${escapeXml(didl(media))}</CurrentURIMetaData>"
         call(transportService(), "SetAVTransportURI", arguments, LOADING_TIMEOUT_MILLISECONDS)
     }
@@ -70,6 +75,7 @@ class DlnaClient(private val renderer: DlnaRenderer, private val journal: CastJo
     }
 
     suspend fun stop() {
+        Log.i(TAG, "Stop")
         call("Stop", "")
     }
 

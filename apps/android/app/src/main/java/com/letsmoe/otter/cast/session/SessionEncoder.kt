@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.Effect
 import androidx.media3.common.MediaItem
@@ -55,10 +56,14 @@ private const val SESSION_SAMPLE_RATE = 48_000
 private const val SESSION_CHANNELS = 2
 // The most channels a source may have; 5.1 is mixed down to stereo.
 private const val MAX_SOURCE_CHANNELS = 6
-private const val STILL_FRAME_RATE = 25
+// Still screens cost the phone a full encode per frame: as few frames as each kind of screen allows.
+private const val MOTIONLESS_FRAME_RATE = 5
+private const val ANIMATED_FRAME_RATE = 15
 // Still screens end and start again after this long, so the stream never runs dry.
 private const val IDLE_SCREEN_MILLISECONDS = 30 * 60 * 1000L
 private const val LOADING_SCREEN_MILLISECONDS = 2 * 60 * 1000L
+// The backend repeats the bridge once a second while a switch is slower than the TV's buffer.
+private const val BRIDGE_MILLISECONDS = 1000L
 // A paced sample looks at the clock again at least this often, so a cancelled job stops quickly.
 private const val MAX_PACING_SLEEP_MILLISECONDS = 100L
 
@@ -78,7 +83,7 @@ class SessionEncoder(
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val size = sessionPictureSize(session.pictureHeight)
-    private val pacing = JobPacing(session, checkNotNull(job.startMicroseconds) { "a job is encoded once the backend took it" })
+    private val pacing = JobPacing(session, job)
 
     /** Encodes until the job ends and returns where its samples end on the session's timeline. */
     suspend fun encode(output: OutputStream): Long {
@@ -109,6 +114,19 @@ class SessionEncoder(
         }
     }
 
+    // The bridge is encoded ahead in one go; the backend plays it out at the TV's pace.
+    private fun pacedMuxer(muxer: Muxer): Muxer {
+        if (job.screen is SessionScreen.Bridge) {
+            return muxer
+        }
+        return PacedMuxer(muxer, pacing, ::logFirstSample)
+    }
+
+    // How long the TV waited for this screen: from asking for it to its first sample.
+    private fun logFirstSample() {
+        Log.i(SESSION_TAG, "first sample of ${job.kind} written, ${job.millisecondsSinceShown()} ms after it was shown")
+    }
+
     private fun buildTransformer(output: OutputStream, listener: Transformer.Listener): Transformer {
         val encoderSettings = VideoEncoderSettings.Builder().setBitrate(OVERLAY_VIDEO_BITRATE).build()
         val encoderFactory = DefaultEncoderFactory.Builder(context).setRequestedVideoEncoderSettings(encoderSettings).build()
@@ -116,7 +134,7 @@ class SessionEncoder(
             .setVideoMimeType(MimeTypes.VIDEO_H264)
             .setAudioMimeType(MimeTypes.AUDIO_AAC)
             .setEncoderFactory(encoderFactory)
-            .setMuxerFactory(StreamMuxerFactory(output) { muxer -> PacedMuxer(muxer, pacing) })
+            .setMuxerFactory(StreamMuxerFactory(output, ::pacedMuxer))
             // Pacing and a paused TV hold samples back for as long as they like.
             .setMaxDelayBetweenMuxerSamplesMs(C.TIME_UNSET)
             .addListener(listener)
@@ -184,7 +202,7 @@ class SessionEncoder(
             effects.add(OverlayEffect(overlays))
         }
         return EditedMediaItem.Builder(mediaItem)
-            .setFrameRate(STILL_FRAME_RATE)
+            .setFrameRate(stillFrameRate(screen))
             .setEffects(Effects(uniformSound(), effects))
             .build()
     }
@@ -206,7 +224,7 @@ class SessionEncoder(
 
     // What moves in a still screen: the loading spinner, the screensaver's backdrops.
     private fun stillOverlay(screen: SessionScreen): TextureOverlay? {
-        if (screen is SessionScreen.Loading) {
+        if (screen is SessionScreen.Loading || screen is SessionScreen.Bridge) {
             return SpinnerOverlay()
         }
         if (screen is SessionScreen.Screensaver) {
@@ -215,7 +233,18 @@ class SessionEncoder(
         return null
     }
 
+    // The spinner and the screensaver's fades move; the other screens never change.
+    private fun stillFrameRate(screen: SessionScreen): Int {
+        if (screen is SessionScreen.Loading || screen is SessionScreen.Bridge || screen is SessionScreen.Screensaver) {
+            return ANIMATED_FRAME_RATE
+        }
+        return MOTIONLESS_FRAME_RATE
+    }
+
     private fun stillMilliseconds(screen: SessionScreen): Long {
+        if (screen is SessionScreen.Bridge) {
+            return BRIDGE_MILLISECONDS
+        }
         if (screen is SessionScreen.Loading) {
             return LOADING_SCREEN_MILLISECONDS
         }
@@ -241,10 +270,12 @@ private fun uniformSound(): List<AudioProcessor> {
 
 /**
  * Holds a job's samples back until the session's clock is less than the lead
- * behind them. The job's first sample, whatever its timestamp, sits at
- * [jobStartMicroseconds] of the session, as the backend puts it there.
+ * behind them. The job's first sample, whatever its timestamp, sits at the
+ * job's start on the session's timeline, as the backend puts it there. That
+ * start is read again for every sample: the backend moves it later when it
+ * had to bridge a gap before the job (see [TelevisionSession.onJobStarted]).
  */
-class JobPacing(private val session: TelevisionSession, private val jobStartMicroseconds: Long) {
+class JobPacing(private val session: TelevisionSession, private val job: SessionJob) {
 
     @Volatile
     private var cancelled = false
@@ -252,7 +283,7 @@ class JobPacing(private val session: TelevisionSession, private val jobStartMicr
 
     /** Where the samples written so far end on the session's timeline. */
     @Volatile
-    var lastSessionMicroseconds: Long = jobStartMicroseconds
+    var lastSessionMicroseconds: Long = jobStartMicroseconds()
         private set
 
     fun cancel() {
@@ -261,8 +292,9 @@ class JobPacing(private val session: TelevisionSession, private val jobStartMicr
 
     /** Waits for the sample's turn; false when the job was cancelled meanwhile and the sample is dropped. */
     fun awaitTurn(sampleMicroseconds: Long): Boolean {
-        val sessionMicroseconds = jobStartMicroseconds + sampleMicroseconds - firstSample(sampleMicroseconds)
+        val offsetMicroseconds = sampleMicroseconds - firstSample(sampleMicroseconds)
         while (!cancelled) {
+            val sessionMicroseconds = jobStartMicroseconds() + offsetMicroseconds
             val waitMicroseconds = session.pacingWaitMicroseconds(sessionMicroseconds)
             if (waitMicroseconds <= 0) {
                 lastSessionMicroseconds = max(lastSessionMicroseconds, sessionMicroseconds)
@@ -273,6 +305,10 @@ class JobPacing(private val session: TelevisionSession, private val jobStartMicr
             }
         }
         return false
+    }
+
+    private fun jobStartMicroseconds(): Long {
+        return checkNotNull(job.startMicroseconds) { "a job is encoded once the backend took it" }
     }
 
     @Synchronized
@@ -296,13 +332,26 @@ class JobPacing(private val session: TelevisionSession, private val jobStartMicr
     }
 }
 
-/** Writes each sample only when [pacing] lets it; samples of a cancelled job are dropped. */
+/**
+ * Writes each sample only when [pacing] lets it; samples of a cancelled job are dropped.
+ * [onFirstSample] hears when the job's first sample goes out.
+ */
 @UnstableApi
-private class PacedMuxer(private val muxer: Muxer, private val pacing: JobPacing) : Muxer by muxer {
+private class PacedMuxer(
+    private val muxer: Muxer,
+    private val pacing: JobPacing,
+    private val onFirstSample: () -> Unit,
+) : Muxer by muxer {
+
+    private var wroteSample = false
 
     override fun writeSampleData(trackId: Int, byteBuffer: ByteBuffer, bufferInfo: BufferInfo) {
         if (!pacing.awaitTurn(bufferInfo.presentationTimeUs)) {
             return
+        }
+        if (!wroteSample) {
+            wroteSample = true
+            onFirstSample()
         }
         muxer.writeSampleData(trackId, byteBuffer, bufferInfo)
     }

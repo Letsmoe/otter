@@ -151,7 +151,7 @@ object TelevisionBrowse {
         if (preview.backdropUrl != null) {
             backdrop = loadBackdropBitmap(applicationContext, preview.backdropUrl, height)
         }
-        val picture = withContext(Dispatchers.Default) { renderBrowseFrame(preview, backdrop, height) }
+        val picture = withContext(Dispatchers.Default) { renderBrowseFrame(applicationContext, preview, backdrop, height) }
         return writeStillPicture(applicationContext, picture, "browse")
     }
 
