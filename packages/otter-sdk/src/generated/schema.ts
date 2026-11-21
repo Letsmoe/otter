@@ -60,7 +60,22 @@ export interface Title {
     inWatchlist: Scalars['Boolean']
     /** Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List. */
     notifying: Scalars['Boolean']
+    /** The profile's latest rewatch of this movie or series; null when there never was one. */
+    rewatch: (Rewatch | null)
     __typename: 'Title'
+}
+
+
+/**
+ * A second run through a movie or series. While it is going, `progress` of the title and its
+ * episodes is the rewatch's own, so Continue watching, history and recommendations stay as the
+ * first watch left them.
+ */
+export interface Rewatch {
+    startedAt: Scalars['String']
+    /** True once the movie, or every aired episode, was watched again. */
+    finished: Scalars['Boolean']
+    __typename: 'Rewatch'
 }
 
 export interface Season {
@@ -94,8 +109,14 @@ export interface Episode {
     next: (Episode | null)
     /** Parts viewers skip (intro, recap, credits, preview), from TheIntroDB; empty when nobody timed them. */
     skipSegments: SkipSegment[]
+    /** Anime only: whether a filler list calls the episode filler, mixed (canon and filler) or canon; null when no list covers it. */
+    filler: (FillerKind | null)
     __typename: 'Episode'
 }
+
+
+/** What a filler list says about an episode. */
+export type FillerKind = 'FILLER' | 'MIXED' | 'CANON'
 
 
 /** A skippable part of an episode. */
@@ -210,6 +231,19 @@ export interface WatchProgress {
     __typename: 'WatchProgress'
 }
 
+
+/** A moment of a movie or episode the profile saved while watching. */
+export interface Bookmark {
+    id: Scalars['ID']
+    /** The movie or episode. */
+    mediaId: Scalars['ID']
+    positionSeconds: Scalars['Float']
+    /** The caption line spoken at that moment; null when there was none. */
+    caption: (Scalars['String'] | null)
+    createdAt: Scalars['String']
+    __typename: 'Bookmark'
+}
+
 export interface ContinueItem {
     title: Title
     /** For series: the episode to continue or the next one. */
@@ -229,6 +263,15 @@ export interface TimeSlotItem {
     /** Why it is offered, e.g. "Next episode", "Pick up where you stopped", "From My List", "Recommended". */
     reason: Scalars['String']
     __typename: 'TimeSlotItem'
+}
+
+
+/** An episode that has not aired yet. */
+export interface UpcomingEpisode {
+    series: Title
+    /** Its airDate (yyyy-MM-dd, TMDB's) is today or within the asked days. */
+    episode: Episode
+    __typename: 'UpcomingEpisode'
 }
 
 export interface HistoryEntry {
@@ -289,6 +332,79 @@ export interface CollectionPart {
     __typename: 'CollectionPart'
 }
 
+
+/** A profile's own Home row: a named, ordered list of movies and series. */
+export interface Shelf {
+    id: Scalars['ID']
+    name: Scalars['String']
+    titles: Title[]
+    __typename: 'Shelf'
+}
+
+
+/**
+ * One profile's calendar year of watching, from its watch history. The history keeps one row per
+ * movie or episode, dated by its latest update, so a title counts in the year of its last watch and
+ * rewatches are estimated: a title started 30+ days before its last watch counts as watched again.
+ */
+export interface YearInReview {
+    year: Scalars['Int']
+    /** False when nothing was watched that year. */
+    hasActivity: Scalars['Boolean']
+    hoursWatched: Scalars['Float']
+    moviesFinished: Scalars['Int']
+    episodesFinished: Scalars['Int']
+    /** Series with at least one episode watched. */
+    seriesWatched: Scalars['Int']
+    topSeries: (TopSeries | null)
+    /** Up to five, the most watched first. */
+    topGenres: GenreShare[]
+    longestBinge: (Binge | null)
+    mostRewatched: (Rewatched | null)
+    firstTitle: (YearMoment | null)
+    lastTitle: (YearMoment | null)
+    __typename: 'YearInReview'
+}
+
+export interface TopSeries {
+    title: Title
+    hoursWatched: Scalars['Float']
+    episodesWatched: Scalars['Int']
+    __typename: 'TopSeries'
+}
+
+export interface GenreShare {
+    genre: Scalars['String']
+    hoursWatched: Scalars['Float']
+    /** Share of the watch time of titles with genres, 0..1. */
+    share: Scalars['Float']
+    __typename: 'GenreShare'
+}
+
+
+/** Most episodes of one series in one night (a night runs from 5 am to 5 am). */
+export interface Binge {
+    title: Title
+    episodes: Scalars['Int']
+    /** The date the night began, YYYY-MM-DD. */
+    date: Scalars['String']
+    __typename: 'Binge'
+}
+
+export interface Rewatched {
+    title: Title
+    /** Episodes watched again (1 for a movie). */
+    count: Scalars['Int']
+    __typename: 'Rewatched'
+}
+
+export interface YearMoment {
+    title: Title
+    /** YYYY-MM-DD. */
+    date: Scalars['String']
+    __typename: 'YearMoment'
+}
+
 export interface RecommendationRow {
     key: Scalars['String']
     title: Scalars['String']
@@ -317,6 +433,8 @@ export interface Profile {
     ageLimit: Scalars['Int']
     /** Child profiles: the fixed bedtime in minutes after midnight, after which every title stops after its episode; null for none. */
     bedtimeMinutes: (Scalars['Int'] | null)
+    /** The Android app shows only Continue, My List and Search with big text and buttons */
+    simpleMode: Scalars['Boolean']
     __typename: 'Profile'
 }
 
@@ -548,8 +666,18 @@ export interface Query {
     continueWatching: ContinueItem[]
     /** What fits into the given minutes: what the profile is in the middle of (next episodes, movies not finished), then short films from My List and recommendations. Items that use the time best come first within each group. */
     timeSlot: TimeSlotItem[]
+    /** Episodes airing from today within days (default four weeks, at most 90), soonest first, of the series on the profile's My List or watched in the last months; air dates from TMDB. */
+    upcomingEpisodes: UpcomingEpisode[]
+    /** Rewatches still going, most recent first: the movie, or the episode of the series to continue or start next. */
+    continueRewatching: ContinueItem[]
     history: HistoryEntry[]
     watchlist: Title[]
+    /** The profile's bookmarks of a movie, or of all episodes of a series (in watching order), earliest moment first. */
+    bookmarks: Bookmark[]
+    /** The profile's pinned shelves in their order, with their titles in order. */
+    shelves: Shelf[]
+    /** The profile's year in review. utcOffsetMinutes is the phone's time zone, so days and nights fall where they were lived. */
+    yearInReview: YearInReview
     /** Titles the profile rated well (I like this, Love this), latest rating first. */
     likedTitles: Title[]
     /** Newest first. */
@@ -677,14 +805,33 @@ export interface Mutation {
     /** Records what a link delivered while it played (resolution, bitrate, stalls, time to first picture). Links that stall or claim more than they deliver are tried later. */
     reportLinkPlayback: Scalars['Boolean']
     recordProgress: WatchProgress
+    /** Starts a rewatch of a movie or series from the beginning; an earlier rewatch's progress is dropped, the first watch's is kept. */
+    startRewatch: Rewatch
+    /** Ends the rewatch and forgets its progress; the first watch's progress is read again. */
+    stopRewatch: Scalars['Boolean']
     setRating: Scalars['Boolean']
     clearRating: Scalars['Boolean']
     /** "Not for me" on a recommendation: the profile never gets this title suggested again, and titles like it rank lower. */
     dismissRecommendation: Scalars['Boolean']
     /** Undo dismissRecommendation. */
     restoreRecommendation: Scalars['Boolean']
+    /** Saves the position of a movie or episode, with the caption line spoken then. */
+    addBookmark: Bookmark
+    removeBookmark: Scalars['Boolean']
     addToWatchlist: Scalars['Boolean']
     removeFromWatchlist: Scalars['Boolean']
+    /** A new empty shelf after the profile's others. */
+    createShelf: Shelf
+    renameShelf: Shelf
+    /** Deletes the shelf with its titles. */
+    deleteShelf: Scalars['Boolean']
+    /** Puts a movie or series at the end of a shelf; one already on it stays where it is. */
+    addToShelf: Scalars['Boolean']
+    removeFromShelf: Scalars['Boolean']
+    /** Sets the order of the profile's shelves; shelves left out follow in their old order. */
+    reorderShelves: Scalars['Boolean']
+    /** Sets the order of a shelf's titles; titles left out follow in their old order. */
+    reorderShelfTitles: Scalars['Boolean']
     /** The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it. */
     setNotifying: Scalars['Boolean']
     markNotificationsRead: Scalars['Boolean']
@@ -817,6 +964,22 @@ export interface TitleGenqlSelection{
     inWatchlist?: { __args: {profileId: Scalars['ID']} }
     /** Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List. */
     notifying?: { __args: {profileId: Scalars['ID']} }
+    /** The profile's latest rewatch of this movie or series; null when there never was one. */
+    rewatch?: (RewatchGenqlSelection & { __args: {profileId: Scalars['ID']} })
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/**
+ * A second run through a movie or series. While it is going, `progress` of the title and its
+ * episodes is the rewatch's own, so Continue watching, history and recommendations stay as the
+ * first watch left them.
+ */
+export interface RewatchGenqlSelection{
+    startedAt?: boolean | number
+    /** True once the movie, or every aired episode, was watched again. */
+    finished?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -853,6 +1016,8 @@ export interface EpisodeGenqlSelection{
     next?: EpisodeGenqlSelection
     /** Parts viewers skip (intro, recap, credits, preview), from TheIntroDB; empty when nobody timed them. */
     skipSegments?: SkipSegmentGenqlSelection
+    /** Anime only: whether a filler list calls the episode filler, mixed (canon and filler) or canon; null when no list covers it. */
+    filler?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -983,6 +1148,20 @@ export interface WatchProgressGenqlSelection{
     __scalar?: boolean | number
 }
 
+
+/** A moment of a movie or episode the profile saved while watching. */
+export interface BookmarkGenqlSelection{
+    id?: boolean | number
+    /** The movie or episode. */
+    mediaId?: boolean | number
+    positionSeconds?: boolean | number
+    /** The caption line spoken at that moment; null when there was none. */
+    caption?: boolean | number
+    createdAt?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 export interface ContinueItemGenqlSelection{
     title?: TitleGenqlSelection
     /** For series: the episode to continue or the next one. */
@@ -1002,6 +1181,16 @@ export interface TimeSlotItemGenqlSelection{
     minutes?: boolean | number
     /** Why it is offered, e.g. "Next episode", "Pick up where you stopped", "From My List", "Recommended". */
     reason?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** An episode that has not aired yet. */
+export interface UpcomingEpisodeGenqlSelection{
+    series?: TitleGenqlSelection
+    /** Its airDate (yyyy-MM-dd, TMDB's) is today or within the asked days. */
+    episode?: EpisodeGenqlSelection
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1069,6 +1258,86 @@ export interface CollectionPartGenqlSelection{
     __scalar?: boolean | number
 }
 
+
+/** A profile's own Home row: a named, ordered list of movies and series. */
+export interface ShelfGenqlSelection{
+    id?: boolean | number
+    name?: boolean | number
+    titles?: TitleGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/**
+ * One profile's calendar year of watching, from its watch history. The history keeps one row per
+ * movie or episode, dated by its latest update, so a title counts in the year of its last watch and
+ * rewatches are estimated: a title started 30+ days before its last watch counts as watched again.
+ */
+export interface YearInReviewGenqlSelection{
+    year?: boolean | number
+    /** False when nothing was watched that year. */
+    hasActivity?: boolean | number
+    hoursWatched?: boolean | number
+    moviesFinished?: boolean | number
+    episodesFinished?: boolean | number
+    /** Series with at least one episode watched. */
+    seriesWatched?: boolean | number
+    topSeries?: TopSeriesGenqlSelection
+    /** Up to five, the most watched first. */
+    topGenres?: GenreShareGenqlSelection
+    longestBinge?: BingeGenqlSelection
+    mostRewatched?: RewatchedGenqlSelection
+    firstTitle?: YearMomentGenqlSelection
+    lastTitle?: YearMomentGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface TopSeriesGenqlSelection{
+    title?: TitleGenqlSelection
+    hoursWatched?: boolean | number
+    episodesWatched?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface GenreShareGenqlSelection{
+    genre?: boolean | number
+    hoursWatched?: boolean | number
+    /** Share of the watch time of titles with genres, 0..1. */
+    share?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** Most episodes of one series in one night (a night runs from 5 am to 5 am). */
+export interface BingeGenqlSelection{
+    title?: TitleGenqlSelection
+    episodes?: boolean | number
+    /** The date the night began, YYYY-MM-DD. */
+    date?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface RewatchedGenqlSelection{
+    title?: TitleGenqlSelection
+    /** Episodes watched again (1 for a movie). */
+    count?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface YearMomentGenqlSelection{
+    title?: TitleGenqlSelection
+    /** YYYY-MM-DD. */
+    date?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 export interface RecommendationRowGenqlSelection{
     key?: boolean | number
     title?: boolean | number
@@ -1098,6 +1367,8 @@ export interface ProfileGenqlSelection{
     ageLimit?: boolean | number
     /** Child profiles: the fixed bedtime in minutes after midnight, after which every title stops after its episode; null for none. */
     bedtimeMinutes?: boolean | number
+    /** The Android app shows only Continue, My List and Search with big text and buttons */
+    simpleMode?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1330,8 +1601,18 @@ export interface QueryGenqlSelection{
     continueWatching?: (ContinueItemGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     /** What fits into the given minutes: what the profile is in the middle of (next episodes, movies not finished), then short films from My List and recommendations. Items that use the time best come first within each group. */
     timeSlot?: (TimeSlotItemGenqlSelection & { __args: {profileId: Scalars['ID'], minutes: Scalars['Int'], limit?: (Scalars['Int'] | null)} })
+    /** Episodes airing from today within days (default four weeks, at most 90), soonest first, of the series on the profile's My List or watched in the last months; air dates from TMDB. */
+    upcomingEpisodes?: (UpcomingEpisodeGenqlSelection & { __args: {profileId: Scalars['ID'], days?: (Scalars['Int'] | null)} })
+    /** Rewatches still going, most recent first: the movie, or the episode of the series to continue or start next. */
+    continueRewatching?: (ContinueItemGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     history?: (HistoryEntryGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     watchlist?: (TitleGenqlSelection & { __args: {profileId: Scalars['ID']} })
+    /** The profile's bookmarks of a movie, or of all episodes of a series (in watching order), earliest moment first. */
+    bookmarks?: (BookmarkGenqlSelection & { __args: {profileId: Scalars['ID'], titleId: Scalars['ID']} })
+    /** The profile's pinned shelves in their order, with their titles in order. */
+    shelves?: (ShelfGenqlSelection & { __args: {profileId: Scalars['ID']} })
+    /** The profile's year in review. utcOffsetMinutes is the phone's time zone, so days and nights fall where they were lived. */
+    yearInReview?: (YearInReviewGenqlSelection & { __args: {profileId: Scalars['ID'], year: Scalars['Int'], utcOffsetMinutes?: (Scalars['Int'] | null)} })
     /** Titles the profile rated well (I like this, Love this), latest rating first. */
     likedTitles?: (TitleGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     /** Newest first. */
@@ -1462,14 +1743,33 @@ export interface MutationGenqlSelection{
     /** Records what a link delivered while it played (resolution, bitrate, stalls, time to first picture). Links that stall or claim more than they deliver are tried later. */
     reportLinkPlayback?: { __args: {input: LinkReportInput} }
     recordProgress?: (WatchProgressGenqlSelection & { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], progressSeconds: Scalars['Float'], durationSeconds: Scalars['Float']} })
+    /** Starts a rewatch of a movie or series from the beginning; an earlier rewatch's progress is dropped, the first watch's is kept. */
+    startRewatch?: (RewatchGenqlSelection & { __args: {profileId: Scalars['ID'], titleId: Scalars['ID']} })
+    /** Ends the rewatch and forgets its progress; the first watch's progress is read again. */
+    stopRewatch?: { __args: {profileId: Scalars['ID'], titleId: Scalars['ID']} }
     setRating?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], rating: Scalars['Float']} }
     clearRating?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
     /** "Not for me" on a recommendation: the profile never gets this title suggested again, and titles like it rank lower. */
     dismissRecommendation?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
     /** Undo dismissRecommendation. */
     restoreRecommendation?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
+    /** Saves the position of a movie or episode, with the caption line spoken then. */
+    addBookmark?: (BookmarkGenqlSelection & { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], positionSeconds: Scalars['Float'], caption?: (Scalars['String'] | null)} })
+    removeBookmark?: { __args: {profileId: Scalars['ID'], bookmarkId: Scalars['ID']} }
     addToWatchlist?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
     removeFromWatchlist?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
+    /** A new empty shelf after the profile's others. */
+    createShelf?: (ShelfGenqlSelection & { __args: {profileId: Scalars['ID'], name: Scalars['String']} })
+    renameShelf?: (ShelfGenqlSelection & { __args: {profileId: Scalars['ID'], shelfId: Scalars['ID'], name: Scalars['String']} })
+    /** Deletes the shelf with its titles. */
+    deleteShelf?: { __args: {profileId: Scalars['ID'], shelfId: Scalars['ID']} }
+    /** Puts a movie or series at the end of a shelf; one already on it stays where it is. */
+    addToShelf?: { __args: {profileId: Scalars['ID'], shelfId: Scalars['ID'], mediaId: Scalars['ID']} }
+    removeFromShelf?: { __args: {profileId: Scalars['ID'], shelfId: Scalars['ID'], mediaId: Scalars['ID']} }
+    /** Sets the order of the profile's shelves; shelves left out follow in their old order. */
+    reorderShelves?: { __args: {profileId: Scalars['ID'], shelfIds: Scalars['ID'][]} }
+    /** Sets the order of a shelf's titles; titles left out follow in their old order. */
+    reorderShelfTitles?: { __args: {profileId: Scalars['ID'], shelfId: Scalars['ID'], mediaIds: Scalars['ID'][]} }
     /** The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it. */
     setNotifying?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], notifying: Scalars['Boolean']} }
     markNotificationsRead?: { __args: {profileId: Scalars['ID']} }
@@ -1493,7 +1793,7 @@ export interface MutationGenqlSelection{
     /** The first profile's top language also becomes the TMDB language. */
     createProfile?: (ProfileGenqlSelection & { __args: {name: Scalars['String'], avatarUrl?: (Scalars['String'] | null), pin?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), languages?: (Scalars['String'][] | null)} })
     /** Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it; ageLimit 0 and a negative bedtimeMinutes remove those. */
-    updateProfile?: (ProfileGenqlSelection & { __args: {id: Scalars['ID'], name?: (Scalars['String'] | null), avatarUrl?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), pin?: (Scalars['String'] | null), languages?: (Scalars['String'][] | null), subtitlesEnabled?: (Scalars['Boolean'] | null), subtitleLanguage?: (Scalars['String'] | null), subtitleSize?: (SubtitleSize | null), subtitleStyle?: (SubtitleStyle | null), voiceBoost?: (Scalars['Boolean'] | null), ageLimit?: (Scalars['Int'] | null), bedtimeMinutes?: (Scalars['Int'] | null)} })
+    updateProfile?: (ProfileGenqlSelection & { __args: {id: Scalars['ID'], name?: (Scalars['String'] | null), avatarUrl?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), pin?: (Scalars['String'] | null), languages?: (Scalars['String'][] | null), subtitlesEnabled?: (Scalars['Boolean'] | null), subtitleLanguage?: (Scalars['String'] | null), subtitleSize?: (SubtitleSize | null), subtitleStyle?: (SubtitleStyle | null), voiceBoost?: (Scalars['Boolean'] | null), ageLimit?: (Scalars['Int'] | null), bedtimeMinutes?: (Scalars['Int'] | null), simpleMode?: (Scalars['Boolean'] | null)} })
     deleteProfile?: { __args: {id: Scalars['ID']} }
     verifyPin?: (PinCheckGenqlSelection & { __args: {profileId: Scalars['ID'], pin: Scalars['String']} })
     /** Makes a new secret for the profile's calendar feed; the old URL stops working. Returns the new path. */
@@ -1564,6 +1864,14 @@ export interface SubscriptionGenqlSelection{
     export const isTitle = (obj?: { __typename?: any } | null): obj is Title => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isTitle"')
       return Title_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const Rewatch_possibleTypes: string[] = ['Rewatch']
+    export const isRewatch = (obj?: { __typename?: any } | null): obj is Rewatch => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isRewatch"')
+      return Rewatch_possibleTypes.includes(obj.__typename)
     }
     
 
@@ -1656,6 +1964,14 @@ export interface SubscriptionGenqlSelection{
     
 
 
+    const Bookmark_possibleTypes: string[] = ['Bookmark']
+    export const isBookmark = (obj?: { __typename?: any } | null): obj is Bookmark => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isBookmark"')
+      return Bookmark_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
     const ContinueItem_possibleTypes: string[] = ['ContinueItem']
     export const isContinueItem = (obj?: { __typename?: any } | null): obj is ContinueItem => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isContinueItem"')
@@ -1668,6 +1984,14 @@ export interface SubscriptionGenqlSelection{
     export const isTimeSlotItem = (obj?: { __typename?: any } | null): obj is TimeSlotItem => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isTimeSlotItem"')
       return TimeSlotItem_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const UpcomingEpisode_possibleTypes: string[] = ['UpcomingEpisode']
+    export const isUpcomingEpisode = (obj?: { __typename?: any } | null): obj is UpcomingEpisode => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isUpcomingEpisode"')
+      return UpcomingEpisode_possibleTypes.includes(obj.__typename)
     }
     
 
@@ -1708,6 +2032,62 @@ export interface SubscriptionGenqlSelection{
     export const isCollectionPart = (obj?: { __typename?: any } | null): obj is CollectionPart => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isCollectionPart"')
       return CollectionPart_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const Shelf_possibleTypes: string[] = ['Shelf']
+    export const isShelf = (obj?: { __typename?: any } | null): obj is Shelf => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isShelf"')
+      return Shelf_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const YearInReview_possibleTypes: string[] = ['YearInReview']
+    export const isYearInReview = (obj?: { __typename?: any } | null): obj is YearInReview => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isYearInReview"')
+      return YearInReview_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const TopSeries_possibleTypes: string[] = ['TopSeries']
+    export const isTopSeries = (obj?: { __typename?: any } | null): obj is TopSeries => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isTopSeries"')
+      return TopSeries_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const GenreShare_possibleTypes: string[] = ['GenreShare']
+    export const isGenreShare = (obj?: { __typename?: any } | null): obj is GenreShare => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isGenreShare"')
+      return GenreShare_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const Binge_possibleTypes: string[] = ['Binge']
+    export const isBinge = (obj?: { __typename?: any } | null): obj is Binge => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isBinge"')
+      return Binge_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const Rewatched_possibleTypes: string[] = ['Rewatched']
+    export const isRewatched = (obj?: { __typename?: any } | null): obj is Rewatched => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isRewatched"')
+      return Rewatched_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const YearMoment_possibleTypes: string[] = ['YearMoment']
+    export const isYearMoment = (obj?: { __typename?: any } | null): obj is YearMoment => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isYearMoment"')
+      return YearMoment_possibleTypes.includes(obj.__typename)
     }
     
 
@@ -1931,6 +2311,12 @@ export const enumMediaType = {
    MOVIE: 'MOVIE' as const,
    SERIES: 'SERIES' as const,
    EPISODE: 'EPISODE' as const
+}
+
+export const enumFillerKind = {
+   FILLER: 'FILLER' as const,
+   MIXED: 'MIXED' as const,
+   CANON: 'CANON' as const
 }
 
 export const enumWatchStatus = {

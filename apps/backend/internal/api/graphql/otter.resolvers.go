@@ -990,15 +990,6 @@ func (r *queryResolver) ContinueWatching(ctx context.Context, profileID string, 
 	return r.continueWatching(ctx, profile, clamp(valueOr(limit, 20), 100))
 }
 
-// ContinueRewatching is the resolver for the continueRewatching field.
-func (r *queryResolver) ContinueRewatching(ctx context.Context, profileID string, limit *int) ([]*model.ContinueItem, error) {
-	profile, err := parseProfile(profileID)
-	if err != nil {
-		return nil, err
-	}
-	return r.continueRewatching(ctx, profile, clamp(valueOr(limit, 20), 100))
-}
-
 // TimeSlot is the resolver for the timeSlot field.
 func (r *queryResolver) TimeSlot(ctx context.Context, profileID string, minutes int, limit *int) ([]*model.TimeSlotItem, error) {
 	profile, err := parseProfile(profileID)
@@ -1015,6 +1006,15 @@ func (r *queryResolver) UpcomingEpisodes(ctx context.Context, profileID string, 
 		return nil, err
 	}
 	return r.upcomingEpisodes(ctx, profile, clamp(valueOr(days, 28), 90))
+}
+
+// ContinueRewatching is the resolver for the continueRewatching field.
+func (r *queryResolver) ContinueRewatching(ctx context.Context, profileID string, limit *int) ([]*model.ContinueItem, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return nil, err
+	}
+	return r.continueRewatching(ctx, profile, clamp(valueOr(limit, 20), 100))
 }
 
 // History is the resolver for the history field.

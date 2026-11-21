@@ -10,10 +10,6 @@ import (
 	"github.com/Letsmoe/otter/internal/library"
 )
 
-func movieRef(id int) library.MediaRef {
-	return library.MediaRef{MediaType: library.MediaTypeMovie, MediaID: id}
-}
-
 func newShelf(t *testing.T, service *Service, profileID int, name string) *Shelf {
 	t.Helper()
 	shelf, err := service.CreateShelf(context.Background(), profileID, name)

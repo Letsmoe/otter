@@ -6,15 +6,18 @@ export default {
         4,
         5,
         6,
-        26,
-        27,
+        10,
         29,
-        37,
-        39,
-        41,
-        46,
-        47,
-        52
+        42,
+        43,
+        45,
+        53,
+        55,
+        57,
+        62,
+        63,
+        66,
+        72
     ],
     "types": {
         "MediaType": {},
@@ -88,8 +91,11 @@ export default {
             "detailFetched": [
                 6
             ],
+            "collectionId": [
+                2
+            ],
             "credits": [
-                12
+                14
             ],
             "related": [
                 1,
@@ -100,16 +106,16 @@ export default {
                 }
             ],
             "seasons": [
-                7
+                8
             ],
             "seasonCount": [
                 3
             ],
             "streams": [
-                13
+                15
             ],
             "progress": [
-                16,
+                20,
                 {
                     "profileId": [
                         2,
@@ -144,6 +150,15 @@ export default {
                     ]
                 }
             ],
+            "rewatch": [
+                7,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
             "__typename": [
                 4
             ]
@@ -153,6 +168,17 @@ export default {
         "String": {},
         "Float": {},
         "Boolean": {},
+        "Rewatch": {
+            "startedAt": [
+                4
+            ],
+            "finished": [
+                6
+            ],
+            "__typename": [
+                4
+            ]
+        },
         "Season": {
             "id": [
                 2
@@ -176,7 +202,7 @@ export default {
                 3
             ],
             "episodes": [
-                8
+                9
             ],
             "__typename": [
                 4
@@ -217,10 +243,10 @@ export default {
                 1
             ],
             "streams": [
-                13
+                15
             ],
             "progress": [
-                16,
+                20,
                 {
                     "profileId": [
                         2,
@@ -229,15 +255,19 @@ export default {
                 }
             ],
             "next": [
-                8
+                9
             ],
             "skipSegments": [
-                9
+                11
+            ],
+            "filler": [
+                10
             ],
             "__typename": [
                 4
             ]
         },
+        "FillerKind": {},
         "SkipSegment": {
             "kind": [
                 4
@@ -289,7 +319,7 @@ export default {
                 }
             ],
             "coStars": [
-                11,
+                13,
                 {
                     "limit": [
                         3
@@ -314,7 +344,7 @@ export default {
         },
         "CoStar": {
             "person": [
-                10
+                12
             ],
             "sharedTitles": [
                 3
@@ -325,7 +355,7 @@ export default {
         },
         "Credit": {
             "person": [
-                10
+                12
             ],
             "role": [
                 4
@@ -377,13 +407,77 @@ export default {
             "foundAt": [
                 4
             ],
+            "report": [
+                16
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "LinkReport": {
+            "claimedHeight": [
+                3
+            ],
+            "measuredHeight": [
+                3
+            ],
+            "overclaimed": [
+                6
+            ],
+            "bitrateBps": [
+                3
+            ],
+            "stalls": [
+                3
+            ],
+            "stallMillis": [
+                3
+            ],
+            "firstFrameMillis": [
+                3
+            ],
+            "plays": [
+                3
+            ],
+            "roughPlays": [
+                3
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "LinkReportInput": {
+            "streamId": [
+                2
+            ],
+            "widthPixels": [
+                3
+            ],
+            "heightPixels": [
+                3
+            ],
+            "bitrateBps": [
+                3
+            ],
+            "stalls": [
+                3
+            ],
+            "stallMillis": [
+                3
+            ],
+            "firstFrameMillis": [
+                3
+            ],
+            "playedMillis": [
+                3
+            ],
             "__typename": [
                 4
             ]
         },
         "StreamUpdate": {
             "streams": [
-                13
+                15
             ],
             "done": [
                 6
@@ -429,15 +523,35 @@ export default {
                 4
             ]
         },
+        "Bookmark": {
+            "id": [
+                2
+            ],
+            "mediaId": [
+                2
+            ],
+            "positionSeconds": [
+                5
+            ],
+            "caption": [
+                4
+            ],
+            "createdAt": [
+                4
+            ],
+            "__typename": [
+                4
+            ]
+        },
         "ContinueItem": {
             "title": [
                 1
             ],
             "episode": [
-                8
+                9
             ],
             "progress": [
-                16
+                20
             ],
             "__typename": [
                 4
@@ -448,7 +562,7 @@ export default {
                 1
             ],
             "episode": [
-                8
+                9
             ],
             "minutes": [
                 3
@@ -460,15 +574,26 @@ export default {
                 4
             ]
         },
+        "UpcomingEpisode": {
+            "series": [
+                1
+            ],
+            "episode": [
+                9
+            ],
+            "__typename": [
+                4
+            ]
+        },
         "HistoryEntry": {
             "title": [
                 1
             ],
             "episode": [
-                8
+                9
             ],
             "progress": [
-                16
+                20
             ],
             "__typename": [
                 4
@@ -513,13 +638,185 @@ export default {
         },
         "MoreWithRow": {
             "person": [
-                10
+                12
             ],
             "becauseOf": [
                 1
             ],
             "items": [
                 1
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "WatchStatus": {},
+        "Collection": {
+            "id": [
+                2
+            ],
+            "tmdbId": [
+                3
+            ],
+            "name": [
+                4
+            ],
+            "overview": [
+                4
+            ],
+            "posterPath": [
+                4
+            ],
+            "backdropPath": [
+                4
+            ],
+            "parts": [
+                31
+            ],
+            "watchedCount": [
+                3
+            ],
+            "next": [
+                31
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "CollectionPart": {
+            "number": [
+                3
+            ],
+            "title": [
+                1
+            ],
+            "status": [
+                29
+            ],
+            "progress": [
+                5
+            ],
+            "released": [
+                6
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "Shelf": {
+            "id": [
+                2
+            ],
+            "name": [
+                4
+            ],
+            "titles": [
+                1
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "YearInReview": {
+            "year": [
+                3
+            ],
+            "hasActivity": [
+                6
+            ],
+            "hoursWatched": [
+                5
+            ],
+            "moviesFinished": [
+                3
+            ],
+            "episodesFinished": [
+                3
+            ],
+            "seriesWatched": [
+                3
+            ],
+            "topSeries": [
+                34
+            ],
+            "topGenres": [
+                35
+            ],
+            "longestBinge": [
+                36
+            ],
+            "mostRewatched": [
+                37
+            ],
+            "firstTitle": [
+                38
+            ],
+            "lastTitle": [
+                38
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "TopSeries": {
+            "title": [
+                1
+            ],
+            "hoursWatched": [
+                5
+            ],
+            "episodesWatched": [
+                3
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "GenreShare": {
+            "genre": [
+                4
+            ],
+            "hoursWatched": [
+                5
+            ],
+            "share": [
+                5
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "Binge": {
+            "title": [
+                1
+            ],
+            "episodes": [
+                3
+            ],
+            "date": [
+                4
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "Rewatched": {
+            "title": [
+                1
+            ],
+            "count": [
+                3
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "YearMoment": {
+            "title": [
+                1
+            ],
+            "date": [
+                4
             ],
             "__typename": [
                 4
@@ -565,10 +862,10 @@ export default {
                 4
             ],
             "subtitleSize": [
-                26
+                42
             ],
             "subtitleStyle": [
-                27
+                43
             ],
             "voiceBoost": [
                 6
@@ -578,6 +875,9 @@ export default {
             ],
             "bedtimeMinutes": [
                 3
+            ],
+            "simpleMode": [
+                6
             ],
             "__typename": [
                 4
@@ -634,7 +934,7 @@ export default {
                 4
             ],
             "tmdbKeyStatus": [
-                29
+                45
             ],
             "usesDefaultTmdbKey": [
                 6
@@ -747,10 +1047,10 @@ export default {
                 6
             ],
             "settings": [
-                32
+                48
             ],
             "account": [
-                35
+                51
             ],
             "__typename": [
                 4
@@ -799,7 +1099,7 @@ export default {
                 2
             ],
             "kind": [
-                37
+                53
             ],
             "heading": [
                 4
@@ -817,7 +1117,7 @@ export default {
                 1
             ],
             "episode": [
-                8
+                9
             ],
             "__typename": [
                 4
@@ -829,7 +1129,7 @@ export default {
                 2
             ],
             "status": [
-                39
+                55
             ],
             "progress": [
                 5
@@ -847,7 +1147,7 @@ export default {
                 1
             ],
             "episode": [
-                8
+                9
             ],
             "url": [
                 4
@@ -882,13 +1182,13 @@ export default {
                 6
             ],
             "status": [
-                41
+                57
             ],
             "self": [
-                42
+                58
             ],
             "peers": [
-                42
+                58
             ],
             "__typename": [
                 4
@@ -896,7 +1196,7 @@ export default {
         },
         "TogetherMessage": {
             "from": [
-                42
+                58
             ],
             "payload": [
                 4
@@ -907,10 +1207,10 @@ export default {
         },
         "TogetherUpdate": {
             "room": [
-                43
+                59
             ],
             "message": [
-                44
+                60
             ],
             "__typename": [
                 4
@@ -940,7 +1240,7 @@ export default {
                 }
             ],
             "episode": [
-                8,
+                9,
                 {
                     "id": [
                         2,
@@ -949,7 +1249,7 @@ export default {
                 }
             ],
             "person": [
-                10,
+                12,
                 {
                     "id": [
                         2,
@@ -971,7 +1271,7 @@ export default {
                         3
                     ],
                     "filter": [
-                        21
+                        27
                     ]
                 }
             ],
@@ -993,7 +1293,7 @@ export default {
                 }
             ],
             "watchedActors": [
-                10,
+                12,
                 {
                     "profileId": [
                         2,
@@ -1008,8 +1308,33 @@ export default {
                     ]
                 }
             ],
+            "collection": [
+                30,
+                {
+                    "id": [
+                        2,
+                        "ID!"
+                    ],
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
+            "franchises": [
+                30,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "limit": [
+                        3
+                    ]
+                }
+            ],
             "moreWith": [
-                22,
+                28,
                 {
                     "profileId": [
                         2,
@@ -1050,7 +1375,7 @@ export default {
                         "MediaType!"
                     ],
                     "sort": [
-                        46
+                        62
                     ]
                 }
             ],
@@ -1062,13 +1387,13 @@ export default {
                         "MediaType!"
                     ],
                     "theme": [
-                        47,
+                        63,
                         "CatalogTheme!"
                     ]
                 }
             ],
             "catalogRows": [
-                48,
+                64,
                 {
                     "mediaType": [
                         0,
@@ -1084,7 +1409,7 @@ export default {
                 }
             ],
             "recommendations": [
-                20,
+                26,
                 {
                     "profileId": [
                         2,
@@ -1105,7 +1430,7 @@ export default {
                 }
             ],
             "recommendationRows": [
-                23,
+                39,
                 {
                     "profileId": [
                         2,
@@ -1120,7 +1445,7 @@ export default {
                 }
             ],
             "continueWatching": [
-                17,
+                22,
                 {
                     "profileId": [
                         2,
@@ -1132,7 +1457,7 @@ export default {
                 }
             ],
             "timeSlot": [
-                18,
+                23,
                 {
                     "profileId": [
                         2,
@@ -1147,8 +1472,32 @@ export default {
                     ]
                 }
             ],
+            "upcomingEpisodes": [
+                24,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "days": [
+                        3
+                    ]
+                }
+            ],
+            "continueRewatching": [
+                22,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "limit": [
+                        3
+                    ]
+                }
+            ],
             "history": [
-                19,
+                25,
                 {
                     "profileId": [
                         2,
@@ -1168,6 +1517,44 @@ export default {
                     ]
                 }
             ],
+            "bookmarks": [
+                21,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "titleId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
+            "shelves": [
+                32,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
+            "yearInReview": [
+                33,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "year": [
+                        3,
+                        "Int!"
+                    ],
+                    "utcOffsetMinutes": [
+                        3
+                    ]
+                }
+            ],
             "likedTitles": [
                 1,
                 {
@@ -1181,7 +1568,7 @@ export default {
                 }
             ],
             "notifications": [
-                38,
+                54,
                 {
                     "profileId": [
                         2,
@@ -1202,7 +1589,7 @@ export default {
                 }
             ],
             "downloads": [
-                40,
+                56,
                 {
                     "profileId": [
                         2,
@@ -1214,10 +1601,10 @@ export default {
                 4
             ],
             "togetherRoom": [
-                43
+                59
             ],
             "subtitles": [
-                25,
+                41,
                 {
                     "mediaId": [
                         2,
@@ -1229,7 +1616,7 @@ export default {
                 }
             ],
             "profiles": [
-                24
+                40
             ],
             "calendarFeedPath": [
                 4,
@@ -1241,7 +1628,7 @@ export default {
                 }
             ],
             "settings": [
-                30
+                46
             ],
             "checkTmdbKey": [
                 6,
@@ -1253,13 +1640,104 @@ export default {
                 }
             ],
             "plugins": [
-                34
+                50
             ],
             "status": [
-                36
+                52
             ],
             "neoworksAccount": [
-                50
+                70
+            ],
+            "letterboxdImport": [
+                67,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
+            "letterboxdAccount": [
+                69,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "LetterboxdImportState": {},
+        "LetterboxdImport": {
+            "state": [
+                66
+            ],
+            "total": [
+                3
+            ],
+            "processed": [
+                3
+            ],
+            "matched": [
+                3
+            ],
+            "watched": [
+                3
+            ],
+            "rated": [
+                3
+            ],
+            "watchlisted": [
+                3
+            ],
+            "unmatchedCount": [
+                3
+            ],
+            "notMatched": [
+                68
+            ],
+            "error": [
+                4
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "LetterboxdFilm": {
+            "name": [
+                4
+            ],
+            "year": [
+                3
+            ],
+            "uri": [
+                4
+            ],
+            "reason": [
+                4
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "LetterboxdAccount": {
+            "username": [
+                4
+            ],
+            "lastSyncedAt": [
+                4
+            ],
+            "lastError": [
+                4
+            ],
+            "lastWatched": [
+                3
+            ],
+            "lastRated": [
+                3
             ],
             "__typename": [
                 4
@@ -1276,7 +1754,7 @@ export default {
                 4
             ],
             "lastSync": [
-                51
+                71
             ],
             "__typename": [
                 4
@@ -1305,7 +1783,7 @@ export default {
                 2
             ],
             "kind": [
-                52
+                72
             ],
             "url": [
                 4
@@ -1373,7 +1851,7 @@ export default {
                 }
             ],
             "resolveStream": [
-                15,
+                19,
                 {
                     "streamId": [
                         2,
@@ -1382,7 +1860,7 @@ export default {
                 }
             ],
             "resolveBestStream": [
-                15,
+                19,
                 {
                     "streamIds": [
                         2,
@@ -1390,8 +1868,17 @@ export default {
                     ]
                 }
             ],
+            "reportLinkPlayback": [
+                6,
+                {
+                    "input": [
+                        17,
+                        "LinkReportInput!"
+                    ]
+                }
+            ],
             "recordProgress": [
-                16,
+                20,
                 {
                     "profileId": [
                         2,
@@ -1408,6 +1895,32 @@ export default {
                     "durationSeconds": [
                         5,
                         "Float!"
+                    ]
+                }
+            ],
+            "startRewatch": [
+                7,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "titleId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
+            "stopRewatch": [
+                6,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "titleId": [
+                        2,
+                        "ID!"
                     ]
                 }
             ],
@@ -1467,6 +1980,39 @@ export default {
                     ]
                 }
             ],
+            "addBookmark": [
+                21,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "mediaId": [
+                        2,
+                        "ID!"
+                    ],
+                    "positionSeconds": [
+                        5,
+                        "Float!"
+                    ],
+                    "caption": [
+                        4
+                    ]
+                }
+            ],
+            "removeBookmark": [
+                6,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "bookmarkId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
             "addToWatchlist": [
                 6,
                 {
@@ -1490,6 +2036,113 @@ export default {
                     "mediaId": [
                         2,
                         "ID!"
+                    ]
+                }
+            ],
+            "createShelf": [
+                32,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "name": [
+                        4,
+                        "String!"
+                    ]
+                }
+            ],
+            "renameShelf": [
+                32,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "shelfId": [
+                        2,
+                        "ID!"
+                    ],
+                    "name": [
+                        4,
+                        "String!"
+                    ]
+                }
+            ],
+            "deleteShelf": [
+                6,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "shelfId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
+            "addToShelf": [
+                6,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "shelfId": [
+                        2,
+                        "ID!"
+                    ],
+                    "mediaId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
+            "removeFromShelf": [
+                6,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "shelfId": [
+                        2,
+                        "ID!"
+                    ],
+                    "mediaId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
+            "reorderShelves": [
+                6,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "shelfIds": [
+                        2,
+                        "[ID!]!"
+                    ]
+                }
+            ],
+            "reorderShelfTitles": [
+                6,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "shelfId": [
+                        2,
+                        "ID!"
+                    ],
+                    "mediaIds": [
+                        2,
+                        "[ID!]!"
                     ]
                 }
             ],
@@ -1523,7 +2176,7 @@ export default {
                 6
             ],
             "startDownload": [
-                40,
+                56,
                 {
                     "profileId": [
                         2,
@@ -1551,7 +2204,7 @@ export default {
                 6
             ],
             "hostTogether": [
-                43,
+                59,
                 {
                     "profileId": [
                         2,
@@ -1560,7 +2213,7 @@ export default {
                 }
             ],
             "joinTogether": [
-                43,
+                59,
                 {
                     "profileId": [
                         2,
@@ -1576,7 +2229,7 @@ export default {
                 6
             ],
             "adoptStream": [
-                13,
+                15,
                 {
                     "mediaId": [
                         2,
@@ -1605,7 +2258,7 @@ export default {
                 }
             ],
             "createProfile": [
-                24,
+                40,
                 {
                     "name": [
                         4,
@@ -1627,7 +2280,7 @@ export default {
                 }
             ],
             "updateProfile": [
-                24,
+                40,
                 {
                     "id": [
                         2,
@@ -1656,10 +2309,10 @@ export default {
                         4
                     ],
                     "subtitleSize": [
-                        26
+                        42
                     ],
                     "subtitleStyle": [
-                        27
+                        43
                     ],
                     "voiceBoost": [
                         6
@@ -1669,6 +2322,9 @@ export default {
                     ],
                     "bedtimeMinutes": [
                         3
+                    ],
+                    "simpleMode": [
+                        6
                     ]
                 }
             ],
@@ -1682,7 +2338,7 @@ export default {
                 }
             ],
             "verifyPin": [
-                28,
+                44,
                 {
                     "profileId": [
                         2,
@@ -1704,10 +2360,10 @@ export default {
                 }
             ],
             "updateSettings": [
-                30,
+                46,
                 {
                     "input": [
-                        31,
+                        47,
                         "SettingsInput!"
                     ]
                 }
@@ -1716,7 +2372,7 @@ export default {
                 6
             ],
             "setPluginEnabled": [
-                34,
+                50,
                 {
                     "name": [
                         4,
@@ -1729,20 +2385,20 @@ export default {
                 }
             ],
             "setPluginSettings": [
-                34,
+                50,
                 {
                     "name": [
                         4,
                         "String!"
                     ],
                     "values": [
-                        33,
+                        49,
                         "[PluginSettingInput!]!"
                     ]
                 }
             ],
             "loginPlugin": [
-                34,
+                50,
                 {
                     "name": [
                         4,
@@ -1759,7 +2415,7 @@ export default {
                 }
             ],
             "logoutPlugin": [
-                34,
+                50,
                 {
                     "name": [
                         4,
@@ -1768,7 +2424,7 @@ export default {
                 }
             ],
             "updatePlugins": [
-                56
+                76
             ],
             "startNeoworksSignIn": [
                 4,
@@ -1779,7 +2435,7 @@ export default {
                 }
             ],
             "completeNeoworksSignIn": [
-                50,
+                70,
                 {
                     "code": [
                         4,
@@ -1792,13 +2448,57 @@ export default {
                 }
             ],
             "signOutOfNeoworks": [
-                50
+                70
             ],
             "syncNeoworks": [
-                50
+                70
             ],
             "syncNeoworksSoon": [
                 6
+            ],
+            "importLetterboxd": [
+                67,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "zipBase64": [
+                        4,
+                        "String!"
+                    ]
+                }
+            ],
+            "connectLetterboxd": [
+                69,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "username": [
+                        4,
+                        "String!"
+                    ]
+                }
+            ],
+            "disconnectLetterboxd": [
+                6,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
+            "syncLetterboxd": [
+                69,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ]
+                }
             ],
             "__typename": [
                 4
@@ -1820,7 +2520,7 @@ export default {
         },
         "PluginUpdateReport": {
             "updated": [
-                55
+                75
             ],
             "failed": [
                 4
@@ -1831,7 +2531,7 @@ export default {
         },
         "Subscription": {
             "streams": [
-                14,
+                18,
                 {
                     "id": [
                         2,
@@ -1840,10 +2540,10 @@ export default {
                 }
             ],
             "together": [
-                45
+                61
             ],
             "challenges": [
-                53
+                73
             ],
             "__typename": [
                 4

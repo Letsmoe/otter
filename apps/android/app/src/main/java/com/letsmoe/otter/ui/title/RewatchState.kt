@@ -1,8 +1,5 @@
 package com.letsmoe.otter.ui.title
 
-// Watched this far, an episode counts as finished; the same bar the backend uses.
-private const val FINISHED_FRACTION = 0.9f
-
 /** What the title page offers about rewatching. */
 enum class RewatchOffer {
     NONE,

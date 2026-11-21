@@ -345,7 +345,7 @@ func nullableText(value string) any {
 // Delete removes a profile and everything it recorded.
 func (s *Service) Delete(ctx context.Context, profileID int) error {
 	return s.database.Tx(ctx, func(tx *db.DB) error {
-		for _, table := range []string{"watch_history", "rewatch", "rewatch_progress", "user_rating", "watchlist", "dismissed_title", "letterboxd_sync"} {
+		for _, table := range []string{"watch_history", "rewatch", "rewatch_progress", "user_rating", "watchlist", "dismissed_title", "letterboxd_sync", "bookmark"} {
 			if _, err := tx.Exec(ctx, "DELETE FROM "+table+" WHERE profile_id = $id", db.Vars{"id": profileID}); err != nil {
 				return err
 			}

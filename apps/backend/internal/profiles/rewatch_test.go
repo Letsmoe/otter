@@ -13,10 +13,6 @@ var (
 	testSeries = library.MediaRef{MediaType: library.MediaTypeSeries, MediaID: 1396}
 )
 
-func episodeRef(id int) library.MediaRef {
-	return library.MediaRef{MediaType: library.MediaTypeEpisode, MediaID: id}
-}
-
 func addTestEpisodes(t *testing.T, service *Service, seriesID int, episodeIDs ...int) {
 	t.Helper()
 	for index, episodeID := range episodeIDs {

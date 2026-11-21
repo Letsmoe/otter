@@ -9,6 +9,14 @@ import (
 	"strconv"
 )
 
+// Most episodes of one series in one night (a night runs from 5 am to 5 am).
+type Binge struct {
+	Title    *Title `json:"title"`
+	Episodes int    `json:"episodes"`
+	// The date the night began, YYYY-MM-DD.
+	Date string `json:"date"`
+}
+
 // A moment of a movie or episode the profile saved while watching.
 type Bookmark struct {
 	ID string `json:"id"`
@@ -128,10 +136,53 @@ type Episode struct {
 	Filler *FillerKind `json:"filler,omitempty"`
 }
 
+type GenreShare struct {
+	Genre        string  `json:"genre"`
+	HoursWatched float64 `json:"hoursWatched"`
+	// Share of the watch time of titles with genres, 0..1.
+	Share float64 `json:"share"`
+}
+
 type HistoryEntry struct {
 	Title    *Title         `json:"title"`
 	Episode  *Episode       `json:"episode,omitempty"`
 	Progress *WatchProgress `json:"progress"`
+}
+
+// A Letterboxd account whose public diary feed a profile follows. Otter only reads from Letterboxd; writing needs API access Letterboxd has not given.
+type LetterboxdAccount struct {
+	Username     string  `json:"username"`
+	LastSyncedAt *string `json:"lastSyncedAt,omitempty"`
+	// Why the last sync failed; null after a good one.
+	LastError *string `json:"lastError,omitempty"`
+	// Watches and ratings the last sync added.
+	LastWatched int `json:"lastWatched"`
+	LastRated   int `json:"lastRated"`
+}
+
+type LetterboxdFilm struct {
+	Name   string  `json:"name"`
+	Year   *int    `json:"year,omitempty"`
+	URI    *string `json:"uri,omitempty"`
+	Reason string  `json:"reason"`
+}
+
+// An import of a Letterboxd export (watched, ratings, diary, watchlist) into a profile.
+type LetterboxdImport struct {
+	State LetterboxdImportState `json:"state"`
+	// Films in the export, and how many were looked up on TMDB so far.
+	Total     int `json:"total"`
+	Processed int `json:"processed"`
+	// Films that found their TMDB movie.
+	Matched int `json:"matched"`
+	// What the import added; what Otter already had is not counted.
+	Watched     int `json:"watched"`
+	Rated       int `json:"rated"`
+	Watchlisted int `json:"watchlisted"`
+	// Films TMDB had no match for; notMatched lists the first few hundred.
+	UnmatchedCount int               `json:"unmatchedCount"`
+	NotMatched     []*LetterboxdFilm `json:"notMatched"`
+	Error          *string           `json:"error,omitempty"`
 }
 
 // What a link really delivered when it played, as the app measured it.
@@ -308,6 +359,8 @@ type Profile struct {
 	AgeLimit int `json:"ageLimit"`
 	// Child profiles: the fixed bedtime in minutes after midnight, after which every title stops after its episode; null for none.
 	BedtimeMinutes *int `json:"bedtimeMinutes,omitempty"`
+	// The Android app shows only Continue, My List and Search with big text and buttons
+	SimpleMode bool `json:"simpleMode"`
 }
 
 type Query struct {
@@ -343,6 +396,12 @@ type Rewatch struct {
 	StartedAt string `json:"startedAt"`
 	// True once the movie, or every aired episode, was watched again.
 	Finished bool `json:"finished"`
+}
+
+type Rewatched struct {
+	Title *Title `json:"title"`
+	// Episodes watched again (1 for a movie).
+	Count int `json:"count"`
 }
 
 type Season struct {
@@ -556,6 +615,12 @@ type TogetherUpdate struct {
 	Message *TogetherMessage `json:"message,omitempty"`
 }
 
+type TopSeries struct {
+	Title           *Title  `json:"title"`
+	HoursWatched    float64 `json:"hoursWatched"`
+	EpisodesWatched int     `json:"episodesWatched"`
+}
+
 // An episode that has not aired yet.
 type UpcomingEpisode struct {
 	Series *Title `json:"series"`
@@ -569,6 +634,33 @@ type WatchProgress struct {
 	DurationSeconds float64 `json:"durationSeconds"`
 	Completed       bool    `json:"completed"`
 	UpdatedAt       string  `json:"updatedAt"`
+}
+
+// One profile's calendar year of watching, from its watch history. The history keeps one row per
+// movie or episode, dated by its latest update, so a title counts in the year of its last watch and
+// rewatches are estimated: a title started 30+ days before its last watch counts as watched again.
+type YearInReview struct {
+	Year int `json:"year"`
+	// False when nothing was watched that year.
+	HasActivity      bool    `json:"hasActivity"`
+	HoursWatched     float64 `json:"hoursWatched"`
+	MoviesFinished   int     `json:"moviesFinished"`
+	EpisodesFinished int     `json:"episodesFinished"`
+	// Series with at least one episode watched.
+	SeriesWatched int        `json:"seriesWatched"`
+	TopSeries     *TopSeries `json:"topSeries,omitempty"`
+	// Up to five, the most watched first.
+	TopGenres     []*GenreShare `json:"topGenres"`
+	LongestBinge  *Binge        `json:"longestBinge,omitempty"`
+	MostRewatched *Rewatched    `json:"mostRewatched,omitempty"`
+	FirstTitle    *YearMoment   `json:"firstTitle,omitempty"`
+	LastTitle     *YearMoment   `json:"lastTitle,omitempty"`
+}
+
+type YearMoment struct {
+	Title *Title `json:"title"`
+	// YYYY-MM-DD.
+	Date string `json:"date"`
 }
 
 type CatalogSort string
@@ -855,6 +947,65 @@ func (e *FillerKind) UnmarshalJSON(b []byte) error {
 }
 
 func (e FillerKind) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type LetterboxdImportState string
+
+const (
+	LetterboxdImportStateIdle    LetterboxdImportState = "IDLE"
+	LetterboxdImportStateRunning LetterboxdImportState = "RUNNING"
+	LetterboxdImportStateDone    LetterboxdImportState = "DONE"
+	LetterboxdImportStateFailed  LetterboxdImportState = "FAILED"
+)
+
+var AllLetterboxdImportState = []LetterboxdImportState{
+	LetterboxdImportStateIdle,
+	LetterboxdImportStateRunning,
+	LetterboxdImportStateDone,
+	LetterboxdImportStateFailed,
+}
+
+func (e LetterboxdImportState) IsValid() bool {
+	switch e {
+	case LetterboxdImportStateIdle, LetterboxdImportStateRunning, LetterboxdImportStateDone, LetterboxdImportStateFailed:
+		return true
+	}
+	return false
+}
+
+func (e LetterboxdImportState) String() string {
+	return string(e)
+}
+
+func (e *LetterboxdImportState) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = LetterboxdImportState(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid LetterboxdImportState", str)
+	}
+	return nil
+}
+
+func (e LetterboxdImportState) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *LetterboxdImportState) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e LetterboxdImportState) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

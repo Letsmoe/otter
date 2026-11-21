@@ -12,11 +12,11 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 private fun playerEpisode(id: String, season: Int, number: Int, filler: FillerKind?): PlayerEpisode {
-    return PlayerEpisode(id, season, number, null, null, null, null, filler)
+    return PlayerEpisode(id, season, number, null, null, null, null, filler = filler)
 }
 
 private fun seasonEpisode(id: String, season: Int, number: Int, filler: FillerKind?, progress: Float? = null): SeasonEpisode {
-    return SeasonEpisode(id, season, number, null, null, null, null, progress, null, filler)
+    return SeasonEpisode(id, season, number, null, null, null, null, progress, null, filler = filler)
 }
 
 class FillerSkipTest {
