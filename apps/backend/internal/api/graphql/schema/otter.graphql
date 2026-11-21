@@ -225,6 +225,10 @@ type Profile {
   subtitleStyle: SubtitleStyle!
   "Boost dialogue over music and effects"
   voiceBoost: Boolean!
+  "Child profiles: the oldest age their titles may be rated for (FSK in Germany); 0 means no limit. Titles above it, or without a rating, are hidden and can't be played."
+  ageLimit: Int!
+  "Child profiles: the fixed bedtime in minutes after midnight, after which every title stops after its episode; null for none."
+  bedtimeMinutes: Int
 }
 
 "An external subtitle file for a movie or episode, found by a subtitles plugin."
@@ -597,8 +601,8 @@ type Mutation {
 
   "The first profile's top language also becomes the TMDB language."
   createProfile(name: String!, avatarUrl: String, pin: String, isChild: Boolean = false, languages: [String!]): Profile!
-  "Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it."
-  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, subtitleStyle: SubtitleStyle, voiceBoost: Boolean): Profile!
+  "Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it; ageLimit 0 and a negative bedtimeMinutes remove those."
+  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, subtitleStyle: SubtitleStyle, voiceBoost: Boolean, ageLimit: Int, bedtimeMinutes: Int): Profile!
   deleteProfile(id: ID!): Boolean!
   verifyPin(profileId: ID!, pin: String!): PinCheck!
 

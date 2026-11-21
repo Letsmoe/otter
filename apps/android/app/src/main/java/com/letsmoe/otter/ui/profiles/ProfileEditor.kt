@@ -179,8 +179,11 @@ private fun NameField(name: String, onChange: (String) -> Unit) {
 @Composable
 private fun ProfileOptions(editor: ProfileEditorViewModel) {
     Column(Modifier.clip(RoundedCornerShape(24.dp)).background(SubtleFill).padding(horizontal = 16.dp)) {
-        OptionRow(Icons.Filled.Face, "Kids Profile", "Marks this as a child's profile. Titles aren't filtered yet.") {
+        OptionRow(Icons.Filled.Face, "Kids Profile", "Marks this as a child's profile, with an age limit and a fixed bedtime.") {
             OtterSwitch(editor.isChild, onCheckedChange = { value -> editor.isChild = value })
+        }
+        if (editor.isChild) {
+            ChildOptions(editor)
         }
         HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
         OptionRow(Icons.Filled.Lock, "Profile Lock", "Require a 4-digit PIN to open this profile.") {
