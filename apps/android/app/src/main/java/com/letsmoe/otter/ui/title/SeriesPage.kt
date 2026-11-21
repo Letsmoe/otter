@@ -70,6 +70,7 @@ fun SeriesPage(
         downloadTarget = upNextDownload(detail, upNext),
         tabBar = { SegmentedBar(seriesTabs, tab, onSelect = { chosen -> tab = chosen }) },
         playExtras = { UpNextBar(upNext) },
+        belowDescription = { SeasonHeatmap(episodes.episodes, onPlay = { episode -> onPlay(PlayRequest(episode.id)) }) },
     ) {
         when (tab) {
             SeriesTab.EPISODES -> EpisodesTab(detail, episodes, seriesViewModel, slots, onPlay)

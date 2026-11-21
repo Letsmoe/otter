@@ -15,6 +15,8 @@ data class SeasonEpisode(
     val progress: Float?,
     /** The episode after this one, crossing seasons. */
     val nextEpisodeId: String?,
+    /** TMDB's vote average (0..10); 0 when nobody rated it yet. */
+    val voteAverage: Double = 0.0,
 ) {
     val displayName: String
         get() {
@@ -32,7 +34,7 @@ data class SeasonEpisode(
 data class UpNext(val episode: SeasonEpisode, val resume: Boolean)
 
 // Watched this far, an episode counts as finished and Play moves on.
-private const val FINISHED_FRACTION = 0.9f
+internal const val FINISHED_FRACTION = 0.9f
 
 fun SeriesEpisodesQuery.Title.toEpisodes(): List<SeasonEpisode> =
     seasons.flatMap { season ->
@@ -51,6 +53,7 @@ fun SeriesEpisodesQuery.Title.toEpisodes(): List<SeasonEpisode> =
                 stillPath = episode.stillPath,
                 progress = progress,
                 nextEpisodeId = episode.next?.episodeRef?.id,
+                voteAverage = episode.voteAverage,
             )
         }
     }
