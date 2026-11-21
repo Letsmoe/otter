@@ -145,6 +145,7 @@ private fun TitleSummary(
             }
         }
         PlayButton(playButton.label, playButton.busy, playButton.ready, playButton.disabled, playButton.onClick)
+        SuggestedTelevisionButton(enabled = !playButton.disabled, onPlay = playButton.onClick)
         playExtras()
         Overview(detail.overview)
         CreditLines(creditLines)

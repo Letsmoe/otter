@@ -102,11 +102,19 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private val progressReporter = ProgressReporter()
     private val togetherSync = PlayerTogetherSync(viewModelScope, this)
     private val skipTracker = SkipTracker()
+    private val sleepTimer = SleepTimer.shared
     private val upNextOffer = UpNext(viewModelScope, ::playNext)
+    private val stillWatching = StillWatching(viewModelScope, onTimeout = { setStopAfterEpisode(true) })
     private val captionExtras = CaptionExtras(viewModelScope, ::reloadPhoneCaptions)
 
     /** The next episode's card while the credits run. */
     val upNext: StateFlow<UpNextCard?> = upNextOffer.card
+
+    /** The next episode waits for the answer to "Still watching?". */
+    val askingStillWatching: StateFlow<Boolean> = stillWatching.asking
+
+    /** The running sleep timer; null when none runs. */
+    val sleepTimerRun: StateFlow<SleepTimerRun?> = sleepTimer.run
 
     /** Caption timing and the second caption language of the title playing. */
     val captionTweaks: StateFlow<CaptionExtrasState> = captionExtras.state
@@ -176,6 +184,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         viewModelScope.launch { pollPosition() }
         viewModelScope.launch { followHolding() }
         viewModelScope.launch { followRemoteMedia() }
+        viewModelScope.launch { stillWatching.asking.collect { asking -> televisionPlayer?.askingStillWatching = asking } }
         viewModelScope.launch { ProfileSession.activeProfile.collect(::onProfileChanged) }
         togetherSync.start()
         if (forTelevision) {
@@ -202,9 +211,12 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         sourceSwitchResumeSeconds = 0.0
         nextEpisodeJob?.cancel()
         upNextOffer.reset()
+        stillWatching.episodeStarted()
         skipTracker.reset(emptyList())
         mutableSkipButton.value = null
         clearPlayers()
+        // A TV with a session stream shows the loading screen while the new title's links resolve.
+        televisionPlayer?.showLoading(null)
         trackCatalog = TrackCatalog.Empty
         startSubtitleLoad(mediaId)
         televisionPlayer?.stopsAfterEpisode = false
@@ -225,6 +237,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             voiceBoost = previous.voiceBoost,
             evenVolume = previous.evenVolume,
             captionLook = previous.captionLook,
+            audioDelayMillis = previous.audioDelayMillis,
         )
     }
 
@@ -298,7 +311,27 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     fun playNext() {
         val nextId = media?.nextEpisodeId ?: return
+        if (stillWatching.holdsBackNext()) {
+            return
+        }
         openMedia(nextId, initial = false)
+    }
+
+    /** Any touch on the phone: the viewer is there. */
+    fun userTouched() {
+        stillWatching.touched()
+    }
+
+    /** "Keep watching": the held-back episode starts. */
+    fun keepWatching() {
+        stillWatching.confirm()
+        playNext()
+    }
+
+    /** "Stop": nothing plays after the episode playing now. */
+    fun stopWatching() {
+        stillWatching.decline()
+        setStopAfterEpisode(true)
     }
 
     /** The end screen's button or countdown; ignored once the next episode already started. */
@@ -659,7 +692,9 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         television.addListener(playerListener)
         televisionPlayer = television
         streamPlayback.fitsScreen = { stream -> television.fits(qualityHeight(stream)) }
-        mutableState.update { current -> current.copy(castDeviceName = target.name, castsToTelevision = true) }
+        mutableState.update { current ->
+            current.copy(castDeviceName = target.name, castsToTelevision = true, audioDelayMillis = television.audioDelayMillis)
+        }
     }
 
     /** Connects a DLNA TV and moves playback there (via [handOver]), where it is right now. */
@@ -903,6 +938,13 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         ProfilePreferences.change(PreferenceChange(voiceBoost = !voiceBoost.enabled))
     }
 
+    /** Moves the TV's sound against the picture by one more step (negative: earlier), for this TV from now on. */
+    fun nudgeAudioDelay(stepMillis: Int) {
+        val television = televisionPlayer ?: return
+        val delayMillis = television.changeAudioDelay(stepMillis)
+        mutableState.update { current -> current.copy(audioDelayMillis = delayMillis) }
+    }
+
     /** Even volume on or off on this phone; a TV's sound follows within seconds. */
     fun toggleEvenVolume() {
         val enabled = !evenVolume.enabled
@@ -914,6 +956,30 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     /** Nothing plays after the episode playing now; the next title starts without this again. */
     fun toggleStopAfterEpisode() {
         val stopping = !mutableState.value.stopsAfterEpisode
+        if (stopping) {
+            sleepTimer.cancel()
+        }
+        setStopAfterEpisode(stopping)
+    }
+
+    /** Fades the sound out and pauses after [minutes]; replaces "End of episode". */
+    fun startSleepTimer(minutes: Int) {
+        sleepTimer.start(minutes)
+        setStopAfterEpisode(false)
+    }
+
+    /** The sleep timer's "End of episode": the existing stop after this episode. */
+    fun sleepAtEndOfEpisode() {
+        sleepTimer.cancel()
+        setStopAfterEpisode(true)
+    }
+
+    fun cancelSleepTimer() {
+        sleepTimer.cancel()
+        setStopAfterEpisode(false)
+    }
+
+    private fun setStopAfterEpisode(stopping: Boolean) {
         televisionPlayer?.stopsAfterEpisode = stopping
         mutableState.update { current -> current.copy(stopsAfterEpisode = stopping) }
         if (stopping) {
@@ -957,11 +1023,37 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             val buffered = activePlayer.bufferedPosition / 1000.0
             mutablePosition.value = PlaybackPosition(position, buffered)
             followSegments(position)
+            followSleepTimer()
             if (activePlayer.playWhenReady) {
                 saveProgress(force = false)
             }
             delay(POSITION_POLL_MILLISECONDS)
         }
+    }
+
+    // The phone fades its own sound; a TV's sound is faded in the encoder (see LiveSleepFade).
+    private fun followSleepTimer() {
+        if (sleepTimer.isDue()) {
+            sleepTimer.cancel()
+            setPhoneVolume(1f)
+            pauseForSleepTimer()
+            return
+        }
+        setPhoneVolume(sleepTimer.gain())
+    }
+
+    private fun setPhoneVolume(gain: Float) {
+        if (mutableState.value.isCasting || player.volume == gain) {
+            return
+        }
+        player.volume = gain
+    }
+
+    private fun pauseForSleepTimer() {
+        if (!intendedPlaying()) {
+            return
+        }
+        togglePlay()
     }
 
     private fun followSegments(positionSeconds: Double) {

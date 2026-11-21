@@ -80,7 +80,8 @@ private fun moviePlayLabel(streams: StreamList): String {
     return "Play"
 }
 
-private fun movieFacts(detail: TitleDetail): List<String> {
+/** "2014", "2h 49m", "★ 8.5" and the first two genres. */
+fun movieFacts(detail: TitleDetail): List<String> {
     val facts = mutableListOf<String>()
     detail.year?.let { year -> facts.add(year.toString()) }
     formatRuntime(detail.runtime)?.let { runtime -> facts.add(runtime) }

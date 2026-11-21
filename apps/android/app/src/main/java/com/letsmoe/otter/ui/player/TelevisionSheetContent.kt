@@ -42,6 +42,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.letsmoe.otter.cast.DlnaRenderer
 import com.letsmoe.otter.cast.TelevisionConnection
 import com.letsmoe.otter.cast.TelevisionTarget
+import com.letsmoe.otter.cast.WakeableTelevision
+import com.letsmoe.otter.cast.WakeableTelevisions
+import com.letsmoe.otter.ui.television.WakeAddressDialog
 import com.letsmoe.otter.cast.discoverRenderers
 import com.letsmoe.otter.cast.phoneVpnActive
 import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
@@ -63,9 +66,12 @@ fun TelevisionSheetContent(onChoose: (DlnaRenderer) -> Unit) {
     var searchRound by remember { mutableIntStateOf(0) }
     val chromecastAvailable = rememberChromecastAvailable()
     val connected by TelevisionConnection.target.collectAsStateWithLifecycle()
+    var standby by remember { mutableStateOf<List<WakeableTelevision>>(emptyList()) }
+    var editedAddress by remember { mutableStateOf<DlnaRenderer?>(null) }
     LaunchedEffect(searchRound) {
         searching = true
         renderers = discoverRenderers(context)
+        standby = WakeableTelevisions.inStandby(renderers)
         searching = false
     }
     // Wraps its rows instead of filling the height: the glass sheet scrolls its content, where a weighted list gets no height.
@@ -77,8 +83,35 @@ fun TelevisionSheetContent(onChoose: (DlnaRenderer) -> Unit) {
         for (renderer in renderers) {
             TelevisionRow(renderer.name, current = isConnectedTo(connected, renderer)) { onChoose(renderer) }
         }
-        SearchStatus(searching, renderers.isEmpty()) { searchRound += 1 }
+        for (television in standby) {
+            TelevisionRow(television.renderer.name, current = false, idleDetail = "In standby: tap to switch on") { onChoose(television.renderer) }
+        }
+        SearchStatus(searching, renderers.isEmpty() && standby.isEmpty()) { searchRound += 1 }
+        for (renderer in renderers) {
+            WakeAddressLink(renderer.name, WakeableTelevisions.macAddressOf(renderer.id)) { editedAddress = renderer }
+        }
     }
+    editedAddress?.let { renderer ->
+        WakeAddressDialog(
+            renderer = renderer,
+            currentAddress = WakeableTelevisions.macAddressOf(renderer.id),
+            onDismiss = { editedAddress = null },
+            onDone = {
+                editedAddress = null
+                standby = WakeableTelevisions.inStandby(renderers)
+            },
+        )
+    }
+}
+
+// A small link: switching on from standby is the exception, picking a TV the point.
+@Composable
+private fun WakeAddressLink(name: String, macAddress: String?, onClick: () -> Unit) {
+    var label = "Switch on $name from standby…"
+    if (macAddress != null) {
+        label = "Switch on $name from standby: $macAddress"
+    }
+    Text(label, fontSize = 13.sp, color = Color.White.copy(alpha = 0.6f), modifier = Modifier.pressable(onClick = onClick).padding(vertical = 4.dp))
 }
 
 private fun isConnectedTo(connected: TelevisionTarget?, renderer: DlnaRenderer): Boolean {
@@ -91,8 +124,8 @@ private fun isConnectedTo(connected: TelevisionTarget?, renderer: DlnaRenderer):
 
 /** A TV as a card: icon, name, whether it's connected, and an arrow that says it can be tapped. */
 @Composable
-private fun TelevisionRow(name: String, current: Boolean, onClick: () -> Unit) {
-    var detail = "Tap to connect"
+private fun TelevisionRow(name: String, current: Boolean, idleDetail: String = "Tap to connect", onClick: () -> Unit) {
+    var detail = idleDetail
     var trailingIcon = PhosphorIcons.Regular.CaretRight
     var frame = Color.Transparent
     if (current) {

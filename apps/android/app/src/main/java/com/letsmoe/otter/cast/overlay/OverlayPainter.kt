@@ -56,6 +56,7 @@ private const val CARD_TITLE_SIZE = 32f
 private const val CARD_LABEL_SIZE = 26f
 private const val CARD_LINE_GAP = 8f
 private const val STOPPING_LABEL = "Stopping after this episode"
+private const val STILL_WATCHING_LABEL = "Still watching? Answer on your phone"
 private val CARD_FILL = Color.argb(222, 18, 18, 22)
 private val CARD_PROGRESS = Color.argb(70, 255, 255, 255)
 private val LABEL_COLOR = Color.argb(184, 255, 255, 255)
@@ -96,9 +97,13 @@ class OverlayPainter(private val job: OverlayJob) : BitmapOverlay() {
         return bitmap
     }
 
-    // A card the viewer cancelled on the phone leaves the picture too; stopping after this episode replaces it.
+    // A card the viewer cancelled on the phone leaves the picture too; stopping after this episode replaces it,
+    // and so does the question whether they still watch.
     private fun visibleFrameAt(seconds: Double): OverlayFrame {
         val frame = job.plan.frameAt(seconds, job.captionDelaySeconds(), job.replayUntilSeconds())
+        if (job.askingStillWatching()) {
+            return frame.copy(upNextSecondsLeft = null, upNextProgress = null, skipLabel = STILL_WATCHING_LABEL)
+        }
         if (frame.upNextSecondsLeft == null) {
             return frame
         }
