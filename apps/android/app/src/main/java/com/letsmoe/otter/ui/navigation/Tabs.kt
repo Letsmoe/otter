@@ -25,6 +25,7 @@ object Routes {
     const val LIBRARY = "library"
     const val HISTORY = "history"
     const val PERSON = "person/{personId}"
+    const val YEAR_IN_OTTER = "year-in-otter/{year}"
     const val PLAYER = "player/{mediaId}?streamId={streamId}&downloadId={downloadId}&start={start}"
     const val NOTIFICATIONS = "notifications"
     const val SETTINGS = "settings"
@@ -47,6 +48,7 @@ object Routes {
 
     fun browse(kind: String) = "browse/$kind"
     fun person(personId: String) = "person/${android.net.Uri.encode(personId)}"
+    fun yearInOtter(year: Int) = "year-in-otter/$year"
 
     /** Plays a movie or episode: on one chosen link, from a finished download, or on its best link. */
     fun player(mediaId: String, streamId: String? = null, downloadId: String? = null, startSeconds: Double? = null): String {

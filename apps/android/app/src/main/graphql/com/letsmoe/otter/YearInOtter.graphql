@@ -1,0 +1,47 @@
+query YearInOtter($profileId: ID!, $year: Int!, $utcOffsetMinutes: Int!) {
+  yearInReview(profileId: $profileId, year: $year, utcOffsetMinutes: $utcOffsetMinutes) {
+    year
+    hasActivity
+    hoursWatched
+    moviesFinished
+    episodesFinished
+    seriesWatched
+    topSeries {
+      hoursWatched
+      episodesWatched
+      title {
+        ...TitleCard
+      }
+    }
+    topGenres {
+      genre
+      hoursWatched
+      share
+    }
+    longestBinge {
+      episodes
+      date
+      title {
+        ...TitleCard
+      }
+    }
+    mostRewatched {
+      count
+      title {
+        ...TitleCard
+      }
+    }
+    firstTitle {
+      date
+      title {
+        ...TitleCard
+      }
+    }
+    lastTitle {
+      date
+      title {
+        ...TitleCard
+      }
+    }
+  }
+}
