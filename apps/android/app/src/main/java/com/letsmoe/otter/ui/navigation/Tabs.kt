@@ -24,6 +24,7 @@ object Routes {
     const val BROWSE = "browse/{kind}"
     const val LIBRARY = "library"
     const val HISTORY = "history"
+    const val UPCOMING = "upcoming"
     const val PERSON = "person/{personId}"
     const val PLAYER = "player/{mediaId}?streamId={streamId}&downloadId={downloadId}&start={start}"
     const val NOTIFICATIONS = "notifications"
@@ -82,6 +83,9 @@ private val routesOfProfileTab = listOf(Routes.PROFILE, Routes.HISTORY, Routes.S
 fun tabForRoute(route: String?): Tab? {
     if (route in routesOfProfileTab) {
         return Tab.PROFILE
+    }
+    if (route == Routes.UPCOMING) {
+        return Tab.HOME
     }
     if (route == Routes.SERIES_DOWNLOADS) {
         return Tab.DOWNLOADS

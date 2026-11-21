@@ -71,6 +71,7 @@ import com.letsmoe.otter.ui.television.TelevisionNowPlayingBar
 import com.letsmoe.otter.ui.television.TelevisionRemoteHost
 import com.letsmoe.otter.ui.title.LinkedEpisode
 import com.letsmoe.otter.ui.title.TitleScreen
+import com.letsmoe.otter.ui.upcoming.UpcomingScreen
 import com.letsmoe.otter.ui.updates.UpdateBanner
 
 @Composable
@@ -216,6 +217,9 @@ private fun OtterNavHost(navController: NavHostController, pagerState: PagerStat
         }
         composable(Routes.HISTORY) {
             HistoryScreen(onOpenItem = { item -> navController.openItem(item) }, onBack = { navController.popBackStack() })
+        }
+        composable(Routes.UPCOMING) {
+            UpcomingScreen(onOpenItem = { item -> navController.openItem(item) }, onBack = { navController.popBackStack() })
         }
         composable(Routes.LIBRARY) {
             LibraryScreen(

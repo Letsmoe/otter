@@ -446,6 +446,13 @@ type TogetherUpdate struct {
 	Message *TogetherMessage `json:"message,omitempty"`
 }
 
+// An episode that has not aired yet.
+type UpcomingEpisode struct {
+	Series *Title `json:"series"`
+	// Its airDate (yyyy-MM-dd, TMDB's) is today or within the asked days.
+	Episode *Episode `json:"episode"`
+}
+
 type WatchProgress struct {
 	MediaID         string  `json:"mediaId"`
 	ProgressSeconds float64 `json:"progressSeconds"`
