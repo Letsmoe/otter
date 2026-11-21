@@ -9,6 +9,14 @@ import (
 	"strconv"
 )
 
+// Most episodes of one series in one night (a night runs from 5 am to 5 am).
+type Binge struct {
+	Title    *Title `json:"title"`
+	Episodes int    `json:"episodes"`
+	// The date the night began, YYYY-MM-DD.
+	Date string `json:"date"`
+}
+
 type CatalogRow struct {
 	Genre string   `json:"genre"`
 	Items []*Title `json:"items"`
@@ -87,6 +95,13 @@ type Episode struct {
 	Next *Episode `json:"next,omitempty"`
 	// Parts viewers skip (intro, recap, credits, preview), from TheIntroDB; empty when nobody timed them.
 	SkipSegments []*SkipSegment `json:"skipSegments"`
+}
+
+type GenreShare struct {
+	Genre        string  `json:"genre"`
+	HoursWatched float64 `json:"hoursWatched"`
+	// Share of the watch time of titles with genres, 0..1.
+	Share float64 `json:"share"`
 }
 
 type HistoryEntry struct {
@@ -259,6 +274,12 @@ type ResolvedStream struct {
 	Quality  *string `json:"quality,omitempty"`
 	// The stored link this was resolved from.
 	StreamID *string `json:"streamId,omitempty"`
+}
+
+type Rewatched struct {
+	Title *Title `json:"title"`
+	// Episodes watched again (1 for a movie).
+	Count int `json:"count"`
 }
 
 type Season struct {
@@ -446,12 +467,45 @@ type TogetherUpdate struct {
 	Message *TogetherMessage `json:"message,omitempty"`
 }
 
+type TopSeries struct {
+	Title           *Title  `json:"title"`
+	HoursWatched    float64 `json:"hoursWatched"`
+	EpisodesWatched int     `json:"episodesWatched"`
+}
+
 type WatchProgress struct {
 	MediaID         string  `json:"mediaId"`
 	ProgressSeconds float64 `json:"progressSeconds"`
 	DurationSeconds float64 `json:"durationSeconds"`
 	Completed       bool    `json:"completed"`
 	UpdatedAt       string  `json:"updatedAt"`
+}
+
+// One profile's calendar year of watching, from its watch history. The history keeps one row per
+// movie or episode, dated by its latest update, so a title counts in the year of its last watch and
+// rewatches are estimated: a title started 30+ days before its last watch counts as watched again.
+type YearInReview struct {
+	Year int `json:"year"`
+	// False when nothing was watched that year.
+	HasActivity      bool    `json:"hasActivity"`
+	HoursWatched     float64 `json:"hoursWatched"`
+	MoviesFinished   int     `json:"moviesFinished"`
+	EpisodesFinished int     `json:"episodesFinished"`
+	// Series with at least one episode watched.
+	SeriesWatched int        `json:"seriesWatched"`
+	TopSeries     *TopSeries `json:"topSeries,omitempty"`
+	// Up to five, the most watched first.
+	TopGenres     []*GenreShare `json:"topGenres"`
+	LongestBinge  *Binge        `json:"longestBinge,omitempty"`
+	MostRewatched *Rewatched    `json:"mostRewatched,omitempty"`
+	FirstTitle    *YearMoment   `json:"firstTitle,omitempty"`
+	LastTitle     *YearMoment   `json:"lastTitle,omitempty"`
+}
+
+type YearMoment struct {
+	Title *Title `json:"title"`
+	// YYYY-MM-DD.
+	Date string `json:"date"`
 }
 
 type CatalogSort string

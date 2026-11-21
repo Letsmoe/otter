@@ -787,6 +787,20 @@ func (r *queryResolver) Watchlist(ctx context.Context, profileID string) ([]*mod
 	return titleModels(titles), nil
 }
 
+// YearInReview is the resolver for the yearInReview field.
+func (r *queryResolver) YearInReview(ctx context.Context, profileID string, year int, utcOffsetMinutes *int) (*model.YearInReview, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return nil, err
+	}
+	offset := valueOr(utcOffsetMinutes, 0)
+	result, err := r.YearReviews.Year(ctx, profile, year, offset)
+	if err != nil {
+		return nil, err
+	}
+	return yearInReviewModel(*result, offset), nil
+}
+
 // LikedTitles is the resolver for the likedTitles field.
 func (r *queryResolver) LikedTitles(ctx context.Context, profileID string, limit *int) ([]*model.Title, error) {
 	profile, err := parseProfile(profileID)
