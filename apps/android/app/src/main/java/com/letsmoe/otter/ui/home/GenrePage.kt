@@ -1,10 +1,8 @@
 package com.letsmoe.otter.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -12,7 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
@@ -51,17 +48,16 @@ fun GenrePage(
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         item(key = "featured") {
-            Column(Modifier.fillMaxWidth().ambientGradient(ambientColor, topPadding), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                chips()
-                FeaturedPreview(
-                    featured = state.featured,
-                    inMyList = state.featuredInMyList,
-                    onOpen = { state.featured?.let { featured -> onOpenItem(featured.item) } },
-                    onPlay = { state.featured?.let { featured -> onPlayItem(featured.item) } },
-                    onToggleMyList = viewModel::toggleFeaturedInMyList,
-                    modifier = Modifier.padding(horizontal = 16.dp).align(Alignment.CenterHorizontally),
-                )
-            }
+            FeaturedArea(
+                featured = state.featured,
+                inMyList = state.featuredInMyList,
+                ambientColor = ambientColor,
+                topPadding = topPadding,
+                onOpen = { state.featured?.let { featured -> onOpenItem(featured.item) } },
+                onPlay = { state.featured?.let { featured -> onPlayItem(featured.item) } },
+                onToggleMyList = viewModel::toggleFeaturedInMyList,
+                chips = chips,
+            )
         }
         if (state.loaded && rows.isEmpty()) {
             item(key = "empty") { Text("Nothing in $genre yet", Modifier.padding(horizontal = 16.dp), color = Color.White.copy(alpha = 0.6f)) }

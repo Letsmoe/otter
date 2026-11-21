@@ -4,12 +4,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -21,7 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -39,12 +40,18 @@ import com.letsmoe.otter.ui.components.pressable
 import com.letsmoe.otter.ui.media.FeaturedItem
 
 private const val MAX_GENRES = 3
-private const val POSTER_SCREEN_SHARE = 0.5f
 private val cardShape = RoundedCornerShape(8.dp)
+private val footerSpacing = 12.dp
+private val buttonHeight = 44.dp
+private val genresFontSize = 14.sp
+// Line height of the genres relative to their font size (Material body text).
+private const val GENRES_LINE_HEIGHT = 1.45f
+private val maxPosterWidth = 448.dp
 
 /**
  * Large poster at the top of a home page with its genres, Play and My List below it, so nothing
- * covers the title printed on the poster. The poster opens the title, Play plays it.
+ * covers the title printed on the poster. The poster opens the title, Play plays it. Needs a
+ * bounded height: the poster grows until poster and footer fill it.
  */
 @Composable
 fun FeaturedPreview(
@@ -55,24 +62,28 @@ fun FeaturedPreview(
     onToggleMyList: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier.widthIn(max = maxPreviewWidth()).fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        FeaturedPoster(featured, onOpen)
-        if (featured != null) {
-            FeaturedFooter(featured, inMyList, onPlay, onToggleMyList)
+    BoxWithConstraints(modifier, contentAlignment = Alignment.TopCenter) {
+        val posterWidth = posterWidthFor(maxWidth, maxHeight)
+        Column(
+            Modifier.width(posterWidth),
+            verticalArrangement = Arrangement.spacedBy(footerSpacing),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            FeaturedPoster(featured, onOpen)
+            if (featured != null) {
+                FeaturedFooter(featured, inMyList, onPlay, onToggleMyList)
+            }
         }
     }
 }
 
-// Narrow enough that the poster leaves room for its buttons and the next row on one screen.
+/** The widest 2:3 poster that leaves room for the genres and buttons below it. */
 @Composable
-private fun maxPreviewWidth(): Dp {
-    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-    val posterHeight = screenHeight * POSTER_SCREEN_SHARE
-    return minOf(posterHeight * 2f / 3f, 448.dp)
+private fun posterWidthFor(availableWidth: Dp, availableHeight: Dp): Dp {
+    val genresHeight = with(LocalDensity.current) { (genresFontSize * GENRES_LINE_HEIGHT).toDp() }
+    val footerHeight = footerSpacing * 2 + genresHeight + buttonHeight
+    val posterWidth = (availableHeight - footerHeight) * 2f / 3f
+    return minOf(posterWidth, availableWidth, maxPosterWidth)
 }
 
 @Composable
@@ -100,8 +111,14 @@ private fun FeaturedFooter(
     onPlay: () -> Unit,
     onToggleMyList: () -> Unit,
 ) {
-    Text(featured.genres.take(MAX_GENRES).joinToString(" • "), fontSize = 14.sp, color = Color.White.copy(alpha = 0.85f), textAlign = TextAlign.Center)
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Text(
+        featured.genres.take(MAX_GENRES).joinToString(" • "),
+        fontSize = genresFontSize,
+        color = Color.White.copy(alpha = 0.85f),
+        textAlign = TextAlign.Center,
+        maxLines = 1,
+    )
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(footerSpacing)) {
         FeaturedButton("Play", PhosphorIcons.Fill.Play, Color.White, Color.Black, onPlay, Modifier.weight(1f))
         var myListIcon = PhosphorIcons.Regular.Plus
         if (inMyList) {
@@ -123,7 +140,7 @@ private fun FeaturedButton(
     Row(
         modifier
             .pressable(onClick = onClick)
-            .height(44.dp)
+            .height(buttonHeight)
             .clip(RoundedCornerShape(6.dp))
             .background(background),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
