@@ -58,6 +58,7 @@ private fun TabPage(tab: Tab, navController: NavHostController, openTab: (Tab) -
         Tab.HOME -> HomeScreen(
             onOpenItem = onOpenItem,
             onPlayItem = { item -> scope.launch { playItem(navController, item, onOpenItem) } },
+            onPlayMedia = { mediaId -> navController.play(PlayerRequest(mediaId)) },
             onOpenPerson = { personId -> navController.navigate(Routes.person(personId)) },
             onSearch = { navController.navigate(Routes.SEARCH) },
         )

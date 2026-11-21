@@ -38,6 +38,7 @@ enum class HomeCategory(val label: String) {
 fun HomeScreen(
     onOpenItem: (RailItem) -> Unit,
     onPlayItem: (RailItem) -> Unit,
+    onPlayMedia: (String) -> Unit,
     onOpenPerson: (String) -> Unit,
     onSearch: () -> Unit,
     modifier: Modifier = Modifier,
@@ -83,6 +84,7 @@ fun HomeScreen(
             ambientColor = ambientColor,
             scrolled = scrolled,
             onSearch = onSearch,
+            onPlayMedia = onPlayMedia,
             modifier = Modifier.onSizeChanged { size ->
                 if (size.height > 0) {
                     headerHeight = with(density) { size.height.toDp() }

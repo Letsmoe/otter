@@ -203,6 +203,22 @@ type ContinueItem {
   progress: WatchProgress
 }
 
+"""One suggestion for a time budget."""
+type TimeSlotItem {
+  title: Title!
+
+  """For a series: the episode to play."""
+  episode: Episode
+
+  """How long it still takes."""
+  minutes: Int!
+
+  """
+  Why it is offered, e.g. "Next episode", "Pick up where you stopped", "From My List", "Recommended".
+  """
+  reason: String!
+}
+
 type HistoryEntry {
   title: Title!
   episode: Episode
@@ -615,6 +631,11 @@ type Query {
   recommendations(profileId: ID!, mediaType: MediaType, limit: Int = 24, offset: Int = 0, refresh: Boolean = false): [Recommendation!]!
   recommendationRows(profileId: ID!, rows: Int = 8, perRow: Int = 20): [RecommendationRow!]!
   continueWatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
+
+  """
+  What fits into the given minutes: what the profile is in the middle of (next episodes, movies not finished), then short films from My List and recommendations. Items that use the time best come first within each group.
+  """
+  timeSlot(profileId: ID!, minutes: Int!, limit: Int = 12): [TimeSlotItem!]!
   history(profileId: ID!, limit: Int = 50): [HistoryEntry!]!
   watchlist(profileId: ID!): [Title!]!
 

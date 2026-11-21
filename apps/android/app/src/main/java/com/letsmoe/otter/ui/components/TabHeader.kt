@@ -32,7 +32,7 @@ import com.letsmoe.otter.ui.together.TogetherButton
  * Without [onSearch] (the search page itself) the search button is left out.
  */
 @Composable
-fun TabHeader(title: String, onSearch: (() -> Unit)?, modifier: Modifier = Modifier) {
+fun TabHeader(title: String, onSearch: (() -> Unit)?, modifier: Modifier = Modifier, extraActions: @Composable RowScope.() -> Unit = {}) {
     Row(modifier.fillMaxWidth().height(52.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(
             title,
@@ -42,6 +42,7 @@ fun TabHeader(title: String, onSearch: (() -> Unit)?, modifier: Modifier = Modif
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
+        extraActions()
         SharedHeaderActions(onSearch)
     }
 }
