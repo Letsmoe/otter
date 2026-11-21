@@ -300,6 +300,13 @@ type SettingsInput struct {
 	CastLogs          *bool   `json:"castLogs,omitempty"`
 }
 
+// A profile's own Home row: a named, ordered list of movies and series.
+type Shelf struct {
+	ID     string   `json:"id"`
+	Name   string   `json:"name"`
+	Titles []*Title `json:"titles"`
+}
+
 // A skippable part of an episode.
 type SkipSegment struct {
 	// intro, recap, credits or preview
