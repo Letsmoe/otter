@@ -17,10 +17,10 @@ import com.letsmoe.otter.tv.theme.TvType
 
 val CARD_SPACING = 14.dp
 val REGULAR_POSTER_WIDTH = 104.dp
-// Large posters still fit the home's row band (below its hero) when focused and grown.
-val LARGE_POSTER_WIDTH = 128.dp
+// Home cards stay small enough that the row band under the hero leaves it room for the details.
+val LARGE_POSTER_WIDTH = 104.dp
 val WIDE_CARD_WIDTH = 200.dp
-val REGULAR_LANDSCAPE_WIDTH = 168.dp
+val REGULAR_LANDSCAPE_WIDTH = 150.dp
 
 /** Where a focused card's top lands in a list of rows: just below its row's title. */
 val ROW_FOCUS_LINE = 34.dp

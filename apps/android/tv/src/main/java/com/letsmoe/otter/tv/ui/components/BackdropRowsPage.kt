@@ -21,7 +21,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.unit.dp
 
 /** Height of the fixed hero area at the top; the rows fill the band below it. */
-val BACKDROP_HERO_HEIGHT = 300.dp
+val BACKDROP_HERO_HEIGHT = 330.dp
 // Focus is in the hero; rows count from 0.
 private const val HERO_FOCUSED = -1
 

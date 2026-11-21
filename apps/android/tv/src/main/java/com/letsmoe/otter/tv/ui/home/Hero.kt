@@ -31,7 +31,10 @@ import com.letsmoe.otter.tv.theme.TvColors
 import com.letsmoe.otter.tv.theme.TvSpacing
 import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.tv.ui.components.TitleName
-import com.letsmoe.otter.tv.ui.components.rememberTitleOverview
+import com.letsmoe.otter.tv.ui.components.TitleExtras
+import com.letsmoe.otter.tv.ui.components.lengthLabel
+import com.letsmoe.otter.tv.ui.components.ratingLabel
+import com.letsmoe.otter.tv.ui.components.rememberTitleExtras
 import androidx.compose.runtime.getValue
 import com.letsmoe.otter.ui.media.RailItem
 
@@ -71,35 +74,39 @@ private val bottomBand = Brush.verticalGradient(
     0.72f to Color.Black,
 )
 
-/** The hero title's logo (or name), its label like "Recently Added", then year, kind and genres. */
+/**
+ * The hero title's logo (or name), its label like "Recently Added", the facts line (year, rating,
+ * runtime or seasons, genres) and the description.
+ */
 @Composable
 fun HeroInfo(hero: HeroTitle?, modifier: Modifier = Modifier) {
     if (hero == null) {
         return
     }
+    val extras by rememberTitleExtras(hero.item.id)
     Column(
         modifier = modifier
             .padding(horizontal = TvSpacing.screenHorizontal)
-            .width(480.dp),
+            .width(HERO_INFO_WIDTH),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TitleName(hero.item.id, hero.item.title, logoMaxWidth = HERO_LOGO_MAX_WIDTH, logoMaxHeight = HERO_LOGO_MAX_HEIGHT)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             HeroLabel(hero.item)
-            Text(heroDetails(hero), fontSize = TvType.body, color = TvColors.secondaryContent, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(heroDetails(hero, extras), fontSize = TvType.body, color = TvColors.secondaryContent, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        HeroOverview(hero.item.id)
+        HeroOverview(extras?.overview)
     }
 }
 
-// Logo and two lines of description fit the hero area above the rows.
+// Logo, the facts line and three lines of description fit the hero area above the rows.
+private val HERO_INFO_WIDTH = 520.dp
 private val HERO_LOGO_MAX_WIDTH = 360.dp
 private val HERO_LOGO_MAX_HEIGHT = 90.dp
-private const val OVERVIEW_MAX_LINES = 2
+private const val OVERVIEW_MAX_LINES = 3
 
 @Composable
-private fun HeroOverview(titleId: String) {
-    val overview by rememberTitleOverview(titleId)
+private fun HeroOverview(overview: String?) {
     val text = overview ?: return
     Text(
         text,
@@ -133,29 +140,33 @@ private fun heroLabelOf(item: RailItem): String? {
     return item.badge
 }
 
-// "2024 · Movie · Drama, Thriller", or the episode for continue watching.
-private fun heroDetails(hero: HeroTitle): String {
+// "2024  ·  ★ 7.9  ·  1h 57m  ·  Drama, Thriller", with the episode for continue watching.
+private fun heroDetails(hero: HeroTitle, extras: TitleExtras?): String {
     val parts = mutableListOf<String>()
     val year = hero.item.year
     if (year != null) {
         parts.add(year.toString())
     }
-    parts.add(kindLabel(hero.item.mediaType))
     val subtitle = hero.item.subtitle
     if (hero.item.episodeId != null && subtitle != null) {
         parts.add(subtitle)
     }
-    if (hero.genres.isNotEmpty()) {
-        parts.add(hero.genres.take(3).joinToString(", "))
+    if (extras != null) {
+        parts.addAll(listOfNotNull(extras.ratingLabel(), extras.lengthLabel(hero.item.mediaType)))
+    }
+    val genres = heroGenres(hero, extras)
+    if (genres.isNotEmpty()) {
+        parts.add(genres.take(3).joinToString(", "))
     }
     return parts.joinToString("  ·  ")
 }
 
-private fun kindLabel(mediaType: MediaType): String {
-    if (mediaType == MediaType.SERIES) {
-        return "Series"
+// Only the featured title comes with its genres; the others' come with the extras.
+private fun heroGenres(hero: HeroTitle, extras: TitleExtras?): List<String> {
+    if (hero.genres.isNotEmpty() || extras == null) {
+        return hero.genres
     }
-    return "Movie"
+    return extras.genres
 }
 
 private fun heroImage(item: RailItem): String? {

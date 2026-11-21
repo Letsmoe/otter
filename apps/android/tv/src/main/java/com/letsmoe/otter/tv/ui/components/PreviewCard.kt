@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
-import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.tv.theme.TvColors
 import com.letsmoe.otter.tv.theme.TvSpacing
 import com.letsmoe.otter.tv.theme.TvType
@@ -265,41 +264,9 @@ private fun previewFacts(item: RailItem, extras: TitleExtras?): String {
     if (year != null) {
         parts.add(year.toString())
     }
-    val length = lengthLabel(item.mediaType, extras)
+    val length = extras?.lengthLabel(item.mediaType)
     if (length != null) {
         parts.add(length)
     }
     return parts.joinToString("  ·  ")
-}
-
-private fun lengthLabel(mediaType: MediaType, extras: TitleExtras?): String? {
-    if (extras == null) {
-        return null
-    }
-    if (mediaType == MediaType.SERIES) {
-        return seasonsLabel(extras.seasonCount)
-    }
-    return runtimeLabel(extras.runtimeMinutes)
-}
-
-private fun seasonsLabel(seasonCount: Int): String? {
-    if (seasonCount <= 0) {
-        return null
-    }
-    if (seasonCount == 1) {
-        return "1 Season"
-    }
-    return "$seasonCount Seasons"
-}
-
-private fun runtimeLabel(minutes: Int?): String? {
-    if (minutes == null || minutes <= 0) {
-        return null
-    }
-    val hours = minutes / 60
-    val rest = minutes % 60
-    if (hours == 0) {
-        return "${rest}m"
-    }
-    return "${hours}h ${rest}m"
 }
