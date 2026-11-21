@@ -41,6 +41,12 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Binge struct {
+		Date     func(childComplexity int) int
+		Episodes func(childComplexity int) int
+		Title    func(childComplexity int) int
+	}
+
 	CatalogRow struct {
 		Genre func(childComplexity int) int
 		Items func(childComplexity int) int
@@ -104,6 +110,12 @@ type ComplexityRoot struct {
 		Streams       func(childComplexity int) int
 		TmdbID        func(childComplexity int) int
 		VoteAverage   func(childComplexity int) int
+	}
+
+	GenreShare struct {
+		Genre        func(childComplexity int) int
+		HoursWatched func(childComplexity int) int
+		Share        func(childComplexity int) int
 	}
 
 	HistoryEntry struct {
@@ -290,6 +302,7 @@ type ComplexityRoot struct {
 		UnreadNotificationCount func(childComplexity int, profileID string) int
 		WatchedActors           func(childComplexity int, profileID string, mediaType model.MediaType, limit *int) int
 		Watchlist               func(childComplexity int, profileID string) int
+		YearInReview            func(childComplexity int, profileID string, year int, utcOffsetMinutes *int) int
 	}
 
 	Recommendation struct {
@@ -310,6 +323,11 @@ type ComplexityRoot struct {
 		Quality  func(childComplexity int) int
 		StreamID func(childComplexity int) int
 		URL      func(childComplexity int) int
+	}
+
+	Rewatched struct {
+		Count func(childComplexity int) int
+		Title func(childComplexity int) int
 	}
 
 	Season struct {
@@ -444,12 +462,38 @@ type ComplexityRoot struct {
 		Room    func(childComplexity int) int
 	}
 
+	TopSeries struct {
+		EpisodesWatched func(childComplexity int) int
+		HoursWatched    func(childComplexity int) int
+		Title           func(childComplexity int) int
+	}
+
 	WatchProgress struct {
 		Completed       func(childComplexity int) int
 		DurationSeconds func(childComplexity int) int
 		MediaID         func(childComplexity int) int
 		ProgressSeconds func(childComplexity int) int
 		UpdatedAt       func(childComplexity int) int
+	}
+
+	YearInReview struct {
+		EpisodesFinished func(childComplexity int) int
+		FirstTitle       func(childComplexity int) int
+		HasActivity      func(childComplexity int) int
+		HoursWatched     func(childComplexity int) int
+		LastTitle        func(childComplexity int) int
+		LongestBinge     func(childComplexity int) int
+		MostRewatched    func(childComplexity int) int
+		MoviesFinished   func(childComplexity int) int
+		SeriesWatched    func(childComplexity int) int
+		TopGenres        func(childComplexity int) int
+		TopSeries        func(childComplexity int) int
+		Year             func(childComplexity int) int
+	}
+
+	YearMoment struct {
+		Date  func(childComplexity int) int
+		Title func(childComplexity int) int
 	}
 }
 
@@ -523,6 +567,7 @@ type QueryResolver interface {
 	ContinueWatching(ctx context.Context, profileID string, limit *int) ([]*model.ContinueItem, error)
 	History(ctx context.Context, profileID string, limit *int) ([]*model.HistoryEntry, error)
 	Watchlist(ctx context.Context, profileID string) ([]*model.Title, error)
+	YearInReview(ctx context.Context, profileID string, year int, utcOffsetMinutes *int) (*model.YearInReview, error)
 	LikedTitles(ctx context.Context, profileID string, limit *int) ([]*model.Title, error)
 	Notifications(ctx context.Context, profileID string, limit *int) ([]*model.Notification, error)
 	UnreadNotificationCount(ctx context.Context, profileID string) (int, error)
@@ -570,6 +615,25 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	ec := newExecutionContext(nil, e, nil)
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Binge.date":
+		if e.ComplexityRoot.Binge.Date == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Binge.Date(childComplexity), true
+	case "Binge.episodes":
+		if e.ComplexityRoot.Binge.Episodes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Binge.Episodes(childComplexity), true
+	case "Binge.title":
+		if e.ComplexityRoot.Binge.Title == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Binge.Title(childComplexity), true
 
 	case "CatalogRow.genre":
 		if e.ComplexityRoot.CatalogRow.Genre == nil {
@@ -846,6 +910,25 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Episode.VoteAverage(childComplexity), true
+
+	case "GenreShare.genre":
+		if e.ComplexityRoot.GenreShare.Genre == nil {
+			break
+		}
+
+		return e.ComplexityRoot.GenreShare.Genre(childComplexity), true
+	case "GenreShare.hoursWatched":
+		if e.ComplexityRoot.GenreShare.HoursWatched == nil {
+			break
+		}
+
+		return e.ComplexityRoot.GenreShare.HoursWatched(childComplexity), true
+	case "GenreShare.share":
+		if e.ComplexityRoot.GenreShare.Share == nil {
+			break
+		}
+
+		return e.ComplexityRoot.GenreShare.Share(childComplexity), true
 
 	case "HistoryEntry.episode":
 		if e.ComplexityRoot.HistoryEntry.Episode == nil {
@@ -1983,6 +2066,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.Watchlist(childComplexity, args["profileId"].(string)), true
+	case "Query.yearInReview":
+		if e.ComplexityRoot.Query.YearInReview == nil {
+			break
+		}
+
+		args, err := ec.field_Query_yearInReview_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.YearInReview(childComplexity, args["profileId"].(string), args["year"].(int), args["utcOffsetMinutes"].(*int)), true
 
 	case "Recommendation.reason":
 		if e.ComplexityRoot.Recommendation.Reason == nil {
@@ -2052,6 +2146,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.ResolvedStream.URL(childComplexity), true
+
+	case "Rewatched.count":
+		if e.ComplexityRoot.Rewatched.Count == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Rewatched.Count(childComplexity), true
+	case "Rewatched.title":
+		if e.ComplexityRoot.Rewatched.Title == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Rewatched.Title(childComplexity), true
 
 	case "Season.airDate":
 		if e.ComplexityRoot.Season.AirDate == nil {
@@ -2654,6 +2761,25 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.TogetherUpdate.Room(childComplexity), true
 
+	case "TopSeries.episodesWatched":
+		if e.ComplexityRoot.TopSeries.EpisodesWatched == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TopSeries.EpisodesWatched(childComplexity), true
+	case "TopSeries.hoursWatched":
+		if e.ComplexityRoot.TopSeries.HoursWatched == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TopSeries.HoursWatched(childComplexity), true
+	case "TopSeries.title":
+		if e.ComplexityRoot.TopSeries.Title == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TopSeries.Title(childComplexity), true
+
 	case "WatchProgress.completed":
 		if e.ComplexityRoot.WatchProgress.Completed == nil {
 			break
@@ -2684,6 +2810,92 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.WatchProgress.UpdatedAt(childComplexity), true
+
+	case "YearInReview.episodesFinished":
+		if e.ComplexityRoot.YearInReview.EpisodesFinished == nil {
+			break
+		}
+
+		return e.ComplexityRoot.YearInReview.EpisodesFinished(childComplexity), true
+	case "YearInReview.firstTitle":
+		if e.ComplexityRoot.YearInReview.FirstTitle == nil {
+			break
+		}
+
+		return e.ComplexityRoot.YearInReview.FirstTitle(childComplexity), true
+	case "YearInReview.hasActivity":
+		if e.ComplexityRoot.YearInReview.HasActivity == nil {
+			break
+		}
+
+		return e.ComplexityRoot.YearInReview.HasActivity(childComplexity), true
+	case "YearInReview.hoursWatched":
+		if e.ComplexityRoot.YearInReview.HoursWatched == nil {
+			break
+		}
+
+		return e.ComplexityRoot.YearInReview.HoursWatched(childComplexity), true
+	case "YearInReview.lastTitle":
+		if e.ComplexityRoot.YearInReview.LastTitle == nil {
+			break
+		}
+
+		return e.ComplexityRoot.YearInReview.LastTitle(childComplexity), true
+	case "YearInReview.longestBinge":
+		if e.ComplexityRoot.YearInReview.LongestBinge == nil {
+			break
+		}
+
+		return e.ComplexityRoot.YearInReview.LongestBinge(childComplexity), true
+	case "YearInReview.mostRewatched":
+		if e.ComplexityRoot.YearInReview.MostRewatched == nil {
+			break
+		}
+
+		return e.ComplexityRoot.YearInReview.MostRewatched(childComplexity), true
+	case "YearInReview.moviesFinished":
+		if e.ComplexityRoot.YearInReview.MoviesFinished == nil {
+			break
+		}
+
+		return e.ComplexityRoot.YearInReview.MoviesFinished(childComplexity), true
+	case "YearInReview.seriesWatched":
+		if e.ComplexityRoot.YearInReview.SeriesWatched == nil {
+			break
+		}
+
+		return e.ComplexityRoot.YearInReview.SeriesWatched(childComplexity), true
+	case "YearInReview.topGenres":
+		if e.ComplexityRoot.YearInReview.TopGenres == nil {
+			break
+		}
+
+		return e.ComplexityRoot.YearInReview.TopGenres(childComplexity), true
+	case "YearInReview.topSeries":
+		if e.ComplexityRoot.YearInReview.TopSeries == nil {
+			break
+		}
+
+		return e.ComplexityRoot.YearInReview.TopSeries(childComplexity), true
+	case "YearInReview.year":
+		if e.ComplexityRoot.YearInReview.Year == nil {
+			break
+		}
+
+		return e.ComplexityRoot.YearInReview.Year(childComplexity), true
+
+	case "YearMoment.date":
+		if e.ComplexityRoot.YearMoment.Date == nil {
+			break
+		}
+
+		return e.ComplexityRoot.YearMoment.Date(childComplexity), true
+	case "YearMoment.title":
+		if e.ComplexityRoot.YearMoment.Title == nil {
+			break
+		}
+
+		return e.ComplexityRoot.YearMoment.Title(childComplexity), true
 
 	}
 	return 0, false
@@ -2992,6 +3204,62 @@ type MoreWithRow {
   items: [Title!]!
 }
 
+"""
+One profile's calendar year of watching, from its watch history. The history keeps one row per
+movie or episode, dated by its latest update, so a title counts in the year of its last watch and
+rewatches are estimated: a title started 30+ days before its last watch counts as watched again.
+"""
+type YearInReview {
+  year: Int!
+  "False when nothing was watched that year."
+  hasActivity: Boolean!
+  hoursWatched: Float!
+  moviesFinished: Int!
+  episodesFinished: Int!
+  "Series with at least one episode watched."
+  seriesWatched: Int!
+  topSeries: TopSeries
+  "Up to five, the most watched first."
+  topGenres: [GenreShare!]!
+  longestBinge: Binge
+  mostRewatched: Rewatched
+  firstTitle: YearMoment
+  lastTitle: YearMoment
+}
+
+type TopSeries {
+  title: Title!
+  hoursWatched: Float!
+  episodesWatched: Int!
+}
+
+type GenreShare {
+  genre: String!
+  hoursWatched: Float!
+  "Share of the watch time of titles with genres, 0..1."
+  share: Float!
+}
+
+"Most episodes of one series in one night (a night runs from 5 am to 5 am)."
+type Binge {
+  title: Title!
+  episodes: Int!
+  "The date the night began, YYYY-MM-DD."
+  date: String!
+}
+
+type Rewatched {
+  title: Title!
+  "Episodes watched again (1 for a movie)."
+  count: Int!
+}
+
+type YearMoment {
+  title: Title!
+  "YYYY-MM-DD."
+  date: String!
+}
+
 type RecommendationRow {
   key: String!
   title: String!
@@ -3281,6 +3549,8 @@ type Query {
   continueWatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
   history(profileId: ID!, limit: Int = 50): [HistoryEntry!]!
   watchlist(profileId: ID!): [Title!]!
+  "The profile's year in review. utcOffsetMinutes is the phone's time zone, so days and nights fall where they were lived."
+  yearInReview(profileId: ID!, year: Int!, utcOffsetMinutes: Int = 0): YearInReview!
   "Titles the profile rated well (I like this, Love this), latest rating first."
   likedTitles(profileId: ID!, limit: Int = 30): [Title!]!
   "Newest first."
@@ -3445,6 +3715,18 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // Each function is generated once per unique object type, deduplicating the
 // switch statements that were previously inlined in every fieldContext_* function.
 
+func (ec *executionContext) childFields_Binge(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "title":
+		return ec.fieldContext_Binge_title(ctx, field)
+	case "episodes":
+		return ec.fieldContext_Binge_episodes(ctx, field)
+	case "date":
+		return ec.fieldContext_Binge_date(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Binge", field.Name)
+}
+
 func (ec *executionContext) childFields_CatalogRow(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "genre":
@@ -3573,6 +3855,18 @@ func (ec *executionContext) childFields_Episode(ctx context.Context, field graph
 		return ec.fieldContext_Episode_skipSegments(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Episode", field.Name)
+}
+
+func (ec *executionContext) childFields_GenreShare(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "genre":
+		return ec.fieldContext_GenreShare_genre(ctx, field)
+	case "hoursWatched":
+		return ec.fieldContext_GenreShare_hoursWatched(ctx, field)
+	case "share":
+		return ec.fieldContext_GenreShare_share(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type GenreShare", field.Name)
 }
 
 func (ec *executionContext) childFields_HistoryEntry(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -3839,6 +4133,16 @@ func (ec *executionContext) childFields_ResolvedStream(ctx context.Context, fiel
 	return nil, fmt.Errorf("no field named %q was found under type ResolvedStream", field.Name)
 }
 
+func (ec *executionContext) childFields_Rewatched(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "title":
+		return ec.fieldContext_Rewatched_title(ctx, field)
+	case "count":
+		return ec.fieldContext_Rewatched_count(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Rewatched", field.Name)
+}
+
 func (ec *executionContext) childFields_Season(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "id":
@@ -4091,6 +4395,18 @@ func (ec *executionContext) childFields_TogetherUpdate(ctx context.Context, fiel
 	return nil, fmt.Errorf("no field named %q was found under type TogetherUpdate", field.Name)
 }
 
+func (ec *executionContext) childFields_TopSeries(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "title":
+		return ec.fieldContext_TopSeries_title(ctx, field)
+	case "hoursWatched":
+		return ec.fieldContext_TopSeries_hoursWatched(ctx, field)
+	case "episodesWatched":
+		return ec.fieldContext_TopSeries_episodesWatched(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type TopSeries", field.Name)
+}
+
 func (ec *executionContext) childFields_WatchProgress(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "mediaId":
@@ -4105,6 +4421,46 @@ func (ec *executionContext) childFields_WatchProgress(ctx context.Context, field
 		return ec.fieldContext_WatchProgress_updatedAt(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type WatchProgress", field.Name)
+}
+
+func (ec *executionContext) childFields_YearInReview(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "year":
+		return ec.fieldContext_YearInReview_year(ctx, field)
+	case "hasActivity":
+		return ec.fieldContext_YearInReview_hasActivity(ctx, field)
+	case "hoursWatched":
+		return ec.fieldContext_YearInReview_hoursWatched(ctx, field)
+	case "moviesFinished":
+		return ec.fieldContext_YearInReview_moviesFinished(ctx, field)
+	case "episodesFinished":
+		return ec.fieldContext_YearInReview_episodesFinished(ctx, field)
+	case "seriesWatched":
+		return ec.fieldContext_YearInReview_seriesWatched(ctx, field)
+	case "topSeries":
+		return ec.fieldContext_YearInReview_topSeries(ctx, field)
+	case "topGenres":
+		return ec.fieldContext_YearInReview_topGenres(ctx, field)
+	case "longestBinge":
+		return ec.fieldContext_YearInReview_longestBinge(ctx, field)
+	case "mostRewatched":
+		return ec.fieldContext_YearInReview_mostRewatched(ctx, field)
+	case "firstTitle":
+		return ec.fieldContext_YearInReview_firstTitle(ctx, field)
+	case "lastTitle":
+		return ec.fieldContext_YearInReview_lastTitle(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type YearInReview", field.Name)
+}
+
+func (ec *executionContext) childFields_YearMoment(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "title":
+		return ec.fieldContext_YearMoment_title(ctx, field)
+	case "date":
+		return ec.fieldContext_YearMoment_date(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type YearMoment", field.Name)
 }
 
 func (ec *executionContext) childFields___Directive(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -5549,6 +5905,36 @@ func (ec *executionContext) field_Query_watchlist_args(ctx context.Context, rawA
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_yearInReview_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "year",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNInt2int(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["year"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "utcOffsetMinutes",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["utcOffsetMinutes"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Subscription_streams_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -5696,6 +6082,84 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _Binge_title(ctx context.Context, field graphql.CollectedField, obj *model.Binge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Binge_title(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Title, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Title) graphql.Marshaler {
+			return ec.marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Binge_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Binge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Title(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Binge_episodes(ctx context.Context, field graphql.CollectedField, obj *model.Binge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Binge_episodes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Episodes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Binge_episodes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Binge", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _Binge_date(ctx context.Context, field graphql.CollectedField, obj *model.Binge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Binge_date(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Date, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Binge_date(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Binge", field, false, false, errors.New("field of type String does not have child fields"))
+}
 
 func (ec *executionContext) _CatalogRow_genre(ctx context.Context, field graphql.CollectedField, obj *model.CatalogRow) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
@@ -6836,6 +7300,75 @@ func (ec *executionContext) fieldContext_Episode_skipSegments(_ context.Context,
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _GenreShare_genre(ctx context.Context, field graphql.CollectedField, obj *model.GenreShare) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_GenreShare_genre(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Genre, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_GenreShare_genre(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("GenreShare", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _GenreShare_hoursWatched(ctx context.Context, field graphql.CollectedField, obj *model.GenreShare) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_GenreShare_hoursWatched(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HoursWatched, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_GenreShare_hoursWatched(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("GenreShare", field, false, false, errors.New("field of type Float does not have child fields"))
+}
+
+func (ec *executionContext) _GenreShare_share(ctx context.Context, field graphql.CollectedField, obj *model.GenreShare) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_GenreShare_share(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Share, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_GenreShare_share(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("GenreShare", field, false, false, errors.New("field of type Float does not have child fields"))
 }
 
 func (ec *executionContext) _HistoryEntry_title(ctx context.Context, field graphql.CollectedField, obj *model.HistoryEntry) (ret graphql.Marshaler) {
@@ -10946,6 +11479,50 @@ func (ec *executionContext) fieldContext_Query_watchlist(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_yearInReview(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_yearInReview(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().YearInReview(ctx, fc.Args["profileId"].(string), fc.Args["year"].(int), fc.Args["utcOffsetMinutes"].(*int))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.YearInReview) graphql.Marshaler {
+			return ec.marshalNYearInReview2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐYearInReview(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_yearInReview(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_YearInReview(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_yearInReview_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_likedTitles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -11770,6 +12347,61 @@ func (ec *executionContext) _ResolvedStream_streamId(ctx context.Context, field 
 }
 func (ec *executionContext) fieldContext_ResolvedStream_streamId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("ResolvedStream", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _Rewatched_title(ctx context.Context, field graphql.CollectedField, obj *model.Rewatched) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Rewatched_title(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Title, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Title) graphql.Marshaler {
+			return ec.marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Rewatched_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Rewatched",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Title(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Rewatched_count(ctx context.Context, field graphql.CollectedField, obj *model.Rewatched) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Rewatched_count(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Count, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Rewatched_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Rewatched", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _Season_id(ctx context.Context, field graphql.CollectedField, obj *model.Season) (ret graphql.Marshaler) {
@@ -14145,6 +14777,84 @@ func (ec *executionContext) fieldContext_TogetherUpdate_message(_ context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _TopSeries_title(ctx context.Context, field graphql.CollectedField, obj *model.TopSeries) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TopSeries_title(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Title, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Title) graphql.Marshaler {
+			return ec.marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TopSeries_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TopSeries",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Title(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TopSeries_hoursWatched(ctx context.Context, field graphql.CollectedField, obj *model.TopSeries) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TopSeries_hoursWatched(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HoursWatched, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TopSeries_hoursWatched(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TopSeries", field, false, false, errors.New("field of type Float does not have child fields"))
+}
+
+func (ec *executionContext) _TopSeries_episodesWatched(ctx context.Context, field graphql.CollectedField, obj *model.TopSeries) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TopSeries_episodesWatched(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.EpisodesWatched, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TopSeries_episodesWatched(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TopSeries", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
 func (ec *executionContext) _WatchProgress_mediaId(ctx context.Context, field graphql.CollectedField, obj *model.WatchProgress) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -14258,6 +14968,391 @@ func (ec *executionContext) _WatchProgress_updatedAt(ctx context.Context, field 
 }
 func (ec *executionContext) fieldContext_WatchProgress_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("WatchProgress", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _YearInReview_year(ctx context.Context, field graphql.CollectedField, obj *model.YearInReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_YearInReview_year(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Year, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_YearInReview_year(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("YearInReview", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _YearInReview_hasActivity(ctx context.Context, field graphql.CollectedField, obj *model.YearInReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_YearInReview_hasActivity(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HasActivity, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_YearInReview_hasActivity(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("YearInReview", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _YearInReview_hoursWatched(ctx context.Context, field graphql.CollectedField, obj *model.YearInReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_YearInReview_hoursWatched(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HoursWatched, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_YearInReview_hoursWatched(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("YearInReview", field, false, false, errors.New("field of type Float does not have child fields"))
+}
+
+func (ec *executionContext) _YearInReview_moviesFinished(ctx context.Context, field graphql.CollectedField, obj *model.YearInReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_YearInReview_moviesFinished(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.MoviesFinished, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_YearInReview_moviesFinished(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("YearInReview", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _YearInReview_episodesFinished(ctx context.Context, field graphql.CollectedField, obj *model.YearInReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_YearInReview_episodesFinished(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.EpisodesFinished, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_YearInReview_episodesFinished(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("YearInReview", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _YearInReview_seriesWatched(ctx context.Context, field graphql.CollectedField, obj *model.YearInReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_YearInReview_seriesWatched(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SeriesWatched, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_YearInReview_seriesWatched(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("YearInReview", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _YearInReview_topSeries(ctx context.Context, field graphql.CollectedField, obj *model.YearInReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_YearInReview_topSeries(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TopSeries, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.TopSeries) graphql.Marshaler {
+			return ec.marshalOTopSeries2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTopSeries(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_YearInReview_topSeries(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "YearInReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_TopSeries(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _YearInReview_topGenres(ctx context.Context, field graphql.CollectedField, obj *model.YearInReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_YearInReview_topGenres(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TopGenres, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.GenreShare) graphql.Marshaler {
+			return ec.marshalNGenreShare2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐGenreShareᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_YearInReview_topGenres(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "YearInReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_GenreShare(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _YearInReview_longestBinge(ctx context.Context, field graphql.CollectedField, obj *model.YearInReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_YearInReview_longestBinge(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LongestBinge, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Binge) graphql.Marshaler {
+			return ec.marshalOBinge2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐBinge(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_YearInReview_longestBinge(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "YearInReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Binge(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _YearInReview_mostRewatched(ctx context.Context, field graphql.CollectedField, obj *model.YearInReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_YearInReview_mostRewatched(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.MostRewatched, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Rewatched) graphql.Marshaler {
+			return ec.marshalORewatched2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRewatched(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_YearInReview_mostRewatched(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "YearInReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Rewatched(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _YearInReview_firstTitle(ctx context.Context, field graphql.CollectedField, obj *model.YearInReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_YearInReview_firstTitle(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FirstTitle, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.YearMoment) graphql.Marshaler {
+			return ec.marshalOYearMoment2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐYearMoment(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_YearInReview_firstTitle(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "YearInReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_YearMoment(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _YearInReview_lastTitle(ctx context.Context, field graphql.CollectedField, obj *model.YearInReview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_YearInReview_lastTitle(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LastTitle, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.YearMoment) graphql.Marshaler {
+			return ec.marshalOYearMoment2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐYearMoment(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_YearInReview_lastTitle(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "YearInReview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_YearMoment(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _YearMoment_title(ctx context.Context, field graphql.CollectedField, obj *model.YearMoment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_YearMoment_title(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Title, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Title) graphql.Marshaler {
+			return ec.marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_YearMoment_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "YearMoment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Title(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _YearMoment_date(ctx context.Context, field graphql.CollectedField, obj *model.YearMoment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_YearMoment_date(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Date, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_YearMoment_date(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("YearMoment", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -15487,6 +16582,55 @@ func (ec *executionContext) unmarshalInputTitleFilter(ctx context.Context, obj a
 
 // region    **************************** object.gotpl ****************************
 
+var bingeImplementors = []string{"Binge"}
+
+func (ec *executionContext) _Binge(ctx context.Context, sel ast.SelectionSet, obj *model.Binge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, bingeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Binge")
+		case "title":
+			out.Values[i] = ec._Binge_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "episodes":
+			out.Values[i] = ec._Binge_episodes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "date":
+			out.Values[i] = ec._Binge_date(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var catalogRowImplementors = []string{"CatalogRow"}
 
 func (ec *executionContext) _CatalogRow(ctx context.Context, sel ast.SelectionSet, obj *model.CatalogRow) graphql.Marshaler {
@@ -16026,6 +17170,55 @@ func (ec *executionContext) _Episode(ctx context.Context, sel ast.SelectionSet, 
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var genreShareImplementors = []string{"GenreShare"}
+
+func (ec *executionContext) _GenreShare(ctx context.Context, sel ast.SelectionSet, obj *model.GenreShare) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, genreShareImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GenreShare")
+		case "genre":
+			out.Values[i] = ec._GenreShare_genre(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "hoursWatched":
+			out.Values[i] = ec._GenreShare_hoursWatched(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "share":
+			out.Values[i] = ec._GenreShare_share(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -17578,6 +18771,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "yearInReview":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_yearInReview(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "likedTitles":
 			field := field
 
@@ -18017,6 +19232,50 @@ func (ec *executionContext) _ResolvedStream(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._ResolvedStream_quality(ctx, field, obj)
 		case "streamId":
 			out.Values[i] = ec._ResolvedStream_streamId(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var rewatchedImplementors = []string{"Rewatched"}
+
+func (ec *executionContext) _Rewatched(ctx context.Context, sel ast.SelectionSet, obj *model.Rewatched) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, rewatchedImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Rewatched")
+		case "title":
+			out.Values[i] = ec._Rewatched_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "count":
+			out.Values[i] = ec._Rewatched_count(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -19142,6 +20401,55 @@ func (ec *executionContext) _TogetherUpdate(ctx context.Context, sel ast.Selecti
 	return out
 }
 
+var topSeriesImplementors = []string{"TopSeries"}
+
+func (ec *executionContext) _TopSeries(ctx context.Context, sel ast.SelectionSet, obj *model.TopSeries) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, topSeriesImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TopSeries")
+		case "title":
+			out.Values[i] = ec._TopSeries_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "hoursWatched":
+			out.Values[i] = ec._TopSeries_hoursWatched(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "episodesWatched":
+			out.Values[i] = ec._TopSeries_episodesWatched(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var watchProgressImplementors = []string{"WatchProgress"}
 
 func (ec *executionContext) _WatchProgress(ctx context.Context, sel ast.SelectionSet, obj *model.WatchProgress) graphql.Marshaler {
@@ -19175,6 +20483,129 @@ func (ec *executionContext) _WatchProgress(ctx context.Context, sel ast.Selectio
 			}
 		case "updatedAt":
 			out.Values[i] = ec._WatchProgress_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var yearInReviewImplementors = []string{"YearInReview"}
+
+func (ec *executionContext) _YearInReview(ctx context.Context, sel ast.SelectionSet, obj *model.YearInReview) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, yearInReviewImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("YearInReview")
+		case "year":
+			out.Values[i] = ec._YearInReview_year(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "hasActivity":
+			out.Values[i] = ec._YearInReview_hasActivity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "hoursWatched":
+			out.Values[i] = ec._YearInReview_hoursWatched(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "moviesFinished":
+			out.Values[i] = ec._YearInReview_moviesFinished(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "episodesFinished":
+			out.Values[i] = ec._YearInReview_episodesFinished(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "seriesWatched":
+			out.Values[i] = ec._YearInReview_seriesWatched(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "topSeries":
+			out.Values[i] = ec._YearInReview_topSeries(ctx, field, obj)
+		case "topGenres":
+			out.Values[i] = ec._YearInReview_topGenres(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "longestBinge":
+			out.Values[i] = ec._YearInReview_longestBinge(ctx, field, obj)
+		case "mostRewatched":
+			out.Values[i] = ec._YearInReview_mostRewatched(ctx, field, obj)
+		case "firstTitle":
+			out.Values[i] = ec._YearInReview_firstTitle(ctx, field, obj)
+		case "lastTitle":
+			out.Values[i] = ec._YearInReview_lastTitle(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var yearMomentImplementors = []string{"YearMoment"}
+
+func (ec *executionContext) _YearMoment(ctx context.Context, sel ast.SelectionSet, obj *model.YearMoment) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, yearMomentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("YearMoment")
+		case "title":
+			out.Values[i] = ec._YearMoment_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "date":
+			out.Values[i] = ec._YearMoment_date(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -19770,6 +21201,32 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 		}
 	}
 	return graphql.WrapContextMarshaler(ctx, res)
+}
+
+func (ec *executionContext) marshalNGenreShare2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐGenreShareᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GenreShare) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNGenreShare2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐGenreShare(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNGenreShare2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐGenreShare(ctx context.Context, sel ast.SelectionSet, v *model.GenreShare) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._GenreShare(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNHistoryEntry2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐHistoryEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.HistoryEntry) graphql.Marshaler {
@@ -20511,6 +21968,20 @@ func (ec *executionContext) marshalNWatchProgress2ᚖgithubᚗcomᚋLetsmoeᚋot
 	return ec._WatchProgress(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNYearInReview2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐYearInReview(ctx context.Context, sel ast.SelectionSet, v model.YearInReview) graphql.Marshaler {
+	return ec._YearInReview(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNYearInReview2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐYearInReview(ctx context.Context, sel ast.SelectionSet, v *model.YearInReview) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._YearInReview(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
 	return ec.___Directive(ctx, sel, &v)
 }
@@ -20650,6 +22121,13 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalOBinge2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐBinge(ctx context.Context, sel ast.SelectionSet, v *model.Binge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Binge(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v any) (bool, error) {
@@ -20802,6 +22280,13 @@ func (ec *executionContext) marshalOPluginAccount2ᚖgithubᚗcomᚋLetsmoeᚋot
 	return ec._PluginAccount(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalORewatched2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRewatched(ctx context.Context, sel ast.SelectionSet, v *model.Rewatched) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Rewatched(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
 	if v == nil {
 		return nil, nil
@@ -20917,11 +22402,25 @@ func (ec *executionContext) marshalOTogetherRoom2ᚖgithubᚗcomᚋLetsmoeᚋott
 	return ec._TogetherRoom(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOTopSeries2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTopSeries(ctx context.Context, sel ast.SelectionSet, v *model.TopSeries) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._TopSeries(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOWatchProgress2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx context.Context, sel ast.SelectionSet, v *model.WatchProgress) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._WatchProgress(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOYearMoment2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐYearMoment(ctx context.Context, sel ast.SelectionSet, v *model.YearMoment) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._YearMoment(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

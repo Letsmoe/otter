@@ -6,15 +6,15 @@ export default {
         4,
         5,
         6,
-        25,
-        26,
-        28,
-        36,
-        38,
-        40,
-        45,
+        31,
+        32,
+        34,
+        42,
+        44,
         46,
-        51
+        51,
+        52,
+        57
     ],
     "types": {
         "MediaType": {},
@@ -505,6 +505,111 @@ export default {
                 4
             ]
         },
+        "YearInReview": {
+            "year": [
+                3
+            ],
+            "hasActivity": [
+                6
+            ],
+            "hoursWatched": [
+                5
+            ],
+            "moviesFinished": [
+                3
+            ],
+            "episodesFinished": [
+                3
+            ],
+            "seriesWatched": [
+                3
+            ],
+            "topSeries": [
+                23
+            ],
+            "topGenres": [
+                24
+            ],
+            "longestBinge": [
+                25
+            ],
+            "mostRewatched": [
+                26
+            ],
+            "firstTitle": [
+                27
+            ],
+            "lastTitle": [
+                27
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "TopSeries": {
+            "title": [
+                1
+            ],
+            "hoursWatched": [
+                5
+            ],
+            "episodesWatched": [
+                3
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "GenreShare": {
+            "genre": [
+                4
+            ],
+            "hoursWatched": [
+                5
+            ],
+            "share": [
+                5
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "Binge": {
+            "title": [
+                1
+            ],
+            "episodes": [
+                3
+            ],
+            "date": [
+                4
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "Rewatched": {
+            "title": [
+                1
+            ],
+            "count": [
+                3
+            ],
+            "__typename": [
+                4
+            ]
+        },
+        "YearMoment": {
+            "title": [
+                1
+            ],
+            "date": [
+                4
+            ],
+            "__typename": [
+                4
+            ]
+        },
         "RecommendationRow": {
             "key": [
                 4
@@ -545,10 +650,10 @@ export default {
                 4
             ],
             "subtitleSize": [
-                25
+                31
             ],
             "subtitleStyle": [
-                26
+                32
             ],
             "voiceBoost": [
                 6
@@ -608,7 +713,7 @@ export default {
                 4
             ],
             "tmdbKeyStatus": [
-                28
+                34
             ],
             "usesDefaultTmdbKey": [
                 6
@@ -721,10 +826,10 @@ export default {
                 6
             ],
             "settings": [
-                31
+                37
             ],
             "account": [
-                34
+                40
             ],
             "__typename": [
                 4
@@ -773,7 +878,7 @@ export default {
                 2
             ],
             "kind": [
-                36
+                42
             ],
             "heading": [
                 4
@@ -803,7 +908,7 @@ export default {
                 2
             ],
             "status": [
-                38
+                44
             ],
             "progress": [
                 5
@@ -856,13 +961,13 @@ export default {
                 6
             ],
             "status": [
-                40
+                46
             ],
             "self": [
-                41
+                47
             ],
             "peers": [
-                41
+                47
             ],
             "__typename": [
                 4
@@ -870,7 +975,7 @@ export default {
         },
         "TogetherMessage": {
             "from": [
-                41
+                47
             ],
             "payload": [
                 4
@@ -881,10 +986,10 @@ export default {
         },
         "TogetherUpdate": {
             "room": [
-                42
+                48
             ],
             "message": [
-                43
+                49
             ],
             "__typename": [
                 4
@@ -1024,7 +1129,7 @@ export default {
                         "MediaType!"
                     ],
                     "sort": [
-                        45
+                        51
                     ]
                 }
             ],
@@ -1036,13 +1141,13 @@ export default {
                         "MediaType!"
                     ],
                     "theme": [
-                        46,
+                        52,
                         "CatalogTheme!"
                     ]
                 }
             ],
             "catalogRows": [
-                47,
+                53,
                 {
                     "mediaType": [
                         0,
@@ -1079,7 +1184,7 @@ export default {
                 }
             ],
             "recommendationRows": [
-                22,
+                28,
                 {
                     "profileId": [
                         2,
@@ -1126,6 +1231,22 @@ export default {
                     ]
                 }
             ],
+            "yearInReview": [
+                22,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "year": [
+                        3,
+                        "Int!"
+                    ],
+                    "utcOffsetMinutes": [
+                        3
+                    ]
+                }
+            ],
             "likedTitles": [
                 1,
                 {
@@ -1139,7 +1260,7 @@ export default {
                 }
             ],
             "notifications": [
-                37,
+                43,
                 {
                     "profileId": [
                         2,
@@ -1160,7 +1281,7 @@ export default {
                 }
             ],
             "downloads": [
-                39,
+                45,
                 {
                     "profileId": [
                         2,
@@ -1172,10 +1293,10 @@ export default {
                 4
             ],
             "togetherRoom": [
-                42
+                48
             ],
             "subtitles": [
-                24,
+                30,
                 {
                     "mediaId": [
                         2,
@@ -1187,10 +1308,10 @@ export default {
                 }
             ],
             "profiles": [
-                23
+                29
             ],
             "settings": [
-                29
+                35
             ],
             "checkTmdbKey": [
                 6,
@@ -1202,13 +1323,13 @@ export default {
                 }
             ],
             "plugins": [
-                33
+                39
             ],
             "status": [
-                35
+                41
             ],
             "neoworksAccount": [
-                49
+                55
             ],
             "__typename": [
                 4
@@ -1225,7 +1346,7 @@ export default {
                 4
             ],
             "lastSync": [
-                50
+                56
             ],
             "__typename": [
                 4
@@ -1254,7 +1375,7 @@ export default {
                 2
             ],
             "kind": [
-                51
+                57
             ],
             "url": [
                 4
@@ -1446,7 +1567,7 @@ export default {
                 6
             ],
             "startDownload": [
-                39,
+                45,
                 {
                     "profileId": [
                         2,
@@ -1474,7 +1595,7 @@ export default {
                 6
             ],
             "hostTogether": [
-                42,
+                48,
                 {
                     "profileId": [
                         2,
@@ -1483,7 +1604,7 @@ export default {
                 }
             ],
             "joinTogether": [
-                42,
+                48,
                 {
                     "profileId": [
                         2,
@@ -1528,7 +1649,7 @@ export default {
                 }
             ],
             "createProfile": [
-                23,
+                29,
                 {
                     "name": [
                         4,
@@ -1550,7 +1671,7 @@ export default {
                 }
             ],
             "updateProfile": [
-                23,
+                29,
                 {
                     "id": [
                         2,
@@ -1579,10 +1700,10 @@ export default {
                         4
                     ],
                     "subtitleSize": [
-                        25
+                        31
                     ],
                     "subtitleStyle": [
-                        26
+                        32
                     ],
                     "voiceBoost": [
                         6
@@ -1599,7 +1720,7 @@ export default {
                 }
             ],
             "verifyPin": [
-                27,
+                33,
                 {
                     "profileId": [
                         2,
@@ -1612,10 +1733,10 @@ export default {
                 }
             ],
             "updateSettings": [
-                29,
+                35,
                 {
                     "input": [
-                        30,
+                        36,
                         "SettingsInput!"
                     ]
                 }
@@ -1624,7 +1745,7 @@ export default {
                 6
             ],
             "setPluginEnabled": [
-                33,
+                39,
                 {
                     "name": [
                         4,
@@ -1637,20 +1758,20 @@ export default {
                 }
             ],
             "setPluginSettings": [
-                33,
+                39,
                 {
                     "name": [
                         4,
                         "String!"
                     ],
                     "values": [
-                        32,
+                        38,
                         "[PluginSettingInput!]!"
                     ]
                 }
             ],
             "loginPlugin": [
-                33,
+                39,
                 {
                     "name": [
                         4,
@@ -1667,7 +1788,7 @@ export default {
                 }
             ],
             "logoutPlugin": [
-                33,
+                39,
                 {
                     "name": [
                         4,
@@ -1676,7 +1797,7 @@ export default {
                 }
             ],
             "updatePlugins": [
-                55
+                61
             ],
             "startNeoworksSignIn": [
                 4,
@@ -1687,7 +1808,7 @@ export default {
                 }
             ],
             "completeNeoworksSignIn": [
-                49,
+                55,
                 {
                     "code": [
                         4,
@@ -1700,10 +1821,10 @@ export default {
                 }
             ],
             "signOutOfNeoworks": [
-                49
+                55
             ],
             "syncNeoworks": [
-                49
+                55
             ],
             "syncNeoworksSoon": [
                 6
@@ -1728,7 +1849,7 @@ export default {
         },
         "PluginUpdateReport": {
             "updated": [
-                54
+                60
             ],
             "failed": [
                 4
@@ -1748,10 +1869,10 @@ export default {
                 }
             ],
             "together": [
-                44
+                50
             ],
             "challenges": [
-                52
+                58
             ],
             "__typename": [
                 4

@@ -43,6 +43,7 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Fill
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.fill.Bell
+import com.adamglin.phosphoricons.fill.Sparkle
 import com.adamglin.phosphoricons.fill.DownloadSimple as DownloadSimpleFill
 import com.adamglin.phosphoricons.regular.CaretDown
 import com.adamglin.phosphoricons.regular.DownloadSimple
@@ -59,6 +60,9 @@ import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.navigation.bottomBarClearance
 import com.letsmoe.otter.ui.components.TabHeader
 import com.letsmoe.otter.ui.components.pressable
+import com.letsmoe.otter.ui.yearinotter.isReviewSeason
+import com.letsmoe.otter.ui.yearinotter.reviewYear
+import java.time.LocalDate
 
 private const val DOWNLOAD_PREVIEW_COUNT = 4
 
@@ -72,6 +76,7 @@ class ProfileNavigation(
     val onHistory: () -> Unit,
     val onPlugins: () -> Unit,
     val onSettings: () -> Unit,
+    val onYearInOtter: (year: Int) -> Unit,
 )
 
 /**
@@ -85,7 +90,10 @@ fun ProfileScreen(navigation: ProfileNavigation, viewModel: ProfileViewModel = v
     val downloadItems by DownloadsRepository.items.collectAsStateWithLifecycle()
     val profile = activeProfile ?: return
     LaunchedEffect(profile.id) { viewModel.load(profile.id) }
+    val today = LocalDate.now()
     val linkActions = ProfileLinkActions(
+        onYearInOtter = { navigation.onYearInOtter(reviewYear(today)) },
+        yearLabel = "Your ${reviewYear(today)} in Otter",
         onHistory = navigation.onHistory,
         onPlugins = navigation.onPlugins,
         onSettings = navigation.onSettings,
@@ -98,10 +106,21 @@ fun ProfileScreen(navigation: ProfileNavigation, viewModel: ProfileViewModel = v
     ) {
         item { TabHeader("My Otter", navigation.onSearch, Modifier.padding(start = 20.dp, end = 12.dp)) }
         item { ProfileIdentity(profile) }
+        if (isReviewSeason(today)) {
+            item { YearOfferCard(reviewYear(today)) { navigation.onYearInOtter(reviewYear(today)) } }
+        }
         item { NotificationsCard(page, navigation) }
         item { DownloadsCard(groupDownloads(downloadItems).take(DOWNLOAD_PREVIEW_COUNT), navigation) }
         item { ProfileLinks(linkActions, Modifier.padding(horizontal = 12.dp)) }
         item { RailsSection(page, navigation.onOpenItem) }
+    }
+}
+
+/** December and January: the year in review is ready, so it is offered above everything else. */
+@Composable
+private fun YearOfferCard(year: Int, onOpen: () -> Unit) {
+    SectionCard("Your $year in Otter", PhosphorIcons.Fill.Sparkle, onOpen, Modifier.padding(horizontal = 12.dp)) {
+        Text("Hours watched, your top series, your longest binge and more. Swipe through and share the cards.", fontSize = 14.sp, color = Color.White.copy(alpha = 0.7f))
     }
 }
 
