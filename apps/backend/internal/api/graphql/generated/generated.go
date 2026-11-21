@@ -387,37 +387,38 @@ type ComplexityRoot struct {
 	}
 
 	Title struct {
-		BackdropPath  func(childComplexity int) int
-		Credits       func(childComplexity int) int
-		DetailFetched func(childComplexity int) int
-		Genres        func(childComplexity int) int
-		ID            func(childComplexity int) int
-		ImdbID        func(childComplexity int) int
-		InWatchlist   func(childComplexity int, profileID string) int
-		Keywords      func(childComplexity int) int
-		LogoPath      func(childComplexity int) int
-		MediaType     func(childComplexity int) int
-		Notifying     func(childComplexity int, profileID string) int
-		OriginalTitle func(childComplexity int) int
-		Overview      func(childComplexity int) int
-		Popularity    func(childComplexity int) int
-		PosterPath    func(childComplexity int) int
-		Progress      func(childComplexity int, profileID string) int
-		Rating        func(childComplexity int, profileID string) int
-		Related       func(childComplexity int, limit *int) int
-		ReleaseDate   func(childComplexity int) int
-		Runtime       func(childComplexity int) int
-		SeasonCount   func(childComplexity int) int
-		Seasons       func(childComplexity int) int
-		Status        func(childComplexity int) int
-		Streams       func(childComplexity int) int
-		Tagline       func(childComplexity int) int
-		Title         func(childComplexity int) int
-		TmdbID        func(childComplexity int) int
-		TrailerKey    func(childComplexity int) int
-		VoteAverage   func(childComplexity int) int
-		VoteCount     func(childComplexity int) int
-		Year          func(childComplexity int) int
+		BackdropPath        func(childComplexity int) int
+		Credits             func(childComplexity int) int
+		DetailFetched       func(childComplexity int) int
+		Genres              func(childComplexity int) int
+		HasPostCreditsScene func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		ImdbID              func(childComplexity int) int
+		InWatchlist         func(childComplexity int, profileID string) int
+		Keywords            func(childComplexity int) int
+		LogoPath            func(childComplexity int) int
+		MediaType           func(childComplexity int) int
+		Notifying           func(childComplexity int, profileID string) int
+		OriginalTitle       func(childComplexity int) int
+		Overview            func(childComplexity int) int
+		Popularity          func(childComplexity int) int
+		PosterPath          func(childComplexity int) int
+		Progress            func(childComplexity int, profileID string) int
+		Rating              func(childComplexity int, profileID string) int
+		Related             func(childComplexity int, limit *int) int
+		ReleaseDate         func(childComplexity int) int
+		Runtime             func(childComplexity int) int
+		SeasonCount         func(childComplexity int) int
+		Seasons             func(childComplexity int) int
+		Status              func(childComplexity int) int
+		Streams             func(childComplexity int) int
+		Tagline             func(childComplexity int) int
+		Title               func(childComplexity int) int
+		TmdbID              func(childComplexity int) int
+		TrailerKey          func(childComplexity int) int
+		VoteAverage         func(childComplexity int) int
+		VoteCount           func(childComplexity int) int
+		Year                func(childComplexity int) int
 	}
 
 	TogetherMessage struct {
@@ -2390,6 +2391,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Title.Genres(childComplexity), true
+	case "Title.hasPostCreditsScene":
+		if e.ComplexityRoot.Title.HasPostCreditsScene == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Title.HasPostCreditsScene(childComplexity), true
 	case "Title.id":
 		if e.ComplexityRoot.Title.ID == nil {
 			break
@@ -2823,6 +2830,8 @@ type Title {
   trailerKey: String
   genres: [String!]!
   keywords: [String!]!
+  "Whether TMDB tags the title with a scene during or after the credits (the duringcreditsstinger and aftercreditsstinger keywords)."
+  hasPostCreditsScene: Boolean!
   "False for titles only seen in lists; reading them through Query.title fetches the rest."
   detailFetched: Boolean!
 
@@ -4019,6 +4028,8 @@ func (ec *executionContext) childFields_Title(ctx context.Context, field graphql
 		return ec.fieldContext_Title_genres(ctx, field)
 	case "keywords":
 		return ec.fieldContext_Title_keywords(ctx, field)
+	case "hasPostCreditsScene":
+		return ec.fieldContext_Title_hasPostCreditsScene(ctx, field)
 	case "detailFetched":
 		return ec.fieldContext_Title_detailFetched(ctx, field)
 	case "credits":
@@ -13462,6 +13473,29 @@ func (ec *executionContext) fieldContext_Title_keywords(_ context.Context, field
 	return graphql.NewScalarFieldContext("Title", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _Title_hasPostCreditsScene(ctx context.Context, field graphql.CollectedField, obj *model.Title) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Title_hasPostCreditsScene(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HasPostCreditsScene, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Title_hasPostCreditsScene(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Title", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
 func (ec *executionContext) _Title_detailFetched(ctx context.Context, field graphql.CollectedField, obj *model.Title) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -18606,6 +18640,11 @@ func (ec *executionContext) _Title(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "keywords":
 			out.Values[i] = ec._Title_keywords(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "hasPostCreditsScene":
+			out.Values[i] = ec._Title_hasPostCreditsScene(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

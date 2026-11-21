@@ -67,6 +67,19 @@ fun BoxScope.SkipSegmentButton(jump: SkipJump?, controlsVisible: Boolean, onSkip
     }
 }
 
+/** Tells that a scene follows the credits of the film, bottom right, as they start. */
+@Composable
+fun BoxScope.PostCreditsSceneNotice(visible: Boolean, controlsVisible: Boolean) {
+    val modifier = Modifier.align(Alignment.BottomEnd)
+        .windowInsetsPadding(WindowInsets.safeDrawing)
+        .padding(end = 24.dp, bottom = bottomOffset(controlsVisible))
+    AnimatedVisibility(visible, modifier, enter = fadeIn(), exit = fadeOut()) {
+        Box(Modifier.height(44.dp).playerGlass(CircleShape).padding(horizontal = 22.dp), contentAlignment = Alignment.Center) {
+            Text(POST_CREDITS_LABEL, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
 /** The next episode during the credits: countdown, still, Cancel and Play now. */
 @Composable
 fun BoxScope.UpNextOverlay(card: UpNextCard?, controlsVisible: Boolean, onCancel: () -> Unit, onPlayNow: () -> Unit) {

@@ -115,6 +115,10 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     /** The intro or recap playing now, for its skip button. */
     val skipButton: StateFlow<SkipJump?> = mutableSkipButton
 
+    private val mutablePostCreditsNotice = MutableStateFlow(false)
+    /** The credits of a film with a scene after them start: the phone says so. */
+    val postCreditsNotice: StateFlow<Boolean> = mutablePostCreditsNotice
+
     private var trackCatalog = TrackCatalog.Empty
     private var subtitles: List<PlayerSubtitle> = emptyList()
     private var subtitlesLoad: Deferred<List<PlayerSubtitle>>? = null
@@ -204,6 +208,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         upNextOffer.reset()
         skipTracker.reset(emptyList())
         mutableSkipButton.value = null
+        mutablePostCreditsNotice.value = false
         clearPlayers()
         trackCatalog = TrackCatalog.Empty
         startSubtitleLoad(mediaId)
@@ -966,6 +971,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     private fun followSegments(positionSeconds: Double) {
         mutableSkipButton.value = skipTracker.jumpAt(positionSeconds)
+        mutablePostCreditsNotice.value = showsPostCreditsNotice(media?.hasPostCreditsScene == true, positionSeconds, durationSeconds)
         val inCredits = skipTracker.isInCredits(positionSeconds)
         upNextOffer.follow(inCredits, activePlayer.isPlaying, offeredNextEpisode())
         skipIntroAt(positionSeconds)
@@ -1003,7 +1009,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     // What the TV's picture shows besides captions: skip hints and, during the credits, the next episode.
     private fun televisionHints(): TelevisionHints {
         val skips = skipTracker.jumps.map { jump -> SkipHint(jump.televisionLabel, jump.startSeconds, jump.endSeconds) }
-        return TelevisionHints(skips, upNextPreview(), titleText())
+        return TelevisionHints(skips, upNextPreview(), titleText(), media?.hasPostCreditsScene == true)
     }
 
     private fun titleText(): TitleText? {
