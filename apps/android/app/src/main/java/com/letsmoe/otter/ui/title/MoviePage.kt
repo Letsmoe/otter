@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.letsmoe.otter.links.movieLink
 import com.letsmoe.otter.links.tmdbIdOf
+import com.letsmoe.otter.tonight.TonightEntry
 import com.letsmoe.otter.ui.components.SegmentedBar
 import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.watchorder.WatchOrderLink
@@ -62,7 +63,10 @@ fun MoviePage(
             onStart = { actions.onStartRewatch { onPlay(PlayRequest(detail.id)) } },
             onStop = { actions.onStopRewatch {} },
         ),
-        playExtras = { FranchiseLink(detail.collectionId, onOpenWatchOrder) },
+        playExtras = {
+            FranchiseLink(detail.collectionId, onOpenWatchOrder)
+            TonightRow(TonightEntry(detail.id, detail.title), onPlay)
+        },
     ) {
         when (tab) {
             MovieTab.RELATED -> RelatedTab(rails, onOpenItem)

@@ -42,8 +42,11 @@ data class UpNextPreview(
     val countsDown: Boolean = true,
 )
 
-/** What is playing, for the title card: "Severance", "S1:E2 · Half Loop" and "Episode 2 of 9" (null for movies). */
-data class TitleText(val title: String, val detail: String?, val episodeCountLabel: String? = null)
+/**
+ * What is playing, for the title card: "Severance", "S1:E2 · Half Loop" and "Episode 2 of 9" (null for
+ * movies), and "2 of 3 tonight" for a title from tonight's queue.
+ */
+data class TitleText(val title: String, val detail: String?, val episodeCountLabel: String? = null, val tonightLabel: String? = null)
 
 /** What the player knows to draw besides captions: the title's skippable parts, what plays next and what plays now. */
 data class TelevisionHints(
@@ -110,6 +113,7 @@ private fun titleCardOf(text: TitleText?, request: TitleCardRequest?): TitleCard
         text.title, text.detail, request.fromSeconds, request.fromSeconds + TITLE_CARD_SECONDS,
         endsAtLabel = request.endsAtLabel,
         episodeCountLabel = text.episodeCountLabel,
+        tonightLabel = text.tonightLabel,
     )
 }
 

@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.letsmoe.otter.links.episodeLink
 import com.letsmoe.otter.links.seriesLink
 import com.letsmoe.otter.links.tmdbIdOf
+import com.letsmoe.otter.tonight.TonightEntry
 import com.letsmoe.otter.ui.components.FilterSelect
 import com.letsmoe.otter.ui.components.SegmentedBar
 import com.letsmoe.otter.ui.media.RailItem
@@ -71,7 +72,10 @@ fun SeriesPage(
         slots = slots,
         downloadTarget = upNextDownload(detail, upNext),
         tabBar = { SegmentedBar(seriesTabs, tab, onSelect = { chosen -> tab = chosen }) },
-        playExtras = { UpNextBar(upNext) },
+        playExtras = {
+            UpNextBar(upNext)
+            TonightRow(upNext?.let { next -> tonightEntryOf(detail, next.episode) }, onPlay)
+        },
         rewatch = seriesRewatchBar(detail, episodes, seriesViewModel, actions, onPlay),
     ) {
         when (tab) {
@@ -110,6 +114,11 @@ private fun seriesRewatchBar(
 private fun episodeLabel(episodes: EpisodesState, mediaId: String): String? {
     val episode = episodes.episodes.firstOrNull { candidate -> candidate.id == mediaId } ?: return null
     return "${episode.code} ${episode.displayName}"
+}
+
+// The episode Play starts, named with its series on the cards of the up-next countdown and the TV.
+private fun tonightEntryOf(detail: TitleDetail, episode: SeasonEpisode): TonightEntry {
+    return TonightEntry(episode.id, "${detail.title} · ${episode.code} ${episode.displayName}")
 }
 
 @Composable

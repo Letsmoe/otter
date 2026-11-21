@@ -238,7 +238,7 @@ private fun drawTitleCard(canvas: Canvas, card: TitleCard, scale: Float) {
     canvas.drawText(ellipsized(card.title, title, maxWidth), left, titleBaseline, title)
     val detailPaint = titleCardPaint(TITLE_CARD_DETAIL_SIZE * scale, LABEL_COLOR, Typeface.NORMAL)
     var baseline = titleBaseline + title.descent() + CARD_LINE_GAP * scale - detailPaint.ascent()
-    for (line in listOfNotNull(card.detail, card.episodeCountLabel, card.endsAtLabel)) {
+    for (line in listOfNotNull(card.detail, card.episodeCountLabel, card.tonightLabel, card.endsAtLabel)) {
         canvas.drawText(ellipsized(line, detailPaint, maxWidth), left, baseline, detailPaint)
         baseline += detailPaint.fontSpacing
     }

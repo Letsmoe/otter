@@ -34,6 +34,8 @@ data class TitleCard(
     val endSeconds: Double,
     val endsAtLabel: String? = null,
     val episodeCountLabel: String? = null,
+    /** "2 of 3 tonight" for a title from tonight's queue. */
+    val tonightLabel: String? = null,
 )
 
 /** Everything drawn into the TV's picture, on the title's timeline. [secondCaptions] show smaller, under [captions]. */

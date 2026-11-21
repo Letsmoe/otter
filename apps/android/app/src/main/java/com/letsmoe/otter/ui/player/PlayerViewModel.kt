@@ -34,6 +34,7 @@ import com.letsmoe.otter.profiles.ProfilePreferences
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.settings.Bedtime
 import com.letsmoe.otter.settings.PlaybackSettings
+import com.letsmoe.otter.tonight.TonightQueue
 import com.letsmoe.otter.toasts.ToastKind
 import com.letsmoe.otter.toasts.Toasts
 import com.letsmoe.otter.together.MediaPayload
@@ -220,6 +221,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         viewModelScope.launch { followHolding() }
         viewModelScope.launch { followRemoteMedia() }
         viewModelScope.launch { stillWatching.asking.collect { asking -> televisionPlayer?.askingStillWatching = asking } }
+        viewModelScope.launch { TonightQueue.shared.entries.collect { refreshHasNextEpisode() } }
         viewModelScope.launch { ProfileSession.activeProfile.collect(::onProfileChanged) }
         togetherSync.start()
         if (forTelevision) {
@@ -308,7 +310,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             // Reaches the TV's picture with its next load, e.g. the next seek.
             televisionPlayer?.hints = televisionHints()
             mutableState.update { current ->
-                current.copy(title = loaded.title, episodes = loaded.episodes, hasNextEpisode = loaded.nextEpisodeId != null)
+                current.copy(title = loaded.title, episodes = loaded.episodes, hasNextEpisode = nextEpisode() != null)
             }
             announceToTogether()
         }
@@ -330,6 +332,11 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         }
         ratingReminder.open(rateable, unrated)
         televisionPlayer?.hints = televisionHints()
+    }
+
+    // Titles lined up for tonight change what comes next.
+    private fun refreshHasNextEpisode() {
+        mutableState.update { current -> current.copy(hasNextEpisode = nextEpisode() != null) }
     }
 
     private fun startStreams(mediaId: String, initial: Boolean) {
@@ -381,7 +388,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     }
 
     fun playNext() {
-        val nextId = media?.nextEpisodeId ?: return
+        val nextId = nextEpisode()?.id ?: return
         if (stillWatching.holdsBackNext()) {
             return
         }
@@ -653,7 +660,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     // The end screen counts down in animation frames, which stop while the phone is locked;
     // the next episode starts regardless, on the phone or on a TV.
     private fun continueWithNextEpisode() {
-        if (media?.nextEpisodeId == null || mutableState.value.stopsAfterEpisode) {
+        if (nextEpisode() == null || mutableState.value.stopsAfterEpisode) {
             return
         }
         nextEpisodeJob?.cancel()
@@ -1290,7 +1297,12 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         return nextEpisode()
     }
 
+    // The title queued for tonight right after this one, else the next episode of the series.
     private fun nextEpisode(): PlayerEpisode? {
+        val queued = TonightQueue.shared.nextAfter(currentMediaId)
+        if (queued != null) {
+            return PlayerEpisode(queued.mediaId, 0, 0, null, null, null, null, cardLabel = queued.label)
+        }
         val loaded = media ?: return null
         val nextId = loaded.nextEpisodeId ?: return null
         return loaded.episodes.firstOrNull { episode -> episode.id == nextId }
@@ -1321,7 +1333,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     private fun titleText(): TitleText? {
         val loaded = media ?: return null
-        return TitleText(loaded.heading, loaded.subheading, loaded.episodeCountLabel)
+        return TitleText(loaded.heading, loaded.subheading, loaded.episodeCountLabel, TonightQueue.shared.positionOf(currentMediaId)?.label)
     }
 
     private fun upNextPreview(): UpNextPreview? {

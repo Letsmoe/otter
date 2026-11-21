@@ -19,6 +19,7 @@ import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.reporting.ErrorReporting
 import com.letsmoe.otter.settings.PlaybackSettings
 import com.letsmoe.otter.neoworks.WelcomeChoice
+import com.letsmoe.otter.tonight.TonightQueue
 import com.letsmoe.otter.updates.UpdateSettings
 import com.letsmoe.otter.vpn.VpnStatusStore
 
@@ -33,6 +34,7 @@ class OtterApplication : Application() {
         EmbeddedBackend(this).start()
         ServerSettings.initialize(this)
         PlaybackSettings.initialize(this)
+        TonightQueue.initialize(this)
         UpdateSettings.initialize(this)
         WelcomeChoice.initialize(this)
         ProfileSession.initialize(this)
