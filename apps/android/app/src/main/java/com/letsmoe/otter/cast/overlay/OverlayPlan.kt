@@ -10,8 +10,18 @@ data class CaptionCue(val startSeconds: Double, val endSeconds: Double, val text
 /** An intro or recap: the picture tells the viewer to skip it on the phone. */
 data class SkipHint(val label: String, val startSeconds: Double, val endSeconds: Double)
 
-/** The next episode's card, from [startSeconds] (the credits) for [durationSeconds], counting down. */
-data class UpNextHint(val episodeLabel: String, val startSeconds: Double, val durationSeconds: Double, val still: Bitmap?)
+/**
+ * The next episode's card, from [startSeconds] (the credits) for [durationSeconds], counting down.
+ * One that doesn't [countsDown] only says [heading] and [episodeLabel], e.g. that a season's finale has nothing after it.
+ */
+data class UpNextHint(
+    val episodeLabel: String,
+    val startSeconds: Double,
+    val durationSeconds: Double,
+    val still: Bitmap?,
+    val heading: String = "Next episode",
+    val countsDown: Boolean = true,
+)
 
 /**
  * What is playing, shown from [startSeconds] to [endSeconds] when a title

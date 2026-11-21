@@ -8,16 +8,21 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 const val UP_NEXT_MILLISECONDS = 10_000L
+// How long the note about a season finale stays, as it has no countdown to end it.
+const val SEASON_FINALE_MILLISECONDS = 15_000L
 
 /**
  * The next episode as the card during the credits shows it. A running
  * countdown ends at [endsAtMillis]; a paused one holds [pausedRemainingMillis].
+ * A card that doesn't [countsDown] only tells (see [UpNextNote]) and has no episode to play.
  */
 data class UpNextCard(
     val episodeLabel: String,
     val stillUrl: String?,
     val endsAtMillis: Long,
     val pausedRemainingMillis: Long? = null,
+    val heading: String = NEXT_EPISODE_HEADING,
+    val countsDown: Boolean = true,
 )
 
 /** Milliseconds until the next episode plays, between 0 and the whole countdown. */
@@ -49,8 +54,12 @@ class UpNext(private val scope: CoroutineScope, private val playNext: () -> Unit
         dismissed = false
     }
 
-    /** Called with every position update; going back before the credits withdraws the card. */
-    fun follow(inCredits: Boolean, playing: Boolean, next: PlayerEpisode?) {
+    /**
+     * Called with every position update; going back before the credits withdraws the card. [current]
+     * is the episode playing: with it, the card names a next season's first episode, and without a
+     * [next] one it says the season finale has nothing after it yet. Pass none to offer nothing then.
+     */
+    fun follow(inCredits: Boolean, playing: Boolean, next: PlayerEpisode?, current: PlayerEpisode? = null) {
         if (!inCredits) {
             reset()
             return
@@ -60,10 +69,15 @@ class UpNext(private val scope: CoroutineScope, private val playNext: () -> Unit
             followPlayback(shown, playing)
             return
         }
-        if (dismissed || !playing || next == null) {
+        if (dismissed || !playing) {
             return
         }
-        startCountdown(UpNextCard(episodeLabel(next), next.stillUrl, 0), UP_NEXT_MILLISECONDS)
+        val note = upNextNote(current, next) ?: return
+        if (note.countsDown) {
+            startCountdown(UpNextCard(note.label, next?.stillUrl, 0, heading = note.heading), UP_NEXT_MILLISECONDS)
+            return
+        }
+        showFinale(note)
     }
 
     fun cancel() {
@@ -72,11 +86,27 @@ class UpNext(private val scope: CoroutineScope, private val playNext: () -> Unit
     }
 
     fun playNow() {
+        if (mutableCard.value?.countsDown == false) {
+            return
+        }
         withdraw()
         playNext()
     }
 
+    // Shown for a while, then gone for these credits.
+    private fun showFinale(note: UpNextNote) {
+        mutableCard.value = UpNextCard(note.label, null, 0, heading = note.heading, countsDown = false)
+        countdown = scope.launch {
+            delay(SEASON_FINALE_MILLISECONDS)
+            mutableCard.value = null
+            dismissed = true
+        }
+    }
+
     private fun followPlayback(shown: UpNextCard, playing: Boolean) {
+        if (!shown.countsDown) {
+            return
+        }
         val paused = shown.pausedRemainingMillis
         if (!playing && paused == null) {
             countdown?.cancel()
