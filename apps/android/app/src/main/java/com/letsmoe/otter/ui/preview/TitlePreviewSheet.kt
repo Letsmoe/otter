@@ -41,6 +41,7 @@ import coil3.compose.AsyncImage
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.Check
+import com.adamglin.phosphoricons.regular.EyeSlash
 import com.adamglin.phosphoricons.regular.Info
 import com.adamglin.phosphoricons.regular.Plus
 import com.letsmoe.otter.ui.components.ActorRail
@@ -76,6 +77,7 @@ fun TitlePreviewSheet(onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> 
                     onOpenItem(current)
                 },
                 onToggleMyList = viewModel::toggleMyList,
+                onNotForMe = { viewModel.hideFromRecommendations(current.title, onHidden = TitlePreview::close) },
             )
         }
     }
@@ -147,14 +149,18 @@ private fun PreviewCast(detail: PreviewDetail?, onOpenPerson: (String) -> Unit) 
 }
 
 @Composable
-private fun PreviewButtons(inMyList: Boolean, onDetails: () -> Unit, onToggleMyList: () -> Unit) {
+private fun PreviewButtons(inMyList: Boolean, onDetails: () -> Unit, onToggleMyList: () -> Unit, onNotForMe: () -> Unit) {
     var myListIcon = PhosphorIcons.Regular.Plus
     if (inMyList) {
         myListIcon = PhosphorIcons.Regular.Check
     }
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        PreviewButton("Details", PhosphorIcons.Regular.Info, Color.White, Color.Black, onDetails, Modifier.weight(1f))
-        PreviewButton("My List", myListIcon, Color.White.copy(alpha = 0.12f), Color.White, onToggleMyList, Modifier.weight(1f))
+    val quietBackground = Color.White.copy(alpha = 0.12f)
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            PreviewButton("Details", PhosphorIcons.Regular.Info, Color.White, Color.Black, onDetails, Modifier.weight(1f))
+            PreviewButton("My List", myListIcon, quietBackground, Color.White, onToggleMyList, Modifier.weight(1f))
+        }
+        PreviewButton("Not for me", PhosphorIcons.Regular.EyeSlash, quietBackground, Color.White, onNotForMe, Modifier.fillMaxWidth())
     }
 }
 

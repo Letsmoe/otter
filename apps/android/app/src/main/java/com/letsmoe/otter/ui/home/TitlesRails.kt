@@ -3,6 +3,7 @@ package com.letsmoe.otter.ui.home
 import com.letsmoe.otter.graphql.type.CatalogTheme
 import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.media.RepeatFilter
+import com.letsmoe.otter.ui.media.withoutHidden
 
 enum class RailStyle { REGULAR, LARGE, WIDE, TOP_TEN }
 
@@ -24,25 +25,27 @@ private const val MIN_RAIL_SIZE = 5
 private const val ACTORS_POSITION = 8
 
 /** A candidate row before repeats are removed. */
-private class RowSpec(
+private data class RowSpec(
     val key: String,
     val title: String,
     val items: List<RailItem>,
     val style: RailStyle = RailStyle.REGULAR,
     val minimumItems: Int = MIN_RAIL_SIZE,
     val keepsAllItems: Boolean = false,
+    /** Personal rows keep titles hidden with "Not for me": the profile put them there. */
+    val showsHiddenTitles: Boolean = false,
 )
 
 /**
  * The page's rows in order: personal rows, Top 10, then themed, recommendation and genre rows
- * interleaved so styles and topics vary. Each row loses titles an earlier row shows;
- * rows left with too few titles are dropped.
+ * interleaved so styles and topics vary. Each row loses titles an earlier row shows or the
+ * profile hid with "Not for me"; rows left with too few titles are dropped.
  */
-fun TitlesPageState.toRows(labels: PageLabels): List<HomeRow> {
+fun TitlesPageState.toRows(labels: PageLabels, hiddenIds: Set<String> = emptySet()): List<HomeRow> {
     val filter = RepeatFilter(featuredIds())
     val rows = mutableListOf<HomeRow>()
     for (spec in orderedSpecs(labels)) {
-        val row = spec.toRow(filter)
+        val row = spec.hidingTitles(hiddenIds).toRow(filter)
         if (row != null) {
             rows.add(row)
         }
@@ -55,6 +58,13 @@ private fun TitlesPageState.featuredIds(): List<String> {
         return emptyList()
     }
     return listOf(featured.item.id)
+}
+
+private fun RowSpec.hidingTitles(hiddenIds: Set<String>): RowSpec {
+    if (showsHiddenTitles || keepsAllItems) {
+        return this
+    }
+    return copy(items = items.withoutHidden(hiddenIds))
 }
 
 private fun RowSpec.toRow(filter: RepeatFilter): PosterRow? {
@@ -72,8 +82,8 @@ private fun RowSpec.toRow(filter: RepeatFilter): PosterRow? {
 private fun TitlesPageState.orderedSpecs(labels: PageLabels): List<RowSpec> {
     val plural = labels.plural
     val head = listOf(
-        RowSpec("continue", labels.continueTitle, continueWatching, minimumItems = 1),
-        RowSpec("my-list", "My List", myList, minimumItems = 1),
+        RowSpec("continue", labels.continueTitle, continueWatching, minimumItems = 1, showsHiddenTitles = true),
+        RowSpec("my-list", "My List", myList, minimumItems = 1, showsHiddenTitles = true),
         RowSpec("top-ten", "Top 10 $plural Today", topTenItems(), RailStyle.TOP_TEN, keepsAllItems = true),
         RowSpec("new", labels.newRow, newAndComingSoon, RailStyle.WIDE),
         RowSpec("recommended", "Recommended $plural", recommended, RailStyle.LARGE),
@@ -81,7 +91,7 @@ private fun TitlesPageState.orderedSpecs(labels: PageLabels): List<RowSpec> {
     )
     val genres = genreRails.map { rail -> RowSpec("genre-${rail.genre}", "${rail.genre} $plural", rail.items) }
     val body = interleave(variedSpecs(plural), genres)
-    val tail = RowSpec("watch-again", "Watch It Again", watchAgain, minimumItems = 1)
+    val tail = RowSpec("watch-again", "Watch It Again", watchAgain, minimumItems = 1, showsHiddenTitles = true)
     return head + body + tail
 }
 

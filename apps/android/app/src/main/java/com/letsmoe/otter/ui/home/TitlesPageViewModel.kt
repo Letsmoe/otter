@@ -13,10 +13,14 @@ import com.letsmoe.otter.ui.media.GenreRail
 import com.letsmoe.otter.ui.media.MediaRepository
 import com.letsmoe.otter.ui.media.MoreWithRail
 import com.letsmoe.otter.ui.media.RailItem
+import com.letsmoe.otter.ui.media.RecommendationDismissals
 import com.letsmoe.otter.ui.media.TitleActions
 import com.letsmoe.otter.ui.media.onlyKind
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -54,10 +58,26 @@ class TitlesPageViewModel(private val mediaType: MediaType) : ViewModel() {
 
     private val profileId: String = ProfileSession.activeProfile.value?.id.orEmpty()
 
+    /** Titles this profile hid with "Not for me"; rows drop them. */
+    val hiddenIds: StateFlow<Set<String>> = RecommendationDismissals.hidden
+        .map { hiddenByProfile -> hiddenByProfile.getOrDefault(profileId, emptySet()) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+
     init {
         viewModelScope.launch {
             OtterApi.awaitBackend()
             loadAll()
+        }
+        viewModelScope.launch { reloadFeaturedWhenHidden() }
+    }
+
+    // The backend no longer recommends a hidden title, so the featured card picks the next best one.
+    private suspend fun reloadFeaturedWhenHidden() {
+        hiddenIds.collect { hidden ->
+            val featuredId = mutableState.value.featured?.item?.id
+            if (featuredId != null && featuredId in hidden) {
+                loadFeatured()
+            }
         }
     }
 

@@ -1390,6 +1390,32 @@ export default {
                     ]
                 }
             ],
+            "dismissRecommendation": [
+                6,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "mediaId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
+            "restoreRecommendation": [
+                6,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ],
+                    "mediaId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
             "addToWatchlist": [
                 6,
                 {

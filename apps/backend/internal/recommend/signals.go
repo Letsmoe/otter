@@ -14,7 +14,7 @@ type signal struct {
 	media  library.MediaRef
 	weight float64
 	at     time.Time
-	// disliked marks a low rating, which also excludes the title.
+	// disliked marks a low rating or a hidden title, which also exclude the title.
 	disliked bool
 }
 
@@ -36,6 +36,11 @@ var watchQuery = `SELECT ` + titleOfMedia + `, activity.progress_seconds AS prog
 
 const saveQuery = `SELECT media_type, media_id, added_at AS at FROM watchlist
 	WHERE profile_id = $profile AND added_at >= $since`
+
+// dismissedQuery ignores the signal window: a hidden title never comes back,
+// however long ago it was hidden (its weight still fades with age).
+const dismissedQuery = `SELECT media_type, media_id, dismissed_at AS at FROM dismissed_title
+	WHERE profile_id = $profile`
 
 type activityRow struct {
 	MediaType library.MediaType `json:"media_type"`
@@ -71,12 +76,26 @@ func (e *Engine) collectSignals(ctx context.Context, profileID int, now time.Tim
 	if err != nil {
 		return nil, err
 	}
+	dismissed, err := e.activity(ctx, dismissedQuery, vars)
+	if err != nil {
+		return nil, err
+	}
 	signals := ratingSignals(ratings)
 	signals = append(signals, watchSignals(watches, now)...)
 	for _, row := range saves {
 		signals = append(signals, signal{media: row.ref(), weight: weightSave, at: row.time()})
 	}
-	return signals, nil
+	return append(signals, dismissedSignals(dismissed)...), nil
+}
+
+// dismissedSignals turns hidden titles into negative signals that also
+// exclude the title and penalize its related titles.
+func dismissedSignals(rows []activityRow) []signal {
+	signals := make([]signal, 0, len(rows))
+	for _, row := range rows {
+		signals = append(signals, signal{media: row.ref(), weight: weightNotForMe, at: row.time(), disliked: true})
+	}
+	return signals
 }
 
 func (e *Engine) activity(ctx context.Context, query string, vars db.Vars) ([]activityRow, error) {
