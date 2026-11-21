@@ -11,6 +11,8 @@ import coil3.request.allowHardware
 import coil3.size.Size
 import coil3.toBitmap
 import com.letsmoe.otter.backend.EmbeddedBackend
+import com.letsmoe.otter.ui.player.RATING_REMINDER_LABEL
+import com.letsmoe.otter.ui.player.ratingReminderWindowFor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -36,6 +38,8 @@ data class TelevisionHints(
     val skips: List<SkipHint> = emptyList(),
     val upNext: UpNextPreview? = null,
     val titleText: TitleText? = null,
+    /** A film (or series' last episode) not rated yet: the picture says to rate it on the phone before the end. */
+    val asksForRating: Boolean = false,
 )
 
 /**
@@ -48,13 +52,31 @@ data class CaptionPaths(val main: String?, val second: String?, val replay: Stri
 /** Where the title card starts on the title's timeline, and "Ends at 22:41" when the length is known. */
 data class TitleCardRequest(val fromSeconds: Double, val endsAtLabel: String?)
 
-/** Loads what the picture shows: the caption files, the next episode's still and, when asked for, the title card. */
-suspend fun loadOverlayPlan(context: Context, hints: TelevisionHints, captionPaths: CaptionPaths, titleCard: TitleCardRequest?): OverlayPlan {
+/**
+ * Loads what the picture shows: the caption files, the next episode's still and, when asked for,
+ * the title card. [durationSeconds] places the reminder to rate the title.
+ */
+suspend fun loadOverlayPlan(
+    context: Context,
+    hints: TelevisionHints,
+    captionPaths: CaptionPaths,
+    titleCard: TitleCardRequest?,
+    durationSeconds: Double,
+): OverlayPlan {
     val captions = loadCaptionCues(captionPaths.main)
     val secondCaptions = loadCaptionCues(captionPaths.second)
     val replayCaptions = loadCaptionCues(captionPaths.replay)
     val upNext = hints.upNext?.let { preview -> upNextHint(context, preview) }
-    return OverlayPlan(captions, hints.skips, upNext, secondCaptions, titleCardOf(hints.titleText, titleCard), replayCaptions)
+    val skips = hints.skips + ratingReminderHints(hints, durationSeconds)
+    return OverlayPlan(captions, skips, upNext, secondCaptions, titleCardOf(hints.titleText, titleCard), replayCaptions)
+}
+
+private fun ratingReminderHints(hints: TelevisionHints, durationSeconds: Double): List<SkipHint> {
+    if (!hints.asksForRating) {
+        return emptyList()
+    }
+    val window = ratingReminderWindowFor(durationSeconds) ?: return emptyList()
+    return listOf(SkipHint(RATING_REMINDER_LABEL, window.startSeconds, window.endSeconds))
 }
 
 private fun titleCardOf(text: TitleText?, request: TitleCardRequest?): TitleCard? {
