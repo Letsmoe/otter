@@ -35,6 +35,32 @@ type CoStar struct {
 	SharedTitles int `json:"sharedTitles"`
 }
 
+// A franchise (TMDB collection) with its films in release order, and one profile's progress through them.
+type Collection struct {
+	ID           string            `json:"id"`
+	TmdbID       int               `json:"tmdbId"`
+	Name         string            `json:"name"`
+	Overview     *string           `json:"overview,omitempty"`
+	PosterPath   *string           `json:"posterPath,omitempty"`
+	BackdropPath *string           `json:"backdropPath,omitempty"`
+	Parts        []*CollectionPart `json:"parts"`
+	// Films the profile finished.
+	WatchedCount int `json:"watchedCount"`
+	// The film to continue with: the first released one not finished yet. Null when everything out is watched.
+	Next *CollectionPart `json:"next,omitempty"`
+}
+
+type CollectionPart struct {
+	// Place in the watch order, from 1.
+	Number int         `json:"number"`
+	Title  *Title      `json:"title"`
+	Status WatchStatus `json:"status"`
+	// Watched share (0..1) of a film in progress.
+	Progress float64 `json:"progress"`
+	// False for films that are announced but not out yet.
+	Released bool `json:"released"`
+}
+
 type ContinueItem struct {
 	Title *Title `json:"title"`
 	// For series: the episode to continue or the next one.
@@ -449,8 +475,10 @@ type Title struct {
 	// Whether TMDB tags the title with a scene during or after the credits (the duringcreditsstinger and aftercreditsstinger keywords).
 	HasPostCreditsScene bool `json:"hasPostCreditsScene"`
 	// False for titles only seen in lists; reading them through Query.title fetches the rest.
-	DetailFetched bool      `json:"detailFetched"`
-	Credits       []*Credit `json:"credits"`
+	DetailFetched bool `json:"detailFetched"`
+	// Movies only: the franchise (TMDB collection) the film belongs to, for Query.collection.
+	CollectionID *string   `json:"collectionId,omitempty"`
+	Credits      []*Credit `json:"credits"`
 	// TMDB recommendations first, then other work of the director and leads.
 	Related []*Title `json:"related"`
 	// Series only.
@@ -1106,6 +1134,64 @@ func (e *TogetherStatus) UnmarshalJSON(b []byte) error {
 }
 
 func (e TogetherStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+// How far a profile got through one film of a franchise.
+type WatchStatus string
+
+const (
+	WatchStatusWatched    WatchStatus = "WATCHED"
+	WatchStatusInProgress WatchStatus = "IN_PROGRESS"
+	WatchStatusNotYet     WatchStatus = "NOT_YET"
+)
+
+var AllWatchStatus = []WatchStatus{
+	WatchStatusWatched,
+	WatchStatusInProgress,
+	WatchStatusNotYet,
+}
+
+func (e WatchStatus) IsValid() bool {
+	switch e {
+	case WatchStatusWatched, WatchStatusInProgress, WatchStatusNotYet:
+		return true
+	}
+	return false
+}
+
+func (e WatchStatus) String() string {
+	return string(e)
+}
+
+func (e *WatchStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = WatchStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid WatchStatus", str)
+	}
+	return nil
+}
+
+func (e WatchStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *WatchStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e WatchStatus) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

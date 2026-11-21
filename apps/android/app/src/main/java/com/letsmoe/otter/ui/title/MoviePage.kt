@@ -12,6 +12,7 @@ import com.letsmoe.otter.links.movieLink
 import com.letsmoe.otter.links.tmdbIdOf
 import com.letsmoe.otter.ui.components.SegmentedBar
 import com.letsmoe.otter.ui.media.RailItem
+import com.letsmoe.otter.ui.watchorder.WatchOrderLink
 
 private enum class MovieTab(val label: String) {
     RELATED("More Like This"),
@@ -34,6 +35,7 @@ fun MoviePage(
     slots: TitleSlots,
     onPlay: (PlayRequest) -> Unit,
     onOpenItem: (RailItem) -> Unit,
+    onOpenWatchOrder: (String) -> Unit,
 ) {
     var tab by rememberSaveable { mutableStateOf(MovieTab.RELATED) }
     val playLabel = moviePlayLabel(streams, detail.rewatching)
@@ -59,6 +61,7 @@ fun MoviePage(
             onStart = { actions.onStartRewatch { onPlay(PlayRequest(detail.id)) } },
             onStop = { actions.onStopRewatch {} },
         ),
+        playExtras = { FranchiseLink(detail.collectionId, onOpenWatchOrder) },
     ) {
         when (tab) {
             MovieTab.RELATED -> RelatedTab(rails, onOpenItem)
@@ -71,6 +74,14 @@ fun MoviePage(
             )
         }
     }
+}
+
+@Composable
+private fun FranchiseLink(collectionId: String?, onOpenWatchOrder: (String) -> Unit) {
+    if (collectionId == null) {
+        return
+    }
+    WatchOrderLink(collectionId, onOpen = { onOpenWatchOrder(collectionId) })
 }
 
 private fun moviePlayLabel(streams: StreamList, rewatching: Boolean): String {

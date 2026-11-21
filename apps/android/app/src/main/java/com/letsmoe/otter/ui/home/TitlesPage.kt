@@ -36,6 +36,7 @@ fun TitlesPage(
     onOpenItem: (RailItem) -> Unit,
     onPlayItem: (RailItem) -> Unit,
     onOpenPerson: (String) -> Unit,
+    onOpenWatchOrder: (String) -> Unit,
     modifier: Modifier = Modifier,
     chips: @Composable () -> Unit = {},
 ) {
@@ -43,7 +44,9 @@ fun TitlesPage(
     val viewModel = viewModel(key = "titles-$mediaType") { TitlesPageViewModel(mediaType) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
-    val rows = state.toRows(labelsOf(mediaType, profileName), hiddenIds).withActorsRow(state.actors.isNotEmpty())
+    val rows = state.toRows(labelsOf(mediaType, profileName), hiddenIds)
+        .withActorsRow(state.actors.isNotEmpty())
+        .withFranchisesRow(state.franchises)
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.loadPersonalRows() }
     val featuredPoster = state.featured?.item?.posterUrl
     LaunchedEffect(featuredPoster) { onFeaturedPoster(featuredPoster) }
@@ -69,7 +72,7 @@ fun TitlesPage(
                 )
             }
         }
-        homeRows(rows, state.actors, onOpenItem, onOpenPerson)
+        homeRows(rows, state.actors, onOpenItem, onOpenPerson, onOpenWatchOrder)
     }
 }
 

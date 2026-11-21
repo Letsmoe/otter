@@ -75,6 +75,8 @@ import com.letsmoe.otter.ui.television.TelevisionVolumeDisplay
 import com.letsmoe.otter.ui.title.LinkedEpisode
 import com.letsmoe.otter.ui.title.TitleScreen
 import com.letsmoe.otter.ui.upcoming.UpcomingScreen
+import com.letsmoe.otter.ui.watchorder.WatchOrderActions
+import com.letsmoe.otter.ui.watchorder.WatchOrderScreen
 import com.letsmoe.otter.ui.updates.UpdateBanner
 
 @Composable
@@ -272,6 +274,16 @@ private fun OtterNavHost(navController: NavHostController, pagerState: PagerStat
                 onBack = { navController.popBackStack() },
             )
         }
+        composable(Routes.WATCH_ORDER, arguments = listOf(navArgument("collectionId") { type = NavType.StringType })) { entry ->
+            WatchOrderScreen(
+                collectionId = entry.arguments?.getString("collectionId").orEmpty(),
+                actions = WatchOrderActions(
+                    onPlay = { titleId -> navController.play(PlayerRequest(titleId)) },
+                    onOpenFilm = { titleId -> navController.navigate(Routes.title(titleId)) },
+                ),
+                onBack = { navController.popBackStack() },
+            )
+        }
         composable(
             Routes.TITLE,
             arguments = listOf(
@@ -294,6 +306,7 @@ private fun OtterNavHost(navController: NavHostController, pagerState: PagerStat
                 onSearch = { navController.navigate(Routes.SEARCH) },
                 onOpenItem = { item -> navController.openItem(item) },
                 onOpenPerson = { personId -> navController.navigate(Routes.person(personId)) },
+                onOpenWatchOrder = { collectionId -> navController.navigate(Routes.watchOrder(collectionId)) },
             )
         }
     }

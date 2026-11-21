@@ -66,7 +66,7 @@ fun GenrePage(
         if (state.loaded && rows.isEmpty()) {
             item(key = "empty") { Text("Nothing in $genre yet", Modifier.padding(horizontal = 16.dp), color = Color.White.copy(alpha = 0.6f)) }
         }
-        homeRows(rows, emptyList(), onOpenItem, onOpenPerson = {})
+        homeRows(rows, emptyList(), onOpenItem, onOpenPerson = {}, onOpenWatchOrder = {})
     }
 }
 

@@ -60,6 +60,7 @@ private fun TabPage(tab: Tab, navController: NavHostController, openTab: (Tab) -
             onPlayItem = { item -> scope.launch { playItem(navController, item, onOpenItem) } },
             onPlayMedia = { mediaId -> navController.play(PlayerRequest(mediaId)) },
             onOpenPerson = { personId -> navController.navigate(Routes.person(personId)) },
+            onOpenWatchOrder = { collectionId -> navController.navigate(Routes.watchOrder(collectionId)) },
             onSearch = { navController.navigate(Routes.SEARCH) },
             onOpenUpcoming = { navController.navigate(Routes.UPCOMING) },
         )

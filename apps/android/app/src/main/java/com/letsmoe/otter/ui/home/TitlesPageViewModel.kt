@@ -16,6 +16,8 @@ import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.media.RecommendationDismissals
 import com.letsmoe.otter.ui.media.TitleActions
 import com.letsmoe.otter.ui.media.onlyKind
+import com.letsmoe.otter.ui.watchorder.WatchOrderGuide
+import com.letsmoe.otter.ui.watchorder.WatchOrderRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -41,6 +43,7 @@ data class TitlesPageState(
     val themes: Map<CatalogTheme, List<RailItem>> = emptyMap(),
     val becauseRows: List<GenreRail> = emptyList(),
     val watchAgain: List<RailItem> = emptyList(),
+    val franchises: List<WatchOrderGuide> = emptyList(),
 )
 
 private const val GENRE_RAIL_TARGET = 8
@@ -111,6 +114,15 @@ class TitlesPageViewModel(private val mediaType: MediaType) : ViewModel() {
         loadRow({ MediaRepository.continueRewatching(profileId).onlyKind(mediaType) }) { items -> copy(continueRewatching = items) }
         loadRow({ MediaRepository.watchlist(profileId).onlyKind(mediaType) }) { items -> copy(myList = items) }
         viewModelScope.launch { loadFeatured() }
+        loadFranchises()
+    }
+
+    // Only films have franchises (TMDB collections); progress changes while using the app.
+    private fun loadFranchises() {
+        if (mediaType != MediaType.MOVIE) {
+            return
+        }
+        loadRow({ WatchOrderRepository.franchises(profileId) }) { guides -> copy(franchises = guides) }
     }
 
     // A new profile has no recommendations yet; TMDB's popular and top-rated lists stand in.

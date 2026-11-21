@@ -13,7 +13,12 @@ const maxCastStored = 20
 var storedCrewJobs = []string{"Director", "Screenplay", "Writer", "Creator", "Original Music Composer"}
 
 func movieTitle(detail *tmdb.MovieDetail) Title {
+	collectionID := 0
+	if detail.BelongsToCollection != nil {
+		collectionID = detail.BelongsToCollection.ID
+	}
 	return Title{
+		CollectionID:  collectionID,
 		MediaType:     MediaTypeMovie,
 		TMDBID:        detail.ID,
 		IMDBID:        detail.IMDBID,

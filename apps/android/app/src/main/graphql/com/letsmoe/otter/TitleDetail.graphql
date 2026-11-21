@@ -12,6 +12,7 @@ query TitleDetail($id: ID!, $profileId: ID!) {
     posterPath
     backdropPath
     trailerKey
+    collectionId
     genres
     inWatchlist(profileId: $profileId)
     notifying(profileId: $profileId)

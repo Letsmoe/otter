@@ -149,8 +149,11 @@ dependencies {
     implementation(libs.haze.blur)
     implementation(libs.phosphor.icons)
     testImplementation(libs.junit)
-    // Draws the TV's browse picture on the JVM (native graphics), for its preview image.
+    // Draws the TV's browse picture and the watch-order artwork on the JVM (native graphics), for previews.
     testImplementation(libs.robolectric)
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.ui.test.junit4)
+    debugImplementation(libs.compose.ui.test.manifest)
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.junit)
