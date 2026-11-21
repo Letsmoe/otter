@@ -161,7 +161,7 @@ func (w *Watcher) seriesNotices(ctx context.Context, series library.Title, today
 		return nil, err
 	}
 	episodes := []library.Episode{}
-	for _, seasonNumber := range newestSeasonNumbers(seasons) {
+	for _, seasonNumber := range library.NewestRegularSeasonNumbers(seasons, seasonsChecked) {
 		seasonEpisodes, err := w.library.EnsureSeason(ctx, series.TMDBID, seasonNumber)
 		if err != nil {
 			return nil, err
@@ -169,21 +169,6 @@ func (w *Watcher) seriesNotices(ctx context.Context, series library.Title, today
 		episodes = append(episodes, seasonEpisodes...)
 	}
 	return SeriesNotices(series, episodes, today), nil
-}
-
-// newestSeasonNumbers returns the last seasonsChecked regular seasons, oldest first.
-// seasons come ordered with specials last.
-func newestSeasonNumbers(seasons []library.Season) []int {
-	numbers := []int{}
-	for _, season := range seasons {
-		if season.SeasonNumber > 0 {
-			numbers = append(numbers, season.SeasonNumber)
-		}
-	}
-	if len(numbers) > seasonsChecked {
-		numbers = numbers[len(numbers)-seasonsChecked:]
-	}
-	return numbers
 }
 
 func (w *Watcher) deliver(ctx context.Context, notices []Notice, followers []follower) {

@@ -1,0 +1,12 @@
+query UpcomingEpisodes($profileId: ID!, $days: Int!) {
+  upcomingEpisodes(profileId: $profileId, days: $days) {
+    series {
+      ...TitleCard
+    }
+    episode {
+      ...EpisodeRef
+      airDate
+      stillPath
+    }
+  }
+}

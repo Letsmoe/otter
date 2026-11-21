@@ -190,6 +190,15 @@ export interface ContinueItem {
     __typename: 'ContinueItem'
 }
 
+
+/** An episode that has not aired yet. */
+export interface UpcomingEpisode {
+    series: Title
+    /** Its airDate (yyyy-MM-dd, TMDB's) is today or within the asked days. */
+    episode: Episode
+    __typename: 'UpcomingEpisode'
+}
+
 export interface HistoryEntry {
     title: Title
     episode: (Episode | null)
@@ -464,6 +473,8 @@ export interface Query {
     recommendations: Recommendation[]
     recommendationRows: RecommendationRow[]
     continueWatching: ContinueItem[]
+    /** Episodes airing from today within days (default four weeks, at most 90), soonest first, of the series on the profile's My List or watched in the last months; air dates from TMDB. */
+    upcomingEpisodes: UpcomingEpisode[]
     history: HistoryEntry[]
     watchlist: Title[]
     /** Titles the profile rated well (I like this, Love this), latest rating first. */
@@ -810,6 +821,16 @@ export interface ContinueItemGenqlSelection{
     __scalar?: boolean | number
 }
 
+
+/** An episode that has not aired yet. */
+export interface UpcomingEpisodeGenqlSelection{
+    series?: TitleGenqlSelection
+    /** Its airDate (yyyy-MM-dd, TMDB's) is today or within the asked days. */
+    episode?: EpisodeGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 export interface HistoryEntryGenqlSelection{
     title?: TitleGenqlSelection
     episode?: EpisodeGenqlSelection
@@ -1093,6 +1114,8 @@ export interface QueryGenqlSelection{
     recommendations?: (RecommendationGenqlSelection & { __args: {profileId: Scalars['ID'], mediaType?: (MediaType | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null), refresh?: (Scalars['Boolean'] | null)} })
     recommendationRows?: (RecommendationRowGenqlSelection & { __args: {profileId: Scalars['ID'], rows?: (Scalars['Int'] | null), perRow?: (Scalars['Int'] | null)} })
     continueWatching?: (ContinueItemGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
+    /** Episodes airing from today within days (default four weeks, at most 90), soonest first, of the series on the profile's My List or watched in the last months; air dates from TMDB. */
+    upcomingEpisodes?: (UpcomingEpisodeGenqlSelection & { __args: {profileId: Scalars['ID'], days?: (Scalars['Int'] | null)} })
     history?: (HistoryEntryGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     watchlist?: (TitleGenqlSelection & { __args: {profileId: Scalars['ID']} })
     /** Titles the profile rated well (I like this, Love this), latest rating first. */
@@ -1349,6 +1372,14 @@ export interface SubscriptionGenqlSelection{
     export const isContinueItem = (obj?: { __typename?: any } | null): obj is ContinueItem => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isContinueItem"')
       return ContinueItem_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const UpcomingEpisode_possibleTypes: string[] = ['UpcomingEpisode']
+    export const isUpcomingEpisode = (obj?: { __typename?: any } | null): obj is UpcomingEpisode => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isUpcomingEpisode"')
+      return UpcomingEpisode_possibleTypes.includes(obj.__typename)
     }
     
 

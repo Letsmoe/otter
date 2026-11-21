@@ -743,6 +743,15 @@ func (r *queryResolver) ContinueWatching(ctx context.Context, profileID string, 
 	return r.continueWatching(ctx, profile, clamp(valueOr(limit, 20), 100))
 }
 
+// UpcomingEpisodes is the resolver for the upcomingEpisodes field.
+func (r *queryResolver) UpcomingEpisodes(ctx context.Context, profileID string, days *int) ([]*model.UpcomingEpisode, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return nil, err
+	}
+	return r.upcomingEpisodes(ctx, profile, clamp(valueOr(days, 28), 90))
+}
+
 // History is the resolver for the history field.
 func (r *queryResolver) History(ctx context.Context, profileID string, limit *int) ([]*model.HistoryEntry, error) {
 	profile, err := parseProfile(profileID)
