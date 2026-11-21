@@ -283,6 +283,13 @@ private fun chooseAnotherSourceAction(state: PlayerUiState, openSheet: (PlayerSh
 private fun SheetContent(kind: PlayerSheetKind, state: PlayerUiState, viewModel: PlayerViewModel, closeSheet: () -> Unit) {
     when (kind) {
         PlayerSheetKind.SPEED -> SpeedSheetContent(state.speed, viewModel::chooseSpeed)
+        PlayerSheetKind.SLEEP -> {
+            val run by viewModel.sleepTimerRun.collectAsStateWithLifecycle()
+            SleepTimerSheetContent(
+                run, state.stopsAfterEpisode, state.hasNextEpisode,
+                viewModel::startSleepTimer, viewModel::sleepAtEndOfEpisode, viewModel::cancelSleepTimer,
+            )
+        }
         PlayerSheetKind.SOURCES -> SourcesSheetContent(
             state.sources,
             state.currentSourceId,
