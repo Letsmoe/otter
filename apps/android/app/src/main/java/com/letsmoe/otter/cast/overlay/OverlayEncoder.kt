@@ -33,6 +33,7 @@ import kotlinx.coroutines.withContext
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.Effect
 import com.letsmoe.otter.ui.player.audio.EvenVolumeAudioProcessor
+import com.letsmoe.otter.ui.player.audio.SleepFadeAudioProcessor
 import com.letsmoe.otter.ui.player.audio.VoiceBoostAudioProcessor
 import java.io.File
 import java.io.OutputStream
@@ -108,7 +109,7 @@ class OverlayEncoder(
             .setMimeType(job.sourceMimeType)
             .setClippingConfiguration(clipping)
             .build()
-        val audioProcessors: List<AudioProcessor> = listOf(LiveVoiceBoost(job), LiveEvenVolume(job))
+        val audioProcessors: List<AudioProcessor> = listOf(LiveVoiceBoost(job), LiveEvenVolume(job), LiveSleepFade(job))
         return EditedMediaItem.Builder(mediaItem)
             .setEffects(Effects(audioProcessors, videoEffects()))
             .build()
@@ -165,6 +166,13 @@ internal class LiveEvenVolume(private val job: OverlayJob) : EvenVolumeAudioProc
         enabled = job.evenVolume()
         super.queueInput(inputBuffer)
     }
+}
+
+/** The sleep timer's fade in the TV's sound; last in the chain, so it fades whatever the other processors made. */
+@UnstableApi
+private class LiveSleepFade(private val job: OverlayJob) : SleepFadeAudioProcessor() {
+
+    override fun currentGain(): Float = job.audioGain()
 }
 
 /** Drops metadata the muxer refuses (e.g. the source's own tags), as Media3's file muxers do. */

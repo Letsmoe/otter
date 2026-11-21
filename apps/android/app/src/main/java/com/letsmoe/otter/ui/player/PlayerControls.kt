@@ -60,6 +60,7 @@ enum class PlayerSheetKind(val isSide: Boolean) {
     SOURCES(true),
     TOGETHER(true),
     TELEVISION(true),
+    SLEEP(true),
     TRACKS(false),
     EPISODES(false),
 }
