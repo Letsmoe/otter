@@ -202,6 +202,13 @@ type MoreWithRow {
   items: [Title!]!
 }
 
+"A profile's own Home row: a named, ordered list of movies and series."
+type Shelf {
+  id: ID!
+  name: String!
+  titles: [Title!]!
+}
+
 type RecommendationRow {
   key: String!
   title: String!
@@ -491,6 +498,8 @@ type Query {
   continueWatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
   history(profileId: ID!, limit: Int = 50): [HistoryEntry!]!
   watchlist(profileId: ID!): [Title!]!
+  "The profile's pinned shelves in their order, with their titles in order."
+  shelves(profileId: ID!): [Shelf!]!
   "Titles the profile rated well (I like this, Love this), latest rating first."
   likedTitles(profileId: ID!, limit: Int = 30): [Title!]!
   "Newest first."
@@ -574,6 +583,18 @@ type Mutation {
   clearRating(profileId: ID!, mediaId: ID!): Boolean!
   addToWatchlist(profileId: ID!, mediaId: ID!): Boolean!
   removeFromWatchlist(profileId: ID!, mediaId: ID!): Boolean!
+  "A new empty shelf after the profile's others."
+  createShelf(profileId: ID!, name: String!): Shelf!
+  renameShelf(profileId: ID!, shelfId: ID!, name: String!): Shelf!
+  "Deletes the shelf with its titles."
+  deleteShelf(profileId: ID!, shelfId: ID!): Boolean!
+  "Puts a movie or series at the end of a shelf; one already on it stays where it is."
+  addToShelf(profileId: ID!, shelfId: ID!, mediaId: ID!): Boolean!
+  removeFromShelf(profileId: ID!, shelfId: ID!, mediaId: ID!): Boolean!
+  "Sets the order of the profile's shelves; shelves left out follow in their old order."
+  reorderShelves(profileId: ID!, shelfIds: [ID!]!): Boolean!
+  "Sets the order of a shelf's titles; titles left out follow in their old order."
+  reorderShelfTitles(profileId: ID!, shelfId: ID!, mediaIds: [ID!]!): Boolean!
   "The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it."
   setNotifying(profileId: ID!, mediaId: ID!, notifying: Boolean!): Boolean!
   markNotificationsRead(profileId: ID!): Boolean!

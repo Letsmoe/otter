@@ -119,6 +119,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		AddToShelf             func(childComplexity int, profileID string, shelfID string, mediaID string) int
 		AddToWatchlist         func(childComplexity int, profileID string, mediaID string) int
 		AdoptStream            func(childComplexity int, mediaID string, url string, plugin string, label *string) int
 		CheckNotifications     func(childComplexity int) int
@@ -127,8 +128,10 @@ type ComplexityRoot struct {
 		CompleteChallenge      func(childComplexity int, id string, cookies string, userAgent string, finalURL *string) int
 		CompleteNeoworksSignIn func(childComplexity int, code string, state string) int
 		CreateProfile          func(childComplexity int, name string, avatarURL *string, pin *string, isChild *bool, languages []string) int
+		CreateShelf            func(childComplexity int, profileID string, name string) int
 		DeleteDownload         func(childComplexity int, id string) int
 		DeleteProfile          func(childComplexity int, id string) int
+		DeleteShelf            func(childComplexity int, profileID string, shelfID string) int
 		FailChallenge          func(childComplexity int, id string, reason string, linkGone *bool) int
 		FindStreams            func(childComplexity int, id string) int
 		HostTogether           func(childComplexity int, profileID string) int
@@ -139,7 +142,11 @@ type ComplexityRoot struct {
 		MarkNotificationsRead  func(childComplexity int, profileID string) int
 		OpenDownloadsFolder    func(childComplexity int) int
 		RecordProgress         func(childComplexity int, profileID string, mediaID string, progressSeconds float64, durationSeconds float64) int
+		RemoveFromShelf        func(childComplexity int, profileID string, shelfID string, mediaID string) int
 		RemoveFromWatchlist    func(childComplexity int, profileID string, mediaID string) int
+		RenameShelf            func(childComplexity int, profileID string, shelfID string, name string) int
+		ReorderShelfTitles     func(childComplexity int, profileID string, shelfID string, mediaIds []string) int
+		ReorderShelves         func(childComplexity int, profileID string, shelfIds []string) int
 		ResolveBestStream      func(childComplexity int, streamIds []string) int
 		ResolveStream          func(childComplexity int, streamID string) int
 		SendTogether           func(childComplexity int, payload string) int
@@ -282,6 +289,7 @@ type ComplexityRoot struct {
 		Recommendations         func(childComplexity int, profileID string, mediaType *model.MediaType, limit *int, offset *int, refresh *bool) int
 		Search                  func(childComplexity int, query string, mediaType *model.MediaType, limit *int, filter *model.TitleFilter) int
 		Settings                func(childComplexity int) int
+		Shelves                 func(childComplexity int, profileID string) int
 		Status                  func(childComplexity int) int
 		Subtitles               func(childComplexity int, mediaID string, profileID *string) int
 		Title                   func(childComplexity int, id string) int
@@ -334,6 +342,12 @@ type ComplexityRoot struct {
 		TmdbKeyStatus      func(childComplexity int) int
 		TmdbLanguage       func(childComplexity int) int
 		UsesDefaultTmdbKey func(childComplexity int) int
+	}
+
+	Shelf struct {
+		ID     func(childComplexity int) int
+		Name   func(childComplexity int) int
+		Titles func(childComplexity int) int
 	}
 
 	SkipSegment struct {
@@ -471,6 +485,13 @@ type MutationResolver interface {
 	ClearRating(ctx context.Context, profileID string, mediaID string) (bool, error)
 	AddToWatchlist(ctx context.Context, profileID string, mediaID string) (bool, error)
 	RemoveFromWatchlist(ctx context.Context, profileID string, mediaID string) (bool, error)
+	CreateShelf(ctx context.Context, profileID string, name string) (*model.Shelf, error)
+	RenameShelf(ctx context.Context, profileID string, shelfID string, name string) (*model.Shelf, error)
+	DeleteShelf(ctx context.Context, profileID string, shelfID string) (bool, error)
+	AddToShelf(ctx context.Context, profileID string, shelfID string, mediaID string) (bool, error)
+	RemoveFromShelf(ctx context.Context, profileID string, shelfID string, mediaID string) (bool, error)
+	ReorderShelves(ctx context.Context, profileID string, shelfIds []string) (bool, error)
+	ReorderShelfTitles(ctx context.Context, profileID string, shelfID string, mediaIds []string) (bool, error)
 	SetNotifying(ctx context.Context, profileID string, mediaID string, notifying bool) (bool, error)
 	MarkNotificationsRead(ctx context.Context, profileID string) (bool, error)
 	CheckNotifications(ctx context.Context) (bool, error)
@@ -523,6 +544,7 @@ type QueryResolver interface {
 	ContinueWatching(ctx context.Context, profileID string, limit *int) ([]*model.ContinueItem, error)
 	History(ctx context.Context, profileID string, limit *int) ([]*model.HistoryEntry, error)
 	Watchlist(ctx context.Context, profileID string) ([]*model.Title, error)
+	Shelves(ctx context.Context, profileID string) ([]*model.Shelf, error)
 	LikedTitles(ctx context.Context, profileID string, limit *int) ([]*model.Title, error)
 	Notifications(ctx context.Context, profileID string, limit *int) ([]*model.Notification, error)
 	UnreadNotificationCount(ctx context.Context, profileID string) (int, error)
@@ -885,6 +907,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.MoreWithRow.Person(childComplexity), true
 
+	case "Mutation.addToShelf":
+		if e.ComplexityRoot.Mutation.AddToShelf == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addToShelf_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.AddToShelf(childComplexity, args["profileId"].(string), args["shelfId"].(string), args["mediaId"].(string)), true
 	case "Mutation.addToWatchlist":
 		if e.ComplexityRoot.Mutation.AddToWatchlist == nil {
 			break
@@ -963,6 +996,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CreateProfile(childComplexity, args["name"].(string), args["avatarUrl"].(*string), args["pin"].(*string), args["isChild"].(*bool), args["languages"].([]string)), true
+	case "Mutation.createShelf":
+		if e.ComplexityRoot.Mutation.CreateShelf == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createShelf_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreateShelf(childComplexity, args["profileId"].(string), args["name"].(string)), true
 	case "Mutation.deleteDownload":
 		if e.ComplexityRoot.Mutation.DeleteDownload == nil {
 			break
@@ -985,6 +1029,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeleteProfile(childComplexity, args["id"].(string)), true
+	case "Mutation.deleteShelf":
+		if e.ComplexityRoot.Mutation.DeleteShelf == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteShelf_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.DeleteShelf(childComplexity, args["profileId"].(string), args["shelfId"].(string)), true
 	case "Mutation.failChallenge":
 		if e.ComplexityRoot.Mutation.FailChallenge == nil {
 			break
@@ -1085,6 +1140,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.RecordProgress(childComplexity, args["profileId"].(string), args["mediaId"].(string), args["progressSeconds"].(float64), args["durationSeconds"].(float64)), true
+	case "Mutation.removeFromShelf":
+		if e.ComplexityRoot.Mutation.RemoveFromShelf == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_removeFromShelf_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.RemoveFromShelf(childComplexity, args["profileId"].(string), args["shelfId"].(string), args["mediaId"].(string)), true
 	case "Mutation.removeFromWatchlist":
 		if e.ComplexityRoot.Mutation.RemoveFromWatchlist == nil {
 			break
@@ -1096,6 +1162,39 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.RemoveFromWatchlist(childComplexity, args["profileId"].(string), args["mediaId"].(string)), true
+	case "Mutation.renameShelf":
+		if e.ComplexityRoot.Mutation.RenameShelf == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_renameShelf_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.RenameShelf(childComplexity, args["profileId"].(string), args["shelfId"].(string), args["name"].(string)), true
+	case "Mutation.reorderShelfTitles":
+		if e.ComplexityRoot.Mutation.ReorderShelfTitles == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_reorderShelfTitles_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.ReorderShelfTitles(childComplexity, args["profileId"].(string), args["shelfId"].(string), args["mediaIds"].([]string)), true
+	case "Mutation.reorderShelves":
+		if e.ComplexityRoot.Mutation.ReorderShelves == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_reorderShelves_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.ReorderShelves(childComplexity, args["profileId"].(string), args["shelfIds"].([]string)), true
 	case "Mutation.resolveBestStream":
 		if e.ComplexityRoot.Mutation.ResolveBestStream == nil {
 			break
@@ -1905,6 +2004,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.Settings(childComplexity), true
+	case "Query.shelves":
+		if e.ComplexityRoot.Query.Shelves == nil {
+			break
+		}
+
+		args, err := ec.field_Query_shelves_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Shelves(childComplexity, args["profileId"].(string)), true
 	case "Query.status":
 		if e.ComplexityRoot.Query.Status == nil {
 			break
@@ -2162,6 +2272,25 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Settings.UsesDefaultTmdbKey(childComplexity), true
+
+	case "Shelf.id":
+		if e.ComplexityRoot.Shelf.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Shelf.ID(childComplexity), true
+	case "Shelf.name":
+		if e.ComplexityRoot.Shelf.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Shelf.Name(childComplexity), true
+	case "Shelf.titles":
+		if e.ComplexityRoot.Shelf.Titles == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Shelf.Titles(childComplexity), true
 
 	case "SkipSegment.endSeconds":
 		if e.ComplexityRoot.SkipSegment.EndSeconds == nil {
@@ -2992,6 +3121,13 @@ type MoreWithRow {
   items: [Title!]!
 }
 
+"A profile's own Home row: a named, ordered list of movies and series."
+type Shelf {
+  id: ID!
+  name: String!
+  titles: [Title!]!
+}
+
 type RecommendationRow {
   key: String!
   title: String!
@@ -3281,6 +3417,8 @@ type Query {
   continueWatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
   history(profileId: ID!, limit: Int = 50): [HistoryEntry!]!
   watchlist(profileId: ID!): [Title!]!
+  "The profile's pinned shelves in their order, with their titles in order."
+  shelves(profileId: ID!): [Shelf!]!
   "Titles the profile rated well (I like this, Love this), latest rating first."
   likedTitles(profileId: ID!, limit: Int = 30): [Title!]!
   "Newest first."
@@ -3364,6 +3502,18 @@ type Mutation {
   clearRating(profileId: ID!, mediaId: ID!): Boolean!
   addToWatchlist(profileId: ID!, mediaId: ID!): Boolean!
   removeFromWatchlist(profileId: ID!, mediaId: ID!): Boolean!
+  "A new empty shelf after the profile's others."
+  createShelf(profileId: ID!, name: String!): Shelf!
+  renameShelf(profileId: ID!, shelfId: ID!, name: String!): Shelf!
+  "Deletes the shelf with its titles."
+  deleteShelf(profileId: ID!, shelfId: ID!): Boolean!
+  "Puts a movie or series at the end of a shelf; one already on it stays where it is."
+  addToShelf(profileId: ID!, shelfId: ID!, mediaId: ID!): Boolean!
+  removeFromShelf(profileId: ID!, shelfId: ID!, mediaId: ID!): Boolean!
+  "Sets the order of the profile's shelves; shelves left out follow in their old order."
+  reorderShelves(profileId: ID!, shelfIds: [ID!]!): Boolean!
+  "Sets the order of a shelf's titles; titles left out follow in their old order."
+  reorderShelfTitles(profileId: ID!, shelfId: ID!, mediaIds: [ID!]!): Boolean!
   "The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it."
   setNotifying(profileId: ID!, mediaId: ID!, notifying: Boolean!): Boolean!
   markNotificationsRead(profileId: ID!): Boolean!
@@ -3887,6 +4037,18 @@ func (ec *executionContext) childFields_Settings(ctx context.Context, field grap
 	return nil, fmt.Errorf("no field named %q was found under type Settings", field.Name)
 }
 
+func (ec *executionContext) childFields_Shelf(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_Shelf_id(ctx, field)
+	case "name":
+		return ec.fieldContext_Shelf_name(ctx, field)
+	case "titles":
+		return ec.fieldContext_Shelf_titles(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Shelf", field.Name)
+}
+
 func (ec *executionContext) childFields_SkipSegment(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "kind":
@@ -4237,6 +4399,36 @@ func (ec *executionContext) field_Episode_progress_args(ctx context.Context, raw
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_addToShelf_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "shelfId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["shelfId"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "mediaId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mediaId"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_addToWatchlist_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4425,6 +4617,28 @@ func (ec *executionContext) field_Mutation_createProfile_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createShelf_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "name",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["name"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteDownload_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4450,6 +4664,28 @@ func (ec *executionContext) field_Mutation_deleteProfile_args(ctx context.Contex
 		return nil, err
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteShelf_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "shelfId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["shelfId"] = arg1
 	return args, nil
 }
 
@@ -4629,6 +4865,36 @@ func (ec *executionContext) field_Mutation_recordProgress_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_removeFromShelf_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "shelfId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["shelfId"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "mediaId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mediaId"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_removeFromWatchlist_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4648,6 +4914,88 @@ func (ec *executionContext) field_Mutation_removeFromWatchlist_args(ctx context.
 		return nil, err
 	}
 	args["mediaId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_renameShelf_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "shelfId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["shelfId"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "name",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["name"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_reorderShelfTitles_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "shelfId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["shelfId"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "mediaIds",
+		func(ctx context.Context, v any) ([]string, error) {
+			return ec.unmarshalNID2ᚕstringᚄ(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mediaIds"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_reorderShelves_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "shelfIds",
+		func(ctx context.Context, v any) ([]string, error) {
+			return ec.unmarshalNID2ᚕstringᚄ(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["shelfIds"] = arg1
 	return args, nil
 }
 
@@ -5438,6 +5786,20 @@ func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs
 		return nil, err
 	}
 	args["filter"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_shelves_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
 	return args, nil
 }
 
@@ -7464,6 +7826,314 @@ func (ec *executionContext) fieldContext_Mutation_removeFromWatchlist(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_removeFromWatchlist_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createShelf(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_createShelf(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateShelf(ctx, fc.Args["profileId"].(string), fc.Args["name"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Shelf) graphql.Marshaler {
+			return ec.marshalNShelf2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐShelf(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_createShelf(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Shelf(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createShelf_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_renameShelf(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_renameShelf(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().RenameShelf(ctx, fc.Args["profileId"].(string), fc.Args["shelfId"].(string), fc.Args["name"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Shelf) graphql.Marshaler {
+			return ec.marshalNShelf2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐShelf(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_renameShelf(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Shelf(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_renameShelf_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteShelf(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_deleteShelf(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().DeleteShelf(ctx, fc.Args["profileId"].(string), fc.Args["shelfId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_deleteShelf(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteShelf_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_addToShelf(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_addToShelf(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().AddToShelf(ctx, fc.Args["profileId"].(string), fc.Args["shelfId"].(string), fc.Args["mediaId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_addToShelf(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_addToShelf_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_removeFromShelf(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_removeFromShelf(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().RemoveFromShelf(ctx, fc.Args["profileId"].(string), fc.Args["shelfId"].(string), fc.Args["mediaId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_removeFromShelf(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_removeFromShelf_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_reorderShelves(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_reorderShelves(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().ReorderShelves(ctx, fc.Args["profileId"].(string), fc.Args["shelfIds"].([]string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_reorderShelves(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_reorderShelves_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_reorderShelfTitles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_reorderShelfTitles(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().ReorderShelfTitles(ctx, fc.Args["profileId"].(string), fc.Args["shelfId"].(string), fc.Args["mediaIds"].([]string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_reorderShelfTitles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_reorderShelfTitles_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -10946,6 +11616,50 @@ func (ec *executionContext) fieldContext_Query_watchlist(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_shelves(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_shelves(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Shelves(ctx, fc.Args["profileId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Shelf) graphql.Marshaler {
+			return ec.marshalNShelf2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐShelfᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_shelves(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Shelf(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_shelves_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_likedTitles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -12193,6 +12907,84 @@ func (ec *executionContext) _Settings_disabledPlugins(ctx context.Context, field
 }
 func (ec *executionContext) fieldContext_Settings_disabledPlugins(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Settings", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Shelf_id(ctx context.Context, field graphql.CollectedField, obj *model.Shelf) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Shelf_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Shelf_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Shelf", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _Shelf_name(ctx context.Context, field graphql.CollectedField, obj *model.Shelf) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Shelf_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Shelf_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Shelf", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Shelf_titles(ctx context.Context, field graphql.CollectedField, obj *model.Shelf) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Shelf_titles(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Titles, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Shelf_titles(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Shelf",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Title(ctx, field)
+		},
+	}
+	return fc, nil
 }
 
 func (ec *executionContext) _SkipSegment_kind(ctx context.Context, field graphql.CollectedField, obj *model.SkipSegment) (ret graphql.Marshaler) {
@@ -16233,6 +17025,55 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createShelf":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createShelf(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "renameShelf":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_renameShelf(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteShelf":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteShelf(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "addToShelf":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_addToShelf(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "removeFromShelf":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_removeFromShelf(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reorderShelves":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_reorderShelves(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reorderShelfTitles":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_reorderShelfTitles(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "setNotifying":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_setNotifying(ctx, field)
@@ -17578,6 +18419,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "shelves":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_shelves(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "likedTitles":
 			field := field
 
@@ -18191,6 +19054,55 @@ func (ec *executionContext) _Settings(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "disabledPlugins":
 			out.Values[i] = ec._Settings_disabledPlugins(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var shelfImplementors = []string{"Shelf"}
+
+func (ec *executionContext) _Shelf(ctx context.Context, sel ast.SelectionSet, obj *model.Shelf) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, shelfImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Shelf")
+		case "id":
+			out.Values[i] = ec._Shelf_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Shelf_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "titles":
+			out.Values[i] = ec._Shelf_titles(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -20215,6 +21127,36 @@ func (ec *executionContext) marshalNSettings2ᚖgithubᚗcomᚋLetsmoeᚋotter�
 func (ec *executionContext) unmarshalNSettingsInput2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSettingsInput(ctx context.Context, v any) (model.SettingsInput, error) {
 	res, err := ec.unmarshalInputSettingsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNShelf2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐShelf(ctx context.Context, sel ast.SelectionSet, v model.Shelf) graphql.Marshaler {
+	return ec._Shelf(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNShelf2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐShelfᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Shelf) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNShelf2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐShelf(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNShelf2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐShelf(ctx context.Context, sel ast.SelectionSet, v *model.Shelf) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Shelf(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNSkipSegment2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSkipSegmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SkipSegment) graphql.Marshaler {

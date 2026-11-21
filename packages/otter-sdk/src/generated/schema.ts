@@ -215,6 +215,15 @@ export interface MoreWithRow {
     __typename: 'MoreWithRow'
 }
 
+
+/** A profile's own Home row: a named, ordered list of movies and series. */
+export interface Shelf {
+    id: Scalars['ID']
+    name: Scalars['String']
+    titles: Title[]
+    __typename: 'Shelf'
+}
+
 export interface RecommendationRow {
     key: Scalars['String']
     title: Scalars['String']
@@ -466,6 +475,8 @@ export interface Query {
     continueWatching: ContinueItem[]
     history: HistoryEntry[]
     watchlist: Title[]
+    /** The profile's pinned shelves in their order, with their titles in order. */
+    shelves: Shelf[]
     /** Titles the profile rated well (I like this, Love this), latest rating first. */
     likedTitles: Title[]
     /** Newest first. */
@@ -546,6 +557,18 @@ export interface Mutation {
     clearRating: Scalars['Boolean']
     addToWatchlist: Scalars['Boolean']
     removeFromWatchlist: Scalars['Boolean']
+    /** A new empty shelf after the profile's others. */
+    createShelf: Shelf
+    renameShelf: Shelf
+    /** Deletes the shelf with its titles. */
+    deleteShelf: Scalars['Boolean']
+    /** Puts a movie or series at the end of a shelf; one already on it stays where it is. */
+    addToShelf: Scalars['Boolean']
+    removeFromShelf: Scalars['Boolean']
+    /** Sets the order of the profile's shelves; shelves left out follow in their old order. */
+    reorderShelves: Scalars['Boolean']
+    /** Sets the order of a shelf's titles; titles left out follow in their old order. */
+    reorderShelfTitles: Scalars['Boolean']
     /** The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it. */
     setNotifying: Scalars['Boolean']
     markNotificationsRead: Scalars['Boolean']
@@ -842,6 +865,16 @@ export interface MoreWithRowGenqlSelection{
     __scalar?: boolean | number
 }
 
+
+/** A profile's own Home row: a named, ordered list of movies and series. */
+export interface ShelfGenqlSelection{
+    id?: boolean | number
+    name?: boolean | number
+    titles?: TitleGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 export interface RecommendationRowGenqlSelection{
     key?: boolean | number
     title?: boolean | number
@@ -1095,6 +1128,8 @@ export interface QueryGenqlSelection{
     continueWatching?: (ContinueItemGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     history?: (HistoryEntryGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     watchlist?: (TitleGenqlSelection & { __args: {profileId: Scalars['ID']} })
+    /** The profile's pinned shelves in their order, with their titles in order. */
+    shelves?: (ShelfGenqlSelection & { __args: {profileId: Scalars['ID']} })
     /** Titles the profile rated well (I like this, Love this), latest rating first. */
     likedTitles?: (TitleGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     /** Newest first. */
@@ -1177,6 +1212,18 @@ export interface MutationGenqlSelection{
     clearRating?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
     addToWatchlist?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
     removeFromWatchlist?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
+    /** A new empty shelf after the profile's others. */
+    createShelf?: (ShelfGenqlSelection & { __args: {profileId: Scalars['ID'], name: Scalars['String']} })
+    renameShelf?: (ShelfGenqlSelection & { __args: {profileId: Scalars['ID'], shelfId: Scalars['ID'], name: Scalars['String']} })
+    /** Deletes the shelf with its titles. */
+    deleteShelf?: { __args: {profileId: Scalars['ID'], shelfId: Scalars['ID']} }
+    /** Puts a movie or series at the end of a shelf; one already on it stays where it is. */
+    addToShelf?: { __args: {profileId: Scalars['ID'], shelfId: Scalars['ID'], mediaId: Scalars['ID']} }
+    removeFromShelf?: { __args: {profileId: Scalars['ID'], shelfId: Scalars['ID'], mediaId: Scalars['ID']} }
+    /** Sets the order of the profile's shelves; shelves left out follow in their old order. */
+    reorderShelves?: { __args: {profileId: Scalars['ID'], shelfIds: Scalars['ID'][]} }
+    /** Sets the order of a shelf's titles; titles left out follow in their old order. */
+    reorderShelfTitles?: { __args: {profileId: Scalars['ID'], shelfId: Scalars['ID'], mediaIds: Scalars['ID'][]} }
     /** The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it. */
     setNotifying?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], notifying: Scalars['Boolean']} }
     markNotificationsRead?: { __args: {profileId: Scalars['ID']} }
@@ -1373,6 +1420,14 @@ export interface SubscriptionGenqlSelection{
     export const isMoreWithRow = (obj?: { __typename?: any } | null): obj is MoreWithRow => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isMoreWithRow"')
       return MoreWithRow_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const Shelf_possibleTypes: string[] = ['Shelf']
+    export const isShelf = (obj?: { __typename?: any } | null): obj is Shelf => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isShelf"')
+      return Shelf_possibleTypes.includes(obj.__typename)
     }
     
 
