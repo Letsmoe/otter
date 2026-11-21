@@ -22,6 +22,7 @@ import (
 	gqlapi "github.com/Letsmoe/otter/internal/api/graphql"
 	"github.com/Letsmoe/otter/internal/blobcache"
 	"github.com/Letsmoe/otter/internal/cache"
+	"github.com/Letsmoe/otter/internal/calendar"
 	"github.com/Letsmoe/otter/internal/challenge"
 	"github.com/Letsmoe/otter/internal/db"
 	"github.com/Letsmoe/otter/internal/downloads"
@@ -58,9 +59,9 @@ type config struct {
 	// The phone app's loopback encoder for TV streams with captions drawn in; "" elsewhere.
 	overlayStreamURL string
 	publicURL        string
-	dataDir       string
-	pluginDir     string
-	hooksDir      string
+	dataDir          string
+	pluginDir        string
+	hooksDir         string
 	// Folder finished downloads are exported to; "" disables exporting.
 	downloadsDir string
 	tmdbAPIKey   string
@@ -72,8 +73,8 @@ func loadConfig() config {
 	dataDir := envOr("DATA_DIR", "./data")
 	return config{
 		// HOST empty = every interface; the phone app binds to 127.0.0.1.
-		host:          os.Getenv("HOST"),
-		port:          port,
+		host:             os.Getenv("HOST"),
+		port:             port,
 		lanStreamPort:    os.Getenv("LAN_STREAM_PORT"),
 		overlayStreamURL: os.Getenv("OVERLAY_STREAM_URL"),
 		// Externally reachable origin; stream-proxy and blob URLs are built from it.
@@ -203,9 +204,11 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	go notificationWatcher.Run(ctx)
 
 	pluginStore := startPluginStore(ctx, cfg.pluginDir)
+	profileService := profiles.NewService(database, cacheClient, hookRunner)
+	calendarService := calendar.NewService(database, profileService, libraryService)
 	resolver := gqlapi.NewResolver(gqlapi.Services{
 		Library:             libraryService,
-		Profiles:            profiles.NewService(database, cacheClient, hookRunner),
+		Profiles:            profileService,
 		Notifications:       notificationStore,
 		NotificationWatcher: notificationWatcher,
 		Downloads:           downloadService,
@@ -234,6 +237,7 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	mux.Handle("/api/stream/", streamProxy)
 	mux.Handle(storage.RoutePrefix, store.Handler())
 	mux.Handle(subtitles.RoutePrefix, subtitleService.Handler())
+	mux.Handle(calendar.RoutePrefix, calendarService.Handler())
 	mux.HandleFunc("/health", func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusOK)
 	})
@@ -242,6 +246,8 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	lanMux.Handle("/api/stream/", streamProxy)
 	lanMux.Handle(storage.RoutePrefix, store.Handler())
 	lanMux.Handle(subtitles.RoutePrefix, subtitleService.Handler())
+	// Calendar apps on other devices of the Wi-Fi subscribe to the feed of the phone's own backend here.
+	lanMux.Handle(calendar.RoutePrefix, calendarService.Handler())
 	// Every request on the LAN port comes from a TV or Chromecast, so all of them are traced.
 	return serverHandlers{
 		api:        tracing.Middleware("api", never, errorreport.Recover(corsMiddleware(mux))),
