@@ -47,12 +47,12 @@ fun HeroBackdrop(hero: HeroTitle?, modifier: Modifier = Modifier) {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .fillMaxWidth(0.78f)
-                    .fillMaxHeight(0.72f),
+                    .fillMaxWidth(0.82f)
+                    .fillMaxHeight(0.86f),
             )
         }
-        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0.2f to Color.Black, 0.6f to Color.Transparent)))
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.35f to Color.Transparent, 0.72f to Color.Black)))
+        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0.18f to Color.Black, 0.6f to Color.Transparent)))
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.5f to Color.Transparent, 0.86f to Color.Black)))
     }
 }
 

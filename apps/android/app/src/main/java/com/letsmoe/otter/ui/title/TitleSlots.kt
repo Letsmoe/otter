@@ -2,9 +2,6 @@ package com.letsmoe.otter.ui.title
 
 import androidx.compose.runtime.Composable
 
-/** What opens the player: a movie or episode, optionally on one chosen link; without one the player picks the best. */
-data class PlayRequest(val mediaId: String, val streamId: String? = null)
-
 /** Places on the title pages where other features (Watch Together, downloads) plug in their buttons. */
 class TitleSlots(
     /** Round 40dp glass buttons (Play on TV, Watch Together) left of search in the floating nav. */

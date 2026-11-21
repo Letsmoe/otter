@@ -21,6 +21,22 @@ fun FocusPivot(pivot: Dp, content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalBringIntoViewSpec provides spec, content = content)
 }
 
+/**
+ * Lists inside [content] don't scroll by themselves when focus moves; the screen scrolls them
+ * (the home moves whole rows into place). Nested lists can set their own [FocusPivot].
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun ManualFocusScroll(content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalBringIntoViewSpec provides NoScrollBringIntoViewSpec, content = content)
+}
+
+private object NoScrollBringIntoViewSpec : BringIntoViewSpec {
+    override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float {
+        return 0f
+    }
+}
+
 private class PivotBringIntoViewSpec(private val pivotPixels: Float) : BringIntoViewSpec {
     override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float {
         return offset - pivotPixels

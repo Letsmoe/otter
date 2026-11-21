@@ -21,8 +21,6 @@ private enum class MovieTab(val label: String) {
 
 private val movieTabs = MovieTab.entries.map { tab -> tab to tab.label }
 
-private const val STARRING_COUNT = 3
-
 /** A movie: Play starts the best source; the tabs hold related titles, trailers and every source. */
 @Composable
 fun MoviePage(
@@ -65,42 +63,4 @@ fun MoviePage(
             )
         }
     }
-}
-
-private fun moviePlayLabel(streams: StreamList): String {
-    if (streams.vpnBlocked) {
-        return "Connect to a VPN to watch"
-    }
-    if (streams.isBusy) {
-        return "Searching sources…"
-    }
-    if (streams.nothingFound) {
-        return "No sources found"
-    }
-    return "Play"
-}
-
-/** "2014", "2h 49m", "★ 8.5" and the first two genres. */
-fun movieFacts(detail: TitleDetail): List<String> {
-    val facts = mutableListOf<String>()
-    detail.year?.let { year -> facts.add(year.toString()) }
-    formatRuntime(detail.runtime)?.let { runtime -> facts.add(runtime) }
-    if (detail.voteAverage > 0) {
-        facts.add("★ %.1f".format(detail.voteAverage))
-    }
-    if (detail.genres.isNotEmpty()) {
-        facts.add(detail.genres.take(2).joinToString(" · "))
-    }
-    return facts
-}
-
-private fun movieCreditLines(detail: TitleDetail): List<String> {
-    val lines = mutableListOf<String>()
-    if (detail.cast.isNotEmpty()) {
-        lines.add("Starring: " + detail.cast.take(STARRING_COUNT).joinToString(", ") { member -> member.name })
-    }
-    if (detail.directors.isNotEmpty()) {
-        lines.add("Director: " + detail.directors.joinToString(", ") { director -> director.name })
-    }
-    return lines
 }

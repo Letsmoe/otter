@@ -69,6 +69,7 @@ fun PillButton(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     primary: Boolean = false,
+    enabled: Boolean = true,
 ) {
     var containerColor = TvColors.subtleFill
     var contentColor = TvColors.baseContent
@@ -78,6 +79,7 @@ fun PillButton(
     }
     Surface(
         onClick = onClick,
+        enabled = enabled,
         modifier = modifier,
         shape = ClickableSurfaceDefaults.shape(CircleShape),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.06f),

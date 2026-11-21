@@ -96,8 +96,9 @@ private fun EpisodeRow(
             )
             downloadButton(episode.id, "${episode.code} ${episode.displayName}")
         }
-        if (!episode.overview.isNullOrEmpty()) {
-            EpisodeOverview(episode.overview) { expanded -> onOverviewExpanded(episode, expanded) }
+        val overview = episode.overview
+        if (!overview.isNullOrEmpty()) {
+            EpisodeOverview(overview) { expanded -> onOverviewExpanded(episode, expanded) }
         }
     }
 }
@@ -136,22 +137,11 @@ private fun EpisodeStill(episode: SeasonEpisode, onClick: () -> Unit) {
         Box(Modifier.align(Alignment.Center).size(36.dp).frostedGlass(CircleShape), contentAlignment = Alignment.Center) {
             Icon(PhosphorIcons.Fill.Play, contentDescription = "Play ${episode.displayName}", modifier = Modifier.size(16.dp))
         }
-        if (episode.progress != null) {
+        val progress = episode.progress
+        if (progress != null) {
             Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(4.dp).background(Color.White.copy(alpha = 0.2f))) {
-                Box(Modifier.fillMaxHeight().fillMaxWidth(episode.progress).background(OtterColors.baseContent))
+                Box(Modifier.fillMaxHeight().fillMaxWidth(progress).background(OtterColors.baseContent))
             }
         }
     }
-}
-
-/** "2h 5m" or "45m". */
-fun formatRuntime(minutes: Int?): String? {
-    if (minutes == null || minutes <= 0) {
-        return null
-    }
-    val hours = minutes / 60
-    if (hours == 0) {
-        return "${minutes % 60}m"
-    }
-    return "${hours}h ${minutes % 60}m"
 }

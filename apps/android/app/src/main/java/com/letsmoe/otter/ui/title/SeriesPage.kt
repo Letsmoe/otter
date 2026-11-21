@@ -36,8 +36,6 @@ private enum class SeriesTab(val label: String) {
 
 private val seriesTabs = SeriesTab.entries.map { tab -> tab to tab.label }
 
-private const val STARRING_COUNT = 3
-
 /** A series: Play resumes or starts the up-next episode; the tabs hold episodes by season, related titles and trailers. */
 @Composable
 fun SeriesPage(
@@ -85,8 +83,9 @@ private fun UpNextBar(upNext: UpNext?) {
         return
     }
     var progress = 0f
-    if (upNext.episode.progress != null) {
-        progress = upNext.episode.progress
+    val episodeProgress = upNext.episode.progress
+    if (episodeProgress != null) {
+        progress = episodeProgress
     }
     UpNextProgress(progress, "${upNext.episode.code} · ${upNext.episode.displayName}")
 }
@@ -100,9 +99,10 @@ private fun EpisodesTab(detail: TitleDetail, episodes: EpisodesState, seriesView
         share(context, "${detail.title} ${episode.code} “${episode.displayName}”", link)
     }
     Column(Modifier.padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        if (detail.seasons.size > 1 && episodes.shownSeason != null) {
+        val shownSeason = episodes.shownSeason
+        if (detail.seasons.size > 1 && shownSeason != null) {
             val options = detail.seasons.map { season -> season.seasonNumber to seasonLabel(season) }
-            FilterSelect("Season", options, episodes.shownSeason, seriesViewModel::selectSeason, showLabel = false)
+            FilterSelect("Season", options, shownSeason, seriesViewModel::selectSeason, showLabel = false)
         }
         when {
             !episodes.loaded && episodes.episodes.isEmpty() -> Spinner()
@@ -131,8 +131,9 @@ private fun Hint(text: String) {
 }
 
 private fun seasonLabel(season: SeasonInfo): String {
-    if (!season.name.isNullOrEmpty()) {
-        return season.name
+    val name = season.name
+    if (!name.isNullOrEmpty()) {
+        return name
     }
     return "Season ${season.seasonNumber}"
 }
@@ -143,43 +144,4 @@ private fun upNextDownload(detail: TitleDetail, upNext: UpNext?): DownloadTarget
         return null
     }
     return DownloadTarget(upNext.episode.id, "${detail.title} ${upNext.episode.code} ${upNext.episode.displayName}")
-}
-
-private fun seriesPlayLabel(upNext: UpNext?, vpnBlocked: Boolean): String {
-    if (vpnBlocked) {
-        return "Connect to a VPN to watch"
-    }
-    if (upNext == null) {
-        return "Play"
-    }
-    if (upNext.resume) {
-        return "Resume ${upNext.episode.code}"
-    }
-    return "Play ${upNext.episode.code}"
-}
-
-/** "2022", "2 Seasons", "★ 8.7" and the first two genres. */
-fun seriesFacts(detail: TitleDetail): List<String> {
-    val facts = mutableListOf<String>()
-    detail.year?.let { year -> facts.add(year.toString()) }
-    if (detail.regularSeasonCount == 1) {
-        facts.add("1 Season")
-    }
-    if (detail.regularSeasonCount > 1) {
-        facts.add("${detail.regularSeasonCount} Seasons")
-    }
-    if (detail.voteAverage > 0) {
-        facts.add("★ %.1f".format(detail.voteAverage))
-    }
-    if (detail.genres.isNotEmpty()) {
-        facts.add(detail.genres.take(2).joinToString(" · "))
-    }
-    return facts
-}
-
-private fun seriesCreditLines(detail: TitleDetail): List<String> {
-    if (detail.cast.isEmpty()) {
-        return emptyList()
-    }
-    return listOf("Starring: " + detail.cast.take(STARRING_COUNT).joinToString(", ") { member -> member.name })
 }

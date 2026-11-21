@@ -74,8 +74,9 @@ private fun PersonContent(person: PersonDetail, rows: PersonRows, onOpenItem: (R
         verticalArrangement = Arrangement.spacedBy(28.dp),
     ) {
         item(key = "hero") { PersonHero(person, scroll = { heroScroll(listState) }) }
-        if (!person.biography.isNullOrEmpty()) {
-            item(key = "biography") { Biography(person.biography) }
+        val biography = person.biography
+        if (!biography.isNullOrEmpty()) {
+            item(key = "biography") { Biography(biography) }
         }
         item(key = "recommended") {
             PosterRail("Recommended with ${person.name}", rows.recommended, onOpenItem, size = PosterSize.LARGE)

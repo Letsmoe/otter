@@ -20,12 +20,6 @@ import com.letsmoe.otter.ui.LoadState
 import com.letsmoe.otter.ui.media.RailItem
 
 /**
- * The episode a series page opens on: by id (Continue Watching, notifications) or by its
- * numbers (shared links, which can't know this install's episode ids).
- */
-data class LinkedEpisode(val seasonNumber: Int? = null, val episodeId: String? = null, val episodeNumber: Int? = null)
-
-/**
  * A movie or series page, loaded from the id. A series page can open on [linkedEpisode].
  * [onPlay] receives the link to open in the player.
  */
