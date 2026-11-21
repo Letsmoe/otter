@@ -3,6 +3,7 @@ package com.letsmoe.otter.settings
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import java.time.LocalTime
 
 /** When intros and recaps are jumped over without pressing the skip button. */
 enum class AutoSkipIntro(val label: String) {
@@ -20,6 +21,8 @@ object PlaybackSettings {
     private const val KEY_TELEVISION_TITLE_CARD = "televisionTitleCard"
     private const val KEY_EVEN_VOLUME = "evenVolume"
     private const val KEY_BRIGHTEN_DARK_SCENES = "brightenDarkScenes"
+    private const val KEY_BEDTIME_MINUTES = "bedtimeMinutes"
+    private const val BEDTIME_OFF = -1
 
     private lateinit var preferences: SharedPreferences
 
@@ -52,6 +55,39 @@ object PlaybackSettings {
         set(value) {
             preferences.edit { putBoolean(KEY_EVEN_VOLUME, value) }
         }
+
+    /** Minutes after midnight when the night starts; null when there is no bedtime. */
+    var bedtimeMinutes: Int?
+        get() {
+            val stored = preferences.getInt(KEY_BEDTIME_MINUTES, BEDTIME_OFF)
+            if (stored == BEDTIME_OFF) {
+                return null
+            }
+            return stored
+        }
+        set(value) {
+            preferences.edit {
+                if (value == null) {
+                    remove(KEY_BEDTIME_MINUTES)
+                } else {
+                    putInt(KEY_BEDTIME_MINUTES, value)
+                }
+            }
+        }
+
+    /** Whether the night after the bedtime has started right now. */
+    fun isPastBedtime(now: LocalTime = LocalTime.now()): Boolean {
+        val bedtime = bedtimeMinutes ?: return false
+        return Bedtime.hasStarted(bedtime, now.hour * 60 + now.minute)
+    }
+
+    /** Even volume that the bedtime switched on. Not saved: it ends with the night or when the viewer switches it off. */
+    @Volatile
+    var evenVolumeFromBedtime = false
+
+    /** Even volume as it applies now: the setting, or the bedtime's. */
+    val evenVolumeActive: Boolean
+        get() = evenVolume || (evenVolumeFromBedtime && isPastBedtime())
 
     /** Lifts the shadows of the picture the phone makes for a TV, from its next stream on. */
     var brightenDarkScenes: Boolean
