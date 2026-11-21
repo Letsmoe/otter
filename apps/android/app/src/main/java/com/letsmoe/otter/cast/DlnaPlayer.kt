@@ -30,6 +30,8 @@ import com.letsmoe.otter.cast.overlay.loadOverlayPlan
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.reporting.ErrorReporting
 import com.letsmoe.otter.settings.PlaybackSettings
+import com.letsmoe.otter.ui.player.SleepTimer
+import com.letsmoe.otter.ui.player.TELEVISION_SOUND_LEAD_MILLISECONDS
 import com.letsmoe.otter.ui.player.captionLookOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -622,6 +624,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
             evenVolume = { PlaybackSettings.evenVolume },
             replayUntilSeconds = { replayUntilSeconds },
             stopsAfterEpisode = { stopsAfterEpisode },
+            audioGain = { SleepTimer.shared.gain(TELEVISION_SOUND_LEAD_MILLISECONDS) },
         )
     }
 

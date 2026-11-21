@@ -102,11 +102,15 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private val progressReporter = ProgressReporter()
     private val togetherSync = PlayerTogetherSync(viewModelScope, this)
     private val skipTracker = SkipTracker()
+    private val sleepTimer = SleepTimer.shared
     private val upNextOffer = UpNext(viewModelScope, ::playNext)
     private val captionExtras = CaptionExtras(viewModelScope, ::reloadPhoneCaptions)
 
     /** The next episode's card while the credits run. */
     val upNext: StateFlow<UpNextCard?> = upNextOffer.card
+
+    /** The running sleep timer; null when none runs. */
+    val sleepTimerRun: StateFlow<SleepTimerRun?> = sleepTimer.run
 
     /** Caption timing and the second caption language of the title playing. */
     val captionTweaks: StateFlow<CaptionExtrasState> = captionExtras.state
@@ -914,6 +918,30 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     /** Nothing plays after the episode playing now; the next title starts without this again. */
     fun toggleStopAfterEpisode() {
         val stopping = !mutableState.value.stopsAfterEpisode
+        if (stopping) {
+            sleepTimer.cancel()
+        }
+        setStopAfterEpisode(stopping)
+    }
+
+    /** Fades the sound out and pauses after [minutes]; replaces "End of episode". */
+    fun startSleepTimer(minutes: Int) {
+        sleepTimer.start(minutes)
+        setStopAfterEpisode(false)
+    }
+
+    /** The sleep timer's "End of episode": the existing stop after this episode. */
+    fun sleepAtEndOfEpisode() {
+        sleepTimer.cancel()
+        setStopAfterEpisode(true)
+    }
+
+    fun cancelSleepTimer() {
+        sleepTimer.cancel()
+        setStopAfterEpisode(false)
+    }
+
+    private fun setStopAfterEpisode(stopping: Boolean) {
         televisionPlayer?.stopsAfterEpisode = stopping
         mutableState.update { current -> current.copy(stopsAfterEpisode = stopping) }
         if (stopping) {
@@ -957,11 +985,37 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             val buffered = activePlayer.bufferedPosition / 1000.0
             mutablePosition.value = PlaybackPosition(position, buffered)
             followSegments(position)
+            followSleepTimer()
             if (activePlayer.playWhenReady) {
                 saveProgress(force = false)
             }
             delay(POSITION_POLL_MILLISECONDS)
         }
+    }
+
+    // The phone fades its own sound; a TV's sound is faded in the encoder (see LiveSleepFade).
+    private fun followSleepTimer() {
+        if (sleepTimer.isDue()) {
+            sleepTimer.cancel()
+            setPhoneVolume(1f)
+            pauseForSleepTimer()
+            return
+        }
+        setPhoneVolume(sleepTimer.gain())
+    }
+
+    private fun setPhoneVolume(gain: Float) {
+        if (mutableState.value.isCasting || player.volume == gain) {
+            return
+        }
+        player.volume = gain
+    }
+
+    private fun pauseForSleepTimer() {
+        if (!intendedPlaying()) {
+            return
+        }
+        togglePlay()
     }
 
     private fun followSegments(positionSeconds: Double) {
