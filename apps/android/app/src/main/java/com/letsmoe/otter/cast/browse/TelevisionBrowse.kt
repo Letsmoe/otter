@@ -7,8 +7,7 @@ import com.letsmoe.otter.AppScope
 import com.letsmoe.otter.cast.DlnaPlayer
 import com.letsmoe.otter.cast.TelevisionConnection
 import com.letsmoe.otter.cast.TelevisionTarget
-import com.letsmoe.otter.cast.overlay.StillJob
-import com.letsmoe.otter.cast.overlay.StillJobs
+import com.letsmoe.otter.cast.session.SessionScreen
 import com.letsmoe.otter.settings.PlaybackSettings
 import com.letsmoe.otter.ui.player.TelevisionPlayback
 import kotlinx.coroutines.CancellationException
@@ -21,19 +20,18 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 private const val TAG = "OtterBrowse"
-// The title page changes often while the user flicks through titles; the TV takes seconds to switch.
+// The title page changes often while the user flicks through titles; drawing each one is wasted work.
 private const val SETTLE_MILLISECONDS = 1200L
-// The picture is a video of this length; a TV that watched all of it goes back to its own screen.
-private const val STILL_SECONDS = 2 * 60 * 60
 
 /**
  * Shows the title the phone is looking at on the connected DLNA TV while
  * nothing plays: the title page asks with [show], the phone draws the picture
- * ([drawBrowseFrame]), the loopback encoder turns it into a video and the TV
- * loads it like any stream. The newest request wins; a title that starts
- * playing or a TV that goes away ends it.
+ * ([drawBrowseFrame]) and the TV's session stream shows it (see
+ * [DlnaPlayer.showIdleScreen]), so the TV loads nothing new. The newest
+ * request wins; a title that starts playing or a TV that goes away ends it.
  */
 object TelevisionBrowse {
 
@@ -45,9 +43,8 @@ object TelevisionBrowse {
     val browsing: StateFlow<BrowsePreview?> = requested
     private val enabled = MutableStateFlow(true)
     private var shown: ShownPreview? = null
-
-    @Volatile
-    private var encoderFailed = false
+    // The picture the session shows now; deleted once another one replaces it.
+    private var shownPicture: File? = null
 
     fun initialize(context: Context) {
         applicationContext = context.applicationContext
@@ -58,7 +55,7 @@ object TelevisionBrowse {
             TelevisionPlayback.player,
             enabled,
         ) { preview, target, player, isEnabled ->
-            BrowseInputs(preview, dlnaIdOf(target), player != null, isEnabled, encoderUsable(target))
+            BrowseInputs(preview, dlnaIdOf(target), player != null, isEnabled, showsScreens(target))
         }
         AppScope.launch {
             inputs.collectLatest { current -> follow(current) }
@@ -99,12 +96,11 @@ object TelevisionBrowse {
         return null
     }
 
-    // Neither this encoder nor the TV's overlay encoder has failed.
-    private fun encoderUsable(target: TelevisionTarget?): Boolean {
+    private fun showsScreens(target: TelevisionTarget?): Boolean {
         if (target !is TelevisionTarget.Dlna) {
             return false
         }
-        return !encoderFailed && target.player.encodesPictures
+        return target.player.showsScreens
     }
 
     private suspend fun follow(inputs: BrowseInputs) {
@@ -116,26 +112,22 @@ object TelevisionBrowse {
         }
     }
 
-    private suspend fun clear() {
+    // The session goes back to its idle screen.
+    private fun clear() {
         val player = dlnaPlayer() ?: return
         shown = null
-        try {
-            player.clearStill()
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Exception) {
-            Log.w(TAG, "taking the picture off the TV failed", error)
-        }
+        player.showIdleScreen(SessionScreen.Idle)
     }
 
     private suspend fun showOnTelevision(preview: BrowsePreview) {
         val player = dlnaPlayer() ?: return
         delay(SETTLE_MILLISECONDS)
-        // Unknown from here on: a cancelled load can leave the TV on either title.
+        // Unknown from here on: a cancelled drawing can leave the TV on either title.
         shown = null
         try {
-            val streamPath = prepareStill(player, preview)
-            player.showStill(streamPath, preview.title)
+            val picture = drawPicture(player, preview)
+            player.showIdleScreen(SessionScreen.Picture(picture))
+            replaceShownPicture(picture)
             shown = ShownPreview(player.renderer.id, preview)
         } catch (cancellation: CancellationException) {
             throw cancellation
@@ -152,23 +144,19 @@ object TelevisionBrowse {
         return null
     }
 
-    // Draws the picture, registers it with the loopback encoder and returns the stream path the TV opens.
-    private suspend fun prepareStill(player: DlnaPlayer, preview: BrowsePreview): String {
-        val height = player.stillHeight
+    // Draws the picture at the session's size and saves it for the encoder to read.
+    private suspend fun drawPicture(player: DlnaPlayer, preview: BrowsePreview): File {
+        val height = player.screenHeight
         var backdrop: Bitmap? = null
         if (preview.backdropUrl != null) {
             backdrop = loadBackdropBitmap(applicationContext, preview.backdropUrl, height)
         }
         val picture = withContext(Dispatchers.Default) { renderBrowseFrame(preview, backdrop, height) }
-        val file = writeStillPicture(applicationContext, picture, "browse")
-        val job = StillJob(file, STILL_SECONDS) { error -> onEncoderFailed(error) }
-        StillJobs.register(job)
-        return "/api/stream/overlay?job=${job.id}"
+        return writeStillPicture(applicationContext, picture, "browse")
     }
 
-    // The TV gets no more pictures from the phone until the app restarts.
-    private fun onEncoderFailed(error: Exception) {
-        Log.w(TAG, "encoding the picture failed", error)
-        encoderFailed = true
+    private fun replaceShownPicture(picture: File) {
+        shownPicture?.delete()
+        shownPicture = picture
     }
 }

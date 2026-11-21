@@ -1,16 +1,13 @@
 package com.letsmoe.otter.cast.browse
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Color
 import android.util.Log
 import com.letsmoe.otter.AppScope
 import com.letsmoe.otter.api.OtterApi
 import com.letsmoe.otter.cast.DlnaPlayer
 import com.letsmoe.otter.cast.TelevisionConnection
 import com.letsmoe.otter.cast.TelevisionTarget
-import com.letsmoe.otter.cast.overlay.StillJob
-import com.letsmoe.otter.cast.overlay.StillJobs
+import com.letsmoe.otter.cast.session.SessionScreen
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.settings.PlaybackSettings
 import com.letsmoe.otter.ui.media.MediaRepository
@@ -29,14 +26,13 @@ import kotlinx.coroutines.launch
 private const val TAG = "OtterScreensaver"
 // Nothing playing and no title page open for this long: the TV is idle.
 private const val IDLE_MILLISECONDS = 2 * 60 * 1000L
-// A TV that watched all of it goes back to its own screen; this covers a night.
-private const val SCREENSAVER_SECONDS = 6 * 60 * 60
 
 /**
  * Shows backdrops of the profile's titles on an idle DLNA TV, one after the other with a slow
- * crossfade and the title small in a corner. The TV loads one long stream once; the phone paints
- * the changing picture into it ([ScreensaverFrames]), so no new load is needed per image. A title
- * page, a playing title, the setting turned off or a disconnected TV ends it.
+ * crossfade and the title small in a corner. It is a screen of the TV's session stream (see
+ * [DlnaPlayer.showIdleScreen]); the phone paints the changing picture into it
+ * ([ScreensaverFrames]), so the TV loads nothing new. A title page, a playing title, the setting
+ * turned off or a disconnected TV ends it.
  */
 object TelevisionScreensaver {
 
@@ -45,9 +41,6 @@ object TelevisionScreensaver {
     private val enabled = MutableStateFlow(true)
     private var running = false
     private var frameScope: CoroutineScope? = null
-
-    @Volatile
-    private var encoderFailed = false
 
     fun initialize(context: Context) {
         applicationContext = context.applicationContext
@@ -58,7 +51,7 @@ object TelevisionScreensaver {
             TelevisionPlayback.player,
             enabled,
         ) { browsing, target, player, isEnabled ->
-            ScreensaverInputs(browsing != null, dlnaIdOf(target), player != null, isEnabled, encoderUsable(target))
+            ScreensaverInputs(browsing != null, dlnaIdOf(target), player != null, isEnabled, showsScreens(target))
         }
         AppScope.launch {
             inputs.collectLatest { current -> follow(current) }
@@ -77,11 +70,11 @@ object TelevisionScreensaver {
         return null
     }
 
-    private fun encoderUsable(target: TelevisionTarget?): Boolean {
+    private fun showsScreens(target: TelevisionTarget?): Boolean {
         if (target !is TelevisionTarget.Dlna) {
             return false
         }
-        return !encoderFailed && target.player.encodesPictures
+        return target.player.showsScreens
     }
 
     private suspend fun follow(inputs: ScreensaverInputs) {
@@ -102,32 +95,23 @@ object TelevisionScreensaver {
         frameScope = null
     }
 
-    private suspend fun clear() {
-        val player = dlnaPlayer()
+    // The session goes back to its idle screen.
+    private fun clear() {
         finish()
-        if (player == null) {
-            return
-        }
-        try {
-            player.clearStill()
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Exception) {
-            Log.w(TAG, "taking the screensaver off the TV failed", error)
-        }
+        dlnaPlayer()?.showIdleScreen(SessionScreen.Idle)
     }
 
     private suspend fun start() {
         val player = dlnaPlayer() ?: return
-        val slides = loadSlides()
-        if (slides.isEmpty()) {
-            return
-        }
         try {
-            val streamPath = prepareStream(player, slides)
+            val slides = loadSlides()
+            if (slides.isEmpty()) {
+                return
+            }
+            val frames = startFrames(player, slides)
             // The title the browse picture showed is gone from the TV from here on.
             TelevisionBrowse.forgetShown()
-            player.showStill(streamPath, "Otter")
+            player.showIdleScreen(SessionScreen.Screensaver(frames))
             running = true
         } catch (cancellation: CancellationException) {
             finish()
@@ -155,24 +139,12 @@ object TelevisionScreensaver {
         return screensaverSlidesOf(continueWatching, watchlist).shuffled()
     }
 
-    // The picture the TV starts from is plain black; the live frames cover all of it.
-    private suspend fun prepareStream(player: DlnaPlayer, slides: List<ScreensaverSlide>): String {
-        val height = player.stillHeight
-        val black = Bitmap.createBitmap(height * 16 / 9, height, Bitmap.Config.ARGB_8888)
-        black.eraseColor(Color.BLACK)
-        val file = writeStillPicture(applicationContext, black, "screensaver")
+    // Backdrops load in the background for as long as this screensaver runs.
+    private fun startFrames(player: DlnaPlayer, slides: List<ScreensaverSlide>): ScreensaverFrames {
         finish()
+        val height = player.screenHeight
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         frameScope = scope
-        val frames = ScreensaverFrames(slides, scope) { url -> loadBackdropBitmap(applicationContext, url, height) }
-        val job = StillJob(file, SCREENSAVER_SECONDS, frames) { error -> onEncoderFailed(error) }
-        StillJobs.register(job)
-        return "/api/stream/overlay?job=${job.id}"
-    }
-
-    // The TV gets no more pictures from the phone until the app restarts.
-    private fun onEncoderFailed(error: Exception) {
-        Log.w(TAG, "encoding the screensaver failed", error)
-        encoderFailed = true
+        return ScreensaverFrames(slides, scope) { url -> loadBackdropBitmap(applicationContext, url, height) }
     }
 }

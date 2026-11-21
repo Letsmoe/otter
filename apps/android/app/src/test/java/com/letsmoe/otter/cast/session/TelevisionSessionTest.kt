@@ -1,5 +1,7 @@
 package com.letsmoe.otter.cast.session
 
+import android.graphics.Canvas
+import com.letsmoe.otter.cast.overlay.LiveFrames
 import com.letsmoe.otter.cast.overlay.OverlayJob
 import com.letsmoe.otter.cast.overlay.OverlayPlan
 import kotlinx.coroutines.Job
@@ -10,6 +12,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 
 class TelevisionSessionTest {
 
@@ -77,6 +80,46 @@ class TelevisionSessionTest {
 
         assertEquals(60_000_000L, title.endMicroseconds)
         assertEquals(SessionScreen.Idle, next?.screen)
+    }
+
+    @Test
+    fun aTitleThatEndsIsFollowedByTheIdleScreenWantedThen() {
+        var wanted: SessionScreen = SessionScreen.Idle
+        val browsing = TelevisionSession(1080, { _, _ -> }, SessionClock { elapsedMicroseconds }, idleScreen = { wanted })
+        runBlocking { browsing.takeNext(0) }
+        val title = browsing.show(titleJob(0.0))
+        runBlocking { browsing.takeNext(1_000_000) }
+        val picture = SessionScreen.Picture(File("browse.jpg"))
+        wanted = picture
+
+        browsing.onCompleted(title, 60_000_000)
+        val next = runBlocking { browsing.takeNext(60_000_000) }
+
+        assertEquals(picture, next?.screen)
+    }
+
+    @Test
+    fun aNewSessionStartsWithTheIdleScreenWantedThen() {
+        val picture = SessionScreen.Picture(File("browse.jpg"))
+        val browsing = TelevisionSession(1080, { _, _ -> }, SessionClock { elapsedMicroseconds }, idleScreen = { picture })
+
+        assertEquals(picture, runBlocking { browsing.takeNext(0) }?.screen)
+    }
+
+    @Test
+    fun aScreensaverThatEndsStartsAgainWithTheSameFrames() {
+        val frames = object : LiveFrames {
+            override fun draw(canvas: Canvas, seconds: Double) = Unit
+        }
+        take(0)
+        val screensaver = session.show(SessionScreen.Screensaver(frames))
+        take(500_000)
+
+        session.onCompleted(screensaver, 1_800_500_000)
+        val next = take(1_800_500_000)
+
+        assertEquals(SessionScreen.Screensaver(frames), next?.screen)
+        assertFalse(next === screensaver)
     }
 
     @Test

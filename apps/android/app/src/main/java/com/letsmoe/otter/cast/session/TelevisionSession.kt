@@ -1,10 +1,12 @@
 package com.letsmoe.otter.cast.session
 
 import android.os.SystemClock
+import com.letsmoe.otter.cast.overlay.LiveFrames
 import com.letsmoe.otter.cast.overlay.OverlayJob
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import java.io.File
 import java.util.UUID
 
 // The encoder runs this far ahead of the TV's picture: what the TV has buffered, and how long a switch takes to show.
@@ -20,6 +22,12 @@ sealed interface SessionScreen {
 
     /** The title itself, with captions and hints drawn in. */
     data class Title(val overlay: OverlayJob) : SessionScreen
+
+    /** A picture the phone drew, e.g. the title being browsed ([imageFile], a JPEG of the whole frame). */
+    data class Picture(val imageFile: File) : SessionScreen
+
+    /** Backdrops that change while the TV watches, painted frame by frame by [frames]. */
+    data class Screensaver(val frames: LiveFrames) : SessionScreen
 }
 
 /**
@@ -42,20 +50,22 @@ class SessionJob(val screen: SessionScreen) {
  * /api/stream/tv?session=<id>). It shows one job at a time; [show] replaces
  * the job, which stops the current job's encoder, and the backend's next
  * request gets the new one. A job that ends on its own is followed by another,
- * so the stream never runs dry: a title by the idle screen, the idle and
- * loading screens by themselves. [pictureHeight] is the height every job is
- * encoded at. [onFailure] hears when the phone can't encode a job.
+ * so the stream never runs dry: a title by [idleScreen] (asked at that moment:
+ * the idle screen, the title being browsed or the screensaver), every other
+ * screen by itself. [pictureHeight] is the height every job is encoded at.
+ * [onFailure] hears when the phone can't encode a job.
  */
 class TelevisionSession(
     val pictureHeight: Int,
     private val onFailure: (SessionJob, Exception) -> Unit,
     private val clock: SessionClock = SessionClock { SystemClock.elapsedRealtimeNanos() / 1000 },
+    private val idleScreen: () -> SessionScreen = { SessionScreen.Idle },
 ) {
     val id: String = UUID.randomUUID().toString()
 
     // Counts every change; waiting backend requests look again when it moves.
     private val changes = MutableStateFlow(0L)
-    private var current = SessionJob(SessionScreen.Idle)
+    private var current = SessionJob(idleScreen())
     private var handedOut: SessionJob? = null
     private var encoder: Job? = null
     private var closed = false
@@ -214,7 +224,7 @@ class TelevisionSession(
 
     private fun screenAfter(screen: SessionScreen): SessionScreen {
         if (screen is SessionScreen.Title) {
-            return SessionScreen.Idle
+            return idleScreen()
         }
         return screen
     }

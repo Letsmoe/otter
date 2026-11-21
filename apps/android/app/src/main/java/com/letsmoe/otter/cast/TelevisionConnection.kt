@@ -64,9 +64,7 @@ object TelevisionConnection {
         val player = DlnaPlayer(applicationContext, renderer)
         mutableTarget.value = TelevisionTarget.Dlna(renderer, player)
         // The phone encodes the TV's one stream from now on, also while nothing plays.
-        if (player.connect()) {
-            CastKeepAliveService.start(applicationContext, renderer.name)
-        }
+        player.connect()
     }
 
     /** Whether the TV plays one stream for the whole connection, which the phone keeps encoding between titles. */
