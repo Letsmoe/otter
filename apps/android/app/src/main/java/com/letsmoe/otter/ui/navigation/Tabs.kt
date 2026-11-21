@@ -25,6 +25,8 @@ object Routes {
     const val LIBRARY = "library"
     const val HISTORY = "history"
     const val PERSON = "person/{personId}"
+    const val SHELVES = "shelves"
+    const val SHELF = "shelf/{shelfId}"
     const val PLAYER = "player/{mediaId}?streamId={streamId}&downloadId={downloadId}&start={start}"
     const val NOTIFICATIONS = "notifications"
     const val SETTINGS = "settings"
@@ -47,6 +49,7 @@ object Routes {
 
     fun browse(kind: String) = "browse/$kind"
     fun person(personId: String) = "person/${android.net.Uri.encode(personId)}"
+    fun shelf(shelfId: String) = "shelf/${android.net.Uri.encode(shelfId)}"
 
     /** Plays a movie or episode: on one chosen link, from a finished download, or on its best link. */
     fun player(mediaId: String, streamId: String? = null, downloadId: String? = null, startSeconds: Double? = null): String {
@@ -77,7 +80,7 @@ enum class Tab(val route: String, val label: String, val icon: ImageVector, val 
 }
 
 /** Further routes that belong to a tab, like `matches` in apps/mobile/src/lib/tabs.ts. */
-private val routesOfProfileTab = listOf(Routes.PROFILE, Routes.HISTORY, Routes.SETTINGS, Routes.PLUGINS, Routes.NOTIFICATIONS)
+private val routesOfProfileTab = listOf(Routes.PROFILE, Routes.HISTORY, Routes.SETTINGS, Routes.PLUGINS, Routes.NOTIFICATIONS, Routes.SHELVES, Routes.SHELF)
 
 fun tabForRoute(route: String?): Tab? {
     if (route in routesOfProfileTab) {

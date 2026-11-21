@@ -69,6 +69,7 @@ class ProfileNavigation(
     val onSearch: () -> Unit,
     val onNotifications: () -> Unit,
     val onDownloads: () -> Unit,
+    val onShelves: () -> Unit,
     val onHistory: () -> Unit,
     val onPlugins: () -> Unit,
     val onSettings: () -> Unit,
@@ -86,6 +87,7 @@ fun ProfileScreen(navigation: ProfileNavigation, viewModel: ProfileViewModel = v
     val profile = activeProfile ?: return
     LaunchedEffect(profile.id) { viewModel.load(profile.id) }
     val linkActions = ProfileLinkActions(
+        onShelves = navigation.onShelves,
         onHistory = navigation.onHistory,
         onPlugins = navigation.onPlugins,
         onSettings = navigation.onSettings,
