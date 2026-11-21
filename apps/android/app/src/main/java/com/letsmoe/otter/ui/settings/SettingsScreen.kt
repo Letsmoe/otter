@@ -256,6 +256,10 @@ private fun PlaybackGroup() {
         PlaybackSwitchRow("Brighten dark scenes on the TV", "Lifts shadows from the next episode or seek on", PlaybackSettings.brightenDarkScenes) { enabled ->
             PlaybackSettings.brightenDarkScenes = enabled
         }
+        SettingsDivider()
+        PlaybackSwitchRow("Pause the TV for calls", "A call, ringing or ongoing, pauses it; it plays on when the call ends", PlaybackSettings.pauseForCalls) { enabled ->
+            PlaybackSettings.pauseForCalls = enabled
+        }
         profile?.let { activeProfile ->
             SettingsDivider()
             CaptionSettingsRows(activeProfile)
