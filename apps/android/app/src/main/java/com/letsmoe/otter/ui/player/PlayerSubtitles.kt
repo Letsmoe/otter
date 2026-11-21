@@ -11,9 +11,7 @@ import com.letsmoe.otter.api.OtterApi
 import com.letsmoe.otter.api.ServerSettings
 import com.letsmoe.otter.api.dataOrThrow
 import com.letsmoe.otter.graphql.PlayerSubtitlesQuery
-import com.letsmoe.otter.graphql.fragment.ProfileFields
 import com.letsmoe.otter.graphql.fragment.SubtitleFields
-import com.letsmoe.otter.profiles.captionLanguage
 import kotlinx.coroutines.CancellationException
 
 /** Subtitle files handed to the player per title; the backend ranks them best first. */
@@ -71,18 +69,18 @@ fun PlayerSubtitle.matchesTrackId(trackId: String?): Boolean {
     return trackId == id || trackId.endsWith(vttPath)
 }
 
-/** What the active profile wants shown when captions start: its language, or nothing when captions are off. */
-fun captionSelection(profile: ProfileFields?, base: TrackSelectionParameters): TrackSelectionParameters {
+/** What shows when captions start: the choice's language, or nothing when captions are off or there is no choice. */
+fun captionSelection(choice: CaptionChoice?, base: TrackSelectionParameters): TrackSelectionParameters {
     val builder = base.buildUpon().clearOverridesOfType(C.TRACK_TYPE_TEXT)
-    if (profile == null || !profile.subtitlesEnabled) {
+    if (choice == null || !choice.enabled) {
         return builder.setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true).build()
     }
     return builder
         .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
-        .setPreferredTextLanguage(profile.captionLanguage())
+        .setPreferredTextLanguage(choice.language)
         .build()
 }
 
-fun applyCaptionSelection(player: Player, profile: ProfileFields?) {
-    player.trackSelectionParameters = captionSelection(profile, player.trackSelectionParameters)
+fun applyCaptionSelection(player: Player, choice: CaptionChoice?) {
+    player.trackSelectionParameters = captionSelection(choice, player.trackSelectionParameters)
 }
