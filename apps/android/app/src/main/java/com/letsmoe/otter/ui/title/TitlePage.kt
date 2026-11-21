@@ -42,8 +42,15 @@ import com.letsmoe.otter.ui.components.alsoBackdropOf
 import com.letsmoe.otter.ui.navigation.bottomBarClearance
 import com.letsmoe.otter.ui.theme.OtterColors
 
-/** The state of the page's Play button. */
-class PlayButtonState(val label: String, val busy: Boolean, val ready: Boolean, val disabled: Boolean, val onClick: () -> Unit)
+/** The state of the page's Play button; [remainingMinutes] is what Play has to run, for the "Ends at" time beside it. */
+class PlayButtonState(
+    val label: String,
+    val busy: Boolean,
+    val ready: Boolean,
+    val disabled: Boolean,
+    val onClick: () -> Unit,
+    val remainingMinutes: Int? = null,
+)
 
 /** What the action row's Download saves: the movie, or a series' up-next episode (streams only exist for those). */
 class DownloadTarget(val mediaId: String, val title: String)
@@ -144,7 +151,7 @@ private fun TitleSummary(
                 Text(fact, fontSize = 14.sp, color = mutedFactColor)
             }
         }
-        PlayButton(playButton.label, playButton.busy, playButton.ready, playButton.disabled, playButton.onClick)
+        PlayRow(playButton)
         playExtras()
         Overview(detail.overview)
         CreditLines(creditLines)
@@ -163,6 +170,21 @@ private fun TitleSummary(
                 }
             },
         )
+    }
+}
+
+@Composable
+private fun PlayRow(playButton: PlayButtonState) {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        PlayButton(
+            playButton.label,
+            playButton.busy,
+            playButton.ready,
+            playButton.disabled,
+            playButton.onClick,
+            modifier = Modifier.weight(1f),
+        )
+        EndTimeLabel(playButton.remainingMinutes)
     }
 }
 

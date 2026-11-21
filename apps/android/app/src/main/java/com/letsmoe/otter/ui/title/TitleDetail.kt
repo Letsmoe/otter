@@ -6,6 +6,7 @@ import com.letsmoe.otter.api.tmdbImageUrl
 import com.letsmoe.otter.graphql.TitleDetailQuery
 import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.ui.media.RailItem
+import com.letsmoe.otter.ui.media.progressFraction
 import com.letsmoe.otter.ui.media.toRailItem
 
 data class CastMember(val personId: String, val name: String, val character: String?, val order: Int, val profileUrl: String?)
@@ -35,6 +36,8 @@ data class TitleDetail(
     /** News about it reaches this profile (the Notify me bell, by default My List). */
     val notifying: Boolean,
     val rating: Double?,
+    /** How far Play resumes a movie (0..1); null when it is unwatched or finished. */
+    val resumeFraction: Float?,
 ) {
     /** Seasons without specials. */
     val regularSeasonCount: Int get() = seasons.count { season -> season.seasonNumber > 0 }
@@ -67,7 +70,16 @@ fun TitleDetailQuery.Title.toDetail(): TitleDetail {
         inWatchlist = inWatchlist,
         notifying = notifying,
         rating = rating,
+        resumeFraction = resumeFractionOf(this),
     )
+}
+
+private fun resumeFractionOf(title: TitleDetailQuery.Title): Float? {
+    val progress = title.progress
+    if (progress == null || progress.completed) {
+        return null
+    }
+    return progressFraction(progress.progressSeconds, progress.durationSeconds)
 }
 
 private fun castOf(title: TitleDetailQuery.Title): List<CastMember> =
