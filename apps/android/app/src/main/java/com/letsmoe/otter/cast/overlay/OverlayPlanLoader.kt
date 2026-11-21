@@ -13,6 +13,8 @@ import coil3.toBitmap
 import com.letsmoe.otter.backend.EmbeddedBackend
 import com.letsmoe.otter.ui.player.POST_CREDITS_LABEL
 import com.letsmoe.otter.ui.player.postCreditsNoticeFor
+import com.letsmoe.otter.ui.player.RATING_REMINDER_LABEL
+import com.letsmoe.otter.ui.player.ratingReminderWindowFor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -50,6 +52,8 @@ data class TelevisionHints(
     val titleText: TitleText? = null,
     /** A film with a scene during or after the credits: the picture says so as they start. */
     val hasPostCreditsScene: Boolean = false,
+    /** A film (or series' last episode) not rated yet: the picture says to rate it on the phone before the end. */
+    val asksForRating: Boolean = false,
 )
 
 /**
@@ -64,7 +68,8 @@ data class TitleCardRequest(val fromSeconds: Double, val endsAtLabel: String?)
 
 /**
  * Loads what the picture shows: the caption files, the next episode's still and, when asked for,
- * the title card. [durationSeconds] places the note about a scene after the credits.
+ * the title card. [durationSeconds] places the note about a scene after the credits and the
+ * reminder to rate the title.
  */
 suspend fun loadOverlayPlan(
     context: Context,
@@ -77,7 +82,7 @@ suspend fun loadOverlayPlan(
     val secondCaptions = loadCaptionCues(captionPaths.second)
     val replayCaptions = loadCaptionCues(captionPaths.replay)
     val upNext = hints.upNext?.let { preview -> upNextHint(context, preview) }
-    val skips = hints.skips + postCreditsHints(hints, durationSeconds)
+    val skips = hints.skips + postCreditsHints(hints, durationSeconds) + ratingReminderHints(hints, durationSeconds)
     return OverlayPlan(captions, skips, upNext, secondCaptions, titleCardOf(hints.titleText, titleCard), replayCaptions)
 }
 
@@ -87,6 +92,14 @@ private fun postCreditsHints(hints: TelevisionHints, durationSeconds: Double): L
     }
     val notice = postCreditsNoticeFor(durationSeconds) ?: return emptyList()
     return listOf(SkipHint(POST_CREDITS_LABEL, notice.startSeconds, notice.endSeconds))
+}
+
+private fun ratingReminderHints(hints: TelevisionHints, durationSeconds: Double): List<SkipHint> {
+    if (!hints.asksForRating) {
+        return emptyList()
+    }
+    val window = ratingReminderWindowFor(durationSeconds) ?: return emptyList()
+    return listOf(SkipHint(RATING_REMINDER_LABEL, window.startSeconds, window.endSeconds))
 }
 
 private fun titleCardOf(text: TitleText?, request: TitleCardRequest?): TitleCard? {

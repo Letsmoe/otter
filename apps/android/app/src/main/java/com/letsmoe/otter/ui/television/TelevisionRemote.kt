@@ -68,6 +68,7 @@ import com.letsmoe.otter.ui.player.reportsTouches
 import com.letsmoe.otter.ui.player.SleepTimer
 import com.letsmoe.otter.ui.player.SleepTimerSheetContent
 import com.letsmoe.otter.ui.player.sleepMinutesLabel
+import com.letsmoe.otter.ui.player.RatingReminderCard
 import com.letsmoe.otter.ui.player.SourcesSheetContent
 import com.letsmoe.otter.ui.player.SpeedSheetContent
 import com.letsmoe.otter.ui.player.TelevisionPlayback
@@ -158,10 +159,14 @@ private fun PlayingRemote(
     onContinueOnPhone: (PlayerRequest) -> Unit,
 ) {
     val askingStillWatching by viewModel.askingStillWatching.collectAsStateWithLifecycle()
+    val ratingReminderShown by viewModel.ratingReminderShown.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxWidth().reportsTouches(viewModel::userTouched).padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         ConnectionHeader(target)
         if (askingStillWatching) {
             StillWatchingCard(viewModel::keepWatching, viewModel::stopWatching)
+        }
+        if (ratingReminderShown) {
+            RatingReminderCard(state.mediaId)
         }
         NowPlaying(state)
         if (state.shownError != null) {

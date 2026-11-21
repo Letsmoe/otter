@@ -114,6 +114,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private val nextEpisodePrefetch = NextEpisodePrefetch { StreamLinkSearch(viewModelScope, streamPlayback.fitsScreen) }
     private val finishWatch = FinishWatch()
     private val sleepTimer = SleepTimer.shared
+    private val ratingReminder = RatingReminder()
     private val upNextOffer = UpNext(viewModelScope, ::playNext)
     private val stillWatching = StillWatching(viewModelScope, onTimeout = { setStopAfterEpisode(true) })
     private val captionExtras = CaptionExtras(viewModelScope, ::reloadPhoneCaptions)
@@ -136,6 +137,9 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private val mutablePostCreditsNotice = MutableStateFlow(false)
     /** The credits of a film with a scene after them start: the phone says so. */
     val postCreditsNotice: StateFlow<Boolean> = mutablePostCreditsNotice
+    private val mutableRatingReminder = MutableStateFlow(false)
+    /** The last seconds of a film (or a series' last episode) not rated yet, and after it: the phone asks for a rating. */
+    val ratingReminderShown: StateFlow<Boolean> = mutableRatingReminder
 
     private var trackCatalog = TrackCatalog.Empty
     private var subtitles: List<PlayerSubtitle> = emptyList()
@@ -248,6 +252,8 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         skipHabits.reset()
         seriesMemory.reset()
         preferredHoster.open(ProfileSession.activeProfile.value?.id, mediaId)
+        ratingReminder.reset()
+        mutableRatingReminder.value = false
         mutableSkipButton.value = null
         mutablePostCreditsNotice.value = false
         clearPlayers()
@@ -297,6 +303,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             skipHabits.open(profileId, loaded.seriesId, mediaId, loaded.episodes.episodeBefore(mediaId)?.id)
             startWithSeriesMemory(profileId, loaded.seriesId)
             learnSeries(loaded)
+            viewModelScope.launch { openRatingReminder(mediaId, profileId, loaded) }
             // Reaches the TV's picture with its next load, e.g. the next seek.
             televisionPlayer?.hints = televisionHints()
             mutableState.update { current ->
@@ -311,6 +318,17 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         val seriesId = loaded.seriesId ?: return
         preferredHoster.learnEpisodes(seriesId, loaded.episodes.map { episode -> episode.id })
         preferredHoster.confirmSeries(seriesId)
+    }
+
+    // A film or a series' last episode asks to be rated, unless it was rated already.
+    private suspend fun openRatingReminder(mediaId: String, profileId: String, loaded: PlayerMedia) {
+        val rateable = !isEpisodeId(mediaId) || loaded.nextEpisodeId == null
+        val unrated = fetchUserRating(mediaId, profileId) == null
+        if (mediaId != currentMediaId) {
+            return
+        }
+        ratingReminder.open(rateable, unrated)
+        televisionPlayer?.hints = televisionHints()
     }
 
     private fun startStreams(mediaId: String, initial: Boolean) {
@@ -1206,6 +1224,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private fun followSegments(positionSeconds: Double) {
         mutableSkipButton.value = skipTracker.jumpAt(positionSeconds)
         mutablePostCreditsNotice.value = showsPostCreditsNotice(media?.hasPostCreditsScene == true, positionSeconds, durationSeconds)
+        mutableRatingReminder.value = ratingReminder.shows(positionSeconds, durationSeconds, mutableState.value.hasEnded)
         val inCredits = skipTracker.isInCredits(positionSeconds)
         upNextOffer.follow(inCredits, activePlayer.isPlaying, offeredNextEpisode(), episodeForUpNextCard())
         skipHabits.follow(skipTracker.jumps, positionSeconds, activePlayer.isPlaying, inCredits)
@@ -1287,7 +1306,11 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     // What the TV's picture shows besides captions: skip hints and, during the credits, the next episode.
     private fun televisionHints(): TelevisionHints {
         val skips = skipTracker.jumps.map { jump -> SkipHint(jump.televisionLabel, jump.startSeconds, jump.endSeconds) }
-        return TelevisionHints(skips, upNextPreview(), titleText(), media?.hasPostCreditsScene == true)
+        return TelevisionHints(
+            skips, upNextPreview(), titleText(),
+            hasPostCreditsScene = media?.hasPostCreditsScene == true,
+            asksForRating = ratingReminder.asksForRating,
+        )
     }
 
     private fun titleText(): TitleText? {
