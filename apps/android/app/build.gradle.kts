@@ -90,6 +90,8 @@ android {
     testOptions {
         // Media3 classes touch android.* statics that the unit test stub jar leaves empty.
         unitTests.isReturnDefaultValues = true
+        // Robolectric reads the merged manifest and resources.
+        unitTests.isIncludeAndroidResources = true
     }
 
     // libotter.so is the Go backend executable, not a library: it must be
@@ -147,6 +149,8 @@ dependencies {
     implementation(libs.haze.blur)
     implementation(libs.phosphor.icons)
     testImplementation(libs.junit)
+    // Draws the TV's browse picture on the JVM (native graphics), for its preview image.
+    testImplementation(libs.robolectric)
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.junit)

@@ -99,6 +99,33 @@ func TestMedia3FragmentsReachTheTelevisionAsMPEGTS(t *testing.T) {
 	}
 }
 
+// testdata/media3-still.mp4 is the picture the app shows a TV that browses (StillEncoderTest's
+// still-output.mp4): 3 s of one 1080p image at 10 fps with silent AAC.
+func TestStillPicturesReachTheTelevisionAsMPEGTS(t *testing.T) {
+	sample, err := os.ReadFile("testdata/media3-still.mp4")
+	if err != nil {
+		t.Fatal(err)
+	}
+	requests := 0
+	encoder := overlayEncoder(t, sample, &requests)
+	proxy := NewProxy(nil, nil, "http://backend.test")
+	proxy.SetOverlaySource(encoder.URL)
+
+	response := overlayRequest(proxy, http.MethodGet, "job-1")
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("status %d: %s", response.Code, response.Body.String())
+	}
+	decoded := decodeTransportStream(t, response.Body.Bytes())
+	if len(decoded.videoDecodeTimes) < 30 {
+		t.Fatalf("%d video frames, want at least 30", len(decoded.videoDecodeTimes))
+	}
+	assertSteadyDecodeTimes(t, decoded.videoDecodeTimes, mpegtsClockRate/10)
+	if decoded.keyframesWithSPS == 0 || decoded.audioFrames == 0 {
+		t.Fatalf("%d keyframes with SPS, %d audio frames", decoded.keyframesWithSPS, decoded.audioFrames)
+	}
+}
+
 // assertSteadyDecodeTimes checks frames follow each other by one frame time across fragments,
 // which the summed-up decode times have to get right.
 func assertSteadyDecodeTimes(t *testing.T, decodeTimes []int64, frameTicks int64) {
