@@ -3,13 +3,6 @@ package com.letsmoe.otter.cast.browse
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
-import coil3.SingletonImageLoader
-import coil3.request.ImageRequest
-import coil3.request.SuccessResult
-import coil3.request.allowHardware
-import coil3.size.Scale
-import coil3.size.Size
-import coil3.toBitmap
 import com.letsmoe.otter.AppScope
 import com.letsmoe.otter.cast.DlnaPlayer
 import com.letsmoe.otter.cast.TelevisionConnection
@@ -22,20 +15,18 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.util.UUID
 
 private const val TAG = "OtterBrowse"
 // The title page changes often while the user flicks through titles; the TV takes seconds to switch.
 private const val SETTLE_MILLISECONDS = 1200L
 // The picture is a video of this length; a TV that watched all of it goes back to its own screen.
 private const val STILL_SECONDS = 2 * 60 * 60
-private const val JPEG_QUALITY = 90
 
 /**
  * Shows the title the phone is looking at on the connected DLNA TV while
@@ -49,6 +40,9 @@ object TelevisionBrowse {
     private lateinit var applicationContext: Context
 
     private val requested = MutableStateFlow<BrowsePreview?>(null)
+
+    /** The title whose page is open; null when none is (the screensaver waits for that). */
+    val browsing: StateFlow<BrowsePreview?> = requested
     private val enabled = MutableStateFlow(true)
     private var shown: ShownPreview? = null
 
@@ -86,6 +80,11 @@ object TelevisionBrowse {
             return null
         }
         return current
+    }
+
+    /** Something else took over the TV's picture (the screensaver): the title shown is shown no more. */
+    fun forgetShown() {
+        shown = null
     }
 
     /** The setting changed: switching it off takes the picture off the TV. */
@@ -156,42 +155,20 @@ object TelevisionBrowse {
     // Draws the picture, registers it with the loopback encoder and returns the stream path the TV opens.
     private suspend fun prepareStill(player: DlnaPlayer, preview: BrowsePreview): String {
         val height = player.stillHeight
-        val picture = withContext(Dispatchers.Default) {
-            renderBrowseFrame(preview, loadBackdrop(preview.backdropUrl, height), height)
+        var backdrop: Bitmap? = null
+        if (preview.backdropUrl != null) {
+            backdrop = loadBackdropBitmap(applicationContext, preview.backdropUrl, height)
         }
-        val file = writePicture(picture)
+        val picture = withContext(Dispatchers.Default) { renderBrowseFrame(preview, backdrop, height) }
+        val file = writeStillPicture(applicationContext, picture, "browse")
         val job = StillJob(file, STILL_SECONDS) { error -> onEncoderFailed(error) }
         StillJobs.register(job)
         return "/api/stream/overlay?job=${job.id}"
-    }
-
-    private suspend fun writePicture(picture: Bitmap): File = withContext(Dispatchers.IO) {
-        val file = File(applicationContext.cacheDir, "browse-${UUID.randomUUID()}.jpg")
-        file.outputStream().use { stream -> picture.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, stream) }
-        file
     }
 
     // The TV gets no more pictures from the phone until the app restarts.
     private fun onEncoderFailed(error: Exception) {
         Log.w(TAG, "encoding the picture failed", error)
         encoderFailed = true
-    }
-
-    private suspend fun loadBackdrop(url: String?, height: Int): Bitmap? {
-        if (url == null) {
-            return null
-        }
-        val width = height * 16 / 9
-        val request = ImageRequest.Builder(applicationContext)
-            .data(url)
-            .size(Size(width, height))
-            .scale(Scale.FILL)
-            .allowHardware(false)
-            .build()
-        val result = SingletonImageLoader.get(applicationContext).execute(request)
-        if (result !is SuccessResult) {
-            return null
-        }
-        return result.image.toBitmap()
     }
 }
