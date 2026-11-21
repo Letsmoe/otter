@@ -123,6 +123,12 @@ fun AppServices(navController: NavHostController) {
         IncomingLinks.consumed()
         navController.navigate(route)
     }
+    val widgetPlay by IncomingLinks.pendingPlay.collectAsStateWithLifecycle()
+    LaunchedEffect(widgetPlay) {
+        val request = widgetPlay ?: return@LaunchedEffect
+        IncomingLinks.playStarted()
+        navController.play(request)
+    }
     val remoteMedia by TogetherSession.remoteMedia.collectAsStateWithLifecycle()
     LaunchedEffect(remoteMedia) {
         val started = remoteMedia ?: return@LaunchedEffect
