@@ -51,15 +51,20 @@ fun renderScreenPicture(context: Context, screen: SessionScreen, size: Size, nam
     val bitmap = Bitmap.createBitmap(size.width, size.height, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     canvas.drawColor(BACKGROUND)
-    if (screen is SessionScreen.Loading) {
-        drawLoading(canvas, screen.title)
-    } else {
-        drawIdle(canvas)
-    }
+    drawScreen(canvas, screen)
     val file = File(context.cacheDir, "tv-screen-$name.png")
     file.outputStream().use { stream -> bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream) }
     bitmap.recycle()
     return file
+}
+
+// The screensaver paints all of its picture live; titles and the phone's pictures aren't drawn here.
+private fun drawScreen(canvas: Canvas, screen: SessionScreen) {
+    when (screen) {
+        is SessionScreen.Loading -> drawLoading(canvas, screen.title)
+        is SessionScreen.Idle -> drawIdle(canvas)
+        is SessionScreen.Screensaver, is SessionScreen.Picture, is SessionScreen.Title -> Unit
+    }
 }
 
 // "Otter" large in the middle, "● Connected" under it.

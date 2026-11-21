@@ -28,6 +28,7 @@ class ScreensaverFrames(
     private val backdrops = ConcurrentHashMap<Int, Bitmap>()
     private val requested = ConcurrentHashMap.newKeySet<Int>()
     private var drawn: DrawnMoment? = null
+    private var drawnCanvas: Canvas? = null
 
     override fun draw(canvas: Canvas, seconds: Double) {
         val moment = screensaverMomentAt(seconds, slides.size)
@@ -39,11 +40,13 @@ class ScreensaverFrames(
         }
         val fadeStep = (moment.fade * FADE_STEPS).toInt()
         val key = DrawnMoment(moment.slide, fadeStep, current?.backdrop != null, next?.backdrop != null)
-        if (key == drawn) {
+        // A restarted session job paints onto a fresh, empty canvas.
+        if (key == drawn && canvas === drawnCanvas) {
             return
         }
         drawScreensaverFrame(canvas, current, next, fadeStep.toFloat() / FADE_STEPS)
         drawn = key
+        drawnCanvas = canvas
     }
 
     private fun layerOf(index: Int): ScreensaverLayer? {

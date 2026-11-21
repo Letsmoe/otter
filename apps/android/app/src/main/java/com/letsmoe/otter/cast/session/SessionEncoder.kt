@@ -32,6 +32,7 @@ import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.Transformer
 import androidx.media3.transformer.VideoEncoderSettings
 import com.letsmoe.otter.cast.overlay.LiveEvenVolume
+import com.letsmoe.otter.cast.overlay.LiveFrameOverlay
 import com.letsmoe.otter.cast.overlay.LiveVoiceBoost
 import com.letsmoe.otter.cast.overlay.OVERLAY_VIDEO_BITRATE
 import com.letsmoe.otter.cast.overlay.OverlayJob
@@ -173,21 +174,47 @@ class SessionEncoder(
     }
 
     private fun stillItem(screen: SessionScreen): EditedMediaItem {
-        val picture = renderScreenPicture(context, screen, size, job.id)
         val mediaItem = MediaItem.Builder()
-            .setUri(Uri.fromFile(picture))
-            .setMimeType(MimeTypes.IMAGE_PNG)
+            .setUri(Uri.fromFile(stillPicture(screen)))
+            .setMimeType(stillMimeType(screen))
             .setImageDurationMs(stillMilliseconds(screen))
             .build()
         val effects = mutableListOf<Effect>(letterbox())
-        if (screen is SessionScreen.Loading) {
-            val overlays: List<TextureOverlay> = listOf(SpinnerOverlay())
+        val overlay = stillOverlay(screen)
+        if (overlay != null) {
+            val overlays: List<TextureOverlay> = listOf(overlay)
             effects.add(OverlayEffect(overlays))
         }
         return EditedMediaItem.Builder(mediaItem)
             .setFrameRate(STILL_FRAME_RATE)
             .setEffects(Effects(uniformSound(), effects))
             .build()
+    }
+
+    // A browse picture was drawn by the phone already; the other screens are drawn here.
+    private fun stillPicture(screen: SessionScreen): File {
+        if (screen is SessionScreen.Picture) {
+            return screen.imageFile
+        }
+        return renderScreenPicture(context, screen, size, job.id)
+    }
+
+    private fun stillMimeType(screen: SessionScreen): String {
+        if (screen is SessionScreen.Picture) {
+            return MimeTypes.IMAGE_JPEG
+        }
+        return MimeTypes.IMAGE_PNG
+    }
+
+    // What moves in a still screen: the loading spinner, the screensaver's backdrops.
+    private fun stillOverlay(screen: SessionScreen): TextureOverlay? {
+        if (screen is SessionScreen.Loading) {
+            return SpinnerOverlay()
+        }
+        if (screen is SessionScreen.Screensaver) {
+            return LiveFrameOverlay(screen.frames)
+        }
+        return null
     }
 
     private fun stillMilliseconds(screen: SessionScreen): Long {

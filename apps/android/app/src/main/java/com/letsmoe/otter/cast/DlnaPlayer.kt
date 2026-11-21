@@ -173,6 +173,9 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     private var sessionStartedAtMilliseconds = 0L
     // Opens the session on the TV, then follows the TV's state.
     private var sessionJob: Job? = null
+    // What the session shows while no title plays (see showIdleScreen); read on the encoder's thread too.
+    @Volatile
+    private var chosenIdleScreen: SessionScreen = SessionScreen.Idle
 
     private var isContinuous = false
     // Where the TV's 0:00 lies on the title's timeline (continuous streams).
@@ -502,6 +505,8 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     // Loading ------------------------------------------------------------------
 
     private fun startLoad(startSeconds: Double) {
+        // The browse picture and the screensaver step aside for titles; they ask again once nothing plays.
+        chosenIdleScreen = SessionScreen.Idle
         if (playsInSession()) {
             startSessionLoad(startSeconds)
             return
@@ -633,28 +638,68 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
         return media
     }
 
-    // Stills -------------------------------------------------------------------
+    // Idle screens -------------------------------------------------------------
 
-    /** The tallest picture the phone's encoder makes for this TV. */
-    val stillHeight: Int
+    /** The height of the pictures the phone draws for this TV. */
+    val screenHeight: Int
         get() = overlayMaxHeight()
 
-    /** False once the phone's encoder failed for this TV: it gets no pictures from the phone any more. */
-    val encodesPictures: Boolean
-        get() = !overlaysFailed
+    /** False once the phone's encoder failed or the TV refused its session stream: it gets no pictures from the phone. */
+    val showsScreens: Boolean
+        get() = !overlaysFailed && !sessionsFailed
 
-    /** Shows the still picture of [streamPath] (an overlay stream path) on the TV; nothing may be playing. */
-    suspend fun showStill(streamPath: String, title: String) {
-        val origin = lanStreamOrigin(context) ?: throw DlnaException("The phone is not on Wi-Fi.")
-        val media = televisionMediaFor(origin, streamPath, title, OVERLAY_MIME_TYPE, seekableBytes = false, captionHints = false)
-        stopBeforeLoading()
-        client.load(media)
-        client.play()
+    /**
+     * Shows [screen] (the title being browsed, the screensaver or the idle screen) in the TV's
+     * session whenever no title plays there; the TV keeps its stream. Opens a session for it when
+     * the TV has none and plays nothing, e.g. with "Draw on the TV picture" off.
+     */
+    fun showIdleScreen(screen: SessionScreen) {
+        chosenIdleScreen = screen
+        if (!showsScreens || playsPlainStream()) {
+            return
+        }
+        // Without "Draw on the TV picture" the session only exists for these pictures.
+        if (screen == SessionScreen.Idle && !usesSessions()) {
+            endPictureSession()
+            return
+        }
+        ensureSession()
+        refreshIdleScreen()
     }
 
-    /** Takes the still picture off the TV. */
-    suspend fun clearStill() {
-        client.stop()
+    private fun idleScreen(): SessionScreen {
+        return chosenIdleScreen
+    }
+
+    private fun playsPlainStream(): Boolean {
+        return session == null && mediaItem != null && playbackState != Player.STATE_IDLE
+    }
+
+    private fun playsTitleInSession(): Boolean {
+        return sessionTitle != null || loadJob?.isActive == true
+    }
+
+    // Puts the idle screen wanted now into the session, unless a title or its loading screen runs there.
+    private fun refreshIdleScreen() {
+        val current = session ?: return
+        if (playsTitleInSession()) {
+            return
+        }
+        showIfOther(current, idleScreen())
+    }
+
+    private fun showIfOther(current: TelevisionSession, screen: SessionScreen) {
+        if (current.currentJob.screen != screen) {
+            current.show(screen)
+        }
+    }
+
+    private fun endPictureSession() {
+        if (session == null || playsTitleInSession()) {
+            return
+        }
+        endSession()
+        sendCommand { client.stop() }
     }
 
     // Overlays -----------------------------------------------------------------
@@ -778,14 +823,13 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
 
     /**
      * Hands the TV its one stream for the whole connection when it gets overlays: the idle
-     * screen first, then every title, seek and caption change inside it. True when it did.
+     * screen first, then every title, seek and caption change inside it.
      */
-    fun connect(): Boolean {
+    fun connect() {
         if (!usesSessions()) {
-            return false
+            return
         }
         ensureSession()
-        return true
     }
 
     /** Whether the TV plays the session's stream: the phone keeps encoding while nothing plays. */
@@ -817,14 +861,25 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
         if (existing != null) {
             return existing
         }
-        val created = TelevisionSession(overlayMaxHeight(), ::onSessionJobFailed)
+        val created = TelevisionSession(overlayMaxHeight(), ::onSessionJobFailed, idleScreen = ::idleScreen)
         TelevisionSessions.register(created)
+        keepPhoneAwake()
         session = created
         sessionPlayed = false
         sessionPlaying = true
         televisionStopped = false
         sessionJob = scope.launch { runSession(created) }
         return created
+    }
+
+    // The phone encodes the session's stream for as long as it lives, also with its screen off.
+    private fun keepPhoneAwake() {
+        try {
+            CastKeepAliveService.start(context, renderer.name)
+        } catch (notAllowed: IllegalStateException) {
+            // Android refuses a foreground service started from the background; the TV may lose the stream then.
+            Log.w(TAG, "keeping the phone awake for the TV failed", notAllowed)
+        }
     }
 
     private suspend fun runSession(created: TelevisionSession) {
@@ -948,6 +1003,8 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
             report(currentPositionMilliseconds() / 1000.0)
             sessionTitle = null
             playbackState = Player.STATE_ENDED
+            // The session moved on when the title's encoding ended; what it should show may have changed since.
+            refreshIdleScreen()
             return
         }
         val loading = loadJob?.isActive == true || seekJob?.isActive == true
@@ -1023,9 +1080,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     private fun showIdleInSession(): Boolean {
         val current = session ?: return false
         sessionTitle = null
-        if (current.currentJob.screen != SessionScreen.Idle) {
-            current.show(SessionScreen.Idle)
-        }
+        showIfOther(current, idleScreen())
         return true
     }
 

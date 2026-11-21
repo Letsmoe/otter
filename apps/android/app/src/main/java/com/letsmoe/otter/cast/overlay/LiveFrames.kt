@@ -7,15 +7,16 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.BitmapOverlay
 
 /**
- * A picture that changes while the stream runs: [draw] paints the moment [seconds] into the stream
- * onto [canvas], always the same one; a source whose picture did not change may leave it as it was.
+ * A picture that changes while the stream runs: [draw] paints the moment [seconds] into the job
+ * onto [canvas], the same one for the whole job (a restarted job brings a new, empty one); a source
+ * whose picture did not change may leave it as it was.
  */
 interface LiveFrames {
     fun draw(canvas: Canvas, seconds: Double)
 }
 
 /**
- * Draws a [LiveFrames] source over every frame of a still stream, so the picture the TV watches
+ * Draws a [LiveFrames] source over every frame of a still session screen, so the picture the TV watches
  * changes without the TV loading anything new. The bitmap is covered entirely by the source.
  */
 @UnstableApi
