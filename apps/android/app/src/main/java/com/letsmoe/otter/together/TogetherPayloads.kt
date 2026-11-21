@@ -13,8 +13,19 @@ fun TogetherPayload.toJson(): String {
         is StatusPayload -> json.put("type", "status").put("mediaId", mediaId ?: JSONObject.NULL).put("buffering", buffering)
         is ChatPayload -> json.put("type", "chat").put("text", text)
         is ReactionPayload -> json.put("type", "reaction").put("emoji", emoji)
+        is SuggestPayload -> writeSuggestion(json, this)
+        is VotePayload -> json.put("type", "vote.cast").put("mediaId", mediaId)
+        is VoteResultPayload -> json.put("type", "vote.result").put("mediaId", mediaId).put("title", title)
     }
     return json.toString()
+}
+
+private fun writeSuggestion(json: JSONObject, payload: SuggestPayload) {
+    json.put("type", "vote.suggest")
+    json.put("mediaId", payload.mediaId)
+    json.put("title", payload.title)
+    json.put("year", payload.year ?: JSONObject.NULL)
+    json.put("posterPath", payload.posterPath ?: JSONObject.NULL)
 }
 
 private fun writeMedia(json: JSONObject, payload: MediaPayload) {
@@ -61,8 +72,19 @@ private fun readPayload(json: JSONObject): TogetherPayload? {
         "status" -> StatusPayload(optionalString(json, "mediaId"), json.optBoolean("buffering", false))
         "chat" -> ChatPayload(json.getString("text"))
         "reaction" -> ReactionPayload(json.getString("emoji"))
+        "vote.suggest" -> readSuggestion(json)
+        "vote.cast" -> VotePayload(json.getString("mediaId"))
+        "vote.result" -> VoteResultPayload(json.getString("mediaId"), json.optString("title"))
         else -> null
     }
+}
+
+private fun readSuggestion(json: JSONObject): SuggestPayload {
+    var year: Int? = null
+    if (json.has("year") && !json.isNull("year")) {
+        year = json.getInt("year")
+    }
+    return SuggestPayload(json.getString("mediaId"), json.getString("title"), year, optionalString(json, "posterPath"))
 }
 
 private fun readMedia(json: JSONObject): MediaPayload {
