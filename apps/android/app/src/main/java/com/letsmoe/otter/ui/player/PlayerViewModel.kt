@@ -1,6 +1,7 @@
 package com.letsmoe.otter.ui.player
 
 import android.app.Application
+import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.cast.CastPlayer
@@ -13,6 +14,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.Tracks
 import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import com.letsmoe.otter.cast.CastCaptionSelector
 import com.letsmoe.otter.cast.CastSetup
 import com.letsmoe.otter.cast.DlnaPlayer
@@ -161,6 +163,10 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private var catchUpFactor = 1f
     // The title the bedtime's defaults were applied to; they apply once, so the viewer can switch them off.
     private var bedtimeAppliedTo: String? = null
+    // Whether the viewer picked the playing link; it is then never replaced by a sharper one by itself.
+    private var viewerChoseSource = false
+    private val bandwidthMeter = DefaultBandwidthMeter.getSingletonInstance(application)
+    private val betterLink = BetterLinkWatcher(SystemClock::elapsedRealtime, ::switchToBetterLink, ::announceBetterLinkSkippedWhileCasting)
 
     override val currentMediaId: String
         get() = mutableState.value.mediaId
@@ -246,6 +252,8 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         TogetherSession.detachPlayer(currentMediaId)
         progressReporter.reset()
         finishWatch.reset()
+        betterLink.reset()
+        viewerChoseSource = false
         playing = null
         sourceSwitchResumeSeconds = 0.0
         nextEpisodeJob?.cancel()
@@ -481,7 +489,36 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         if (sourceId == current.currentSourceId && current.shownError == null) {
             return
         }
+        viewerChoseSource = true
         reloadSource(sourceId)
+    }
+
+    // A sharper link replaces the playing one by itself, once it is safe (see BetterLinkWatcher).
+    private fun switchToBetterLink(link: LinkInfo) {
+        reloadSource(link.id)
+        Toasts.push("Switched to a sharper link (${link.qualityLabel})")
+    }
+
+    private fun announceBetterLinkSkippedWhileCasting(link: LinkInfo) {
+        Toasts.push("A sharper link (${link.qualityLabel}) exists, but switching would interrupt the TV's picture, so it stays")
+    }
+
+    private fun betterLinkSnapshot(): PlaybackSnapshot {
+        val current = mutableState.value
+        val links = streamPlayback.state.value.streams.map(::linkInfoOf)
+        return PlaybackSnapshot(
+            paused = !activePlayer.playWhenReady,
+            casting = current.isCasting,
+            viewerChoseLink = viewerChoseSource,
+            current = links.firstOrNull { link -> link.id == current.currentSourceId },
+            links = links,
+            measuredBitsPerSecond = bandwidthMeter.bitrateEstimate,
+            captionVisible = player.currentCues.cues.isNotEmpty(),
+        )
+    }
+
+    private fun linkInfoOf(stream: SourceStream): LinkInfo {
+        return LinkInfo(stream.id, qualityHeight(stream), stream.language, stream.playable, stream.quality.orEmpty())
     }
 
     /**
@@ -635,12 +672,18 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     }
 
     private fun setBuffering(buffering: Boolean) {
+        if (buffering && sourceStarted) {
+            betterLink.onRebuffer()
+        }
         mutableState.update { current -> current.copy(isBuffering = buffering) }
         togetherSync.reportLoading(buffering || !mutableState.value.hasSource)
     }
 
     private fun onReady() {
         televisionLinkRenewed = false
+        if (!sourceStarted) {
+            betterLink.onPlaybackStarted()
+        }
         sourceStarted = true
         playbackMeter.buffering(false, activePlayer.playWhenReady)
         val duration = activePlayer.duration
@@ -1200,6 +1243,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             mutablePosition.value = PlaybackPosition(position, buffered)
             applyBedtimeIfDue()
             enforceChildBedtime()
+            betterLink.check(::betterLinkSnapshot)
             followSegments(position)
             followSleepTimer()
             if (activePlayer.playWhenReady) {
