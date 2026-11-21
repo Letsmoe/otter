@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.letsmoe.otter.ui.components.FilterSelect
 import com.letsmoe.otter.ui.components.pressable
+import com.letsmoe.otter.ui.player.audio.AUDIO_DELAY_STEP_MILLISECONDS
+import com.letsmoe.otter.ui.player.audio.audioDelayLabel
 
 private const val NO_SECOND_LANGUAGE = -1
 
@@ -58,8 +60,22 @@ private fun CaptionTimingRow(delaySeconds: Double, onNudge: (Double) -> Unit) {
     }
 }
 
+/** "Audio delay  [−]  +100 ms  [+]": the TV's sound earlier and later, in 50 ms steps. */
 @Composable
-private fun TimingButton(symbol: String, onClick: () -> Unit) {
+fun AudioDelayRow(delayMillis: Int, onNudge: (Int) -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("Audio delay", fontWeight = FontWeight.SemiBold)
+            Text("Sound behind the picture: −; ahead of it: +", color = Color.White.copy(alpha = 0.55f), fontSize = 12.sp)
+        }
+        TimingButton("−") { onNudge(-AUDIO_DELAY_STEP_MILLISECONDS) }
+        Text(audioDelayLabel(delayMillis), Modifier.width(64.dp), textAlign = TextAlign.Center, fontSize = 14.sp)
+        TimingButton("+") { onNudge(AUDIO_DELAY_STEP_MILLISECONDS) }
+    }
+}
+
+@Composable
+internal fun TimingButton(symbol: String, onClick: () -> Unit) {
     Box(
         Modifier.pressable(onClick = onClick).size(36.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.12f)),
         contentAlignment = Alignment.Center,

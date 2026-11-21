@@ -334,6 +334,7 @@ private fun SheetContent(kind: PlayerSheetKind, state: PlayerUiState, viewModel:
             viewModel::chooseSubtitle,
             viewModel::toggleVoiceBoost,
             viewModel::toggleEvenVolume,
+            viewModel::nudgeAudioDelay,
             rememberCaptionTweaks(state, viewModel),
         )
         PlayerSheetKind.EPISODES -> EpisodesSheetContent(state.episodes, state.mediaId) { episodeId ->

@@ -83,7 +83,13 @@ data class PlayerUiState(
     val stopLocked: Boolean = false,
     /** The profile's caption size and style. */
     val captionLook: CaptionLook = CaptionLook.DEFAULT,
+    /** How far the TV's sound is moved against the picture (positive: later); kept per TV. */
+    val audioDelayMillis: Int = 0,
 ) {
+    /** The sound is the phone's own, so it can be moved against the picture: a DLNA TV with the drawn picture. */
+    val canDelayAudio: Boolean
+        get() = drawsOnTelevision
+
     val shownError: String?
         get() = loadError ?: playbackError
 

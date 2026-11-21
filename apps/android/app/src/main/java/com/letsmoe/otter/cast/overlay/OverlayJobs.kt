@@ -43,14 +43,16 @@ class OverlayJob(
 
     fun askingStillWatching(): Boolean = live.askingStillWatching()
     fun audioGain(): Float = live.audioGain()
+    fun audioDelayMillis(): Int = live.audioDelayMillis()
 }
 
 /**
  * What can change while a stream plays: the profile's caption look, a cancelled next-episode
  * card, the viewer's caption timing (positive: later), voice boost, even volume, the Watch
  * Together room, a replay with captions (until that second of the title) and stopping after
- * this episode, the question "Still watching?" waiting for an answer on the phone, and the
- * sound's gain (0 to 1) for the sleep timer's fade.
+ * this episode, the question "Still watching?" waiting for an answer on the phone, the
+ * sound's gain (0 to 1) for the sleep timer's fade, and how far the TV's sound is moved
+ * against the picture (positive: later).
  */
 class OverlayLiveInputs(
     val captionLook: () -> CaptionLook = { CaptionLook.DEFAULT },
@@ -63,6 +65,7 @@ class OverlayLiveInputs(
     val stopsAfterEpisode: () -> Boolean = { false },
     val askingStillWatching: () -> Boolean = { false },
     val audioGain: () -> Float = { 1f },
+    val audioDelayMillis: () -> Int = { 0 },
 )
 
 /** The overlay streams the loopback server can encode, by id. */
