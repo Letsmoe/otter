@@ -22,6 +22,8 @@ data class PlayerEpisode(
     val stillUrl: String?,
     /** Watch fraction (0..1); null when unwatched. */
     val progress: Float?,
+    /** Names the up-next card instead of season and episode: a title from tonight's queue. */
+    val cardLabel: String? = null,
 )
 
 data class TrackOption(val index: Int, val label: String)
