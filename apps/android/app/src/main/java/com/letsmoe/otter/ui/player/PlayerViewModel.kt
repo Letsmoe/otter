@@ -107,6 +107,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private val skipTracker = SkipTracker()
     private val skipHabits = SkipHabits(PreferencesSkipHabitStorage(application))
     private val seriesMemory = SeriesMemory(PreferencesSeriesMemoryStorage(application))
+    private val preferredHoster = PreferredHoster(PreferencesPreferredHosterStorage(application))
     private val upNextOffer = UpNext(viewModelScope, ::playNext)
     private val captionExtras = CaptionExtras(viewModelScope, ::reloadPhoneCaptions)
 
@@ -164,6 +165,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) = onPlayWhenReadyChanged(playWhenReady)
 
         override fun onPlayerError(error: PlaybackException) {
+            preferredHoster.sourceFailed()
             if (leaveLostTelevision(error)) {
                 return
             }
@@ -182,6 +184,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     }
 
     init {
+        streamPlayback.preferredHoster = { preferredHoster.hoster }
         player.addListener(playerListener)
         viewModelScope.launch { streamPlayback.state.collect(::onStreamState) }
         viewModelScope.launch { pollPosition() }
@@ -216,6 +219,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         skipTracker.reset(emptyList())
         skipHabits.reset()
         seriesMemory.reset()
+        preferredHoster.open(ProfileSession.activeProfile.value?.id, mediaId)
         mutableSkipButton.value = null
         mutablePostCreditsNotice.value = false
         clearPlayers()
@@ -263,6 +267,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             skipTracker.reset(loaded.skipSegments)
             skipHabits.open(profileId, loaded.seriesId, mediaId, loaded.episodes.episodeBefore(mediaId)?.id)
             startWithSeriesMemory(profileId, loaded.seriesId)
+            learnSeries(loaded)
             // Reaches the TV's picture with its next load, e.g. the next seek.
             televisionPlayer?.hints = televisionHints()
             mutableState.update { current ->
@@ -270,6 +275,13 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             }
             announceToTogether()
         }
+    }
+
+    // The next episodes belong to this series, so their links start with its preferred hoster.
+    private fun learnSeries(loaded: PlayerMedia) {
+        val seriesId = loaded.seriesId ?: return
+        preferredHoster.learnEpisodes(seriesId, loaded.episodes.map { episode -> episode.id })
+        preferredHoster.confirmSeries(seriesId)
     }
 
     private fun startStreams(mediaId: String, initial: Boolean) {
@@ -440,6 +452,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     private fun attachSource(source: PlayingSource) {
         sourceStarted = false
+        preferredHoster.sourceAttached(playingStream()?.let(::hosterOf))
         attachJob?.cancel()
         attachJob = viewModelScope.launch {
             val resumeSeconds = resumeSecondsFor(currentMediaId)
@@ -1058,6 +1071,9 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         val inCredits = skipTracker.isInCredits(positionSeconds)
         upNextOffer.follow(inCredits, activePlayer.isPlaying, offeredNextEpisode())
         skipHabits.follow(skipTracker.jumps, positionSeconds, activePlayer.isPlaying, inCredits)
+        if (activePlayer.isPlaying) {
+            preferredHoster.follow(positionSeconds, durationSeconds)
+        }
         skipIntroAt(positionSeconds)
         endReplayAt(positionSeconds)
         // Back before the credits, the TV's card may show again, like the phone's.
