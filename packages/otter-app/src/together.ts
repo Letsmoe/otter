@@ -71,6 +71,10 @@ export interface ReactionPayload {
 	emoji: string;
 }
 
+// The Android app also sends movie night payloads ("vote.suggest", "vote.cast", "vote.result",
+// see apps/android/.../together/TogetherPayloads.kt). They are not listed here on purpose:
+// parsePayload drops types it does not know, so web clients ignore the vote, and still follow
+// the "media" payload that opens the winner.
 export type TogetherPayload =
 	| MediaPayload
 	| PlaybackPayload
