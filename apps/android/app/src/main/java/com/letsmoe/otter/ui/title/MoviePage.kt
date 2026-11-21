@@ -46,6 +46,7 @@ fun MoviePage(
             ready = !streams.isBusy && !streams.vpnBlocked && streams.streams.isNotEmpty(),
             disabled = streams.nothingFound || streams.vpnBlocked,
             onClick = { onPlay(PlayRequest(detail.id)) },
+            remainingMinutes = remainingMinutes(detail.runtime, detail.resumeFraction),
         ),
         creditLines = movieCreditLines(detail),
         shareUrl = movieLink(tmdbIdOf(detail.id), detail.title),

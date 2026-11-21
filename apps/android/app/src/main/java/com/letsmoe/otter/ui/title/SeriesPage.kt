@@ -62,6 +62,7 @@ fun SeriesPage(
             ready = episodes.loaded && upNext != null && !vpn.blocksStreaming,
             disabled = (episodes.loaded && upNext == null) || vpn.blocksStreaming,
             onClick = { upNext?.let { next -> onPlay(PlayRequest(next.episode.id)) } },
+            remainingMinutes = upNextRemainingMinutes(upNext),
         ),
         creditLines = seriesCreditLines(detail),
         shareUrl = seriesLink(tmdbIdOf(detail.id), detail.title),
