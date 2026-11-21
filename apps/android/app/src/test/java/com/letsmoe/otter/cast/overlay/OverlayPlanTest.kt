@@ -92,6 +92,25 @@ class OverlayPlanTest {
     }
 
     @Test
+    fun aReplayShowsCaptionsThatAreOffUntilItCatchesUp() {
+        val plan = OverlayPlan(replayCaptions = listOf(CaptionCue(10.0, 30.0, "What was that?")))
+
+        assertNull(plan.frameAt(15.0).caption)
+        assertEquals("What was that?", plan.frameAt(15.0, replayUntilSeconds = 20.0).caption)
+        assertNull(plan.frameAt(20.0, replayUntilSeconds = 20.0).caption)
+    }
+
+    @Test
+    fun aReplayLeavesCaptionsThatAreOnAlone() {
+        val plan = OverlayPlan(
+            captions = listOf(CaptionCue(10.0, 30.0, "Was war das?")),
+            replayCaptions = listOf(CaptionCue(10.0, 30.0, "What was that?")),
+        )
+
+        assertEquals("Was war das?", plan.frameAt(15.0, replayUntilSeconds = 20.0).caption)
+    }
+
+    @Test
     fun theTitleCardShowsForItsSecondsOnly() {
         val card = TitleCard("Severance", "S1:E2 · Half Loop", 300.0, 306.0)
         val plan = OverlayPlan(titleCard = card)

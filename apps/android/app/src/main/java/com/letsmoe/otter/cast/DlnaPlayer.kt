@@ -134,6 +134,14 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     /** The viewer's caption timing in seconds, positive for later; the picture follows within seconds. */
     @Volatile
     var captionDelaySeconds = 0.0
+    /** Nothing plays after this episode; the picture says so during the credits. */
+    @Volatile
+    var stopsAfterEpisode = false
+    // A replay with captions shows them until this second of the title; null when none runs.
+    @Volatile
+    private var replayUntilSeconds: Double? = null
+    // What a replay shows while the main captions are off.
+    private var replayCaptionFile: TelevisionSubtitleFile? = null
     // A second caption language, drawn smaller under the main one (overlay streams only).
     private var secondSubtitleFile: TelevisionSubtitleFile? = null
     // The title the card last introduced: a new source for the same episode shows no card again.
@@ -219,6 +227,20 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
             return
         }
         startLoad(currentPositionMilliseconds() / 1000.0)
+    }
+
+    /**
+     * Shows captions until [untilSeconds] of the title (from [file] when the
+     * main ones are off); set before seeking back, whose new stream draws them.
+     */
+    fun startReplay(untilSeconds: Double, file: TelevisionSubtitleFile?) {
+        replayUntilSeconds = untilSeconds
+        replayCaptionFile = file
+    }
+
+    /** The replay reached where it started: captions follow the viewer's choice again. */
+    fun endReplay() {
+        replayUntilSeconds = null
     }
 
     /** Draws a second caption language under the main one (or none); the TV loads the stream again. */
@@ -581,9 +603,10 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
         streamHeight = minOf(linkHeight ?: maxHeight, maxHeight)
         report(startSeconds)
         pendingFileSeekSeconds = null
-        val captionPaths = CaptionPaths(subtitleFile?.srtPath, secondSubtitleFile?.srtPath)
+        val captionPaths = CaptionPaths(subtitleFile?.srtPath, secondSubtitleFile?.srtPath, replayCaptionPath())
         val plan = loadOverlayPlan(context, hints, captionPaths, titleCardRequest(startSeconds))
-        val job = OverlayJob(playerUrl, mimeType, startSeconds, maxHeight, plan, liveInputs(), ::onOverlayFailed)
+        val brightens = PlaybackSettings.brightenDarkScenes
+        val job = OverlayJob(playerUrl, mimeType, startSeconds, maxHeight, plan, liveInputs(), brightens, ::onOverlayFailed)
         overlayJobId = OverlayJobs.register(job)
         journal.note("Drawing into the picture", mapOf("overlay_job" to job.id, "overlay_captions" to plan.captions.size))
         return televisionMediaFor(origin, "/api/stream/overlay?job=${job.id}", title, OVERLAY_MIME_TYPE, seekableBytes = false, captionHints = false)
@@ -596,7 +619,18 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
             captionDelaySeconds = { captionDelaySeconds },
             voiceBoost = { ProfileSession.activeProfile.value?.voiceBoost == true },
             together = ::togetherMoments,
+            evenVolume = { PlaybackSettings.evenVolume },
+            replayUntilSeconds = { replayUntilSeconds },
+            stopsAfterEpisode = { stopsAfterEpisode },
         )
+    }
+
+    // Only needed while a replay runs and the main captions are off.
+    private fun replayCaptionPath(): String? {
+        if (replayUntilSeconds == null || subtitleFile != null) {
+            return null
+        }
+        return replayCaptionFile?.srtPath
     }
 
     // The first stream of a title shows what plays and when it ends; seeks and new links for the same title don't.

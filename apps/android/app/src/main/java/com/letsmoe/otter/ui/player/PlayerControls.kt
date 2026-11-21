@@ -74,6 +74,8 @@ class PlayerActions(
     val openSheet: (PlayerSheetKind) -> Unit,
     val playNext: () -> Unit,
     val toggleLock: () -> Unit,
+    val replayWithCaptions: () -> Unit,
+    val toggleStopAfterEpisode: () -> Unit,
 )
 
 /** Whether the controls are showing, and the reasons they stay up. */

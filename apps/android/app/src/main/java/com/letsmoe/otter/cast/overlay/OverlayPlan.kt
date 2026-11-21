@@ -32,6 +32,8 @@ data class OverlayPlan(
     val upNext: UpNextHint? = null,
     val secondCaptions: List<CaptionCue> = emptyList(),
     val titleCard: TitleCard? = null,
+    /** Shown during a replay with captions when [captions] are off. */
+    val replayCaptions: List<CaptionCue> = emptyList(),
 )
 
 // Steps of the card's fill: about one per frame, so it moves smoothly but frames can still repeat.
@@ -53,11 +55,15 @@ data class OverlayFrame(
         get() = caption == null && secondCaption == null && skipLabel == null && upNextSecondsLeft == null && titleCard == null
 }
 
-/** The frame at [seconds] of the title; captions show [captionDelaySeconds] later than their file says. */
-fun OverlayPlan.frameAt(seconds: Double, captionDelaySeconds: Double = 0.0): OverlayFrame {
+/**
+ * The frame at [seconds] of the title; captions show [captionDelaySeconds]
+ * later than their file says. Until [replayUntilSeconds] a replay shows
+ * captions even when they are off.
+ */
+fun OverlayPlan.frameAt(seconds: Double, captionDelaySeconds: Double = 0.0, replayUntilSeconds: Double? = null): OverlayFrame {
     val captionSeconds = seconds - captionDelaySeconds
     return OverlayFrame(
-        caption = captions.textAt(captionSeconds),
+        caption = captionAt(captionSeconds, isReplaying(seconds, replayUntilSeconds)),
         skipLabel = skipLabelAt(seconds),
         upNextSecondsLeft = upNextSecondsLeftAt(seconds),
         upNextProgress = upNextProgressAt(seconds),
@@ -73,6 +79,21 @@ fun List<CaptionCue>.textAt(seconds: Double): String? {
         return null
     }
     return showing.joinToString("\n") { cue -> cue.text }
+}
+
+private fun OverlayPlan.captionAt(captionSeconds: Double, replaying: Boolean): String? {
+    val shown = captions.textAt(captionSeconds)
+    if (shown != null || !replaying) {
+        return shown
+    }
+    return replayCaptions.textAt(captionSeconds)
+}
+
+private fun isReplaying(seconds: Double, replayUntilSeconds: Double?): Boolean {
+    if (replayUntilSeconds == null) {
+        return false
+    }
+    return seconds < replayUntilSeconds
 }
 
 private fun OverlayPlan.skipLabelAt(seconds: Double): String? {

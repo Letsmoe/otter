@@ -190,12 +190,14 @@ fun TracksSheetContent(
     onAudio: (Int) -> Unit,
     onSubtitle: (Int) -> Unit,
     onVoiceBoost: () -> Unit,
+    onEvenVolume: () -> Unit,
     captionTweaks: CaptionTweaksUi?,
 ) {
     Row(Modifier.fillMaxSize().padding(horizontal = 40.dp, vertical = 24.dp), horizontalArrangement = Arrangement.spacedBy(40.dp)) {
         TrackColumn("Audio", state.audioTracks, state.selectedAudioIndex, "Original", onAudio, Modifier.weight(1f)) {
             if (state.canBoostVoice) {
-                VoiceBoostRow(state.voiceBoost, onVoiceBoost)
+                AudioSwitchRow("Voice boost", "Dialogue over music and effects", state.voiceBoost, onVoiceBoost)
+                AudioSwitchRow("Even volume", "Quieter loud scenes, clearer quiet ones", state.evenVolume, onEvenVolume)
             }
         }
         val subtitleOptions = listOf(TrackOption(-1, "Off")) + state.subtitleTracks
@@ -206,11 +208,11 @@ fun TracksSheetContent(
 }
 
 @Composable
-private fun VoiceBoostRow(enabled: Boolean, onToggle: () -> Unit) {
+private fun AudioSwitchRow(title: String, description: String, enabled: Boolean, onToggle: () -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text("Voice boost", fontWeight = FontWeight.SemiBold)
-            Text("Dialogue over music and effects", color = Color.White.copy(alpha = 0.55f), fontSize = 12.sp)
+            Text(title, fontWeight = FontWeight.SemiBold)
+            Text(description, color = Color.White.copy(alpha = 0.55f), fontSize = 12.sp)
         }
         OtterSwitch(enabled) { onToggle() }
     }

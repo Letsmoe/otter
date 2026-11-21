@@ -18,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.padding
-import com.letsmoe.otter.cast.overlay.CaptionCue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -114,6 +113,8 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
         openSheet = ::openSheet,
         playNext = { viewModel.playNext(); chrome.show() },
         toggleLock = { chrome.locked = !chrome.locked; sheet = null; chrome.show() },
+        replayWithCaptions = { viewModel.replayWithCaptions(); chrome.show() },
+        toggleStopAfterEpisode = { viewModel.toggleStopAfterEpisode(); chrome.show() },
     )
 
     // The sheets' glass blurs the video (or the casting backdrop) behind them.
@@ -123,12 +124,14 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
             val secondShown = captionTweaks.secondCues.isNotEmpty() && !state.isCasting
             VideoSurface(viewModel.player, state.captionLook, mainCaptionBottomFraction(state.captionLook, secondShown))
             if (secondShown) {
-                SecondCaptions(viewModel.player, captionTweaks.secondCues, captionTweaks.delaySeconds, state.captionLook)
+                DrawnCaptions(viewModel.player, captionTweaks.secondCues, captionTweaks.delaySeconds, state.captionLook, DrawnCaptionRole.SECOND)
+            }
+            if (showsReplayCaptions(state, captionTweaks)) {
+                DrawnCaptions(viewModel.player, captionTweaks.transcriptCues, captionTweaks.delaySeconds, state.captionLook, DrawnCaptionRole.REPLAY)
             }
             state.castDeviceName?.let { deviceName ->
                 LaunchedEffect(deviceName, state.selectedSubtitleIndex) { viewModel.loadTranscript() }
-                val lines = recentLines(captionTweaks.transcriptCues, position.positionSeconds, captionTweaks.delaySeconds)
-                CastingBackdrop(deviceName, lines)
+                CastingBackdrop(deviceName)
             }
         }
         PlayerTapSurface(
@@ -143,6 +146,11 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
             },
         )
         skipFeedback?.let { feedback -> SkipFeedbackBubble(feedback) }
+        // Above the tap surface, so a line can be tapped to play it again.
+        if (state.isCasting) {
+            val lines = recentLines(captionTweaks.transcriptCues, position.positionSeconds, captionTweaks.delaySeconds)
+            RecentLines(lines, viewModel::replayLine, Modifier.align(Alignment.BottomCenter).padding(start = 32.dp, end = 32.dp, bottom = 150.dp))
+        }
         StatusNotice(state, viewModel, ::openSheet)
         if (!state.hasEnded) {
             PlayerControlsLayer(state, position, chrome, actions) { viewModel.previewPlayer }
@@ -216,7 +224,7 @@ private fun VideoSurface(player: Player, captionLook: CaptionLook, captionBottom
 
 // The video runs on the TV; the phone shows where and keeps the controls.
 @Composable
-private fun CastingBackdrop(deviceName: String, recentLines: List<CaptionCue>) {
+private fun CastingBackdrop(deviceName: String) {
     Column(
         Modifier.fillMaxSize().background(Color.Black).padding(horizontal = 32.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
@@ -224,8 +232,12 @@ private fun CastingBackdrop(deviceName: String, recentLines: List<CaptionCue>) {
     ) {
         Icon(PhosphorIcons.Regular.Television, contentDescription = null, tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(56.dp))
         Text("Playing on $deviceName", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.85f))
-        RecentLines(recentLines, Modifier.padding(top = 20.dp))
     }
+}
+
+// The phone draws a replay's captions itself when its own are off; a TV draws them in its picture.
+private fun showsReplayCaptions(state: PlayerUiState, tweaks: CaptionExtrasState): Boolean {
+    return tweaks.replayUntilSeconds != null && state.selectedSubtitleIndex == -1 && !state.isCasting
 }
 
 // Waiting for the room, buffering, or a failure, in the middle of the video.
@@ -283,6 +295,7 @@ private fun SheetContent(kind: PlayerSheetKind, state: PlayerUiState, viewModel:
             viewModel::chooseAudio,
             viewModel::chooseSubtitle,
             viewModel::toggleVoiceBoost,
+            viewModel::toggleEvenVolume,
             rememberCaptionTweaks(state, viewModel),
         )
         PlayerSheetKind.EPISODES -> EpisodesSheetContent(state.episodes, state.mediaId) { episodeId ->

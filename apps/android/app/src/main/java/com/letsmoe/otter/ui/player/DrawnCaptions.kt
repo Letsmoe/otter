@@ -45,9 +45,15 @@ fun mainCaptionBottomFraction(look: CaptionLook, secondShown: Boolean): Float {
     return SUBTITLE_BOTTOM_FRACTION + SECOND_CAPTION_ROOM_LINES * look.textFraction
 }
 
-/** The second caption language on the phone, under the main captions, in the profile's look. */
+/** Captions the phone draws itself: a second language (smaller, light grey) or a replay's (as the main ones). */
+enum class DrawnCaptionRole(val scale: Float) {
+    SECOND(SECOND_CAPTION_SCALE),
+    REPLAY(1f),
+}
+
+/** Captions from [cues] at the bottom of the picture, in the profile's look. */
 @Composable
-fun SecondCaptions(player: Player, cues: List<CaptionCue>, delaySeconds: Double, look: CaptionLook) {
+fun DrawnCaptions(player: Player, cues: List<CaptionCue>, delaySeconds: Double, look: CaptionLook, role: DrawnCaptionRole) {
     var text by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(cues, delaySeconds) {
         while (true) {
@@ -59,34 +65,45 @@ fun SecondCaptions(player: Player, cues: List<CaptionCue>, delaySeconds: Double,
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val height = maxHeight
         val bottom = height * SUBTITLE_BOTTOM_FRACTION
-        val textSize = with(LocalDensity.current) { (height * look.textFraction * SECOND_CAPTION_SCALE).toSp() }
+        val captionHeight = height * look.textFraction * role.scale
+        val textSize = with(LocalDensity.current) { captionHeight.toSp() }
         Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth(0.8f).padding(bottom = bottom), contentAlignment = Alignment.BottomCenter) {
-            CaptionText(shown, textSize, look.style, outlineWidth(height, look))
+            CaptionText(shown, textSize, captionColor(look.style, role), CaptionEdge(look.style, captionHeight * OUTLINE_WIDTH_FRACTION))
         }
     }
 }
 
-private fun outlineWidth(height: Dp, look: CaptionLook): Dp {
-    return height * look.textFraction * SECOND_CAPTION_SCALE * OUTLINE_WIDTH_FRACTION
-}
+/** How the text stands off the picture: the profile's style, with the outline this wide. */
+private class CaptionEdge(val style: SubtitleStyle, val outline: Dp)
 
 @Composable
-private fun CaptionText(text: String, textSize: TextUnit, style: SubtitleStyle, outline: Dp) {
+private fun CaptionText(text: String, textSize: TextUnit, color: Color, edge: CaptionEdge) {
     val base = TextStyle(fontSize = textSize, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-    if (style == SubtitleStyle.BOX) {
-        Text(text, Modifier.background(Color(CaptionColors.BOX)), style = base.copy(color = Color.White))
+    if (edge.style == SubtitleStyle.BOX) {
+        Text(text, Modifier.background(Color(CaptionColors.BOX)), style = base.copy(color = color))
         return
     }
-    val strokeWidth = with(LocalDensity.current) { outline.toPx() }
+    val strokeWidth = with(LocalDensity.current) { edge.outline.toPx() }
     Box {
         Text(text, style = base.copy(color = Color(CaptionColors.OUTLINE), drawStyle = Stroke(width = strokeWidth)))
-        Text(text, style = base.copy(color = secondColor(style)))
+        Text(text, style = base.copy(color = color))
     }
 }
 
-private fun secondColor(style: SubtitleStyle): Color {
+// A replay looks like the main captions; a second language is set apart from them, as on the TV.
+private fun captionColor(style: SubtitleStyle, role: DrawnCaptionRole): Color {
+    if (role == DrawnCaptionRole.REPLAY) {
+        return mainColor(style)
+    }
     if (style == SubtitleStyle.YELLOW) {
         return Color.White
     }
     return Color(CaptionColors.SECOND)
+}
+
+private fun mainColor(style: SubtitleStyle): Color {
+    if (style == SubtitleStyle.YELLOW) {
+        return Color(CaptionColors.YELLOW)
+    }
+    return Color.White
 }

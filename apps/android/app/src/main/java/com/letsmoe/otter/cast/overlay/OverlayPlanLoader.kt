@@ -38,8 +38,12 @@ data class TelevisionHints(
     val titleText: TitleText? = null,
 )
 
-/** The caption files the picture shows, as backend paths: the main language and, smaller, a second one. */
-data class CaptionPaths(val main: String?, val second: String?)
+/**
+ * The caption files the picture shows, as backend paths: the main language,
+ * smaller a second one, and what a replay with captions shows when the main
+ * ones are off.
+ */
+data class CaptionPaths(val main: String?, val second: String?, val replay: String? = null)
 
 /** Where the title card starts on the title's timeline, and "Ends at 22:41" when the length is known. */
 data class TitleCardRequest(val fromSeconds: Double, val endsAtLabel: String?)
@@ -48,8 +52,9 @@ data class TitleCardRequest(val fromSeconds: Double, val endsAtLabel: String?)
 suspend fun loadOverlayPlan(context: Context, hints: TelevisionHints, captionPaths: CaptionPaths, titleCard: TitleCardRequest?): OverlayPlan {
     val captions = loadCaptionCues(captionPaths.main)
     val secondCaptions = loadCaptionCues(captionPaths.second)
+    val replayCaptions = loadCaptionCues(captionPaths.replay)
     val upNext = hints.upNext?.let { preview -> upNextHint(context, preview) }
-    return OverlayPlan(captions, hints.skips, upNext, secondCaptions, titleCardOf(hints.titleText, titleCard))
+    return OverlayPlan(captions, hints.skips, upNext, secondCaptions, titleCardOf(hints.titleText, titleCard), replayCaptions)
 }
 
 private fun titleCardOf(text: TitleText?, request: TitleCardRequest?): TitleCard? {
