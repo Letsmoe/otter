@@ -5,17 +5,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.apollographql.apollo.api.Optional
 import com.letsmoe.otter.api.OtterApi
 import com.letsmoe.otter.api.dataOrThrow
-import com.letsmoe.otter.api.posterUrl
-import com.letsmoe.otter.api.tmdbImageUrl
 import com.letsmoe.otter.graphql.ProfilesQuery
-import com.letsmoe.otter.graphql.SpotlightTitleQuery
-import com.letsmoe.otter.graphql.TrendingQuery
 import com.letsmoe.otter.graphql.VerifyPinMutation
 import com.letsmoe.otter.graphql.fragment.ProfileFields
 import com.letsmoe.otter.profiles.ProfileSession
+import com.letsmoe.otter.profiles.Spotlight
+import com.letsmoe.otter.profiles.fetchSpotlight
 import com.letsmoe.otter.profiles.avatarImage
 import com.letsmoe.otter.ui.profile.ProfileFlight
 import com.letsmoe.otter.ui.LoadState
@@ -27,11 +24,6 @@ sealed interface GateScreen {
     data class Edit(val profile: ProfileFields) : GateScreen
     data object Add : GateScreen
 }
-
-/** A trending title shown behind the profile picker. */
-data class Spotlight(val title: String, val posterUrl: String, val logoUrl: String?, val tagline: String?)
-
-private const val SPOTLIGHT_CANDIDATES = 8
 
 class ProfileGateViewModel : ViewModel() {
 
@@ -115,32 +107,5 @@ class ProfileGateViewModel : ViewModel() {
             return "Too many attempts. Try again in ${waitSeconds}s."
         }
         return "Incorrect PIN. Try again."
-    }
-
-    /** One of the top trending titles with poster, logo and tagline; null offline. */
-    private suspend fun fetchSpotlight(): Spotlight? {
-        OtterApi.awaitBackend()
-        val trending = try {
-            OtterApi.client.query(TrendingQuery(Optional.absent())).execute().dataOrThrow().trending
-        } catch (error: Exception) {
-            return null
-        }
-        val candidates = trending.map { item -> item.titleCard }.filter { card -> card.posterPath != null }.take(SPOTLIGHT_CANDIDATES)
-        val picked = candidates.randomOrNull() ?: return null
-        val fallback = Spotlight(picked.title, posterUrl(picked.posterPath).orEmpty(), logoUrl = null, tagline = null)
-        val detail = try {
-            OtterApi.client.query(SpotlightTitleQuery(picked.id)).execute().dataOrThrow().title
-        } catch (error: Exception) {
-            return fallback
-        }
-        if (detail == null) {
-            return fallback
-        }
-        return Spotlight(
-            title = picked.title,
-            posterUrl = tmdbImageUrl(detail.posterPath, "original") ?: fallback.posterUrl,
-            logoUrl = tmdbImageUrl(detail.logoPath, "w500"),
-            tagline = detail.tagline?.takeIf { tagline -> tagline.isNotBlank() },
-        )
     }
 }

@@ -7,6 +7,7 @@ import com.letsmoe.otter.network.ConnectivityStore
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.reporting.ErrorReporting
 import com.letsmoe.otter.settings.PlaybackSettings
+import com.letsmoe.otter.vpn.VpnStatusStore
 
 /** Starts the on-device backend and restores the active profile once per app process, before any activity. */
 class TvApplication : Application() {
@@ -20,5 +21,6 @@ class TvApplication : Application() {
         PlaybackSettings.initialize(this)
         ProfileSession.initialize(this)
         ConnectivityStore.initialize(this)
+        VpnStatusStore.initialize(this)
     }
 }

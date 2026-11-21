@@ -54,6 +54,10 @@ dependencies {
     api(libs.posthog.android)
     api(libs.androidx.core)
     api(libs.coroutines.android)
+    // Shared view models keep Compose state (mutableStateOf); no composables live here.
+    api(platform(libs.compose.bom))
+    api(libs.compose.runtime)
+    api(libs.lifecycle.viewmodel)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     testImplementation(libs.junit)
 }

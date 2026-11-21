@@ -55,6 +55,7 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.letsmoe.otter.ui.profile.ProfileFlight
 import com.letsmoe.otter.graphql.fragment.ProfileFields
+import com.letsmoe.otter.profiles.Spotlight
 import com.letsmoe.otter.profiles.avatarImage
 import com.letsmoe.otter.ui.LoadState
 import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE

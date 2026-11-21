@@ -3,8 +3,8 @@ package com.letsmoe.otter.tv
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.letsmoe.otter.tv.home.HomeScreen
 import com.letsmoe.otter.tv.theme.OtterTvTheme
+import com.letsmoe.otter.tv.ui.TvApp
 
 class TvActivity : ComponentActivity() {
 
@@ -12,7 +12,7 @@ class TvActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             OtterTvTheme {
-                HomeScreen()
+                TvApp()
             }
         }
     }

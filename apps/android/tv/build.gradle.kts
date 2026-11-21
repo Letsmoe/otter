@@ -61,5 +61,6 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.coil.compose)
     implementation(libs.coil.network)
+    implementation(libs.phosphor.icons)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 }
