@@ -5,6 +5,8 @@ import android.util.Log
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.gms.cast.framework.CastSession
 import com.google.android.gms.cast.framework.SessionManagerListener
+import com.letsmoe.otter.settings.PlaybackSettings
+import com.letsmoe.otter.settings.TELEVISION_VOLUME_RANGE
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.math.roundToInt
@@ -100,9 +102,14 @@ object TelevisionConnection {
         return castSession()?.volume?.toFloat()
     }
 
+    /** The loudest volume the TV may be set to now, from 0 to 1: lower than 1 during a night with a limit. */
+    fun maximumVolume(): Float {
+        return PlaybackSettings.televisionVolumeMaximum.toFloat() / TELEVISION_VOLUME_RANGE
+    }
+
     fun setVolume(fraction: Float) {
         val current = mutableTarget.value ?: return
-        val clamped = fraction.coerceIn(0f, 1f)
+        val clamped = fraction.coerceIn(0f, maximumVolume())
         if (current is TelevisionTarget.Dlna) {
             current.player.changeVolume((clamped * 100).roundToInt())
             return
