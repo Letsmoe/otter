@@ -362,6 +362,17 @@ type Subtitle struct {
 	SrtURL string `json:"srtUrl"`
 }
 
+// One suggestion for a time budget.
+type TimeSlotItem struct {
+	Title *Title `json:"title"`
+	// For a series: the episode to play.
+	Episode *Episode `json:"episode,omitempty"`
+	// How long it still takes.
+	Minutes int `json:"minutes"`
+	// Why it is offered, e.g. "Next episode", "Pick up where you stopped", "From My List", "Recommended".
+	Reason string `json:"reason"`
+}
+
 // A movie or a series.
 type Title struct {
 	ID            string    `json:"id"`

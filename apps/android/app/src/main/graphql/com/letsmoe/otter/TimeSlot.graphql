@@ -1,0 +1,12 @@
+query TimeSlot($profileId: ID!, $minutes: Int!) {
+  timeSlot(profileId: $profileId, minutes: $minutes) {
+    title {
+      ...TitleCard
+    }
+    episode {
+      ...EpisodeRef
+    }
+    minutes
+    reason
+  }
+}

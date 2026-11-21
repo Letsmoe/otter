@@ -190,6 +190,19 @@ export interface ContinueItem {
     __typename: 'ContinueItem'
 }
 
+
+/** One suggestion for a time budget. */
+export interface TimeSlotItem {
+    title: Title
+    /** For a series: the episode to play. */
+    episode: (Episode | null)
+    /** How long it still takes. */
+    minutes: Scalars['Int']
+    /** Why it is offered, e.g. "Next episode", "Pick up where you stopped", "From My List", "Recommended". */
+    reason: Scalars['String']
+    __typename: 'TimeSlotItem'
+}
+
 export interface HistoryEntry {
     title: Title
     episode: (Episode | null)
@@ -464,6 +477,8 @@ export interface Query {
     recommendations: Recommendation[]
     recommendationRows: RecommendationRow[]
     continueWatching: ContinueItem[]
+    /** What fits into the given minutes: what the profile is in the middle of (next episodes, movies not finished), then short films from My List and recommendations. Items that use the time best come first within each group. */
+    timeSlot: TimeSlotItem[]
     history: HistoryEntry[]
     watchlist: Title[]
     /** Titles the profile rated well (I like this, Love this), latest rating first. */
@@ -810,6 +825,20 @@ export interface ContinueItemGenqlSelection{
     __scalar?: boolean | number
 }
 
+
+/** One suggestion for a time budget. */
+export interface TimeSlotItemGenqlSelection{
+    title?: TitleGenqlSelection
+    /** For a series: the episode to play. */
+    episode?: EpisodeGenqlSelection
+    /** How long it still takes. */
+    minutes?: boolean | number
+    /** Why it is offered, e.g. "Next episode", "Pick up where you stopped", "From My List", "Recommended". */
+    reason?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 export interface HistoryEntryGenqlSelection{
     title?: TitleGenqlSelection
     episode?: EpisodeGenqlSelection
@@ -1093,6 +1122,8 @@ export interface QueryGenqlSelection{
     recommendations?: (RecommendationGenqlSelection & { __args: {profileId: Scalars['ID'], mediaType?: (MediaType | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null), refresh?: (Scalars['Boolean'] | null)} })
     recommendationRows?: (RecommendationRowGenqlSelection & { __args: {profileId: Scalars['ID'], rows?: (Scalars['Int'] | null), perRow?: (Scalars['Int'] | null)} })
     continueWatching?: (ContinueItemGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
+    /** What fits into the given minutes: what the profile is in the middle of (next episodes, movies not finished), then short films from My List and recommendations. Items that use the time best come first within each group. */
+    timeSlot?: (TimeSlotItemGenqlSelection & { __args: {profileId: Scalars['ID'], minutes: Scalars['Int'], limit?: (Scalars['Int'] | null)} })
     history?: (HistoryEntryGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     watchlist?: (TitleGenqlSelection & { __args: {profileId: Scalars['ID']} })
     /** Titles the profile rated well (I like this, Love this), latest rating first. */
@@ -1349,6 +1380,14 @@ export interface SubscriptionGenqlSelection{
     export const isContinueItem = (obj?: { __typename?: any } | null): obj is ContinueItem => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isContinueItem"')
       return ContinueItem_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const TimeSlotItem_possibleTypes: string[] = ['TimeSlotItem']
+    export const isTimeSlotItem = (obj?: { __typename?: any } | null): obj is TimeSlotItem => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isTimeSlotItem"')
+      return TimeSlotItem_possibleTypes.includes(obj.__typename)
     }
     
 

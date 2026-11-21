@@ -743,6 +743,15 @@ func (r *queryResolver) ContinueWatching(ctx context.Context, profileID string, 
 	return r.continueWatching(ctx, profile, clamp(valueOr(limit, 20), 100))
 }
 
+// TimeSlot is the resolver for the timeSlot field.
+func (r *queryResolver) TimeSlot(ctx context.Context, profileID string, minutes int, limit *int) ([]*model.TimeSlotItem, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return nil, err
+	}
+	return r.timeSlot(ctx, profile, minutes, clamp(valueOr(limit, 12), 30))
+}
+
 // History is the resolver for the history field.
 func (r *queryResolver) History(ctx context.Context, profileID string, limit *int) ([]*model.HistoryEntry, error) {
 	profile, err := parseProfile(profileID)

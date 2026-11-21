@@ -48,6 +48,7 @@ fun HomeHeader(
     ambientColor: Color,
     scrolled: Boolean,
     onSearch: () -> Unit,
+    onPlayMedia: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var targetBackground = Color.Transparent
@@ -63,6 +64,6 @@ fun HomeHeader(
             .padding(start = 20.dp, end = 12.dp, bottom = 4.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        TabHeader("For $profileName", onSearch)
+        TabHeader("For $profileName", onSearch, extraActions = { TimeSlotButton(onPlayMedia) })
     }
 }
