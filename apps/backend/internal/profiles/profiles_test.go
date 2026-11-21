@@ -311,3 +311,44 @@ func TestSimpleModeIsOffByDefaultAndKeptAcrossOtherUpdates(t *testing.T) {
 		t.Error("simple mode stayed on")
 	}
 }
+
+func TestCalendarTokenStaysUntilReset(t *testing.T) {
+	ctx := context.Background()
+	service := newTestService(t)
+	created, err := service.Create(ctx, "Frank", "", "", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	first, err := service.CalendarToken(ctx, created.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	again, _ := service.CalendarToken(ctx, created.ID)
+	reset, err := service.ResetCalendarToken(ctx, created.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(first) != 32 || again != first {
+		t.Fatalf("token changed without a reset: %q then %q", first, again)
+	}
+	if reset == first {
+		t.Fatal("reset kept the old token")
+	}
+	if _, err := service.ProfileOfCalendarToken(ctx, first); !errors.Is(err, ErrProfileNotFound) {
+		t.Fatalf("the old token still works: %v", err)
+	}
+	profile, err := service.ProfileOfCalendarToken(ctx, reset)
+	if err != nil || profile.ID != created.ID {
+		t.Fatalf("the new token finds %+v, %v", profile, err)
+	}
+}
+
+func TestNoProfileHasAnEmptyCalendarToken(t *testing.T) {
+	service := newTestService(t)
+
+	if _, err := service.ProfileOfCalendarToken(context.Background(), ""); !errors.Is(err, ErrProfileNotFound) {
+		t.Fatalf("an empty token found a profile: %v", err)
+	}
+}

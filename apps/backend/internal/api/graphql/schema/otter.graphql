@@ -625,6 +625,8 @@ type Query {
   subtitles(mediaId: ID!, profileId: ID): [Subtitle!]!
 
   profiles: [Profile!]!
+  "Path of the profile's calendar feed (upcoming episodes of the series it watches or has on My List, next 8 weeks) on the backend, e.g. /api/calendar/<secret>.ics. Whoever has the full URL can read the feed."
+  calendarFeedPath(profileId: ID!): String!
   settings: Settings!
   "Whether TMDB accepts the key; errors when TMDB can't be reached."
   checkTmdbKey(key: String!): Boolean!
@@ -778,6 +780,8 @@ type Mutation {
   updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, subtitleStyle: SubtitleStyle, voiceBoost: Boolean, simpleMode: Boolean): Profile!
   deleteProfile(id: ID!): Boolean!
   verifyPin(profileId: ID!, pin: String!): PinCheck!
+  "Makes a new secret for the profile's calendar feed; the old URL stops working. Returns the new path."
+  resetCalendarFeed(profileId: ID!): String!
 
   updateSettings(input: SettingsInput!): Settings!
   "Asks TMDB right now whether it answers; also updates Status.tmdbReachable."

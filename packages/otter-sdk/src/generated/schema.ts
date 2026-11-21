@@ -564,6 +564,8 @@ export interface Query {
     /** Subtitle files for a movie or episode (same id as streams/findStreams), best first. Ranked by the profile's caption language, then its other languages; at most 3 per language. Asks subtitles plugins when nothing fresh is stored. */
     subtitles: Subtitle[]
     profiles: Profile[]
+    /** Path of the profile's calendar feed (upcoming episodes of the series it watches or has on My List, next 8 weeks) on the backend, e.g. /api/calendar/<secret>.ics. Whoever has the full URL can read the feed. */
+    calendarFeedPath: Scalars['String']
     settings: Settings
     /** Whether TMDB accepts the key; errors when TMDB can't be reached. */
     checkTmdbKey: Scalars['Boolean']
@@ -709,6 +711,8 @@ export interface Mutation {
     updateProfile: Profile
     deleteProfile: Scalars['Boolean']
     verifyPin: PinCheck
+    /** Makes a new secret for the profile's calendar feed; the old URL stops working. Returns the new path. */
+    resetCalendarFeed: Scalars['String']
     updateSettings: Settings
     /** Asks TMDB right now whether it answers; also updates Status.tmdbReachable. */
     checkTmdbConnection: Scalars['Boolean']
@@ -1342,6 +1346,8 @@ export interface QueryGenqlSelection{
     /** Subtitle files for a movie or episode (same id as streams/findStreams), best first. Ranked by the profile's caption language, then its other languages; at most 3 per language. Asks subtitles plugins when nothing fresh is stored. */
     subtitles?: (SubtitleGenqlSelection & { __args: {mediaId: Scalars['ID'], profileId?: (Scalars['ID'] | null)} })
     profiles?: ProfileGenqlSelection
+    /** Path of the profile's calendar feed (upcoming episodes of the series it watches or has on My List, next 8 weeks) on the backend, e.g. /api/calendar/<secret>.ics. Whoever has the full URL can read the feed. */
+    calendarFeedPath?: { __args: {profileId: Scalars['ID']} }
     settings?: SettingsGenqlSelection
     /** Whether TMDB accepts the key; errors when TMDB can't be reached. */
     checkTmdbKey?: { __args: {key: Scalars['String']} }
@@ -1490,6 +1496,8 @@ export interface MutationGenqlSelection{
     updateProfile?: (ProfileGenqlSelection & { __args: {id: Scalars['ID'], name?: (Scalars['String'] | null), avatarUrl?: (Scalars['String'] | null), isChild?: (Scalars['Boolean'] | null), pin?: (Scalars['String'] | null), languages?: (Scalars['String'][] | null), subtitlesEnabled?: (Scalars['Boolean'] | null), subtitleLanguage?: (Scalars['String'] | null), subtitleSize?: (SubtitleSize | null), subtitleStyle?: (SubtitleStyle | null), voiceBoost?: (Scalars['Boolean'] | null), ageLimit?: (Scalars['Int'] | null), bedtimeMinutes?: (Scalars['Int'] | null)} })
     deleteProfile?: { __args: {id: Scalars['ID']} }
     verifyPin?: (PinCheckGenqlSelection & { __args: {profileId: Scalars['ID'], pin: Scalars['String']} })
+    /** Makes a new secret for the profile's calendar feed; the old URL stops working. Returns the new path. */
+    resetCalendarFeed?: { __args: {profileId: Scalars['ID']} }
     updateSettings?: (SettingsGenqlSelection & { __args: {input: SettingsInput} })
     /** Asks TMDB right now whether it answers; also updates Status.tmdbReachable. */
     checkTmdbConnection?: boolean | number

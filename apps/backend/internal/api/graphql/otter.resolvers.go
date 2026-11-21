@@ -430,6 +430,11 @@ func (r *mutationResolver) VerifyPin(ctx context.Context, profileID string, pin 
 	return &model.PinCheck{Success: check.Success, WaitSeconds: check.WaitSeconds}, nil
 }
 
+// ResetCalendarFeed is the resolver for the resetCalendarFeed field.
+func (r *mutationResolver) ResetCalendarFeed(ctx context.Context, profileID string) (string, error) {
+	return r.calendarFeedPath(ctx, profileID, true)
+}
+
 // UpdateSettings is the resolver for the updateSettings field.
 func (r *mutationResolver) UpdateSettings(ctx context.Context, input model.SettingsInput) (*model.Settings, error) {
 	updated, err := r.applySettings(ctx, settings.Update{
@@ -1056,6 +1061,11 @@ func (r *queryResolver) Profiles(ctx context.Context) ([]*model.Profile, error) 
 		models = append(models, profileModel(profile))
 	}
 	return models, nil
+}
+
+// CalendarFeedPath is the resolver for the calendarFeedPath field.
+func (r *queryResolver) CalendarFeedPath(ctx context.Context, profileID string) (string, error) {
+	return r.calendarFeedPath(ctx, profileID, false)
 }
 
 // Settings is the resolver for the settings field.

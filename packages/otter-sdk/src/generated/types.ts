@@ -1231,6 +1231,15 @@ export default {
             "profiles": [
                 24
             ],
+            "calendarFeedPath": [
+                4,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
             "settings": [
                 30
             ],
@@ -1682,6 +1691,15 @@ export default {
                     "pin": [
                         4,
                         "String!"
+                    ]
+                }
+            ],
+            "resetCalendarFeed": [
+                4,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
                     ]
                 }
             ],
