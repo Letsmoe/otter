@@ -1,4 +1,4 @@
-import type { MediaRef, TitleFields } from "./model.ts";
+import type { MediaRef, SeriesRef, TitleFields } from "./model.ts";
 
 // Letters NFD cannot split into base letter and accent.
 const SPECIAL_LETTERS: Record<string, string> = {
@@ -47,12 +47,15 @@ function comparableTitle(title: string): string {
   return withoutFillers.join(" ");
 }
 
-function titleFieldsOf(media: MediaRef): TitleFields {
-  if (media.object === "movie") return media;
-  return media.series;
+/** What can be looked for by its title: a movie, an episode (by its series) or a series itself. */
+export type MatchTarget = MediaRef | SeriesRef;
+
+function titleFieldsOf(media: MatchTarget): TitleFields {
+  if (media.object === "episode") return media.series;
+  return media;
 }
 
-function comparableTitlesOf(media: MediaRef): string[] {
+function comparableTitlesOf(media: MatchTarget): string[] {
   const fields = titleFieldsOf(media);
   const known = [fields.title, fields.original_title];
   const comparable: string[] = [];
@@ -63,7 +66,7 @@ function comparableTitlesOf(media: MediaRef): string[] {
 }
 
 /** Whether a title found on a site is the movie, or the series of the episode, being looked for. */
-export function titles(candidateTitle: string, media: MediaRef): boolean {
+export function titles(candidateTitle: string, media: MatchTarget): boolean {
   const candidate = comparableTitle(candidateTitle);
   if (candidate === "") return false;
   return comparableTitlesOf(media).includes(candidate);
@@ -97,7 +100,7 @@ function yearRank(candidateYear: number | undefined, wantedYear: number | undefi
  */
 export function best<Candidate>(
   candidates: Candidate[],
-  media: MediaRef,
+  media: MatchTarget,
   options: BestOptions<Candidate> = {},
 ): Candidate | undefined {
   const titleOf = options.title || defaultTitleOf;

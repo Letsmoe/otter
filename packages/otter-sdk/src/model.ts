@@ -2,7 +2,7 @@
 // strings and field names are snake_case. The backend still speaks the v1
 // wire format (types.ts); runtime.ts converts between the two.
 
-import type { ResolveResult } from "./types.ts";
+import type { FillerEpisode, ResolveResult } from "./types.ts";
 
 export type MediaKind = "movie" | "episode";
 
@@ -89,6 +89,14 @@ export interface SourceInput {
 export interface Source extends SourceInput {
   object: "source";
 }
+
+/** What `filler.list` takes: the series to look up. */
+export interface FillerListParams {
+  series: SeriesRef;
+}
+
+/** What `filler.list` returns per episode, as in types.ts `FillerEpisode`. */
+export type FillerEpisodeInput = FillerEpisode;
 
 /** What `subtitles.list` returns per file. The SDK completes it into a `Subtitle`. */
 export interface SubtitleInput {

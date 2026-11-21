@@ -84,6 +84,9 @@ private fun EpisodeRow(
                 if (runtime != null) {
                     Text(runtime, fontSize = 12.sp, color = Color.White.copy(alpha = 0.5f))
                 }
+                fillerLabelOf(episode.filler)?.let { label ->
+                    Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFFE0A84C))
+                }
             }
             Icon(
                 PhosphorIcons.Regular.ShareNetwork,

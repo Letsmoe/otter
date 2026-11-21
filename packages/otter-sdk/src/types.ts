@@ -1,12 +1,13 @@
 // Mirrors apps/backend/internal/plugins/types.go — keep in sync.
 // All JSON field names use snake_case.
 //
-// Otter plugins do three things: find stream links for a title TMDB already
+// Otter plugins do four things: find stream links for a title TMDB already
 // identified ("streams"), turn a hoster link into a playable media URL
-// ("resolve"), and find subtitle files for a title ("subtitles"). Plugins
-// whose site needs an account also log in ("login").
+// ("resolve"), find subtitle files for a title ("subtitles"), and tell which
+// episodes of an anime are filler ("filler"). Plugins whose site needs an
+// account also log in ("login").
 
-export type Capability = "meta" | "streams" | "resolve" | "subtitles" | "login";
+export type Capability = "meta" | "streams" | "resolve" | "subtitles" | "filler" | "login";
 
 /** The site needs the user's account. */
 export interface AccountRequirement {
@@ -90,6 +91,32 @@ export interface StreamsArgs {
 
 export interface StreamsResult {
   downloads: Download[];
+}
+
+/** Passed to the filler capability: the series, as StreamsArgs describe it. */
+export interface FillerArgs {
+  title: string;
+  original_title?: string;
+  year?: number;
+  tmdb_id?: number;
+  imdb_id?: string;
+}
+
+export type FillerKind = "filler" | "mixed" | "canon";
+
+/**
+ * One episode of a filler list. `number` counts across the whole series (absolute, as most lists
+ * do) unless `season_number` is set: then it counts within that season. "mixed" holds canon and filler.
+ */
+export interface FillerEpisode {
+  number: number;
+  kind: FillerKind;
+  season_number?: number;
+}
+
+/** No episodes means the site doesn't know the series. */
+export interface FillerResult {
+  episodes: FillerEpisode[];
 }
 
 /** Passed to the subtitles capability: the title as in StreamsArgs, plus the languages wanted. */

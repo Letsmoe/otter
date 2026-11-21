@@ -6,15 +6,16 @@ export default {
         4,
         5,
         6,
-        25,
+        9,
         26,
-        28,
-        36,
-        38,
-        40,
-        45,
+        27,
+        29,
+        37,
+        39,
+        41,
         46,
-        51
+        47,
+        52
     ],
     "types": {
         "MediaType": {},
@@ -86,7 +87,7 @@ export default {
                 6
             ],
             "credits": [
-                12
+                13
             ],
             "related": [
                 1,
@@ -103,10 +104,10 @@ export default {
                 3
             ],
             "streams": [
-                13
+                14
             ],
             "progress": [
-                16,
+                17,
                 {
                     "profileId": [
                         2,
@@ -214,10 +215,10 @@ export default {
                 1
             ],
             "streams": [
-                13
+                14
             ],
             "progress": [
-                16,
+                17,
                 {
                     "profileId": [
                         2,
@@ -229,12 +230,16 @@ export default {
                 8
             ],
             "skipSegments": [
+                10
+            ],
+            "filler": [
                 9
             ],
             "__typename": [
                 4
             ]
         },
+        "FillerKind": {},
         "SkipSegment": {
             "kind": [
                 4
@@ -286,7 +291,7 @@ export default {
                 }
             ],
             "coStars": [
-                11,
+                12,
                 {
                     "limit": [
                         3
@@ -311,7 +316,7 @@ export default {
         },
         "CoStar": {
             "person": [
-                10
+                11
             ],
             "sharedTitles": [
                 3
@@ -322,7 +327,7 @@ export default {
         },
         "Credit": {
             "person": [
-                10
+                11
             ],
             "role": [
                 4
@@ -380,7 +385,7 @@ export default {
         },
         "StreamUpdate": {
             "streams": [
-                13
+                14
             ],
             "done": [
                 6
@@ -434,7 +439,7 @@ export default {
                 8
             ],
             "progress": [
-                16
+                17
             ],
             "__typename": [
                 4
@@ -448,7 +453,7 @@ export default {
                 8
             ],
             "progress": [
-                16
+                17
             ],
             "__typename": [
                 4
@@ -493,7 +498,7 @@ export default {
         },
         "MoreWithRow": {
             "person": [
-                10
+                11
             ],
             "becauseOf": [
                 1
@@ -545,10 +550,10 @@ export default {
                 4
             ],
             "subtitleSize": [
-                25
+                26
             ],
             "subtitleStyle": [
-                26
+                27
             ],
             "voiceBoost": [
                 6
@@ -608,7 +613,7 @@ export default {
                 4
             ],
             "tmdbKeyStatus": [
-                28
+                29
             ],
             "usesDefaultTmdbKey": [
                 6
@@ -721,10 +726,10 @@ export default {
                 6
             ],
             "settings": [
-                31
+                32
             ],
             "account": [
-                34
+                35
             ],
             "__typename": [
                 4
@@ -773,7 +778,7 @@ export default {
                 2
             ],
             "kind": [
-                36
+                37
             ],
             "heading": [
                 4
@@ -803,7 +808,7 @@ export default {
                 2
             ],
             "status": [
-                38
+                39
             ],
             "progress": [
                 5
@@ -856,13 +861,13 @@ export default {
                 6
             ],
             "status": [
-                40
+                41
             ],
             "self": [
-                41
+                42
             ],
             "peers": [
-                41
+                42
             ],
             "__typename": [
                 4
@@ -870,7 +875,7 @@ export default {
         },
         "TogetherMessage": {
             "from": [
-                41
+                42
             ],
             "payload": [
                 4
@@ -881,10 +886,10 @@ export default {
         },
         "TogetherUpdate": {
             "room": [
-                42
+                43
             ],
             "message": [
-                43
+                44
             ],
             "__typename": [
                 4
@@ -923,7 +928,7 @@ export default {
                 }
             ],
             "person": [
-                10,
+                11,
                 {
                     "id": [
                         2,
@@ -945,7 +950,7 @@ export default {
                         3
                     ],
                     "filter": [
-                        20
+                        21
                     ]
                 }
             ],
@@ -967,7 +972,7 @@ export default {
                 }
             ],
             "watchedActors": [
-                10,
+                11,
                 {
                     "profileId": [
                         2,
@@ -983,7 +988,7 @@ export default {
                 }
             ],
             "moreWith": [
-                21,
+                22,
                 {
                     "profileId": [
                         2,
@@ -1024,7 +1029,7 @@ export default {
                         "MediaType!"
                     ],
                     "sort": [
-                        45
+                        46
                     ]
                 }
             ],
@@ -1036,13 +1041,13 @@ export default {
                         "MediaType!"
                     ],
                     "theme": [
-                        46,
+                        47,
                         "CatalogTheme!"
                     ]
                 }
             ],
             "catalogRows": [
-                47,
+                48,
                 {
                     "mediaType": [
                         0,
@@ -1058,7 +1063,7 @@ export default {
                 }
             ],
             "recommendations": [
-                19,
+                20,
                 {
                     "profileId": [
                         2,
@@ -1079,7 +1084,7 @@ export default {
                 }
             ],
             "recommendationRows": [
-                22,
+                23,
                 {
                     "profileId": [
                         2,
@@ -1094,7 +1099,7 @@ export default {
                 }
             ],
             "continueWatching": [
-                17,
+                18,
                 {
                     "profileId": [
                         2,
@@ -1106,7 +1111,7 @@ export default {
                 }
             ],
             "history": [
-                18,
+                19,
                 {
                     "profileId": [
                         2,
@@ -1139,7 +1144,7 @@ export default {
                 }
             ],
             "notifications": [
-                37,
+                38,
                 {
                     "profileId": [
                         2,
@@ -1160,7 +1165,7 @@ export default {
                 }
             ],
             "downloads": [
-                39,
+                40,
                 {
                     "profileId": [
                         2,
@@ -1172,10 +1177,10 @@ export default {
                 4
             ],
             "togetherRoom": [
-                42
+                43
             ],
             "subtitles": [
-                24,
+                25,
                 {
                     "mediaId": [
                         2,
@@ -1187,10 +1192,10 @@ export default {
                 }
             ],
             "profiles": [
-                23
+                24
             ],
             "settings": [
-                29
+                30
             ],
             "checkTmdbKey": [
                 6,
@@ -1202,13 +1207,13 @@ export default {
                 }
             ],
             "plugins": [
-                33
+                34
             ],
             "status": [
-                35
+                36
             ],
             "neoworksAccount": [
-                49
+                50
             ],
             "__typename": [
                 4
@@ -1225,7 +1230,7 @@ export default {
                 4
             ],
             "lastSync": [
-                50
+                51
             ],
             "__typename": [
                 4
@@ -1254,7 +1259,7 @@ export default {
                 2
             ],
             "kind": [
-                51
+                52
             ],
             "url": [
                 4
@@ -1322,7 +1327,7 @@ export default {
                 }
             ],
             "resolveStream": [
-                15,
+                16,
                 {
                     "streamId": [
                         2,
@@ -1331,7 +1336,7 @@ export default {
                 }
             ],
             "resolveBestStream": [
-                15,
+                16,
                 {
                     "streamIds": [
                         2,
@@ -1340,7 +1345,7 @@ export default {
                 }
             ],
             "recordProgress": [
-                16,
+                17,
                 {
                     "profileId": [
                         2,
@@ -1446,7 +1451,7 @@ export default {
                 6
             ],
             "startDownload": [
-                39,
+                40,
                 {
                     "profileId": [
                         2,
@@ -1474,7 +1479,7 @@ export default {
                 6
             ],
             "hostTogether": [
-                42,
+                43,
                 {
                     "profileId": [
                         2,
@@ -1483,7 +1488,7 @@ export default {
                 }
             ],
             "joinTogether": [
-                42,
+                43,
                 {
                     "profileId": [
                         2,
@@ -1499,7 +1504,7 @@ export default {
                 6
             ],
             "adoptStream": [
-                13,
+                14,
                 {
                     "mediaId": [
                         2,
@@ -1528,7 +1533,7 @@ export default {
                 }
             ],
             "createProfile": [
-                23,
+                24,
                 {
                     "name": [
                         4,
@@ -1550,7 +1555,7 @@ export default {
                 }
             ],
             "updateProfile": [
-                23,
+                24,
                 {
                     "id": [
                         2,
@@ -1579,10 +1584,10 @@ export default {
                         4
                     ],
                     "subtitleSize": [
-                        25
+                        26
                     ],
                     "subtitleStyle": [
-                        26
+                        27
                     ],
                     "voiceBoost": [
                         6
@@ -1599,7 +1604,7 @@ export default {
                 }
             ],
             "verifyPin": [
-                27,
+                28,
                 {
                     "profileId": [
                         2,
@@ -1612,10 +1617,10 @@ export default {
                 }
             ],
             "updateSettings": [
-                29,
+                30,
                 {
                     "input": [
-                        30,
+                        31,
                         "SettingsInput!"
                     ]
                 }
@@ -1624,7 +1629,7 @@ export default {
                 6
             ],
             "setPluginEnabled": [
-                33,
+                34,
                 {
                     "name": [
                         4,
@@ -1637,20 +1642,20 @@ export default {
                 }
             ],
             "setPluginSettings": [
-                33,
+                34,
                 {
                     "name": [
                         4,
                         "String!"
                     ],
                     "values": [
-                        32,
+                        33,
                         "[PluginSettingInput!]!"
                     ]
                 }
             ],
             "loginPlugin": [
-                33,
+                34,
                 {
                     "name": [
                         4,
@@ -1667,7 +1672,7 @@ export default {
                 }
             ],
             "logoutPlugin": [
-                33,
+                34,
                 {
                     "name": [
                         4,
@@ -1676,7 +1681,7 @@ export default {
                 }
             ],
             "updatePlugins": [
-                55
+                56
             ],
             "startNeoworksSignIn": [
                 4,
@@ -1687,7 +1692,7 @@ export default {
                 }
             ],
             "completeNeoworksSignIn": [
-                49,
+                50,
                 {
                     "code": [
                         4,
@@ -1700,10 +1705,10 @@ export default {
                 }
             ],
             "signOutOfNeoworks": [
-                49
+                50
             ],
             "syncNeoworks": [
-                49
+                50
             ],
             "syncNeoworksSoon": [
                 6
@@ -1728,7 +1733,7 @@ export default {
         },
         "PluginUpdateReport": {
             "updated": [
-                54
+                55
             ],
             "failed": [
                 4
@@ -1739,7 +1744,7 @@ export default {
         },
         "Subscription": {
             "streams": [
-                14,
+                15,
                 {
                     "id": [
                         2,
@@ -1748,10 +1753,10 @@ export default {
                 }
             ],
             "together": [
-                44
+                45
             ],
             "challenges": [
-                52
+                53
             ],
             "__typename": [
                 4

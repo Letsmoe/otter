@@ -7,13 +7,15 @@ import (
 
 type Capability string
 
-// Otter plugins do exactly three things: find stream links for a title TMDB
-// already identified, turn a hoster link into a playable media URL, and find
-// subtitle files for a title. Plugins whose site needs an account also log in.
+// Otter plugins do exactly four things: find stream links for a title TMDB
+// already identified, turn a hoster link into a playable media URL, find
+// subtitle files for a title, and tell which episodes of an anime are filler.
+// Plugins whose site needs an account also log in.
 const (
 	CapabilityStreams   Capability = "streams"
 	CapabilityResolve   Capability = "resolve"
 	CapabilitySubtitles Capability = "subtitles"
+	CapabilityFiller    Capability = "filler"
 	CapabilityLogin     Capability = "login"
 )
 
@@ -206,6 +208,38 @@ type Download struct {
 	Format    string  `json:"format,omitempty"`
 	SizeBytes int64   `json:"size_bytes,omitempty"`
 	SpeedBps  float64 `json:"speed_bps,omitempty"`
+}
+
+// FillerArgs is passed to a plugin's filler capability: the series the way
+// StreamsArgs describes it.
+type FillerArgs struct {
+	Title         string `json:"title"`
+	OriginalTitle string `json:"original_title,omitempty"`
+	Year          int    `json:"year,omitempty"`
+	TMDBID        int    `json:"tmdb_id,omitempty"`
+	IMDBID        string `json:"imdb_id,omitempty"`
+}
+
+// Kinds of episode a filler list tells apart. Mixed episodes hold canon and filler.
+const (
+	FillerKindFiller = "filler"
+	FillerKindMixed  = "mixed"
+	FillerKindCanon  = "canon"
+)
+
+// FillerResult is returned by a plugin's filler capability; no entries
+// means the site doesn't know the series.
+type FillerResult struct {
+	Episodes []FillerEpisode `json:"episodes"`
+}
+
+// FillerEpisode is one episode of a filler list. Number counts across the
+// whole series (absolute, as most lists do) unless SeasonNumber is set, then
+// it counts within that season.
+type FillerEpisode struct {
+	Number       int    `json:"number"`
+	Kind         string `json:"kind"`
+	SeasonNumber int    `json:"season_number,omitempty"`
 }
 
 // SubtitlesArgs is passed to a plugin's subtitles capability: the title the

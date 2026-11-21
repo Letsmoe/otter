@@ -5,6 +5,8 @@ import type { PluginContext, PluginDefinition } from "./definition.ts";
 import { domainOf } from "./http.ts";
 import type {
   EpisodeRef,
+  FillerEpisodeInput,
+  FillerListParams,
   List,
   MediaRef,
   MovieRef,
@@ -24,6 +26,8 @@ import { resolveWithTiming } from "./timing.ts";
 import type {
   Capability,
   Download,
+  FillerArgs,
+  FillerResult,
   LoginArgs,
   LoginResult,
   PluginMeta,
@@ -43,6 +47,8 @@ export interface PluginHandlers {
   resolve?: (url: string) => Promise<ResolveResult>;
   /** Lists caption files for a TMDB-known movie or episode. */
   subtitles?: (args: SubtitlesArgs) => Promise<SubtitlesResult>;
+  /** Tells which episodes of a TMDB-known series are filler. */
+  filler?: (args: FillerArgs) => Promise<FillerResult>;
   /** Logs in to the site and returns a session. */
   login?: (credentials: LoginArgs) => Promise<LoginResult>;
 }
@@ -58,6 +64,7 @@ function capabilitiesOf(definition: PluginDefinition): Capability[] {
   if (definition.streams) capabilities.push("streams");
   if (definition.sources) capabilities.push("resolve");
   if (definition.subtitles) capabilities.push("subtitles");
+  if (definition.filler) capabilities.push("filler");
   if (definition.account) capabilities.push("login");
   return capabilities;
 }
@@ -94,14 +101,17 @@ export function metaOf(definition: PluginDefinition): PluginMeta {
 
 // ---- params ----------------------------------------------------------------
 
+/** What identifies a title, in the arguments of every capability. */
+type TitleArgs = Pick<StreamsArgs, "title" | "original_title" | "year" | "tmdb_id" | "imdb_id">;
+
 /** "603" if the TMDB id is known, else the IMDb id, else the normalized title. */
-function identityPart(args: StreamsArgs): string {
+function identityPart(args: TitleArgs): string {
   if (args.tmdb_id) return String(args.tmdb_id);
   if (args.imdb_id) return args.imdb_id;
   return normalize(args.title).replace(/ /g, "-");
 }
 
-function movieRefOf(args: StreamsArgs): MovieRef {
+function movieRefOf(args: TitleArgs): MovieRef {
   return {
     object: "movie",
     id: `movie:${identityPart(args)}`,
@@ -113,7 +123,7 @@ function movieRefOf(args: StreamsArgs): MovieRef {
   };
 }
 
-function seriesRefOf(args: StreamsArgs): SeriesRef {
+function seriesRefOf(args: TitleArgs): SeriesRef {
   return {
     object: "series",
     id: `series:${identityPart(args)}`,
@@ -142,6 +152,10 @@ export function toStreamListParams(args: StreamsArgs): StreamListParams {
   let media: MediaRef = movieRefOf(args);
   if (args.media_type === "episode") media = episodeRefOf(args);
   return { media };
+}
+
+export function toFillerListParams(args: FillerArgs): FillerListParams {
+  return { series: seriesRefOf(args) };
 }
 
 export function toSubtitleListParams(args: SubtitlesArgs): SubtitleListParams {
@@ -235,6 +249,12 @@ export class PluginRuntime {
     return this.ctx.list(result.data.map(completeSubtitle));
   }
 
+  async listFiller(params: FillerListParams): Promise<List<FillerEpisodeInput>> {
+    const capability = this.definition.filler;
+    if (!capability) throw new Error("filler not implemented");
+    return capability.list(params, this.ctx);
+  }
+
   async retrieveSource(params: SourceRetrieveParams): Promise<Source> {
     const capability = this.definition.sources;
     if (!capability) throw new Error("resolve not implemented");
@@ -262,6 +282,12 @@ export function handlersOf(definition: PluginDefinition, options: ContextOptions
     handlers.subtitles = async (args) => {
       const list = await runtime.listSubtitles(toSubtitleListParams(args));
       return { subtitles: list.data.map(toSubtitleFile) };
+    };
+  }
+  if (definition.filler) {
+    handlers.filler = async (args) => {
+      const list = await runtime.listFiller(toFillerListParams(args));
+      return { episodes: list.data };
     };
   }
   if (definition.sources) {

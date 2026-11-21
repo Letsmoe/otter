@@ -87,6 +87,8 @@ type Episode struct {
 	Next *Episode `json:"next,omitempty"`
 	// Parts viewers skip (intro, recap, credits, preview), from TheIntroDB; empty when nobody timed them.
 	SkipSegments []*SkipSegment `json:"skipSegments"`
+	// Anime only: whether a filler list calls the episode filler, mixed (canon and filler) or canon; null when no list covers it.
+	Filler *FillerKind `json:"filler,omitempty"`
 }
 
 type HistoryEntry struct {
@@ -680,6 +682,64 @@ func (e *DownloadStatus) UnmarshalJSON(b []byte) error {
 }
 
 func (e DownloadStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+// What a filler list says about an episode.
+type FillerKind string
+
+const (
+	FillerKindFiller FillerKind = "FILLER"
+	FillerKindMixed  FillerKind = "MIXED"
+	FillerKindCanon  FillerKind = "CANON"
+)
+
+var AllFillerKind = []FillerKind{
+	FillerKindFiller,
+	FillerKindMixed,
+	FillerKindCanon,
+}
+
+func (e FillerKind) IsValid() bool {
+	switch e {
+	case FillerKindFiller, FillerKindMixed, FillerKindCanon:
+		return true
+	}
+	return false
+}
+
+func (e FillerKind) String() string {
+	return string(e)
+}
+
+func (e *FillerKind) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = FillerKind(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid FillerKind", str)
+	}
+	return nil
+}
+
+func (e FillerKind) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *FillerKind) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e FillerKind) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil
