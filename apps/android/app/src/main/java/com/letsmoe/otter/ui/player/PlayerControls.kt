@@ -77,6 +77,7 @@ class PlayerActions(
     val toggleLock: () -> Unit,
     val replayWithCaptions: () -> Unit,
     val toggleStopAfterEpisode: () -> Unit,
+    val bookmark: () -> Unit,
 )
 
 /** Whether the controls are showing, and the reasons they stay up. */

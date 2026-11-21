@@ -18,6 +18,7 @@ const (
 	kindNotification = "notification"
 	kindDownload     = "download"
 	kindCollection   = "collection"
+	kindBookmark     = "bookmark"
 )
 
 func formatID(kind string, number int) string {
@@ -74,6 +75,11 @@ func parsePerson(id string) (int, error) {
 
 func parseDownload(id string) (int, error) {
 	_, number, err := parseID(id, kindDownload)
+	return number, err
+}
+
+func parseBookmark(id string) (int, error) {
+	_, number, err := parseID(id, kindBookmark)
 	return number, err
 }
 

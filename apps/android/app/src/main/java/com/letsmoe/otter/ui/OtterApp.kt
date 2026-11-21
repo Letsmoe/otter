@@ -300,7 +300,7 @@ private fun OtterNavHost(navController: NavHostController, pagerState: PagerStat
                     episodeId = entry.arguments?.getString("episodeId"),
                     episodeNumber = entry.arguments?.getString("episodeNumber")?.toIntOrNull(),
                 ),
-                onPlay = { request -> navController.play(PlayerRequest(request.mediaId, request.streamId)) },
+                onPlay = { request -> navController.play(PlayerRequest(request.mediaId, request.streamId, startSeconds = request.startSeconds)) },
                 slots = titleSlots(openTab),
                 onBack = { navController.popBackStack() },
                 onSearch = { navController.navigate(Routes.SEARCH) },

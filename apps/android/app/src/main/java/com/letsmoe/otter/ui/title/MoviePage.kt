@@ -18,6 +18,7 @@ private enum class MovieTab(val label: String) {
     RELATED("More Like This"),
     TRAILERS("Trailers & More"),
     SOURCES("Sources"),
+    BOOKMARKS("Bookmarks"),
 }
 
 private val movieTabs = MovieTab.entries.map { tab -> tab to tab.label }
@@ -66,6 +67,7 @@ fun MoviePage(
         when (tab) {
             MovieTab.RELATED -> RelatedTab(rails, onOpenItem)
             MovieTab.TRAILERS -> TrailerTab(detail.trailerKey, detail.title, Modifier.padding(horizontal = 12.dp))
+            MovieTab.BOOKMARKS -> BookmarksTab(detail.id, { null }, onPlay, Modifier.padding(horizontal = 12.dp))
             MovieTab.SOURCES -> SourceList(
                 streams = streams,
                 onPlay = { stream -> onPlay(PlayRequest(detail.id, stream.id)) },
