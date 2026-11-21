@@ -103,6 +103,64 @@ func (r *Resolver) gatedTitles(ctx context.Context, gate ageGate, titles []*mode
 	return kept, nil
 }
 
+// countryOfProfile is the country whose ratings apply to a profile.
+func (r *Resolver) countryOfProfile(ctx context.Context, profileID int) (string, error) {
+	profile, err := r.Profiles.Get(ctx, profileID)
+	if err != nil {
+		return "", err
+	}
+	_, tmdbLanguage := r.Settings.TMDB()
+	return library.CountryFor(profile.LanguageList(), tmdbLanguage), nil
+}
+
+// ageRatingOf is the title's stored rating in the profile's country as shown on screen; nil when unknown.
+func (r *Resolver) ageRatingOf(ctx context.Context, profileID int, ref library.MediaRef) (*string, error) {
+	country, err := r.countryOfProfile(ctx, profileID)
+	if err != nil {
+		return nil, err
+	}
+	stored, err := r.Library.Store.Certifications(ctx, []library.MediaRef{ref})
+	if err != nil {
+		return nil, err
+	}
+	label := library.AgeRatingLabel(country, stored[ref].ByCountry[country])
+	return optional(label), nil
+}
+
+// gatedRefs leaves out the titles the gate holds back, keeping the order.
+func (r *Resolver) gatedRefs(ctx context.Context, gate ageGate, refs []library.MediaRef) ([]library.MediaRef, error) {
+	allowed, err := r.allowedRefs(ctx, gate, refs)
+	if err != nil || allowed == nil {
+		return refs, err
+	}
+	kept := make([]library.MediaRef, 0, len(refs))
+	for _, ref := range refs {
+		if allowed[ref] {
+			kept = append(kept, ref)
+		}
+	}
+	return kept, nil
+}
+
+// gatedContinueItems leaves out the continue entries whose title the gate holds back.
+func (r *Resolver) gatedContinueItems(ctx context.Context, gate ageGate, entries []*model.ContinueItem) ([]*model.ContinueItem, error) {
+	refs := make([]library.MediaRef, 0, len(entries))
+	for _, entry := range entries {
+		refs = append(refs, titleRef(entry.Title))
+	}
+	allowed, err := r.allowedRefs(ctx, gate, refs)
+	if err != nil || allowed == nil {
+		return entries, err
+	}
+	kept := make([]*model.ContinueItem, 0, len(entries))
+	for _, entry := range entries {
+		if allowed[titleRef(entry.Title)] {
+			kept = append(kept, entry)
+		}
+	}
+	return kept, nil
+}
+
 // gatedItems leaves out the recommendations the gate holds back.
 func (r *Resolver) gatedItems(ctx context.Context, gate ageGate, items []recommend.Item) ([]recommend.Item, error) {
 	allowed, err := r.allowedRefs(ctx, gate, itemRefs(items))

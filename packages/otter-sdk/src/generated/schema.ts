@@ -62,6 +62,8 @@ export interface Title {
     notifying: Scalars['Boolean']
     /** The profile's latest rewatch of this movie or series; null when there never was one. */
     rewatch: (Rewatch | null)
+    /** The title's age rating in the profile's country, e.g. "FSK 12" or "PG-13"; null while it isn't known (ratings are fetched once a child profile's age limit asks for them). */
+    ageRating: (Scalars['String'] | null)
     __typename: 'Title'
 }
 
@@ -966,6 +968,8 @@ export interface TitleGenqlSelection{
     notifying?: { __args: {profileId: Scalars['ID']} }
     /** The profile's latest rewatch of this movie or series; null when there never was one. */
     rewatch?: (RewatchGenqlSelection & { __args: {profileId: Scalars['ID']} })
+    /** The title's age rating in the profile's country, e.g. "FSK 12" or "PG-13"; null while it isn't known (ratings are fetched once a child profile's age limit asks for them). */
+    ageRating?: { __args: {profileId: Scalars['ID']} }
     __typename?: boolean | number
     __scalar?: boolean | number
 }

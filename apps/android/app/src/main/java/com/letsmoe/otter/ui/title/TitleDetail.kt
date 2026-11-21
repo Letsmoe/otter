@@ -44,6 +44,8 @@ data class TitleDetail(
     val finishedBefore: Boolean,
     /** A rewatch of it is going. */
     val rewatching: Boolean,
+    /** The rating in the profile's country ("FSK 12"); null while it isn't known. */
+    val ageRating: String? = null,
 ) {
     /** Seasons without specials. */
     val regularSeasonCount: Int get() = seasons.count { season -> season.seasonNumber > 0 }
@@ -80,6 +82,7 @@ fun TitleDetailQuery.Title.toDetail(): TitleDetail {
         resumeFraction = resumeFractionOf(this),
         finishedBefore = titleWatchState.progress?.completed == true,
         rewatching = isRewatchRunning(titleWatchState.rewatch?.finished),
+        ageRating = ageRating,
     )
 }
 

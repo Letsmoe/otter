@@ -525,6 +525,7 @@ type ComplexityRoot struct {
 	}
 
 	Title struct {
+		AgeRating           func(childComplexity int, profileID string) int
 		BackdropPath        func(childComplexity int) int
 		CollectionID        func(childComplexity int) int
 		Credits             func(childComplexity int) int
@@ -758,6 +759,7 @@ type TitleResolver interface {
 	InWatchlist(ctx context.Context, obj *model.Title, profileID string) (bool, error)
 	Notifying(ctx context.Context, obj *model.Title, profileID string) (bool, error)
 	Rewatch(ctx context.Context, obj *model.Title, profileID string) (*model.Rewatch, error)
+	AgeRating(ctx context.Context, obj *model.Title, profileID string) (*string, error)
 }
 
 type executableSchema graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot]
@@ -3326,6 +3328,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.TimeSlotItem.Title(childComplexity), true
 
+	case "Title.ageRating":
+		if e.ComplexityRoot.Title.AgeRating == nil {
+			break
+		}
+
+		args, err := ec.field_Title_ageRating_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Title.AgeRating(childComplexity, args["profileId"].(string)), true
 	case "Title.backdropPath":
 		if e.ComplexityRoot.Title.BackdropPath == nil {
 			break
@@ -3949,6 +3962,8 @@ type Title {
   notifying(profileId: ID!): Boolean!
   "The profile's latest rewatch of this movie or series; null when there never was one."
   rewatch(profileId: ID!): Rewatch
+  "The title's age rating in the profile's country, e.g. \"FSK 12\" or \"PG-13\"; null while it isn't known (ratings are fetched once a child profile's age limit asks for them)."
+  ageRating(profileId: ID!): String
 }
 
 """
@@ -5655,6 +5670,8 @@ func (ec *executionContext) childFields_Title(ctx context.Context, field graphql
 		return ec.fieldContext_Title_notifying(ctx, field)
 	case "rewatch":
 		return ec.fieldContext_Title_rewatch(ctx, field)
+	case "ageRating":
+		return ec.fieldContext_Title_ageRating(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Title", field.Name)
 }
@@ -7922,6 +7939,20 @@ func (ec *executionContext) field_Subscription_streams_args(ctx context.Context,
 		return nil, err
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Title_ageRating_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
 	return args, nil
 }
 
@@ -19287,6 +19318,50 @@ func (ec *executionContext) fieldContext_Title_rewatch(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Title_ageRating(ctx context.Context, field graphql.CollectedField, obj *model.Title) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Title_ageRating(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Title().AgeRating(ctx, obj, fc.Args["profileId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Title_ageRating(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Title",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Title_ageRating_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _TogetherMessage_from(ctx context.Context, field graphql.CollectedField, obj *model.TogetherMessage) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -26132,6 +26207,39 @@ func (ec *executionContext) _Title(ctx context.Context, sel ast.SelectionSet, ob
 					}
 				}()
 				res = ec._Title_rewatch(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "ageRating":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Title_ageRating(ctx, field, obj)
 				return res
 			}
 

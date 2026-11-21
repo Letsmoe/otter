@@ -11,13 +11,22 @@ import (
 const filmCandidateLimit = 40
 
 // timeSlot suggests what fits into [minutes]: what the profile is in the middle of, then short films.
+// A child profile's age limit applies to every candidate.
 func (r *Resolver) timeSlot(ctx context.Context, profileID, minutes, limit int) ([]*model.TimeSlotItem, error) {
+	gate, err := r.gateForProfile(ctx, profileID)
+	if err != nil {
+		return nil, err
+	}
 	continuing, err := r.continueWatching(ctx, profileID, 20)
 	if err != nil {
 		return nil, err
 	}
+	continuing, err = r.gatedContinueItems(ctx, gate, continuing)
+	if err != nil {
+		return nil, err
+	}
 	items := continuingThatFits(continuing, minutes)
-	films, err := r.shortFilms(ctx, profileID, minutes, continuing)
+	films, err := r.shortFilms(ctx, profileID, minutes, continuing, gate)
 	if err != nil {
 		return nil, err
 	}
@@ -60,12 +69,20 @@ func continuingReason(entry *model.ContinueItem) string {
 }
 
 // shortFilms are the unseen movies of My List and the recommendations that fit, longest first.
-func (r *Resolver) shortFilms(ctx context.Context, profileID, minutes int, continuing []*model.ContinueItem) ([]*model.TimeSlotItem, error) {
+func (r *Resolver) shortFilms(ctx context.Context, profileID, minutes int, continuing []*model.ContinueItem, gate ageGate) ([]*model.TimeSlotItem, error) {
 	listed, err := r.listedFilms(ctx, profileID)
 	if err != nil {
 		return nil, err
 	}
+	listed, err = r.gatedRefs(ctx, gate, listed)
+	if err != nil {
+		return nil, err
+	}
 	recommended, err := r.recommendedFilms(ctx, profileID)
+	if err != nil {
+		return nil, err
+	}
+	recommended, err = r.gatedRefs(ctx, gate, recommended)
 	if err != nil {
 		return nil, err
 	}

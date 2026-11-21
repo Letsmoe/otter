@@ -9,6 +9,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.compose.ui.platform.LocalContext
+import com.letsmoe.otter.cast.SuggestedTelevision
 import com.letsmoe.otter.downloads.DownloadsRepository
 import com.letsmoe.otter.notifications.NotificationItem
 import com.letsmoe.otter.profiles.ProfileSession
@@ -131,10 +133,12 @@ fun AppServices(navController: NavHostController) {
         IncomingLinks.consumed()
         navController.navigate(route)
     }
+    val context = LocalContext.current
     val widgetPlay by IncomingLinks.pendingPlay.collectAsStateWithLifecycle()
     LaunchedEffect(widgetPlay) {
         val request = widgetPlay ?: return@LaunchedEffect
         IncomingLinks.playStarted()
+        SuggestedTelevision.connectIfIdle(context)
         navController.play(request)
     }
     val remoteMedia by TogetherSession.remoteMedia.collectAsStateWithLifecycle()

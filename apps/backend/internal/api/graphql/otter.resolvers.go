@@ -1435,6 +1435,15 @@ func (r *titleResolver) Rewatch(ctx context.Context, obj *model.Title, profileID
 	return rewatchModel(rewatch), nil
 }
 
+// AgeRating is the resolver for the ageRating field.
+func (r *titleResolver) AgeRating(ctx context.Context, obj *model.Title, profileID string) (*string, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return nil, err
+	}
+	return r.ageRatingOf(ctx, profile, titleRef(obj))
+}
+
 // Episode returns generated.EpisodeResolver implementation.
 func (r *Resolver) Episode() generated.EpisodeResolver { return &episodeResolver{r} }
 

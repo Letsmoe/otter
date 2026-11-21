@@ -31,4 +31,13 @@ class BrowsePreviewTest {
 
         assertEquals("2014 · 2h 49m · ★ 8.5", preview.factsLine)
     }
+
+    @Test
+    fun theAgeRatingLeadsTheFactsWhenKnown() {
+        val facts = listOf("2014", "2h 49m")
+
+        assertEquals(listOf("FSK 12", "2014", "2h 49m"), withAgeRating(facts, "FSK 12"))
+        assertEquals(facts, withAgeRating(facts, null))
+        assertEquals(facts, withAgeRating(facts, ""))
+    }
 }

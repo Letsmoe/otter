@@ -29,6 +29,7 @@ models:
       inWatchlist: { resolver: true }
       notifying: { resolver: true }
       rewatch: { resolver: true }
+      ageRating: { resolver: true }
   Season:
     fields:
       episodes: { resolver: true }

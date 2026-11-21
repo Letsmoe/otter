@@ -17,6 +17,7 @@ query TitleDetail($id: ID!, $profileId: ID!) {
     inWatchlist(profileId: $profileId)
     notifying(profileId: $profileId)
     rating(profileId: $profileId)
+    ageRating(profileId: $profileId)
     progress(profileId: $profileId) {
       progressSeconds
       durationSeconds

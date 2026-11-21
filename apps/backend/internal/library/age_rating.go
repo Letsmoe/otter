@@ -69,6 +69,21 @@ func CountryFor(profileLanguages []string, tmdbLanguage string) string {
 	return countryOfLanguage[first]
 }
 
+// AgeRatingLabel is how a certification reads on screen: Germany's plain numbers
+// are FSK ratings ("FSK 12"); other countries' certifications are shown as they are.
+func AgeRatingLabel(country, certification string) string {
+	trimmed := strings.TrimSpace(certification)
+	if trimmed == "" {
+		return ""
+	}
+	if strings.EqualFold(country, "DE") {
+		if _, err := strconv.Atoi(trimmed); err == nil {
+			return "FSK " + trimmed
+		}
+	}
+	return trimmed
+}
+
 func regionOf(tmdbLanguage string) string {
 	_, region, _ := strings.Cut(tmdbLanguage, "-")
 	return strings.ToUpper(region)

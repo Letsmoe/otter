@@ -573,6 +573,8 @@ type Title struct {
 	Notifying bool `json:"notifying"`
 	// The profile's latest rewatch of this movie or series; null when there never was one.
 	Rewatch *Rewatch `json:"rewatch,omitempty"`
+	// The title's age rating in the profile's country, e.g. "FSK 12" or "PG-13"; null while it isn't known (ratings are fetched once a child profile's age limit asks for them).
+	AgeRating *string `json:"ageRating,omitempty"`
 }
 
 // Narrows search results; omitted fields don't filter. Runtime is in minutes.

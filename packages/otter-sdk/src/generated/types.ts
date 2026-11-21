@@ -159,6 +159,15 @@ export default {
                     ]
                 }
             ],
+            "ageRating": [
+                4,
+                {
+                    "profileId": [
+                        2,
+                        "ID!"
+                    ]
+                }
+            ],
             "__typename": [
                 4
             ]

@@ -27,7 +27,15 @@ fun browsePreviewOf(detail: TitleDetail): BrowsePreview {
     if (detail.mediaType == MediaType.SERIES) {
         facts = seriesFacts(detail)
     }
-    return BrowsePreview(detail.id, detail.title, facts, detail.overview, televisionBackdropUrl(detail.bannerUrl))
+    return BrowsePreview(detail.id, detail.title, withAgeRating(facts, detail.ageRating), detail.overview, televisionBackdropUrl(detail.bannerUrl))
+}
+
+/** The age rating ("FSK 12") leads the facts, as it does on a cinema poster; nothing is added while it is unknown. */
+fun withAgeRating(facts: List<String>, ageRating: String?): List<String> {
+    if (ageRating.isNullOrEmpty()) {
+        return facts
+    }
+    return listOf(ageRating) + facts
 }
 
 /** The same image as the title page's banner, in the size a full-screen TV picture needs. */
