@@ -532,7 +532,54 @@ export interface Query {
     status: Status
     /** The household's Neoworks account, which syncs profiles, history, lists, ratings and settings between devices. */
     neoworksAccount: NeoworksAccount
+    /** Progress and result of the profile's latest Letterboxd import. */
+    letterboxdImport: LetterboxdImport
+    /** The Letterboxd account the profile follows; null when none. */
+    letterboxdAccount: (LetterboxdAccount | null)
     __typename: 'Query'
+}
+
+export type LetterboxdImportState = 'IDLE' | 'RUNNING' | 'DONE' | 'FAILED'
+
+
+/** An import of a Letterboxd export (watched, ratings, diary, watchlist) into a profile. */
+export interface LetterboxdImport {
+    state: LetterboxdImportState
+    /** Films in the export, and how many were looked up on TMDB so far. */
+    total: Scalars['Int']
+    processed: Scalars['Int']
+    /** Films that found their TMDB movie. */
+    matched: Scalars['Int']
+    /** What the import added; what Otter already had is not counted. */
+    watched: Scalars['Int']
+    rated: Scalars['Int']
+    watchlisted: Scalars['Int']
+    /** Films TMDB had no match for; notMatched lists the first few hundred. */
+    unmatchedCount: Scalars['Int']
+    notMatched: LetterboxdFilm[]
+    error: (Scalars['String'] | null)
+    __typename: 'LetterboxdImport'
+}
+
+export interface LetterboxdFilm {
+    name: Scalars['String']
+    year: (Scalars['Int'] | null)
+    uri: (Scalars['String'] | null)
+    reason: Scalars['String']
+    __typename: 'LetterboxdFilm'
+}
+
+
+/** A Letterboxd account whose public diary feed a profile follows. Otter only reads from Letterboxd; writing needs API access Letterboxd has not given. */
+export interface LetterboxdAccount {
+    username: Scalars['String']
+    lastSyncedAt: (Scalars['String'] | null)
+    /** Why the last sync failed; null after a good one. */
+    lastError: (Scalars['String'] | null)
+    /** Watches and ratings the last sync added. */
+    lastWatched: Scalars['Int']
+    lastRated: Scalars['Int']
+    __typename: 'LetterboxdAccount'
 }
 
 export interface NeoworksAccount {
@@ -644,6 +691,14 @@ export interface Mutation {
     syncNeoworks: NeoworksAccount
     /** Starts a sync in the background and returns at once; the apps call it when they open. */
     syncNeoworksSoon: Scalars['Boolean']
+    /** Starts importing a Letterboxd export ZIP (base64) into the profile in the background; follow it with Query.letterboxdImport. Refused when the file is no export or an import is running. */
+    importLetterboxd: LetterboxdImport
+    /** Makes the profile follow a Letterboxd account's public diary (a username or a profile address); the feed is read every few hours. */
+    connectLetterboxd: LetterboxdAccount
+    /** Stops following the account; what was imported stays. */
+    disconnectLetterboxd: Scalars['Boolean']
+    /** Reads the followed account's diary feed now; a failure is in the account's lastError. */
+    syncLetterboxd: LetterboxdAccount
     __typename: 'Mutation'
 }
 
@@ -1218,6 +1273,54 @@ export interface QueryGenqlSelection{
     status?: StatusGenqlSelection
     /** The household's Neoworks account, which syncs profiles, history, lists, ratings and settings between devices. */
     neoworksAccount?: NeoworksAccountGenqlSelection
+    /** Progress and result of the profile's latest Letterboxd import. */
+    letterboxdImport?: (LetterboxdImportGenqlSelection & { __args: {profileId: Scalars['ID']} })
+    /** The Letterboxd account the profile follows; null when none. */
+    letterboxdAccount?: (LetterboxdAccountGenqlSelection & { __args: {profileId: Scalars['ID']} })
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** An import of a Letterboxd export (watched, ratings, diary, watchlist) into a profile. */
+export interface LetterboxdImportGenqlSelection{
+    state?: boolean | number
+    /** Films in the export, and how many were looked up on TMDB so far. */
+    total?: boolean | number
+    processed?: boolean | number
+    /** Films that found their TMDB movie. */
+    matched?: boolean | number
+    /** What the import added; what Otter already had is not counted. */
+    watched?: boolean | number
+    rated?: boolean | number
+    watchlisted?: boolean | number
+    /** Films TMDB had no match for; notMatched lists the first few hundred. */
+    unmatchedCount?: boolean | number
+    notMatched?: LetterboxdFilmGenqlSelection
+    error?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface LetterboxdFilmGenqlSelection{
+    name?: boolean | number
+    year?: boolean | number
+    uri?: boolean | number
+    reason?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** A Letterboxd account whose public diary feed a profile follows. Otter only reads from Letterboxd; writing needs API access Letterboxd has not given. */
+export interface LetterboxdAccountGenqlSelection{
+    username?: boolean | number
+    lastSyncedAt?: boolean | number
+    /** Why the last sync failed; null after a good one. */
+    lastError?: boolean | number
+    /** Watches and ratings the last sync added. */
+    lastWatched?: boolean | number
+    lastRated?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1332,6 +1435,14 @@ export interface MutationGenqlSelection{
     syncNeoworks?: NeoworksAccountGenqlSelection
     /** Starts a sync in the background and returns at once; the apps call it when they open. */
     syncNeoworksSoon?: boolean | number
+    /** Starts importing a Letterboxd export ZIP (base64) into the profile in the background; follow it with Query.letterboxdImport. Refused when the file is no export or an import is running. */
+    importLetterboxd?: (LetterboxdImportGenqlSelection & { __args: {profileId: Scalars['ID'], zipBase64: Scalars['String']} })
+    /** Makes the profile follow a Letterboxd account's public diary (a username or a profile address); the feed is read every few hours. */
+    connectLetterboxd?: (LetterboxdAccountGenqlSelection & { __args: {profileId: Scalars['ID'], username: Scalars['String']} })
+    /** Stops following the account; what was imported stays. */
+    disconnectLetterboxd?: { __args: {profileId: Scalars['ID']} }
+    /** Reads the followed account's diary feed now; a failure is in the account's lastError. */
+    syncLetterboxd?: (LetterboxdAccountGenqlSelection & { __args: {profileId: Scalars['ID']} })
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1637,6 +1748,30 @@ export interface SubscriptionGenqlSelection{
     
 
 
+    const LetterboxdImport_possibleTypes: string[] = ['LetterboxdImport']
+    export const isLetterboxdImport = (obj?: { __typename?: any } | null): obj is LetterboxdImport => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isLetterboxdImport"')
+      return LetterboxdImport_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const LetterboxdFilm_possibleTypes: string[] = ['LetterboxdFilm']
+    export const isLetterboxdFilm = (obj?: { __typename?: any } | null): obj is LetterboxdFilm => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isLetterboxdFilm"')
+      return LetterboxdFilm_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const LetterboxdAccount_possibleTypes: string[] = ['LetterboxdAccount']
+    export const isLetterboxdAccount = (obj?: { __typename?: any } | null): obj is LetterboxdAccount => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isLetterboxdAccount"')
+      return LetterboxdAccount_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
     const NeoworksAccount_possibleTypes: string[] = ['NeoworksAccount']
     export const isNeoworksAccount = (obj?: { __typename?: any } | null): obj is NeoworksAccount => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isNeoworksAccount"')
@@ -1747,6 +1882,13 @@ export const enumCatalogTheme = {
    BLOCKBUSTERS: 'BLOCKBUSTERS' as const,
    FEEL_GOOD: 'FEEL_GOOD' as const,
    BINGEWORTHY: 'BINGEWORTHY' as const
+}
+
+export const enumLetterboxdImportState = {
+   IDLE: 'IDLE' as const,
+   RUNNING: 'RUNNING' as const,
+   DONE: 'DONE' as const,
+   FAILED: 'FAILED' as const
 }
 
 export const enumChallengeKind = {

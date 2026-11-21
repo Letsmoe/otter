@@ -23,10 +23,12 @@ import (
 	"github.com/Letsmoe/otter/internal/blobcache"
 	"github.com/Letsmoe/otter/internal/cache"
 	"github.com/Letsmoe/otter/internal/challenge"
+	"github.com/Letsmoe/otter/internal/chrometls"
 	"github.com/Letsmoe/otter/internal/db"
 	"github.com/Letsmoe/otter/internal/downloads"
 	"github.com/Letsmoe/otter/internal/errorreport"
 	"github.com/Letsmoe/otter/internal/hooks"
+	"github.com/Letsmoe/otter/internal/letterboxd"
 	"github.com/Letsmoe/otter/internal/library"
 	"github.com/Letsmoe/otter/internal/neoworks"
 	"github.com/Letsmoe/otter/internal/netdns"
@@ -203,9 +205,12 @@ func buildServer(ctx context.Context, cfg config, database *db.DB) (serverHandle
 	go notificationWatcher.Run(ctx)
 
 	pluginStore := startPluginStore(ctx, cfg.pluginDir)
+	profileService := profiles.NewService(database, cacheClient, hookRunner)
+	letterboxdService := startLetterboxd(ctx, database, tmdbClient, libraryService, profileService, neoworksService)
 	resolver := gqlapi.NewResolver(gqlapi.Services{
 		Library:             libraryService,
-		Profiles:            profiles.NewService(database, cacheClient, hookRunner),
+		Profiles:            profileService,
+		Letterboxd:          letterboxdService,
 		Notifications:       notificationStore,
 		NotificationWatcher: notificationWatcher,
 		Downloads:           downloadService,
@@ -293,6 +298,18 @@ func pluginAccounts(ctx context.Context, database *db.DB, box *secrets.Box, runn
 
 // startPluginStore swaps in newer npm releases of the installed bundles
 // (the registry hot-reloads them); nil while PLUGIN_AUTO_UPDATE=false.
+// startLetterboxd follows the Letterboxd diaries profiles connected. The feed and film
+// pages are read with Chrome's TLS handshake, which Cloudflare lets through; it is no
+// streaming site, so the VPN guard does not apply.
+func startLetterboxd(ctx context.Context, database *db.DB, tmdbClient *tmdb.Client, libraryService *library.Service, profileService *profiles.Service, neoworksService *neoworks.Service) *letterboxd.Service {
+	dialer := &net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}
+	client := &http.Client{Transport: chrometls.New(dialer.DialContext), Timeout: 30 * time.Second}
+	service := letterboxd.NewService(database, tmdbClient, letterboxd.NewLibraryCatalog(libraryService), profileService, client)
+	service.SetOnChange(neoworksService.NotifyChange)
+	go service.Run(ctx)
+	return service
+}
+
 func startPluginStore(ctx context.Context, pluginDir string) *pluginstore.Service {
 	if !pluginstore.Enabled() {
 		return nil

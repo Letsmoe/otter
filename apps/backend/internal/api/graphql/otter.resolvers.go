@@ -557,6 +557,26 @@ func (r *mutationResolver) SyncNeoworksSoon(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
+// ImportLetterboxd is the resolver for the importLetterboxd field.
+func (r *mutationResolver) ImportLetterboxd(ctx context.Context, profileID string, zipBase64 string) (*model.LetterboxdImport, error) {
+	return r.importLetterboxd(profileID, zipBase64)
+}
+
+// ConnectLetterboxd is the resolver for the connectLetterboxd field.
+func (r *mutationResolver) ConnectLetterboxd(ctx context.Context, profileID string, username string) (*model.LetterboxdAccount, error) {
+	return r.connectLetterboxd(ctx, profileID, username)
+}
+
+// DisconnectLetterboxd is the resolver for the disconnectLetterboxd field.
+func (r *mutationResolver) DisconnectLetterboxd(ctx context.Context, profileID string) (bool, error) {
+	return r.disconnectLetterboxd(ctx, profileID)
+}
+
+// SyncLetterboxd is the resolver for the syncLetterboxd field.
+func (r *mutationResolver) SyncLetterboxd(ctx context.Context, profileID string) (*model.LetterboxdAccount, error) {
+	return r.syncLetterboxd(ctx, profileID)
+}
+
 // Filmography is the resolver for the filmography field.
 func (r *personResolver) Filmography(ctx context.Context, obj *model.Person, job *string) ([]*model.Title, error) {
 	titles, err := r.Library.Store.Filmography(ctx, obj.TmdbID, valueOr(job, ""))
@@ -1048,6 +1068,16 @@ func (r *queryResolver) NeoworksAccount(ctx context.Context) (*model.NeoworksAcc
 		return nil, err
 	}
 	return neoworksAccountModel(status, r.Neoworks.LastSync()), nil
+}
+
+// LetterboxdImport is the resolver for the letterboxdImport field.
+func (r *queryResolver) LetterboxdImport(ctx context.Context, profileID string) (*model.LetterboxdImport, error) {
+	return r.letterboxdImport(profileID)
+}
+
+// LetterboxdAccount is the resolver for the letterboxdAccount field.
+func (r *queryResolver) LetterboxdAccount(ctx context.Context, profileID string) (*model.LetterboxdAccount, error) {
+	return r.letterboxdAccount(ctx, profileID)
 }
 
 // Episodes is the resolver for the episodes field.
