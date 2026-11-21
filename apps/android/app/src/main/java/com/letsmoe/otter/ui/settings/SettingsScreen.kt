@@ -81,6 +81,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenPlugins: () -> Unit, viewModel: Set
             MetadataGroup(viewModel)
             StreamingGroup(viewModel)
             PlaybackGroup()
+            SmartDownloadsGroup()
             NotificationsGroup()
             CalendarGroup()
             ProfilesGroup(onOpenPlugins)

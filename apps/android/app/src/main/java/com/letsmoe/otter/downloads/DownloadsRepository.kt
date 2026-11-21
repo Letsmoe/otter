@@ -89,6 +89,7 @@ object DownloadsRepository {
     }
 
     suspend fun remove(downloadId: String) {
+        findById(downloadId)?.let { item -> SmartDownloadStore.onRemovedByViewer(downloadId, item.mediaId) }
         mutableItems.update { current -> current.filter { item -> item.id != downloadId } }
         OtterApi.client.mutation(DeleteDownloadMutation(downloadId)).execute().dataOrThrow()
         refresh()
