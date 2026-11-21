@@ -61,6 +61,23 @@ type Title {
   Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List.
   """
   notifying(profileId: ID!): Boolean!
+
+  """
+  The profile's latest rewatch of this movie or series; null when there never was one.
+  """
+  rewatch(profileId: ID!): Rewatch
+}
+
+"""
+A second run through a movie or series. While it is going, `progress` of the title and its
+episodes is the rewatch's own, so Continue watching, history and recommendations stay as the
+first watch left them.
+"""
+type Rewatch {
+  startedAt: String!
+
+  """True once the movie, or every aired episode, was watched again."""
+  finished: Boolean!
 }
 
 type Season {
@@ -605,6 +622,11 @@ type Query {
   recommendations(profileId: ID!, mediaType: MediaType, limit: Int = 24, offset: Int = 0, refresh: Boolean = false): [Recommendation!]!
   recommendationRows(profileId: ID!, rows: Int = 8, perRow: Int = 20): [RecommendationRow!]!
   continueWatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
+
+  """
+  Rewatches still going, most recent first: the movie, or the episode of the series to continue or start next.
+  """
+  continueRewatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
   history(profileId: ID!, limit: Int = 50): [HistoryEntry!]!
   watchlist(profileId: ID!): [Title!]!
 
@@ -733,6 +755,16 @@ type Mutation {
   """
   resolveBestStream(streamIds: [ID!]!): ResolvedStream!
   recordProgress(profileId: ID!, mediaId: ID!, progressSeconds: Float!, durationSeconds: Float!): WatchProgress!
+
+  """
+  Starts a rewatch of a movie or series from the beginning; an earlier rewatch's progress is dropped, the first watch's is kept.
+  """
+  startRewatch(profileId: ID!, titleId: ID!): Rewatch!
+
+  """
+  Ends the rewatch and forgets its progress; the first watch's progress is read again.
+  """
+  stopRewatch(profileId: ID!, titleId: ID!): Boolean!
   setRating(profileId: ID!, mediaId: ID!, rating: Float!): Boolean!
   clearRating(profileId: ID!, mediaId: ID!): Boolean!
   addToWatchlist(profileId: ID!, mediaId: ID!): Boolean!

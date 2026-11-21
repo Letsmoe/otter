@@ -16,6 +16,7 @@ query TitleDetail($id: ID!, $profileId: ID!) {
     inWatchlist(profileId: $profileId)
     notifying(profileId: $profileId)
     rating(profileId: $profileId)
+    ...TitleWatchState
     credits {
       person {
         id
@@ -36,6 +37,23 @@ query TitleDetail($id: ID!, $profileId: ID!) {
     related(limit: 20) {
       ...TitleCard
     }
+  }
+}
+
+# Whether the profile finished the title, and whether a rewatch of it is going.
+fragment TitleWatchState on Title {
+  progress(profileId: $profileId) {
+    completed
+  }
+  rewatch(profileId: $profileId) {
+    finished
+  }
+}
+
+query CurrentWatchState($id: ID!, $profileId: ID!) {
+  title(id: $id) {
+    id
+    ...TitleWatchState
   }
 }
 

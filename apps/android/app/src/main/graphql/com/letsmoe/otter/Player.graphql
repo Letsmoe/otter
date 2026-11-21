@@ -31,6 +31,9 @@ query PlayerMovie($id: ID!, $profileId: ID!) {
     progress(profileId: $profileId) {
       ...PlayerProgressFields
     }
+    rewatch(profileId: $profileId) {
+      finished
+    }
   }
 }
 
@@ -46,6 +49,9 @@ query PlayerEpisode($id: ID!, $profileId: ID!) {
     series {
       id
       title
+      rewatch(profileId: $profileId) {
+        finished
+      }
     }
     progress(profileId: $profileId) {
       ...PlayerProgressFields

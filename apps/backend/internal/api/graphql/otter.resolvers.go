@@ -135,10 +135,20 @@ func (r *mutationResolver) RecordProgress(ctx context.Context, profileID string,
 	if err != nil {
 		return nil, err
 	}
-	if entry.Completed {
+	if entry.Completed && !entry.Rewatch {
 		r.Recommender.Forget(profile)
 	}
 	return progressModel(entry), nil
+}
+
+// StartRewatch is the resolver for the startRewatch field.
+func (r *mutationResolver) StartRewatch(ctx context.Context, profileID string, titleID string) (*model.Rewatch, error) {
+	return r.startRewatch(ctx, profileID, titleID)
+}
+
+// StopRewatch is the resolver for the stopRewatch field.
+func (r *mutationResolver) StopRewatch(ctx context.Context, profileID string, titleID string) (bool, error) {
+	return r.stopRewatch(ctx, profileID, titleID)
 }
 
 // SetRating is the resolver for the setRating field.
@@ -743,6 +753,15 @@ func (r *queryResolver) ContinueWatching(ctx context.Context, profileID string, 
 	return r.continueWatching(ctx, profile, clamp(valueOr(limit, 20), 100))
 }
 
+// ContinueRewatching is the resolver for the continueRewatching field.
+func (r *queryResolver) ContinueRewatching(ctx context.Context, profileID string, limit *int) ([]*model.ContinueItem, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return nil, err
+	}
+	return r.continueRewatching(ctx, profile, clamp(valueOr(limit, 20), 100))
+}
+
 // History is the resolver for the history field.
 func (r *queryResolver) History(ctx context.Context, profileID string, limit *int) ([]*model.HistoryEntry, error) {
 	profile, err := parseProfile(profileID)
@@ -1079,6 +1098,19 @@ func (r *titleResolver) Notifying(ctx context.Context, obj *model.Title, profile
 		return false, err
 	}
 	return r.Profiles.Notifying(ctx, profile, titleRef(obj))
+}
+
+// Rewatch is the resolver for the rewatch field.
+func (r *titleResolver) Rewatch(ctx context.Context, obj *model.Title, profileID string) (*model.Rewatch, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return nil, err
+	}
+	rewatch, err := r.Profiles.Rewatch(ctx, profile, titleRef(obj))
+	if err != nil {
+		return nil, err
+	}
+	return rewatchModel(rewatch), nil
 }
 
 // Episode returns generated.EpisodeResolver implementation.
