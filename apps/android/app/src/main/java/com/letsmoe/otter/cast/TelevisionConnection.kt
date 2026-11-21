@@ -51,6 +51,7 @@ object TelevisionConnection {
 
     fun initialize(context: Context) {
         applicationContext = context.applicationContext
+        WakeableTelevisions.initialize(applicationContext)
         val castContext = castContext() ?: return
         castContext.sessionManager.addSessionManagerListener(castSessionListener, CastSession::class.java)
         castContext.sessionManager.currentCastSession?.let(::onChromecastConnected)
@@ -61,6 +62,7 @@ object TelevisionConnection {
 
     fun connectDlna(renderer: DlnaRenderer) {
         disconnect()
+        WakeableTelevisions.learn(renderer)
         mutableTarget.value = TelevisionTarget.Dlna(renderer, DlnaPlayer(applicationContext, renderer))
     }
 
