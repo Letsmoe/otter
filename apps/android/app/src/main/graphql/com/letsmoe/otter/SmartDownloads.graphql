@@ -1,0 +1,49 @@
+query SmartDownloadSources($profileId: ID!) {
+  continueWatching(profileId: $profileId, limit: 6) {
+    title {
+      id
+      mediaType
+      runtime
+    }
+    episode {
+      id
+      runtime
+      next {
+        id
+        runtime
+      }
+    }
+  }
+  recommendations(profileId: $profileId, mediaType: MOVIE, limit: 8) {
+    title {
+      id
+      runtime
+    }
+  }
+  history(profileId: $profileId, limit: 300) {
+    progress {
+      mediaId
+      completed
+    }
+  }
+}
+
+query MovieLinks($id: ID!) {
+  title(id: $id) {
+    streams {
+      id
+      quality
+      playable
+    }
+  }
+}
+
+query EpisodeLinks($id: ID!) {
+  episode(id: $id) {
+    streams {
+      id
+      quality
+      playable
+    }
+  }
+}
