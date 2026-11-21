@@ -28,7 +28,6 @@ import com.letsmoe.otter.cast.overlay.UpNextPreview
 import com.letsmoe.otter.downloads.DownloadItem
 import com.letsmoe.otter.downloads.DownloadsRepository
 import com.letsmoe.otter.graphql.fragment.ProfileFields
-import com.letsmoe.otter.profiles.captionLanguage
 import com.letsmoe.otter.profiles.PreferenceChange
 import com.letsmoe.otter.profiles.ProfilePreferences
 import com.letsmoe.otter.profiles.ProfileSession
@@ -61,6 +60,8 @@ private const val REPLAY_SECONDS = 10.0
 private const val NEXT_EPISODE_DELAY_MILLISECONDS = 8000L
 // Playback starts without captions when the backend needs longer than this to find them.
 private const val SUBTITLE_WAIT_MILLISECONDS = 8000L
+// Playback starts without the series' remembered captions when the backend needs longer than this to name the series.
+private const val MEDIA_WAIT_MILLISECONDS = 3000L
 
 /**
  * Owns the ExoPlayer so playback survives rotation, and everything around it: sources, resume, progress, Watch Together.
@@ -102,6 +103,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private val progressReporter = ProgressReporter()
     private val togetherSync = PlayerTogetherSync(viewModelScope, this)
     private val skipTracker = SkipTracker()
+    private val seriesMemory = SeriesMemory(PreferencesSeriesMemoryStorage(application))
     private val upNextOffer = UpNext(viewModelScope, ::playNext)
     private val captionExtras = CaptionExtras(viewModelScope, ::reloadPhoneCaptions)
 
@@ -203,6 +205,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         nextEpisodeJob?.cancel()
         upNextOffer.reset()
         skipTracker.reset(emptyList())
+        seriesMemory.reset()
         mutableSkipButton.value = null
         clearPlayers()
         trackCatalog = TrackCatalog.Empty
@@ -244,6 +247,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             val loaded = loadPlayerMedia(mediaId, profileId) ?: return@launch
             media = loaded
             skipTracker.reset(loaded.skipSegments)
+            startWithSeriesMemory(profileId, loaded.seriesId)
             // Reaches the TV's picture with its next load, e.g. the next seek.
             televisionPlayer?.hints = televisionHints()
             mutableState.update { current ->
@@ -425,9 +429,10 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         attachJob = viewModelScope.launch {
             val resumeSeconds = resumeSecondsFor(currentMediaId)
             subtitles = awaitSubtitles()
+            awaitMediaInfo()
             val mediaItem = mediaItemOf(source)
             shownSubtitle = defaultSubtitle()
-            applyCaptionSelection(player, ProfileSession.activeProfile.value)
+            applyCaptionSelection(player, startingCaptions())
             loadIntoPlayers(mediaItem, (resumeSeconds * 1000).toLong())
             mutableState.update { current ->
                 current.copy(hasSource = true, isBuffering = true, hasEnded = false, playbackError = null, wantPlaying = true, previewable = !source.isHls())
@@ -599,6 +604,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     fun chooseSpeed(speed: Float) {
         mutableState.update { current -> current.copy(speed = speed) }
+        seriesMemory.rememberSpeed(speed)
         applyPlaybackRate()
     }
 
@@ -631,7 +637,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             return
         }
         // Each output keeps its own track selection, so the profile's caption choice is handed over.
-        applyCaptionSelection(player, ProfileSession.activeProfile.value)
+        applyCaptionSelection(player, startingCaptions())
         if (deviceInfo.playbackType != DeviceInfo.PLAYBACK_TYPE_REMOTE) {
             mutableState.update { current -> current.copy(castDeviceName = null) }
             return
@@ -791,10 +797,30 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private fun rememberCaptionChoice(subtitle: PlayerSubtitle?) {
         shownSubtitle = subtitle
         if (subtitle == null) {
+            seriesMemory.rememberCaptions(CaptionChoice(false, startingCaptions()?.language.orEmpty()))
             ProfilePreferences.change(PreferenceChange(subtitlesEnabled = false))
             return
         }
+        seriesMemory.rememberCaptions(CaptionChoice(true, subtitle.language))
         ProfilePreferences.change(PreferenceChange(subtitlesEnabled = true, subtitleLanguage = subtitle.language))
+    }
+
+    // The series' remembered speed and captions, once the episode's series is known.
+    private fun startWithSeriesMemory(profileId: String, seriesId: String?) {
+        seriesMemory.open(profileId, seriesId)
+        val rememberedSpeed = seriesMemory.speed ?: return
+        mutableState.update { current -> current.copy(speed = rememberedSpeed) }
+        applyPlaybackRate()
+    }
+
+    private suspend fun awaitMediaInfo() {
+        val load = mediaJob ?: return
+        withTimeoutOrNull(MEDIA_WAIT_MILLISECONDS) { load.join() }
+    }
+
+    // The series' captions, else the profile's.
+    private fun startingCaptions(): CaptionChoice? {
+        return seriesMemory.startingCaptions(ProfileSession.activeProfile.value)
     }
 
     private fun televisionSubtitleFile(): TelevisionSubtitleFile? {
@@ -841,8 +867,8 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         if (shown != null) {
             return shown
         }
-        val profileLanguage = ProfileSession.activeProfile.value?.captionLanguage()
-        val inProfileLanguage = subtitles.firstOrNull { subtitle -> subtitle.language == profileLanguage }
+        val startingLanguage = startingCaptions()?.language
+        val inProfileLanguage = subtitles.firstOrNull { subtitle -> subtitle.language == startingLanguage }
         if (inProfileLanguage != null) {
             return inProfileLanguage
         }
@@ -882,11 +908,11 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     // The captions the profile asks for, before the player has read any track.
     private fun defaultSubtitle(): PlayerSubtitle? {
-        val profile = ProfileSession.activeProfile.value ?: return null
-        if (!profile.subtitlesEnabled) {
+        val choice = startingCaptions() ?: return null
+        if (!choice.enabled) {
             return null
         }
-        return subtitles.firstOrNull { subtitle -> subtitle.language.equals(profile.captionLanguage(), ignoreCase = true) }
+        return subtitles.firstOrNull { subtitle -> subtitle.language.equals(choice.language, ignoreCase = true) }
     }
 
     // Profile ------------------------------------------------------------------------
