@@ -62,6 +62,8 @@ dependencies {
     api(libs.media3.exoplayer)
     api(libs.media3.exoplayer.hls)
     api(libs.media3.ui)
+    // Trailers: YouTube keys resolved to stream URLs (TrailerStreamResolver).
+    implementation(libs.newpipe.extractor)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     testImplementation(libs.junit)
 }

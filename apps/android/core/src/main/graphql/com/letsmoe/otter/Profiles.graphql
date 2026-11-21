@@ -73,5 +73,9 @@ query SpotlightTitle($id: ID!) {
     overview
     posterPath
     logoPath
+    trailerKey
+    genres
+    runtime
+    seasonCount
   }
 }

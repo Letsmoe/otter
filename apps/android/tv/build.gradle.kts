@@ -63,5 +63,7 @@ dependencies {
     implementation(libs.coil.network)
     implementation(libs.phosphor.icons)
     implementation(libs.media3.ui)
+    // Card previews: the trailer in a TextureView, so it clips to the card's rounded corners.
+    implementation(libs.media3.ui.compose)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 }

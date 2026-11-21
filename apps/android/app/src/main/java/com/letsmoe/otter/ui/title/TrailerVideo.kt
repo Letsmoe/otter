@@ -16,14 +16,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.MediaSource
-import androidx.media3.exoplayer.source.MergingMediaSource
-import androidx.media3.exoplayer.source.ProgressiveMediaSource
-import androidx.media3.exoplayer.hls.HlsMediaSource
-import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.ui.compose.ContentFrame
 import androidx.media3.ui.compose.SURFACE_TYPE_TEXTURE_VIEW
 
@@ -59,7 +53,7 @@ fun TrailerVideo(
         if (resolved == null) {
             return@LaunchedEffect
         }
-        player.setMediaSource(buildMediaSource(resolved))
+        player.setMediaSource(resolved.toMediaSource())
         player.repeatMode = repeatModeFor(looping)
         player.prepare()
     }
@@ -110,17 +104,4 @@ private fun volumeFor(muted: Boolean): Float {
         return 0f
     }
     return 1f
-}
-
-private fun buildMediaSource(streams: TrailerStreams): MediaSource {
-    val dataSourceFactory = DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true)
-    if (streams.isHls) {
-        return HlsMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(streams.videoUrl))
-    }
-    val factory = ProgressiveMediaSource.Factory(dataSourceFactory)
-    val videoSource = factory.createMediaSource(MediaItem.fromUri(streams.videoUrl))
-    if (streams.audioUrl == null) {
-        return videoSource
-    }
-    return MergingMediaSource(videoSource, factory.createMediaSource(MediaItem.fromUri(streams.audioUrl)))
 }

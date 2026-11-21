@@ -92,13 +92,23 @@ private fun Modifier.reportFocus(row: Int, onFocused: (Int) -> Unit): Modifier {
 private fun ScrollFocusedRowIntoPlace(listState: LazyListState, focusedRow: Int) {
     val topLine = with(LocalDensity.current) { ROWS_TOP_LINE.roundToPx() }
     LaunchedEffect(focusedRow) {
-        if (focusedRow <= 0) {
+        if (focusedRow == HERO_FOCUSED || (focusedRow == 0 && firstRowFitsUnderHero(listState))) {
             listState.animateScrollToItem(0)
             return@LaunchedEffect
         }
         // Item 0 is the hero, so row n is item n + 1; a negative offset leaves room above it.
         listState.animateScrollToItem(focusedRow + 1, -topLine)
     }
+}
+
+// A page whose first screen shows only the hero (a movie) scrolls its first row up like any other.
+private fun firstRowFitsUnderHero(listState: LazyListState): Boolean {
+    if (listState.firstVisibleItemIndex != 0 || listState.firstVisibleItemScrollOffset != 0) {
+        return false
+    }
+    val layout = listState.layoutInfo
+    val firstRow = layout.visibleItemsInfo.firstOrNull { item -> item.index == 1 } ?: return false
+    return firstRow.offset + firstRow.size <= layout.viewportEndOffset
 }
 
 private fun Modifier.parallax(listState: LazyListState, heroHeight: Dp): Modifier {

@@ -27,10 +27,15 @@ val ROW_FOCUS_LINE = 34.dp
 
 /**
  * A row's title over its horizontally scrolling cards; the focused card stays [focusLine] from
- * the left, like a TV launcher's rows.
+ * the left, like a TV launcher's rows. [below] goes under the cards (a previewed title's info).
  */
 @Composable
-fun CardRow(title: String, focusLine: Dp = TvSpacing.screenHorizontal, cards: LazyListScope.() -> Unit) {
+fun CardRow(
+    title: String,
+    focusLine: Dp = TvSpacing.screenHorizontal,
+    below: @Composable () -> Unit = {},
+    cards: LazyListScope.() -> Unit,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             title,
@@ -46,5 +51,6 @@ fun CardRow(title: String, focusLine: Dp = TvSpacing.screenHorizontal, cards: La
                 content = cards,
             )
         }
+        below()
     }
 }

@@ -1,5 +1,11 @@
 package com.letsmoe.otter.ui.title
 
+import androidx.media3.common.MediaItem
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.exoplayer.hls.HlsMediaSource
+import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.exoplayer.source.MergingMediaSource
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,6 +20,20 @@ private const val MAX_TRAILER_HEIGHT = 720
 
 /** A playable trailer: [audioUrl] is null when [videoUrl] already carries the sound (or is an HLS manifest). */
 data class TrailerStreams(val videoUrl: String, val audioUrl: String?, val isHls: Boolean = false)
+
+/** What ExoPlayer plays for the trailer: the HLS manifest, or the video merged with its separate audio. */
+fun TrailerStreams.toMediaSource(): MediaSource {
+    val dataSourceFactory = DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true)
+    if (isHls) {
+        return HlsMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(videoUrl))
+    }
+    val factory = ProgressiveMediaSource.Factory(dataSourceFactory)
+    val videoSource = factory.createMediaSource(MediaItem.fromUri(videoUrl))
+    if (audioUrl == null) {
+        return videoSource
+    }
+    return MergingMediaSource(videoSource, factory.createMediaSource(MediaItem.fromUri(audioUrl)))
+}
 
 /** Resolves YouTube keys to stream URLs with NewPipeExtractor, caching results (including misses) in memory. */
 object TrailerStreamResolver {

@@ -10,16 +10,26 @@ import com.letsmoe.otter.graphql.SpotlightTitleQuery
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-/** What the hero shows beyond a card's fields: TMDB's logo artwork of the name and the description. */
-data class TitleExtras(val logoUrl: String?, val overview: String?)
+/**
+ * What the hero and card previews show beyond a card's fields: TMDB's logo artwork of the name,
+ * the description, the trailer's YouTube key and the facts line's genres, runtime and seasons.
+ */
+data class TitleExtras(
+    val logoUrl: String? = null,
+    val overview: String? = null,
+    val trailerKey: String? = null,
+    val genres: List<String> = emptyList(),
+    val runtimeMinutes: Int? = null,
+    val seasonCount: Int = 0,
+)
 
-private val NO_EXTRAS = TitleExtras(logoUrl = null, overview = null)
+private val NO_EXTRAS = TitleExtras()
 
-/** A title's logo and description by title id; looked up once per title and kept while the app runs. */
-object TitleLogos {
+/** A title's extras by title id; looked up once per title and kept while the app runs. */
+object TitleExtrasCache {
 
     private val extrasById = mutableMapOf<String, TitleExtras>()
-    // The logo and the description of one title are asked at once; one request answers both.
+    // The logo, description and preview of one title are asked at once; one request answers all.
     private val lookup = Mutex()
 
     suspend fun extras(titleId: String): TitleExtras {
@@ -43,7 +53,14 @@ object TitleLogos {
         if (title == null) {
             return NO_EXTRAS
         }
-        return TitleExtras(logoUrl = tmdbImageUrl(title.logoPath, "w500"), overview = nonBlank(title.overview))
+        return TitleExtras(
+            logoUrl = tmdbImageUrl(title.logoPath, "w500"),
+            overview = nonBlank(title.overview),
+            trailerKey = nonBlank(title.trailerKey),
+            genres = title.genres,
+            runtimeMinutes = title.runtime,
+            seasonCount = title.seasonCount,
+        )
     }
 }
 
@@ -54,6 +71,18 @@ private fun nonBlank(text: String?): String? {
     return text
 }
 
+/** The title's extras once known; null while loading. */
+@Composable
+fun rememberTitleExtras(titleId: String?): State<TitleExtras?> {
+    return produceState<TitleExtras?>(null, titleId) {
+        if (titleId == null) {
+            value = null
+            return@produceState
+        }
+        value = TitleExtrasCache.extras(titleId)
+    }
+}
+
 /** The title's logo URL once known; null while loading and for titles without one. */
 @Composable
 fun rememberTitleLogo(titleId: String?): State<String?> {
@@ -62,7 +91,7 @@ fun rememberTitleLogo(titleId: String?): State<String?> {
             value = null
             return@produceState
         }
-        value = TitleLogos.extras(titleId).logoUrl
+        value = TitleExtrasCache.extras(titleId).logoUrl
     }
 }
 
@@ -74,6 +103,6 @@ fun rememberTitleOverview(titleId: String?): State<String?> {
             value = null
             return@produceState
         }
-        value = TitleLogos.extras(titleId).overview
+        value = TitleExtrasCache.extras(titleId).overview
     }
 }

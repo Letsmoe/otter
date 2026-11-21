@@ -121,7 +121,6 @@ dependencies {
     implementation(libs.media3.muxer)
     implementation(libs.posthog.android)
     implementation(libs.appcompat)
-    implementation(libs.newpipe.extractor)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     implementation(libs.apollo.runtime)
     implementation(libs.coil.compose)

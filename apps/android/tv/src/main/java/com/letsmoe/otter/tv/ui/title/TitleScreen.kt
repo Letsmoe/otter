@@ -21,7 +21,10 @@ import com.letsmoe.otter.tv.ui.components.CardRow
 import com.letsmoe.otter.tv.ui.components.FailedNotice
 import com.letsmoe.otter.tv.ui.components.HeroRowsPage
 import com.letsmoe.otter.tv.ui.components.PageRow
-import com.letsmoe.otter.tv.ui.components.PosterCard
+import com.letsmoe.otter.tv.ui.components.PosterCardContent
+import com.letsmoe.otter.tv.ui.components.PreviewCard
+import com.letsmoe.otter.tv.ui.components.PreviewInfo
+import com.letsmoe.otter.tv.ui.components.rememberRowPreview
 import com.letsmoe.otter.tv.ui.components.REGULAR_POSTER_WIDTH
 import com.letsmoe.otter.tv.ui.components.TopBar
 import com.letsmoe.otter.tv.ui.home.ActorRow
@@ -45,8 +48,9 @@ import com.letsmoe.otter.ui.title.seriesFacts
 import com.letsmoe.otter.ui.title.seriesPlayLabel
 import com.letsmoe.otter.vpn.VpnStatusStore
 
-// Under a movie's hero: one row of posters. Under a series' hero: the seasons and episodes.
-private val MOVIE_FIRST_ROW_SPACE = 222.dp
+// Under a movie's hero only the first row's title peeks, so the page doesn't open on other movies.
+// Under a series' hero: the seasons and episodes.
+private val MOVIE_FIRST_ROW_SPACE = 36.dp
 private val SERIES_FIRST_ROW_SPACE = 196.dp
 
 /** What a title page does with what's selected on it. */
@@ -159,11 +163,22 @@ private fun relatedRows(rails: RailsState, cast: List<ActorItem>, navigation: Ti
     return rows
 }
 
+/** Posters that preview their trailer when focus rests on them, with the title's info below the row. */
 @Composable
 private fun RailRow(title: String, items: List<RailItem>, onOpenItem: (RailItem) -> Unit) {
-    CardRow(title) {
+    val preview = rememberRowPreview()
+    CardRow(title, below = { PreviewInfo(preview.item) }) {
         items(items, key = { item -> item.id }) { item ->
-            PosterCard(item, REGULAR_POSTER_WIDTH, onFocus = {}, onClick = { onOpenItem(item) })
+            PreviewCard(
+                item,
+                restingWidth = REGULAR_POSTER_WIDTH,
+                restingHeight = REGULAR_POSTER_WIDTH * 3f / 2f,
+                onFocus = {},
+                onClick = { onOpenItem(item) },
+                rowPreview = preview,
+            ) {
+                PosterCardContent(item)
+            }
         }
     }
 }

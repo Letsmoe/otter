@@ -8,12 +8,15 @@ import com.letsmoe.otter.tv.ui.components.ActorCard
 import com.letsmoe.otter.tv.ui.components.CardRow
 import com.letsmoe.otter.tv.ui.components.LARGE_POSTER_WIDTH
 import com.letsmoe.otter.tv.ui.components.PageRow
-import com.letsmoe.otter.tv.ui.components.PosterCard
+import com.letsmoe.otter.tv.ui.components.PosterCardContent
+import com.letsmoe.otter.tv.ui.components.PreviewCard
 import com.letsmoe.otter.tv.ui.components.RANK_NUMBER_WIDTH
 import com.letsmoe.otter.tv.ui.components.REGULAR_LANDSCAPE_WIDTH
+import com.letsmoe.otter.tv.ui.components.TOP_TEN_POSTER_WIDTH
 import com.letsmoe.otter.tv.ui.components.TopTenCard
 import com.letsmoe.otter.tv.ui.components.WIDE_CARD_WIDTH
-import com.letsmoe.otter.tv.ui.components.WideCard
+import com.letsmoe.otter.tv.ui.components.WideCardContent
+import androidx.compose.ui.unit.Dp
 import com.letsmoe.otter.ui.components.ActorItem
 import com.letsmoe.otter.ui.home.ActorsRow
 import com.letsmoe.otter.ui.home.HomeRow
@@ -54,17 +57,44 @@ private fun PosterRowContent(row: PosterRow, actions: RowActions) {
     }
 }
 
-/** [position] is the card's 1-based place in its row; the Top 10 row shows it as the rank. */
+/**
+ * [position] is the card's 1-based place in its row; the Top 10 row shows it as the rank. Cards
+ * preview their trailer when focus rests on them; the hero above already shows the title's info.
+ */
 @Composable
 private fun TitleCardFor(style: RailStyle, item: RailItem, position: Int, actions: RowActions) {
-    val onFocus = { actions.onFocusItem(item) }
-    val onClick = { actions.onOpenItem(item) }
     when (style) {
         // Landscape like Prime Video's rows; large and Top 10 rows stay posters for variety.
-        RailStyle.REGULAR -> WideCard(item, REGULAR_LANDSCAPE_WIDTH, onFocus, onClick)
-        RailStyle.LARGE -> PosterCard(item, LARGE_POSTER_WIDTH, onFocus, onClick)
-        RailStyle.WIDE -> WideCard(item, WIDE_CARD_WIDTH, onFocus, onClick)
-        RailStyle.TOP_TEN -> TopTenCard(item, position, onFocus, onClick)
+        RailStyle.REGULAR -> HomeWideCard(item, REGULAR_LANDSCAPE_WIDTH, actions)
+        RailStyle.LARGE -> HomePosterCard(item, LARGE_POSTER_WIDTH, actions)
+        RailStyle.WIDE -> HomeWideCard(item, WIDE_CARD_WIDTH, actions)
+        RailStyle.TOP_TEN -> TopTenCard(position) { HomePosterCard(item, TOP_TEN_POSTER_WIDTH, actions) }
+    }
+}
+
+@Composable
+private fun HomePosterCard(item: RailItem, width: Dp, actions: RowActions) {
+    PreviewCard(
+        item,
+        restingWidth = width,
+        restingHeight = width * 3f / 2f,
+        onFocus = { actions.onFocusItem(item) },
+        onClick = { actions.onOpenItem(item) },
+    ) {
+        PosterCardContent(item)
+    }
+}
+
+@Composable
+private fun HomeWideCard(item: RailItem, width: Dp, actions: RowActions) {
+    PreviewCard(
+        item,
+        restingWidth = width,
+        restingHeight = width * 9f / 16f,
+        onFocus = { actions.onFocusItem(item) },
+        onClick = { actions.onOpenItem(item) },
+    ) {
+        WideCardContent(item)
     }
 }
 

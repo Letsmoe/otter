@@ -37,7 +37,7 @@ import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.ui.components.ActorItem
 import com.letsmoe.otter.ui.media.RailItem
 
-private val CARD_SHAPE = RoundedCornerShape(8.dp)
+internal val CARD_SHAPE = RoundedCornerShape(8.dp)
 val TOP_TEN_POSTER_WIDTH = 104.dp
 
 /** Room a Top 10 rank number takes left of its poster ("10" is the widest). */
@@ -55,11 +55,17 @@ fun PosterCard(item: RailItem, width: Dp, onFocus: () -> Unit, onClick: () -> Un
             .aspectRatio(2f / 3f)
             .onFocusChanged { state -> reportFocus(state.isFocused, onFocus) },
     ) {
-        Box(Modifier.fillMaxSize()) {
-            CardImage(item.posterUrl, item.title)
-            CardBadge(item.badge, Modifier.align(Alignment.TopStart))
-            CardProgress(item.progress, Modifier.align(Alignment.BottomStart))
-        }
+        PosterCardContent(item)
+    }
+}
+
+/** A poster card's inside: the poster, its badge and the watch progress. */
+@Composable
+fun PosterCardContent(item: RailItem) {
+    Box(Modifier.fillMaxSize()) {
+        CardImage(item.posterUrl, item.title)
+        CardBadge(item.badge, Modifier.align(Alignment.TopStart))
+        CardProgress(item.progress, Modifier.align(Alignment.BottomStart))
     }
 }
 
@@ -75,21 +81,27 @@ fun WideCard(item: RailItem, width: Dp, onFocus: () -> Unit, onClick: () -> Unit
             .aspectRatio(16f / 9f)
             .onFocusChanged { state -> reportFocus(state.isFocused, onFocus) },
     ) {
-        Box(Modifier.fillMaxSize()) {
-            CardImage(wideImage(item), item.title)
-            WideCardCaption(item, hasProgress = item.progress != null, Modifier.align(Alignment.BottomStart))
-            CardBadge(item.badge, Modifier.align(Alignment.TopStart))
-            CardProgress(item.progress, Modifier.align(Alignment.BottomStart))
-        }
+        WideCardContent(item)
     }
 }
 
-/** A poster with its Top 10 place as a large outlined number on its left. */
+/** A wide card's inside: the backdrop with the title over its bottom edge, the badge and the progress. */
 @Composable
-fun TopTenCard(item: RailItem, rank: Int, onFocus: () -> Unit, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun WideCardContent(item: RailItem) {
+    Box(Modifier.fillMaxSize()) {
+        CardImage(wideImage(item), item.title)
+        WideCardCaption(item, hasProgress = item.progress != null, Modifier.align(Alignment.BottomStart))
+        CardBadge(item.badge, Modifier.align(Alignment.TopStart))
+        CardProgress(item.progress, Modifier.align(Alignment.BottomStart))
+    }
+}
+
+/** A Top 10 [card] (a poster) with its place as a large outlined number on its left. */
+@Composable
+fun TopTenCard(rank: Int, card: @Composable () -> Unit) {
     Row(verticalAlignment = Alignment.Bottom) {
         RankNumber(rank.toString())
-        PosterCard(item, width = TOP_TEN_POSTER_WIDTH, onFocus = onFocus, onClick = onClick, modifier = modifier)
+        card()
     }
 }
 
