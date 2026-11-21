@@ -1075,7 +1075,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         mutableSkipButton.value = skipTracker.jumpAt(positionSeconds)
         mutablePostCreditsNotice.value = showsPostCreditsNotice(media?.hasPostCreditsScene == true, positionSeconds, durationSeconds)
         val inCredits = skipTracker.isInCredits(positionSeconds)
-        upNextOffer.follow(inCredits, activePlayer.isPlaying, offeredNextEpisode())
+        upNextOffer.follow(inCredits, activePlayer.isPlaying, offeredNextEpisode(), episodeForUpNextCard())
         skipHabits.follow(skipTracker.jumps, positionSeconds, activePlayer.isPlaying, inCredits)
         if (activePlayer.isPlaying) {
             preferredHoster.follow(positionSeconds, durationSeconds)
@@ -1124,6 +1124,19 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         return loaded.episodes.firstOrNull { episode -> episode.id == nextId }
     }
 
+    private fun playingEpisode(): PlayerEpisode? {
+        val loaded = media ?: return null
+        return loaded.episodes.firstOrNull { episode -> episode.id == currentMediaId }
+    }
+
+    // Lets the card name a new season or a finale; none when the viewer stops after this episode.
+    private fun episodeForUpNextCard(): PlayerEpisode? {
+        if (mutableState.value.stopsAfterEpisode) {
+            return null
+        }
+        return playingEpisode()
+    }
+
     // What the TV's picture shows besides captions: skip hints and, during the credits, the next episode.
     private fun televisionHints(): TelevisionHints {
         val skips = skipTracker.jumps.map { jump -> SkipHint(jump.televisionLabel, jump.startSeconds, jump.endSeconds) }
@@ -1136,9 +1149,13 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     }
 
     private fun upNextPreview(): UpNextPreview? {
-        val next = nextEpisode() ?: return null
+        val next = nextEpisode()
         val creditsStart = skipTracker.creditsStartSeconds ?: return null
-        return UpNextPreview(episodeLabel(next), next.stillUrl, creditsStart, UP_NEXT_MILLISECONDS / 1000.0)
+        val note = upNextNote(playingEpisode(), next) ?: return null
+        if (!note.countsDown) {
+            return UpNextPreview(note.label, null, creditsStart, SEASON_FINALE_MILLISECONDS / 1000.0, note.heading, countsDown = false)
+        }
+        return UpNextPreview(note.label, next?.stillUrl, creditsStart, UP_NEXT_MILLISECONDS / 1000.0, note.heading)
     }
 
     /** The skip button: jumps to the end of the intro or recap playing now. */

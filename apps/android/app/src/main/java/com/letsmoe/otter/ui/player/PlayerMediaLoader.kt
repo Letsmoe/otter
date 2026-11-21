@@ -67,7 +67,8 @@ private suspend fun loadEpisodeMedia(mediaId: String, profileId: String): Player
     val title = "${episode.series.title} · ${episodeCode(episode.seasonNumber, episode.episodeNumber)} ${episodeName(episode.name, episode.episodeNumber)}"
     val subheading = "${episodeCode(episode.seasonNumber, episode.episodeNumber)} · ${episodeName(episode.name, episode.episodeNumber)}"
     val episodes = loadSeriesEpisodes(seriesId, profileId)
-    val nextId = episode.next?.id
+    // The first episode of the next season may only be stored once the series' episodes were read just now.
+    val nextId = episode.next?.id ?: episodes.episodeAfter(mediaId)?.id
     val nextKnown = episodes.any { candidate -> candidate.id == nextId }
     val skipSegments = episode.skipSegments.map { segment -> SkipSegment(segment.kind, segment.startSeconds, segment.endSeconds) }
     return PlayerMedia(

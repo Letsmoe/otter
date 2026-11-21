@@ -272,6 +272,7 @@ private fun PlaybackGroup() {
         }
         SettingsDivider()
         BedtimeRows()
+        SettingsDivider()
         PlaybackSwitchRow("Pause the TV for calls", "A call, ringing or ongoing, pauses it; it plays on when the call ends", PlaybackSettings.pauseForCalls) { enabled ->
             PlaybackSettings.pauseForCalls = enabled
         }

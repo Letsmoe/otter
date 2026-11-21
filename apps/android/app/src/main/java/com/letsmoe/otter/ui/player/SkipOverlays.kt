@@ -87,9 +87,21 @@ fun BoxScope.UpNextOverlay(card: UpNextCard?, controlsVisible: Boolean, onCancel
         .windowInsetsPadding(WindowInsets.safeDrawing)
         .padding(end = 24.dp, bottom = bottomOffset(controlsVisible))
     AnimatedVisibility(card != null, modifier, enter = fadeIn() + slideInHorizontally { width -> width / 3 }, exit = fadeOut() + slideOutHorizontally { width -> width / 3 }) {
-        if (card != null) {
+        if (card != null && card.countsDown) {
             UpNextCardContent(card, onCancel, onPlayNow)
         }
+        if (card != null && !card.countsDown) {
+            SeasonFinaleCardContent(card)
+        }
+    }
+}
+
+// A season's last episode with nothing after it: only tells, nothing to press.
+@Composable
+private fun SeasonFinaleCardContent(card: UpNextCard) {
+    Column(Modifier.width(300.dp).playerGlass(RoundedCornerShape(16.dp)).padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(card.heading, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+        Text(card.episodeLabel, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.8f))
     }
 }
 
@@ -98,7 +110,7 @@ private fun UpNextCardContent(card: UpNextCard, onCancel: () -> Unit, onPlayNow:
     val remainingMilliseconds = rememberRemainingMilliseconds(card)
     val remainingSeconds = (remainingMilliseconds + 999) / 1000
     Column(Modifier.width(300.dp).playerGlass(RoundedCornerShape(16.dp)).padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("Next episode in $remainingSeconds s", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.8f))
+        Text("${card.heading} in $remainingSeconds s", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.8f))
         AsyncImage(
             card.stillUrl,
             contentDescription = null,

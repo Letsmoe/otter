@@ -27,8 +27,18 @@ private const val STILL_WIDTH = 640
 private const val STILL_HEIGHT = 360
 private const val TITLE_CARD_SECONDS = 6.0
 
-/** The next episode as its card in the picture shows it; it counts down from the credits. */
-data class UpNextPreview(val episodeLabel: String, val stillUrl: String?, val creditsStartSeconds: Double, val countdownSeconds: Double)
+/**
+ * The next episode as its card in the picture shows it; it counts down from the credits, unless
+ * it only tells (a season finale with nothing after it) and then stays for [countdownSeconds].
+ */
+data class UpNextPreview(
+    val episodeLabel: String,
+    val stillUrl: String?,
+    val creditsStartSeconds: Double,
+    val countdownSeconds: Double,
+    val heading: String = "Next episode",
+    val countsDown: Boolean = true,
+)
 
 /** What is playing, for the title card: "Severance", "S1:E2 · Half Loop" and "Episode 2 of 9" (null for movies). */
 data class TitleText(val title: String, val detail: String?, val episodeCountLabel: String? = null)
@@ -101,7 +111,7 @@ fun endsAtLabel(context: Context, secondsLeft: Double): String? {
 
 private suspend fun upNextHint(context: Context, preview: UpNextPreview): UpNextHint {
     val still = preview.stillUrl?.let { url -> loadStill(context, url) }
-    return UpNextHint(preview.episodeLabel, preview.creditsStartSeconds, preview.countdownSeconds, still)
+    return UpNextHint(preview.episodeLabel, preview.creditsStartSeconds, preview.countdownSeconds, still, preview.heading, preview.countsDown)
 }
 
 /** The cues of the caption file at [captionPath] (a backend .srt path); empty without one or when it can't be read. */
