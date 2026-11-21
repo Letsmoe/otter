@@ -8,6 +8,8 @@ import androidx.core.content.edit
 enum class AutoSkipIntro(val label: String) {
     OFF("Off"),
     TELEVISION("Only on TV"),
+    /** Per series: intros once skipped by hand a few times, recaps while episodes follow each other. */
+    HABITS("Learn per series"),
     ALWAYS("Always"),
 }
 
@@ -66,13 +68,4 @@ object PlaybackSettings {
         set(value) {
             preferences.edit { putBoolean(KEY_TELEVISION_TITLE_CARD, value) }
         }
-
-    /** Whether to skip on its own, given whether a TV (DLNA or Chromecast) plays. */
-    fun skipsIntroAutomatically(casting: Boolean): Boolean {
-        return when (autoSkipIntro) {
-            AutoSkipIntro.OFF -> false
-            AutoSkipIntro.TELEVISION -> casting
-            AutoSkipIntro.ALWAYS -> true
-        }
-    }
 }
