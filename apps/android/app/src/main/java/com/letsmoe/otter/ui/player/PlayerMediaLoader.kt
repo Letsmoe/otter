@@ -22,6 +22,8 @@ data class PlayerMedia(
     /** The title card on a TV: the movie or series, and for episodes "S1:E2 · Name". */
     val heading: String = title,
     val subheading: String? = null,
+    /** A film TMDB tags with a scene during or after the credits. */
+    val hasPostCreditsScene: Boolean = false,
 )
 
 /** A skippable part; endSeconds is null when it runs to the end. */
@@ -51,7 +53,7 @@ suspend fun loadPlayerMedia(mediaId: String, profileId: String): PlayerMedia? {
 private suspend fun loadMovieMedia(mediaId: String, profileId: String): PlayerMedia? {
     val data = OtterApi.client.query(PlayerMovieQuery(mediaId, profileId)).execute().dataOrThrow()
     val title = data.title ?: return null
-    return PlayerMedia(title.title, "/movies/$mediaId", emptyList(), null)
+    return PlayerMedia(title.title, "/movies/$mediaId", emptyList(), null, hasPostCreditsScene = title.hasPostCreditsScene)
 }
 
 private suspend fun loadEpisodeMedia(mediaId: String, profileId: String): PlayerMedia? {
