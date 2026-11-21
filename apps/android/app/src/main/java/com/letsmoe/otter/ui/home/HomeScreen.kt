@@ -39,6 +39,7 @@ fun HomeScreen(
     onOpenItem: (RailItem) -> Unit,
     onPlayItem: (RailItem) -> Unit,
     onOpenPerson: (String) -> Unit,
+    onOpenWatchOrder: (String) -> Unit,
     onSearch: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -62,6 +63,7 @@ fun HomeScreen(
         onOpenItem = onOpenItem,
         onPlayItem = onPlayItem,
         onOpenPerson = onOpenPerson,
+        onOpenWatchOrder = onOpenWatchOrder,
         chips = {
             CategoryChips(
                 selected = category,
@@ -110,6 +112,7 @@ private class HomePage(
     val onOpenItem: (RailItem) -> Unit,
     val onPlayItem: (RailItem) -> Unit,
     val onOpenPerson: (String) -> Unit,
+    val onOpenWatchOrder: (String) -> Unit,
     val chips: @Composable () -> Unit,
 )
 
@@ -151,6 +154,7 @@ private fun CategoryContent(category: HomeCategory, genre: String?, listState: L
         onOpenItem = page.onOpenItem,
         onPlayItem = page.onPlayItem,
         onOpenPerson = page.onOpenPerson,
+        onOpenWatchOrder = page.onOpenWatchOrder,
         chips = page.chips,
     )
 }

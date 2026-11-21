@@ -3,6 +3,7 @@ package com.letsmoe.otter.ui.home
 import com.letsmoe.otter.graphql.type.CatalogTheme
 import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.media.RepeatFilter
+import com.letsmoe.otter.ui.watchorder.WatchOrderGuide
 
 enum class RailStyle { REGULAR, LARGE, WIDE, TOP_TEN }
 
@@ -17,11 +18,17 @@ data object ActorsRow : HomeRow {
     override val key = "actors"
 }
 
+/** The franchises with a watch-order guide, ones in progress first. */
+data class FranchisesRow(val guides: List<WatchOrderGuide>) : HomeRow {
+    override val key = "franchises"
+}
+
 class PageLabels(val plural: String, val newRow: String, val continueTitle: String)
 
 private const val TOP_TEN_SIZE = 10
 private const val MIN_RAIL_SIZE = 5
 private const val ACTORS_POSITION = 8
+private const val FRANCHISES_POSITION = 4
 
 /** A candidate row before repeats are removed. */
 private class RowSpec(
@@ -127,6 +134,15 @@ private fun <T> interleave(first: List<T>, second: List<T>): List<T> {
         second.getOrNull(index)?.let { item -> merged.add(item) }
     }
     return merged
+}
+
+/** Puts the Franchises row after the personal rows and the first recommendations. */
+fun List<HomeRow>.withFranchisesRow(guides: List<WatchOrderGuide>): List<HomeRow> {
+    if (guides.isEmpty()) {
+        return this
+    }
+    val position = minOf(size, FRANCHISES_POSITION)
+    return take(position) + FranchisesRow(guides) + drop(position)
 }
 
 /** Puts the actor row in the middle of the page, between poster rows. */

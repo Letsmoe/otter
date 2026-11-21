@@ -26,6 +26,8 @@ data class TitleDetail(
     /** The backdrop, or the poster when the title has none. */
     val bannerUrl: String?,
     val trailerKey: String?,
+    /** The franchise (TMDB collection) of a movie, for its watch-order guide. */
+    val collectionId: String?,
     val genres: List<String>,
     val cast: List<CastMember>,
     val directors: List<DirectorPerson>,
@@ -59,6 +61,7 @@ fun TitleDetailQuery.Title.toDetail(): TitleDetail {
         voteAverage = voteAverage,
         bannerUrl = banner,
         trailerKey = trailerKey,
+        collectionId = collectionId,
         genres = genres,
         cast = castOf(this),
         directors = directorsOf(this),
