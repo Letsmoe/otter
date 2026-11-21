@@ -199,7 +199,7 @@ private fun shortenedAtWord(text: String, end: Int): String {
 
 private fun titlePaint(size: Float): TextPaint = textPaint(size, Color.WHITE, Typeface.BOLD)
 
-private fun textPaint(size: Float, color: Int, style: Int): TextPaint {
+internal fun textPaint(size: Float, color: Int, style: Int): TextPaint {
     val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     paint.textSize = size
     paint.typeface = Typeface.create(Typeface.SANS_SERIF, style)
@@ -207,7 +207,7 @@ private fun textPaint(size: Float, color: Int, style: Int): TextPaint {
     return paint
 }
 
-private fun textLayout(text: String, paint: TextPaint, width: Float, maxLines: Int, lineSpacing: Float = 1f): StaticLayout {
+internal fun textLayout(text: String, paint: TextPaint, width: Float, maxLines: Int, lineSpacing: Float = 1f): StaticLayout {
     return StaticLayout.Builder.obtain(text, 0, text.length, paint, width.toInt())
         .setAlignment(Layout.Alignment.ALIGN_NORMAL)
         .setMaxLines(maxLines)
@@ -221,7 +221,7 @@ private fun isCutOff(layout: StaticLayout, text: String): Boolean {
     return layout.getEllipsisCount(lastLine) > 0 || layout.getLineEnd(lastLine) < text.length
 }
 
-private fun centerCrop(picture: Bitmap, slot: RectF): Rect {
+internal fun centerCrop(picture: Bitmap, slot: RectF): Rect {
     val slotRatio = slot.width() / slot.height()
     val pictureRatio = picture.width.toFloat() / picture.height
     if (pictureRatio > slotRatio) {
