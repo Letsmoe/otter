@@ -158,6 +158,9 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     /** Nothing plays after this episode; the picture says so during the credits. */
     @Volatile
     var stopsAfterEpisode = false
+    /** The next episode waits for "Still watching?"; the picture asks the viewer to answer on the phone. */
+    @Volatile
+    var askingStillWatching = false
     // A replay with captions shows them until this second of the title; null when none runs.
     @Volatile
     private var replayUntilSeconds: Double? = null
@@ -737,6 +740,7 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
             evenVolume = { PlaybackSettings.evenVolumeActive },
             replayUntilSeconds = { replayUntilSeconds },
             stopsAfterEpisode = { stopsAfterEpisode },
+            askingStillWatching = { askingStillWatching },
         )
     }
 

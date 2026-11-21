@@ -80,6 +80,7 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
     val skipButton by viewModel.skipButton.collectAsStateWithLifecycle()
     val upNext by viewModel.upNext.collectAsStateWithLifecycle()
     val postCreditsNotice by viewModel.postCreditsNotice.collectAsStateWithLifecycle()
+    val askingStillWatching by viewModel.askingStillWatching.collectAsStateWithLifecycle()
     val captionTweaks by viewModel.captionTweaks.collectAsStateWithLifecycle()
     val room by TogetherSession.room.collectAsStateWithLifecycle()
     val chrome = remember { PlayerChrome() }
@@ -120,7 +121,7 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
 
     // The sheets' glass blurs the video (or the casting backdrop) behind them.
     val videoBackdrop = rememberHazeState()
-    Box(Modifier.fillMaxSize().background(Color.Black)) {
+    Box(Modifier.fillMaxSize().background(Color.Black).reportsTouches(viewModel::userTouched)) {
         Box(Modifier.fillMaxSize().hazeSource(videoBackdrop)) {
             val secondShown = captionTweaks.secondCues.isNotEmpty() && !state.isCasting
             VideoSurface(viewModel.player, state.captionLook, mainCaptionBottomFraction(state.captionLook, secondShown))
@@ -164,8 +165,11 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
             TogetherOverlay()
         }
         AnimatedVisibility(state.hasEnded, enter = fadeIn(), exit = fadeOut()) {
-            EndScreen(state.title, state.mediaId, state.hasNextEpisode, onNext = viewModel::playNextAfterEnd, onClose = ::close)
+            // Not counting down to an episode the viewer asked not to play.
+            val offersNext = state.hasNextEpisode && !state.stopsAfterEpisode
+            EndScreen(state.title, state.mediaId, offersNext, onNext = viewModel::playNextAfterEnd, onClose = ::close)
         }
+        StillWatchingPrompt(askingStillWatching, viewModel::keepWatching, viewModel::stopWatching)
         CompositionLocalProvider(LocalGlassBackdrop provides videoBackdrop) {
             PlayerSheetHost(sheet, onClose = ::closeSheet) { kind -> SheetContent(kind, state, viewModel, ::closeSheet) }
         }

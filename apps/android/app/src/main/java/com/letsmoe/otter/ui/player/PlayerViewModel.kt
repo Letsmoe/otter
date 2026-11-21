@@ -111,10 +111,14 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private val nextEpisodePrefetch = NextEpisodePrefetch { StreamLinkSearch(viewModelScope, streamPlayback.fitsScreen) }
     private val finishWatch = FinishWatch()
     private val upNextOffer = UpNext(viewModelScope, ::playNext)
+    private val stillWatching = StillWatching(viewModelScope, onTimeout = { setStopAfterEpisode(true) })
     private val captionExtras = CaptionExtras(viewModelScope, ::reloadPhoneCaptions)
 
     /** The next episode's card while the credits run. */
     val upNext: StateFlow<UpNextCard?> = upNextOffer.card
+
+    /** The next episode waits for the answer to "Still watching?". */
+    val askingStillWatching: StateFlow<Boolean> = stillWatching.asking
 
     /** Caption timing and the second caption language of the title playing. */
     val captionTweaks: StateFlow<CaptionExtrasState> = captionExtras.state
@@ -192,6 +196,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         viewModelScope.launch { pollPosition() }
         viewModelScope.launch { followHolding() }
         viewModelScope.launch { followRemoteMedia() }
+        viewModelScope.launch { stillWatching.asking.collect { asking -> televisionPlayer?.askingStillWatching = asking } }
         viewModelScope.launch { ProfileSession.activeProfile.collect(::onProfileChanged) }
         togetherSync.start()
         if (forTelevision) {
@@ -219,6 +224,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         sourceSwitchResumeSeconds = 0.0
         nextEpisodeJob?.cancel()
         upNextOffer.reset()
+        stillWatching.episodeStarted()
         skipTracker.reset(emptyList())
         skipHabits.reset()
         seriesMemory.reset()
@@ -337,7 +343,27 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     fun playNext() {
         val nextId = media?.nextEpisodeId ?: return
+        if (stillWatching.holdsBackNext()) {
+            return
+        }
         openMedia(nextId, initial = false)
+    }
+
+    /** Any touch on the phone: the viewer is there. */
+    fun userTouched() {
+        stillWatching.touched()
+    }
+
+    /** "Keep watching": the held-back episode starts. */
+    fun keepWatching() {
+        stillWatching.confirm()
+        playNext()
+    }
+
+    /** "Stop": nothing plays after the episode playing now. */
+    fun stopWatching() {
+        stillWatching.decline()
+        setStopAfterEpisode(true)
     }
 
     /** The end screen's button or countdown; ignored once the next episode already started. */
@@ -1020,7 +1046,10 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             Toasts.push("It's bedtime: this is the last episode tonight")
             return
         }
-        val stopping = !mutableState.value.stopsAfterEpisode
+        setStopAfterEpisode(!mutableState.value.stopsAfterEpisode)
+    }
+
+    private fun setStopAfterEpisode(stopping: Boolean) {
         televisionPlayer?.stopsAfterEpisode = stopping
         mutableState.update { current -> current.copy(stopsAfterEpisode = stopping) }
         if (stopping) {
