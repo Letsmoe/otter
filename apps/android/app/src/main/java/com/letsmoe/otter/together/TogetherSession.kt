@@ -195,6 +195,7 @@ object TogetherSession {
         knownPeerIds = emptySet()
         roomMediaId = null
         mutableNowPlayingTitle.value = null
+        MovieNight.reset()
     }
 
     // Player -----------------------------------------------------------------
@@ -280,7 +281,19 @@ object TogetherSession {
         return pending
     }
 
-    private fun send(payload: TogetherPayload) {
+    /**
+     * The room opens [media]: the others get it like a title someone started, and this device
+     * opens it too (on the TV for whoever is casting).
+     */
+    fun openForRoom(media: MediaPayload) {
+        if (!isConnected) {
+            return
+        }
+        send(media)
+        onMedia(media)
+    }
+
+    internal fun send(payload: TogetherPayload) {
         AppScope.launch {
             try {
                 OtterApi.client.mutation(SendTogetherMutation(payload.toJson())).execute()
@@ -315,6 +328,7 @@ object TogetherSession {
         knownPeerIds = current.peers.map { peer -> peer.id }.toSet()
         joined.forEach { peer -> Toasts.push("${peer.name} joined Watch Together", ToastKind.SUCCESS) }
         left.forEach { peer -> Toasts.push("${peer.name} left Watch Together") }
+        MovieNight.onRoomChanged(current)
         if (joined.isNotEmpty()) {
             catchUp()
         }
@@ -335,6 +349,7 @@ object TogetherSession {
             return
         }
         send(StatusPayload(ownState.mediaId, ownState.buffering))
+        MovieNight.resend()
         val report = player ?: return
         roomMediaId = report.media.mediaId
         mutableNowPlayingTitle.value = report.media.title
@@ -349,6 +364,7 @@ object TogetherSession {
             is StatusPayload -> onPeerState(message.from, payload)
             is ChatPayload -> onChat(message.from, payload.text)
             is ReactionPayload -> addReaction(message.from, payload.emoji)
+            is SuggestPayload, is VotePayload, is VoteResultPayload -> MovieNight.onPayload(message.from, payload)
             null -> Unit
         }
     }

@@ -35,6 +35,12 @@ describe('parsePayload', () => {
 		expect(parsePayload('{"type":"chat","text":"hi"}')).toEqual({ type: 'chat', text: 'hi' });
 	});
 
+	test('ignores the movie night vote payloads the Android app sends', () => {
+		expect(parsePayload('{"type":"vote.suggest","mediaId":"movie:603","title":"The Matrix","year":1999,"posterPath":null}')).toBeNull();
+		expect(parsePayload('{"type":"vote.cast","mediaId":"movie:603"}')).toBeNull();
+		expect(parsePayload('{"type":"vote.result","mediaId":"movie:603","title":"The Matrix"}')).toBeNull();
+	});
+
 	test('drops unknown or malformed payloads', () => {
 		expect(parsePayload('{"type":"unknown"}')).toBeNull();
 		expect(parsePayload('not json')).toBeNull();

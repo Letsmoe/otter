@@ -32,6 +32,7 @@ import com.letsmoe.otter.ui.settings.SettingsScreen
 import com.letsmoe.otter.ui.title.TitleSlots
 import com.letsmoe.otter.links.IncomingLinks
 import com.letsmoe.otter.ui.television.TelevisionButton
+import com.letsmoe.otter.ui.together.MovieNightSheet
 import com.letsmoe.otter.ui.together.TogetherButton
 import com.letsmoe.otter.ui.together.TogetherChatSheet
 import com.letsmoe.otter.ui.together.TogetherSheet
@@ -155,5 +156,6 @@ fun AppOverlays() {
     ToastHost()
     TogetherSheet()
     TogetherChatSheet()
+    MovieNightSheet()
     ProfileFlightOverlay()
 }
