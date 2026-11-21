@@ -155,6 +155,40 @@ type Stream {
   "Null until someone tried to play it."
   playable: Boolean
   foundAt: String!
+  "What the app measured when it played; null until it did."
+  report: LinkReport
+}
+
+"What a link really delivered when it played, as the app measured it."
+type LinkReport {
+  "Pixel height the site's label claimed; 0 when it named none"
+  claimedHeight: Int!
+  "Pixel height of the picture (wide films count by their width); 0 when unknown"
+  measuredHeight: Int!
+  "True when the picture had clearly fewer pixels than claimed"
+  overclaimed: Boolean!
+  "Video bitrate of the latest play in bits per second; 0 when unknown"
+  bitrateBps: Int!
+  "Times the latest play stopped to buffer after it had started, and for how long"
+  stalls: Int!
+  stallMillis: Int!
+  "Milliseconds from loading the link to its first picture, latest play"
+  firstFrameMillis: Int!
+  "Reported plays, and how many of them stalled a lot"
+  plays: Int!
+  roughPlays: Int!
+}
+
+"What the player measured during one play of a link."
+input LinkReportInput {
+  streamId: ID!
+  widthPixels: Int!
+  heightPixels: Int!
+  bitrateBps: Int!
+  stalls: Int!
+  stallMillis: Int!
+  firstFrameMillis: Int!
+  playedMillis: Int!
 }
 
 type StreamUpdate {
@@ -613,6 +647,8 @@ type Mutation {
   resolveStream(streamId: ID!): ResolvedStream!
   "Resolves several links at once (most preferred first) and returns the fastest that really delivers video. Fails only when none plays."
   resolveBestStream(streamIds: [ID!]!): ResolvedStream!
+  "Records what a link delivered while it played (resolution, bitrate, stalls, time to first picture). Links that stall or claim more than they deliver are tried later."
+  reportLinkPlayback(input: LinkReportInput!): Boolean!
 
   recordProgress(profileId: ID!, mediaId: ID!, progressSeconds: Float!, durationSeconds: Float!): WatchProgress!
   "Starts a rewatch of a movie or series from the beginning; an earlier rewatch's progress is dropped, the first watch's is kept."

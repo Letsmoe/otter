@@ -9,6 +9,9 @@ import com.letsmoe.otter.graphql.ResolveBestStreamMutation
 import com.letsmoe.otter.graphql.SourceStreamsSubscription
 import com.letsmoe.otter.graphql.fragment.SourceStreamFields
 import com.letsmoe.otter.together.SharedSource
+import com.letsmoe.otter.ui.components.LinkReportInfo
+import com.letsmoe.otter.ui.components.linkReportRank
+import com.letsmoe.otter.ui.components.toInfo
 import com.letsmoe.otter.ui.media.TitleActions
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -35,6 +38,8 @@ data class SourceStream(
     /** Null until someone tried to play it. */
     val playable: Boolean?,
     val speedBytesPerSecond: Double?,
+    /** What the app measured when the link played; null before it did. */
+    val report: LinkReportInfo? = null,
 )
 
 data class PlayingSource(val url: String, val mimeType: String, val sourceId: String?)
@@ -50,10 +55,13 @@ data class StreamPlaybackState(
 )
 
 fun SourceStreamFields.toSourceStream(): SourceStream {
-    return SourceStream(id, url, plugin, label, quality, language, playable, speedBps)
+    return SourceStream(id, url, plugin, label, quality, language, playable, speedBps, report?.linkReportFields?.toInfo())
 }
 
-/** Known-broken links last; otherwise the profile's languages first, then known-playable before untested. */
+/**
+ * Known-broken links last; otherwise the profile's languages first, then known-playable before
+ * untested, then links that played smoothly before ones that stalled or claimed more than they had.
+ */
 fun rankStreams(streams: List<SourceStream>): List<SourceStream> {
     val preferred = preferredLanguages()
     return streams.sortedWith(
@@ -61,6 +69,7 @@ fun rankStreams(streams: List<SourceStream>): List<SourceStream> {
             { stream -> stream.playable == false },
             { stream -> languageRank(stream.language, preferred) },
             { stream -> playableRank(stream) },
+            { stream -> linkReportRank(stream.report) },
         ),
     )
 }

@@ -7,6 +7,9 @@ fragment SourceStreamFields on Stream {
   language
   playable
   speedBps
+  report {
+    ...LinkReportFields
+  }
 }
 
 subscription SourceStreams($id: ID!) {

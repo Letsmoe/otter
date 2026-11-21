@@ -11,6 +11,7 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
+import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
 import com.letsmoe.otter.cast.CastCaptionSelector
 import com.letsmoe.otter.cast.CastSetup
@@ -103,6 +104,8 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     private val streamPlayback = StreamPlayback(viewModelScope)
     private val progressReporter = ProgressReporter()
+    // Measures the link that plays on this phone; reported when the link is left.
+    private val playbackMeter = PlaybackMeter(System::currentTimeMillis)
     private val togetherSync = PlayerTogetherSync(viewModelScope, this)
     private val skipTracker = SkipTracker()
     private val skipHabits = SkipHabits(PreferencesSkipHabitStorage(application))
@@ -189,6 +192,18 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
         override fun onTracksChanged(tracks: Tracks) = onTracksRead(tracks)
 
+        override fun onRenderedFirstFrame() = playbackMeter.firstFrame()
+
+        override fun onVideoSizeChanged(videoSize: VideoSize) = playbackMeter.videoSize(videoSize.width, videoSize.height)
+
+        override fun onIsPlayingChanged(isPlaying: Boolean) = playbackMeter.playing(isPlaying)
+
+        override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) {
+            if (reason == Player.DISCONTINUITY_REASON_SEEK || reason == Player.DISCONTINUITY_REASON_SEEK_ADJUSTMENT) {
+                playbackMeter.seeked()
+            }
+        }
+
         override fun onDeviceInfoChanged(deviceInfo: DeviceInfo) = onOutputChanged(deviceInfo)
     }
 
@@ -220,6 +235,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     private fun openMedia(mediaId: String, initial: Boolean) {
         saveProgress(force = true)
+        finishLinkReport()
         TogetherSession.detachPlayer(currentMediaId)
         progressReporter.reset()
         finishWatch.reset()
@@ -380,7 +396,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     // Sources ----------------------------------------------------------------
 
     private fun onStreamState(streamState: StreamPlaybackState) {
-        val sources = streamState.streams.map { stream -> PlayerSource(stream.id, sourceLabel(stream), sourceDetails(stream), stream.plugin, stream.playable) }
+        val sources = streamState.streams.map { stream -> PlayerSource(stream.id, sourceLabel(stream), sourceDetails(stream), stream.plugin, stream.playable, stream.report) }
         mutableState.update { current ->
             current.copy(
                 sources = sources,
@@ -490,6 +506,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private fun attachSource(source: PlayingSource) {
         sourceStarted = false
         preferredHoster.sourceAttached(playingStream()?.let(::hosterOf))
+        finishLinkReport()
         attachJob?.cancel()
         attachJob = viewModelScope.launch {
             val resumeSeconds = resumeSecondsFor(currentMediaId)
@@ -498,6 +515,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             val mediaItem = mediaItemOf(source)
             shownSubtitle = defaultSubtitle()
             applyCaptionSelection(player, startingCaptions())
+            startMeasuring(source)
             loadIntoPlayers(mediaItem, (resumeSeconds * 1000).toLong())
             mutableState.update { current ->
                 current.copy(hasSource = true, isBuffering = true, hasEnded = false, playbackError = null, wantPlaying = true, previewable = !source.isHls())
@@ -506,6 +524,15 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             applyIntent()
             announceToTogether()
         }
+    }
+
+    // Only links of the backend's list are judged, and only while this phone plays them.
+    private fun startMeasuring(source: PlayingSource) {
+        val sourceId = source.sourceId
+        if (sourceId == null || televisionPlayer != null) {
+            return
+        }
+        playbackMeter.start(sourceId)
     }
 
     private fun mediaItemOf(source: PlayingSource): MediaItem {
@@ -561,9 +588,22 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     private fun onPlayerStateChanged(playbackState: Int) {
         when (playbackState) {
-            Player.STATE_BUFFERING -> setBuffering(true)
+            Player.STATE_BUFFERING -> onBufferingStarted()
             Player.STATE_READY -> onReady()
             Player.STATE_ENDED -> onEnded()
+        }
+    }
+
+    private fun onBufferingStarted() {
+        playbackMeter.buffering(true, activePlayer.playWhenReady)
+        setBuffering(true)
+    }
+
+    // Sends how the link did; called whenever playback leaves it (another link or title, closing).
+    private fun finishLinkReport() {
+        val measurement = playbackMeter.finish(selectedVideoBitrate(player.currentTracks))
+        if (measurement != null) {
+            LinkReporter.send(measurement)
         }
     }
 
@@ -575,6 +615,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private fun onReady() {
         televisionLinkRenewed = false
         sourceStarted = true
+        playbackMeter.buffering(false, activePlayer.playWhenReady)
         val duration = activePlayer.duration
         if (duration > 0) {
             mutableState.update { current -> current.copy(durationSeconds = duration / 1000.0) }
@@ -1291,6 +1332,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     /** Saves progress before the screen leaves. */
     fun close() {
         saveProgress(force = true)
+        finishLinkReport()
     }
 
     // Watch Together ---------------------------------------------------------
@@ -1331,6 +1373,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
 
     override fun onCleared() {
         saveProgress(force = true)
+        finishLinkReport()
         // The TV belongs to TelevisionConnection: it stays connected, only this title stops on it.
         televisionPlayer?.let { television ->
             television.removeListener(playerListener)

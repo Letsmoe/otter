@@ -121,6 +121,11 @@ func (r *mutationResolver) ResolveBestStream(ctx context.Context, streamIds []st
 	return r.resolveBest(ctx, streamIds)
 }
 
+// ReportLinkPlayback is the resolver for the reportLinkPlayback field.
+func (r *mutationResolver) ReportLinkPlayback(ctx context.Context, input model.LinkReportInput) (bool, error) {
+	return r.reportLinkPlayback(ctx, input)
+}
+
 // RecordProgress is the resolver for the recordProgress field.
 func (r *mutationResolver) RecordProgress(ctx context.Context, profileID string, mediaID string, progressSeconds float64, durationSeconds float64) (*model.WatchProgress, error) {
 	profile, err := parseProfile(profileID)

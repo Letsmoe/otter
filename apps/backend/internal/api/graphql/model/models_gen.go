@@ -95,6 +95,38 @@ type HistoryEntry struct {
 	Progress *WatchProgress `json:"progress"`
 }
 
+// What a link really delivered when it played, as the app measured it.
+type LinkReport struct {
+	// Pixel height the site's label claimed; 0 when it named none
+	ClaimedHeight int `json:"claimedHeight"`
+	// Pixel height of the picture (wide films count by their width); 0 when unknown
+	MeasuredHeight int `json:"measuredHeight"`
+	// True when the picture had clearly fewer pixels than claimed
+	Overclaimed bool `json:"overclaimed"`
+	// Video bitrate of the latest play in bits per second; 0 when unknown
+	BitrateBps int `json:"bitrateBps"`
+	// Times the latest play stopped to buffer after it had started, and for how long
+	Stalls      int `json:"stalls"`
+	StallMillis int `json:"stallMillis"`
+	// Milliseconds from loading the link to its first picture, latest play
+	FirstFrameMillis int `json:"firstFrameMillis"`
+	// Reported plays, and how many of them stalled a lot
+	Plays      int `json:"plays"`
+	RoughPlays int `json:"roughPlays"`
+}
+
+// What the player measured during one play of a link.
+type LinkReportInput struct {
+	StreamID         string `json:"streamId"`
+	WidthPixels      int    `json:"widthPixels"`
+	HeightPixels     int    `json:"heightPixels"`
+	BitrateBps       int    `json:"bitrateBps"`
+	Stalls           int    `json:"stalls"`
+	StallMillis      int    `json:"stallMillis"`
+	FirstFrameMillis int    `json:"firstFrameMillis"`
+	PlayedMillis     int    `json:"playedMillis"`
+}
+
 // Titles featuring the lead actor of a title the profile rated well.
 type MoreWithRow struct {
 	Person    *Person  `json:"person"`
@@ -346,6 +378,8 @@ type Stream struct {
 	// Null until someone tried to play it.
 	Playable *bool  `json:"playable,omitempty"`
 	FoundAt  string `json:"foundAt"`
+	// What the app measured when it played; null until it did.
+	Report *LinkReport `json:"report,omitempty"`
 }
 
 type StreamUpdate struct {

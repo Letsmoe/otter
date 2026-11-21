@@ -29,7 +29,9 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.ArrowClockwise
 import com.adamglin.phosphoricons.regular.Check
+import com.letsmoe.otter.ui.components.LinkBadgeRow
 import com.letsmoe.otter.ui.components.OtterSwitch
+import com.letsmoe.otter.ui.components.linkBadges
 import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.pressable
 
@@ -152,6 +154,7 @@ private fun SourceRow(source: PlayerSource, mark: SourceMark, modifier: Modifier
             if (source.details.isNotEmpty()) {
                 Text(source.details, color = Color.White.copy(alpha = 0.45f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
+            LinkBadgeRow(linkBadges(source.report), Modifier.padding(top = 4.dp))
         }
         Text(
             source.plugin,
