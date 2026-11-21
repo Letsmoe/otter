@@ -77,6 +77,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenPlugins: () -> Unit, viewModel: Set
             StreamingGroup(viewModel)
             PlaybackGroup()
             NotificationsGroup()
+            CalendarGroup()
             ProfilesGroup(onOpenPlugins)
             PrivacyGroup(viewModel)
             UpdatesGroup()

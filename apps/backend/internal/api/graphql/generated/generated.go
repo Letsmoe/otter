@@ -140,6 +140,7 @@ type ComplexityRoot struct {
 		OpenDownloadsFolder    func(childComplexity int) int
 		RecordProgress         func(childComplexity int, profileID string, mediaID string, progressSeconds float64, durationSeconds float64) int
 		RemoveFromWatchlist    func(childComplexity int, profileID string, mediaID string) int
+		ResetCalendarFeed      func(childComplexity int, profileID string) int
 		ResolveBestStream      func(childComplexity int, streamIds []string) int
 		ResolveStream          func(childComplexity int, streamID string) int
 		SendTogether           func(childComplexity int, payload string) int
@@ -260,6 +261,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Browse                  func(childComplexity int, mediaType model.MediaType, genre *string, limit *int, offset *int) int
+		CalendarFeedPath        func(childComplexity int, profileID string) int
 		Catalog                 func(childComplexity int, mediaType model.MediaType, sort *model.CatalogSort) int
 		CatalogRows             func(childComplexity int, mediaType model.MediaType, count *int, exclude []string) int
 		CatalogTheme            func(childComplexity int, mediaType model.MediaType, theme model.CatalogTheme) int
@@ -486,6 +488,7 @@ type MutationResolver interface {
 	UpdateProfile(ctx context.Context, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, subtitleStyle *model.SubtitleStyle, voiceBoost *bool) (*model.Profile, error)
 	DeleteProfile(ctx context.Context, id string) (bool, error)
 	VerifyPin(ctx context.Context, profileID string, pin string) (*model.PinCheck, error)
+	ResetCalendarFeed(ctx context.Context, profileID string) (string, error)
 	UpdateSettings(ctx context.Context, input model.SettingsInput) (*model.Settings, error)
 	CheckTmdbConnection(ctx context.Context) (bool, error)
 	SetPluginEnabled(ctx context.Context, name string, enabled bool) (*model.Plugin, error)
@@ -531,6 +534,7 @@ type QueryResolver interface {
 	TogetherRoom(ctx context.Context) (*model.TogetherRoom, error)
 	Subtitles(ctx context.Context, mediaID string, profileID *string) ([]*model.Subtitle, error)
 	Profiles(ctx context.Context) ([]*model.Profile, error)
+	CalendarFeedPath(ctx context.Context, profileID string) (string, error)
 	Settings(ctx context.Context) (*model.Settings, error)
 	CheckTmdbKey(ctx context.Context, key string) (bool, error)
 	Plugins(ctx context.Context) ([]*model.Plugin, error)
@@ -1096,6 +1100,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.RemoveFromWatchlist(childComplexity, args["profileId"].(string), args["mediaId"].(string)), true
+	case "Mutation.resetCalendarFeed":
+		if e.ComplexityRoot.Mutation.ResetCalendarFeed == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_resetCalendarFeed_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.ResetCalendarFeed(childComplexity, args["profileId"].(string)), true
 	case "Mutation.resolveBestStream":
 		if e.ComplexityRoot.Mutation.ResolveBestStream == nil {
 			break
@@ -1692,6 +1707,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.Browse(childComplexity, args["mediaType"].(model.MediaType), args["genre"].(*string), args["limit"].(*int), args["offset"].(*int)), true
+	case "Query.calendarFeedPath":
+		if e.ComplexityRoot.Query.CalendarFeedPath == nil {
+			break
+		}
+
+		args, err := ec.field_Query_calendarFeedPath_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.CalendarFeedPath(childComplexity, args["profileId"].(string)), true
 	case "Query.catalog":
 		if e.ComplexityRoot.Query.Catalog == nil {
 			break
@@ -3297,6 +3323,8 @@ type Query {
   subtitles(mediaId: ID!, profileId: ID): [Subtitle!]!
 
   profiles: [Profile!]!
+  "Path of the profile's calendar feed (upcoming episodes of the series it watches or has on My List, next 8 weeks) on the backend, e.g. /api/calendar/<secret>.ics. Whoever has the full URL can read the feed."
+  calendarFeedPath(profileId: ID!): String!
   settings: Settings!
   "Whether TMDB accepts the key; errors when TMDB can't be reached."
   checkTmdbKey(key: String!): Boolean!
@@ -3391,6 +3419,8 @@ type Mutation {
   updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, subtitleStyle: SubtitleStyle, voiceBoost: Boolean): Profile!
   deleteProfile(id: ID!): Boolean!
   verifyPin(profileId: ID!, pin: String!): PinCheck!
+  "Makes a new secret for the profile's calendar feed; the old URL stops working. Returns the new path."
+  resetCalendarFeed(profileId: ID!): String!
 
   updateSettings(input: SettingsInput!): Settings!
   "Asks TMDB right now whether it answers; also updates Status.tmdbReachable."
@@ -4651,6 +4681,20 @@ func (ec *executionContext) field_Mutation_removeFromWatchlist_args(ctx context.
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_resetCalendarFeed_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_resolveBestStream_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -5070,6 +5114,20 @@ func (ec *executionContext) field_Query_browse_args(ctx context.Context, rawArgs
 		return nil, err
 	}
 	args["offset"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_calendarFeedPath_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
 	return args, nil
 }
 
@@ -8061,6 +8119,50 @@ func (ec *executionContext) fieldContext_Mutation_verifyPin(ctx context.Context,
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_verifyPin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_resetCalendarFeed(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_resetCalendarFeed(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().ResetCalendarFeed(ctx, fc.Args["profileId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_resetCalendarFeed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_resetCalendarFeed_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -11249,6 +11351,50 @@ func (ec *executionContext) fieldContext_Query_profiles(_ context.Context, field
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return ec.childFields_Profile(ctx, field)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_calendarFeedPath(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_calendarFeedPath(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().CalendarFeedPath(ctx, fc.Args["profileId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_calendarFeedPath(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_calendarFeedPath_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -16338,6 +16484,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "resetCalendarFeed":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_resetCalendarFeed(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "updateSettings":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateSettings(ctx, field)
@@ -17736,6 +17889,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_profiles(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "calendarFeedPath":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_calendarFeedPath(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
