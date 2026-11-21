@@ -91,6 +91,7 @@ fun profileNavigation(navController: NavHostController, openTab: (Tab) -> Unit, 
         onHistory = { navController.navigate(Routes.HISTORY) },
         onPlugins = { navController.navigate(Routes.PLUGINS) },
         onSettings = { navController.navigate(Routes.SETTINGS) },
+        onYearInOtter = { year -> navController.navigate(Routes.yearInOtter(year)) },
     )
 }
 
