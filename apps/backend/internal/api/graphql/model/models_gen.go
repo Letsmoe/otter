@@ -233,6 +233,8 @@ type Profile struct {
 	SubtitleStyle SubtitleStyle `json:"subtitleStyle"`
 	// Boost dialogue over music and effects
 	VoiceBoost bool `json:"voiceBoost"`
+	// The Android app shows only Continue, My List and Search with big text and buttons
+	SimpleMode bool `json:"simpleMode"`
 }
 
 type Query struct {

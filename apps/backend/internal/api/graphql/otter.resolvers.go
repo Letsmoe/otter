@@ -335,7 +335,7 @@ func (r *mutationResolver) CreateProfile(ctx context.Context, name string, avata
 }
 
 // UpdateProfile is the resolver for the updateProfile field.
-func (r *mutationResolver) UpdateProfile(ctx context.Context, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, subtitleStyle *model.SubtitleStyle, voiceBoost *bool) (*model.Profile, error) {
+func (r *mutationResolver) UpdateProfile(ctx context.Context, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, subtitleStyle *model.SubtitleStyle, voiceBoost *bool, simpleMode *bool) (*model.Profile, error) {
 	profileID, err := parseProfile(id)
 	if err != nil {
 		return nil, err
@@ -344,6 +344,7 @@ func (r *mutationResolver) UpdateProfile(ctx context.Context, id string, name *s
 	update.Name = name
 	update.AvatarURL = avatarURL
 	update.IsChild = isChild
+	update.SimpleMode = simpleMode
 	update.Pin = pin
 	// A null list leaves the languages as they are.
 	if languages != nil {

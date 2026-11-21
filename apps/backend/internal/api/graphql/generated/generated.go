@@ -153,7 +153,7 @@ type ComplexityRoot struct {
 		SyncNeoworks           func(childComplexity int) int
 		SyncNeoworksSoon       func(childComplexity int) int
 		UpdatePlugins          func(childComplexity int) int
-		UpdateProfile          func(childComplexity int, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, subtitleStyle *model.SubtitleStyle, voiceBoost *bool) int
+		UpdateProfile          func(childComplexity int, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, subtitleStyle *model.SubtitleStyle, voiceBoost *bool, simpleMode *bool) int
 		UpdateSettings         func(childComplexity int, input model.SettingsInput) int
 		VerifyPin              func(childComplexity int, profileID string, pin string) int
 	}
@@ -251,6 +251,7 @@ type ComplexityRoot struct {
 		IsChild          func(childComplexity int) int
 		Languages        func(childComplexity int) int
 		Name             func(childComplexity int) int
+		SimpleMode       func(childComplexity int) int
 		SubtitleLanguage func(childComplexity int) int
 		SubtitleSize     func(childComplexity int) int
 		SubtitleStyle    func(childComplexity int) int
@@ -483,7 +484,7 @@ type MutationResolver interface {
 	AdoptStream(ctx context.Context, mediaID string, url string, plugin string, label *string) (*model.Stream, error)
 	SendTogether(ctx context.Context, payload string) (bool, error)
 	CreateProfile(ctx context.Context, name string, avatarURL *string, pin *string, isChild *bool, languages []string) (*model.Profile, error)
-	UpdateProfile(ctx context.Context, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, subtitleStyle *model.SubtitleStyle, voiceBoost *bool) (*model.Profile, error)
+	UpdateProfile(ctx context.Context, id string, name *string, avatarURL *string, isChild *bool, pin *string, languages []string, subtitlesEnabled *bool, subtitleLanguage *string, subtitleSize *model.SubtitleSize, subtitleStyle *model.SubtitleStyle, voiceBoost *bool, simpleMode *bool) (*model.Profile, error)
 	DeleteProfile(ctx context.Context, id string) (bool, error)
 	VerifyPin(ctx context.Context, profileID string, pin string) (*model.PinCheck, error)
 	UpdateSettings(ctx context.Context, input model.SettingsInput) (*model.Settings, error)
@@ -1229,7 +1230,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.UpdateProfile(childComplexity, args["id"].(string), args["name"].(*string), args["avatarUrl"].(*string), args["isChild"].(*bool), args["pin"].(*string), args["languages"].([]string), args["subtitlesEnabled"].(*bool), args["subtitleLanguage"].(*string), args["subtitleSize"].(*model.SubtitleSize), args["subtitleStyle"].(*model.SubtitleStyle), args["voiceBoost"].(*bool)), true
+		return e.ComplexityRoot.Mutation.UpdateProfile(childComplexity, args["id"].(string), args["name"].(*string), args["avatarUrl"].(*string), args["isChild"].(*bool), args["pin"].(*string), args["languages"].([]string), args["subtitlesEnabled"].(*bool), args["subtitleLanguage"].(*string), args["subtitleSize"].(*model.SubtitleSize), args["subtitleStyle"].(*model.SubtitleStyle), args["voiceBoost"].(*bool), args["simpleMode"].(*bool)), true
 	case "Mutation.updateSettings":
 		if e.ComplexityRoot.Mutation.UpdateSettings == nil {
 			break
@@ -1650,6 +1651,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Profile.Name(childComplexity), true
+	case "Profile.simpleMode":
+		if e.ComplexityRoot.Profile.SimpleMode == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Profile.SimpleMode(childComplexity), true
 	case "Profile.subtitleLanguage":
 		if e.ComplexityRoot.Profile.SubtitleLanguage == nil {
 			break
@@ -3015,6 +3022,8 @@ type Profile {
   subtitleStyle: SubtitleStyle!
   "Boost dialogue over music and effects"
   voiceBoost: Boolean!
+  "The Android app shows only Continue, My List and Search with big text and buttons"
+  simpleMode: Boolean!
 }
 
 "An external subtitle file for a movie or episode, found by a subtitles plugin."
@@ -3388,7 +3397,7 @@ type Mutation {
   "The first profile's top language also becomes the TMDB language."
   createProfile(name: String!, avatarUrl: String, pin: String, isChild: Boolean = false, languages: [String!]): Profile!
   "Changes the given fields; omitted fields stay. An empty pin removes the PIN; an empty subtitleLanguage clears it."
-  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, subtitleStyle: SubtitleStyle, voiceBoost: Boolean): Profile!
+  updateProfile(id: ID!, name: String, avatarUrl: String, isChild: Boolean, pin: String, languages: [String!], subtitlesEnabled: Boolean, subtitleLanguage: String, subtitleSize: SubtitleSize, subtitleStyle: SubtitleStyle, voiceBoost: Boolean, simpleMode: Boolean): Profile!
   deleteProfile(id: ID!): Boolean!
   verifyPin(profileId: ID!, pin: String!): PinCheck!
 
@@ -3795,6 +3804,8 @@ func (ec *executionContext) childFields_Profile(ctx context.Context, field graph
 		return ec.fieldContext_Profile_subtitleStyle(ctx, field)
 	case "voiceBoost":
 		return ec.fieldContext_Profile_voiceBoost(ctx, field)
+	case "simpleMode":
+		return ec.fieldContext_Profile_simpleMode(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Profile", field.Name)
 }
@@ -4932,6 +4943,14 @@ func (ec *executionContext) field_Mutation_updateProfile_args(ctx context.Contex
 		return nil, err
 	}
 	args["voiceBoost"] = arg10
+	arg11, err := graphql.ProcessArgField(ctx, rawArgs, "simpleMode",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["simpleMode"] = arg11
 	return args, nil
 }
 
@@ -7945,7 +7964,7 @@ func (ec *executionContext) _Mutation_updateProfile(ctx context.Context, field g
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().UpdateProfile(ctx, fc.Args["id"].(string), fc.Args["name"].(*string), fc.Args["avatarUrl"].(*string), fc.Args["isChild"].(*bool), fc.Args["pin"].(*string), fc.Args["languages"].([]string), fc.Args["subtitlesEnabled"].(*bool), fc.Args["subtitleLanguage"].(*string), fc.Args["subtitleSize"].(*model.SubtitleSize), fc.Args["subtitleStyle"].(*model.SubtitleStyle), fc.Args["voiceBoost"].(*bool))
+			return ec.Resolvers.Mutation().UpdateProfile(ctx, fc.Args["id"].(string), fc.Args["name"].(*string), fc.Args["avatarUrl"].(*string), fc.Args["isChild"].(*bool), fc.Args["pin"].(*string), fc.Args["languages"].([]string), fc.Args["subtitlesEnabled"].(*bool), fc.Args["subtitleLanguage"].(*string), fc.Args["subtitleSize"].(*model.SubtitleSize), fc.Args["subtitleStyle"].(*model.SubtitleStyle), fc.Args["voiceBoost"].(*bool), fc.Args["simpleMode"].(*bool))
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Profile) graphql.Marshaler {
@@ -10172,6 +10191,29 @@ func (ec *executionContext) _Profile_voiceBoost(ctx context.Context, field graph
 	)
 }
 func (ec *executionContext) fieldContext_Profile_voiceBoost(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Profile", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _Profile_simpleMode(ctx context.Context, field graphql.CollectedField, obj *model.Profile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Profile_simpleMode(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SimpleMode, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Profile_simpleMode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Profile", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
@@ -17149,6 +17191,11 @@ func (ec *executionContext) _Profile(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "voiceBoost":
 			out.Values[i] = ec._Profile_voiceBoost(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "simpleMode":
+			out.Values[i] = ec._Profile_simpleMode(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

@@ -24,6 +24,7 @@ object ProfileSession {
     private const val KEY_SUBTITLE_SIZE = "subtitleSize"
     private const val KEY_SUBTITLE_STYLE = "subtitleStyle"
     private const val KEY_VOICE_BOOST = "voiceBoost"
+    private const val KEY_SIMPLE_MODE = "simpleMode"
 
     private lateinit var preferences: SharedPreferences
     private val mutableActiveProfile = MutableStateFlow<ProfileFields?>(null)
@@ -47,6 +48,7 @@ object ProfileSession {
             putString(KEY_SUBTITLE_SIZE, profile.subtitleSize.rawValue)
             putString(KEY_SUBTITLE_STYLE, profile.subtitleStyle.rawValue)
             putBoolean(KEY_VOICE_BOOST, profile.voiceBoost)
+            putBoolean(KEY_SIMPLE_MODE, profile.simpleMode)
         }
         mutableActiveProfile.value = profile
     }
@@ -70,6 +72,7 @@ object ProfileSession {
             subtitleSize = readStoredSubtitleSize(),
             subtitleStyle = readStoredSubtitleStyle(),
             voiceBoost = preferences.getBoolean(KEY_VOICE_BOOST, false),
+            simpleMode = preferences.getBoolean(KEY_SIMPLE_MODE, false),
         )
     }
 
