@@ -104,8 +104,9 @@ private fun HistoryRow(item: RailItem, onClick: () -> Unit) {
         }
         Column(Modifier.weight(1f)) {
             Text(item.title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (item.subtitle != null) {
-                Text(item.subtitle, fontSize = 12.sp, color = Color.White.copy(alpha = 0.55f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            val subtitle = item.subtitle
+            if (subtitle != null) {
+                Text(subtitle,fontSize = 12.sp, color = Color.White.copy(alpha = 0.55f), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }

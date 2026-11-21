@@ -76,17 +76,20 @@ fun PosterTile(item: RailItem, onClick: () -> Unit, modifier: Modifier = Modifie
             .background(posterBackground),
     ) {
         PosterImage(item)
-        if (item.badge != null) {
-            PosterBadge(item.badge, Modifier.align(Alignment.TopStart).padding(6.dp))
+        val badge = item.badge
+        val label = item.label
+        val progress = item.progress
+        if (badge != null) {
+            PosterBadge(badge, Modifier.align(Alignment.TopStart).padding(6.dp))
         }
         if (item.rank != null) {
             TopTenBadge(Modifier.align(Alignment.TopEnd))
         }
-        if (item.label != null && item.progress == null) {
-            PosterLabel(item.label, Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp))
+        if (label != null && progress == null) {
+            PosterLabel(label, Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp))
         }
-        if (item.progress != null) {
-            PosterProgress(item.progress, Modifier.align(Alignment.BottomStart))
+        if (progress != null) {
+            PosterProgress(progress, Modifier.align(Alignment.BottomStart))
         }
     }
 }

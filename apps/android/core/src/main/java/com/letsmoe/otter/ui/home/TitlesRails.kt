@@ -1,6 +1,7 @@
 package com.letsmoe.otter.ui.home
 
 import com.letsmoe.otter.graphql.type.CatalogTheme
+import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.ui.media.RailItem
 import com.letsmoe.otter.ui.media.RepeatFilter
 
@@ -18,6 +19,14 @@ data object ActorsRow : HomeRow {
 }
 
 class PageLabels(val plural: String, val newRow: String, val continueTitle: String)
+
+fun pageLabels(mediaType: MediaType, profileName: String): PageLabels {
+    val continueTitle = "Continue Watching for $profileName"
+    if (mediaType == MediaType.SERIES) {
+        return PageLabels("Shows", "New Episodes", continueTitle)
+    }
+    return PageLabels("Movies", "New & Coming Soon", continueTitle)
+}
 
 private const val TOP_TEN_SIZE = 10
 private const val MIN_RAIL_SIZE = 5

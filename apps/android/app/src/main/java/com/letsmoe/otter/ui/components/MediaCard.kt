@@ -46,8 +46,9 @@ fun MediaCard(item: RailItem, onClick: () -> Unit, modifier: Modifier = Modifier
         }
         Column(Modifier.padding(horizontal = 2.dp)) {
             Text(item.title, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (item.subtitle != null) {
-                Text(item.subtitle, fontSize = 12.sp, color = OtterColors.baseContent.copy(alpha = 0.4f))
+            val subtitle = item.subtitle
+            if (subtitle != null) {
+                Text(subtitle,fontSize = 12.sp, color = OtterColors.baseContent.copy(alpha = 0.4f))
             }
         }
     }

@@ -38,7 +38,7 @@ fun TitlesPage(
     val profileName = ProfileSession.activeProfile.value?.name.orEmpty()
     val viewModel = viewModel(key = "titles-$mediaType") { TitlesPageViewModel(mediaType) }
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val rows = state.toRows(labelsOf(mediaType, profileName)).withActorsRow(state.actors.isNotEmpty())
+    val rows = state.toRows(pageLabels(mediaType, profileName)).withActorsRow(state.actors.isNotEmpty())
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.loadPersonalRows() }
     val featuredPoster = state.featured?.item?.posterUrl
     LaunchedEffect(featuredPoster) { onFeaturedPoster(featuredPoster) }
@@ -62,12 +62,4 @@ fun TitlesPage(
         }
         homeRows(rows, state.actors, onOpenItem, onOpenPerson)
     }
-}
-
-private fun labelsOf(mediaType: MediaType, profileName: String): PageLabels {
-    val continueTitle = "Continue Watching for $profileName"
-    if (mediaType == MediaType.SERIES) {
-        return PageLabels("Shows", "New Episodes", continueTitle)
-    }
-    return PageLabels("Movies", "New & Coming Soon", continueTitle)
 }

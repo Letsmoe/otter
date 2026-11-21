@@ -62,16 +62,18 @@ private fun WideCard(item: RailItem, onClick: () -> Unit, modifier: Modifier) {
         Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(fade).padding(start = 10.dp, end = 10.dp, top = 24.dp, bottom = 8.dp)) {
             Text(item.title, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        if (item.badge != null) {
+        val badge = item.badge
+        val label = item.label
+        if (badge != null) {
             Text(
-                item.badge,
+                badge,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.align(Alignment.TopStart).padding(6.dp).clip(RoundedCornerShape(4.dp)).background(Color.Black.copy(alpha = 0.75f)).padding(horizontal = 6.dp, vertical = 2.dp),
             )
         }
-        if (item.label != null) {
-            PosterLabel(item.label, Modifier.align(Alignment.TopEnd).padding(6.dp))
+        if (label != null) {
+            PosterLabel(label, Modifier.align(Alignment.TopEnd).padding(6.dp))
         }
     }
 }

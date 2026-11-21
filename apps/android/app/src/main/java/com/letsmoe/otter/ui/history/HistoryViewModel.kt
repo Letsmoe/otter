@@ -47,9 +47,10 @@ class HistoryViewModel : ViewModel() {
     }
 
     private fun labelOf(item: RailItem): String {
-        if (item.watchedAt == null) {
+        val watchedAt = item.watchedAt
+        if (watchedAt == null) {
             return "Earlier"
         }
-        return dayLabel(item.watchedAt)
+        return dayLabel(watchedAt)
     }
 }

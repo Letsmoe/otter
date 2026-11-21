@@ -25,9 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 
-/** An actor in a row of faces. */
-data class ActorItem(val personId: String, val name: String, val portraitUrl: String?, val role: String? = null)
-
 private val portraitSize = 96.dp
 
 /** Titled row of round actor portraits with names; draws nothing without actors. */
@@ -76,8 +73,9 @@ private fun ActorTile(actor: ActorItem, onClick: () -> Unit) {
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
-        if (actor.role != null) {
-            Text(actor.role, fontSize = 12.sp, color = Color.White.copy(alpha = 0.55f), textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        val role = actor.role
+        if (role != null) {
+            Text(role,fontSize = 12.sp, color = Color.White.copy(alpha = 0.55f), textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
