@@ -77,7 +77,12 @@ private fun LoadedTitle(
         }
         titleViewModel.toggleNotifying()
     }
-    val actions = TitlePageActions(onBack, onOpenPerson, onSearch, toggleWatchlist, toggleNotifying, titleViewModel::rate)
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { titleViewModel.refreshWatchState() }
+    val actions = TitlePageActions(
+        onBack, onOpenPerson, onSearch, toggleWatchlist, toggleNotifying, titleViewModel::rate,
+        onStartRewatch = titleViewModel::startRewatch,
+        onStopRewatch = titleViewModel::stopRewatch,
+    )
     if (detail.mediaType == MediaType.SERIES) {
         SeriesTitle(detail, rails, actions, slots, linkedEpisode, onPlay, onOpenItem)
         return

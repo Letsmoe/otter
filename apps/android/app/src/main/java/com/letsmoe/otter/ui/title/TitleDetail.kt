@@ -35,6 +35,10 @@ data class TitleDetail(
     /** News about it reaches this profile (the Notify me bell, by default My List). */
     val notifying: Boolean,
     val rating: Double?,
+    /** The title was watched to the end (a movie; a series is judged from its episodes). */
+    val finishedBefore: Boolean,
+    /** A rewatch of it is going. */
+    val rewatching: Boolean,
 ) {
     /** Seasons without specials. */
     val regularSeasonCount: Int get() = seasons.count { season -> season.seasonNumber > 0 }
@@ -67,6 +71,8 @@ fun TitleDetailQuery.Title.toDetail(): TitleDetail {
         inWatchlist = inWatchlist,
         notifying = notifying,
         rating = rating,
+        finishedBefore = titleWatchState.progress?.completed == true,
+        rewatching = isRewatchRunning(titleWatchState.rewatch?.finished),
     )
 }
 

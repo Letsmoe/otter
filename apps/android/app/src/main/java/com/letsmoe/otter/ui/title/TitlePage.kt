@@ -55,6 +55,9 @@ class TitlePageActions(
     val onToggleWatchlist: () -> Unit,
     val onToggleNotifying: () -> Unit,
     val onRate: (Double) -> Unit,
+    /** Starts a rewatch; the callback runs once it is saved. */
+    val onStartRewatch: (onStarted: () -> Unit) -> Unit,
+    val onStopRewatch: (onStopped: () -> Unit) -> Unit,
 )
 
 private val floatingNavHeight = 56.dp
@@ -78,6 +81,7 @@ fun TitlePage(
     tabBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     playExtras: @Composable () -> Unit = {},
+    rewatch: RewatchBarState = RewatchBarState.None,
     tabContent: @Composable () -> Unit,
 ) {
     val listState = rememberLazyListState()
@@ -98,7 +102,7 @@ fun TitlePage(
             ) {
                 item { TitleBackdropOverlay(trailer, modifier = bannerPlacement) }
                 item {
-                    TitleSummary(detail, facts, playButton, creditLines, shareUrl, actions, slots, downloadTarget, playExtras)
+                    TitleSummary(detail, facts, playButton, creditLines, shareUrl, actions, slots, downloadTarget, playExtras, rewatch)
                 }
                 item { CastRow(detail.cast, actions.onOpenPerson) }
                 item { Box(Modifier.padding(horizontal = 12.dp).padding(top = 12.dp)) { tabBar() } }
@@ -136,6 +140,7 @@ private fun TitleSummary(
     slots: TitleSlots,
     downloadTarget: DownloadTarget?,
     playExtras: @Composable () -> Unit,
+    rewatch: RewatchBarState,
 ) {
     Column(Modifier.padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(detail.title, fontSize = 24.sp, lineHeight = 30.sp, fontWeight = FontWeight.Bold)
@@ -146,6 +151,7 @@ private fun TitleSummary(
         }
         PlayButton(playButton.label, playButton.busy, playButton.ready, playButton.disabled, playButton.onClick)
         playExtras()
+        RewatchBar(rewatch)
         Overview(detail.overview)
         CreditLines(creditLines)
         ActionRow(

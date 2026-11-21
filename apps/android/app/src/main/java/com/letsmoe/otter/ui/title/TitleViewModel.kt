@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.letsmoe.otter.api.OtterApi
 import com.letsmoe.otter.api.dataOrThrow
 import com.letsmoe.otter.graphql.TitleDetailQuery
+import com.letsmoe.otter.graphql.CurrentWatchStateQuery
 import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.toasts.ToastKind
@@ -136,6 +137,50 @@ class TitleViewModel(private val titleId: String) : ViewModel() {
             TitleActions.setRating(profileId, titleId, rating)
         } catch (error: Exception) {
             updateDetail { current -> current.copy(rating = previous) }
+        }
+    }
+
+    /** Starts the title over without touching Continue watching; [onStarted] runs once it is saved. */
+    fun startRewatch(onStarted: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                TitleActions.startRewatch(profileId, titleId)
+                updateDetail { current -> current.copy(rewatching = true) }
+                onStarted()
+            } catch (error: Exception) {
+                Toasts.push("Could not start the rewatch", ToastKind.ERROR)
+            }
+        }
+    }
+
+    /** Ends the rewatch; the first watch's progress is back. [onStopped] runs once it is saved. */
+    fun stopRewatch(onStopped: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                TitleActions.stopRewatch(profileId, titleId)
+                updateDetail { current -> current.copy(rewatching = false) }
+                onStopped()
+            } catch (error: Exception) {
+                Toasts.push("Could not stop the rewatch", ToastKind.ERROR)
+            }
+        }
+    }
+
+    /** A rewatch can finish while the player is open; read where the title stands when the page returns. */
+    fun refreshWatchState() {
+        viewModelScope.launch {
+            try {
+                val data = OtterApi.client.query(CurrentWatchStateQuery(titleId, profileId)).execute().dataOrThrow()
+                val state = data.title?.titleWatchState ?: return@launch
+                updateDetail { current ->
+                    current.copy(
+                        finishedBefore = state.progress?.completed == true,
+                        rewatching = isRewatchRunning(state.rewatch?.finished),
+                    )
+                }
+            } catch (error: Exception) {
+                // The page keeps showing what it knew.
+            }
         }
     }
 

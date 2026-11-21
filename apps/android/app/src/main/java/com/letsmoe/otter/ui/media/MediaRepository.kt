@@ -11,7 +11,11 @@ import com.letsmoe.otter.graphql.WatchedActorsQuery
 import com.letsmoe.otter.ui.components.ActorItem
 import com.letsmoe.otter.graphql.CatalogQuery
 import com.letsmoe.otter.graphql.CatalogRowsQuery
+import com.letsmoe.otter.graphql.ContinueRewatchingQuery
 import com.letsmoe.otter.graphql.ContinueWatchingQuery
+import com.letsmoe.otter.graphql.fragment.EpisodeRef
+import com.letsmoe.otter.graphql.fragment.ProgressFields
+import com.letsmoe.otter.graphql.fragment.TitleCard
 import com.letsmoe.otter.graphql.FeaturedTrendingQuery
 import com.letsmoe.otter.graphql.GenresQuery
 import com.letsmoe.otter.graphql.HistoryQuery
@@ -70,16 +74,27 @@ object MediaRepository {
     suspend fun continueWatching(profileId: String, limit: Int = 20): List<RailItem> = orDefault(emptyList()) {
         val data = run { OtterApi.client.query(ContinueWatchingQuery(profileId, limit)).execute() }
         data.continueWatching.map { entry ->
-            var item = entry.title.titleCard.toRailItem()
-            if (entry.progress != null) {
-                val progress = entry.progress.progressFields
-                item = item.copy(progress = progressFraction(progress.progressSeconds, progress.durationSeconds))
-            }
-            if (entry.episode != null) {
-                item = item.withEpisode(entry.episode.episodeRef)
-            }
-            item
+            continueRailItem(entry.title.titleCard, entry.progress?.progressFields, entry.episode?.episodeRef)
         }
+    }
+
+    /** Rewatches still going: where each one continues, apart from Continue Watching. */
+    suspend fun continueRewatching(profileId: String, limit: Int = 20): List<RailItem> = orDefault(emptyList()) {
+        val data = run { OtterApi.client.query(ContinueRewatchingQuery(profileId, limit)).execute() }
+        data.continueRewatching.map { entry ->
+            continueRailItem(entry.title.titleCard, entry.progress?.progressFields, entry.episode?.episodeRef)
+        }
+    }
+
+    private fun continueRailItem(titleCard: TitleCard, progress: ProgressFields?, episode: EpisodeRef?): RailItem {
+        var item = titleCard.toRailItem()
+        if (progress != null) {
+            item = item.copy(progress = progressFraction(progress.progressSeconds, progress.durationSeconds))
+        }
+        if (episode != null) {
+            item = item.withEpisode(episode)
+        }
+        return item
     }
 
     suspend fun history(profileId: String, limit: Int = 50): List<RailItem> = orDefault(emptyList()) {

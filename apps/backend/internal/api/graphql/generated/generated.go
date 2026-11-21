@@ -150,6 +150,8 @@ type ComplexityRoot struct {
 		SignOutOfNeoworks      func(childComplexity int) int
 		StartDownload          func(childComplexity int, profileID string, mediaID string, streamID *string) int
 		StartNeoworksSignIn    func(childComplexity int, returnTo *string) int
+		StartRewatch           func(childComplexity int, profileID string, titleID string) int
+		StopRewatch            func(childComplexity int, profileID string, titleID string) int
 		SyncNeoworks           func(childComplexity int) int
 		SyncNeoworksSoon       func(childComplexity int) int
 		UpdatePlugins          func(childComplexity int) int
@@ -264,6 +266,7 @@ type ComplexityRoot struct {
 		CatalogRows             func(childComplexity int, mediaType model.MediaType, count *int, exclude []string) int
 		CatalogTheme            func(childComplexity int, mediaType model.MediaType, theme model.CatalogTheme) int
 		CheckTmdbKey            func(childComplexity int, key string) int
+		ContinueRewatching      func(childComplexity int, profileID string, limit *int) int
 		ContinueWatching        func(childComplexity int, profileID string, limit *int) int
 		Downloads               func(childComplexity int, profileID string) int
 		DownloadsFolder         func(childComplexity int) int
@@ -310,6 +313,11 @@ type ComplexityRoot struct {
 		Quality  func(childComplexity int) int
 		StreamID func(childComplexity int) int
 		URL      func(childComplexity int) int
+	}
+
+	Rewatch struct {
+		Finished  func(childComplexity int) int
+		StartedAt func(childComplexity int) int
 	}
 
 	Season struct {
@@ -406,6 +414,7 @@ type ComplexityRoot struct {
 		Rating        func(childComplexity int, profileID string) int
 		Related       func(childComplexity int, limit *int) int
 		ReleaseDate   func(childComplexity int) int
+		Rewatch       func(childComplexity int, profileID string) int
 		Runtime       func(childComplexity int) int
 		SeasonCount   func(childComplexity int) int
 		Seasons       func(childComplexity int) int
@@ -467,6 +476,8 @@ type MutationResolver interface {
 	ResolveStream(ctx context.Context, streamID string) (*model.ResolvedStream, error)
 	ResolveBestStream(ctx context.Context, streamIds []string) (*model.ResolvedStream, error)
 	RecordProgress(ctx context.Context, profileID string, mediaID string, progressSeconds float64, durationSeconds float64) (*model.WatchProgress, error)
+	StartRewatch(ctx context.Context, profileID string, titleID string) (*model.Rewatch, error)
+	StopRewatch(ctx context.Context, profileID string, titleID string) (bool, error)
 	SetRating(ctx context.Context, profileID string, mediaID string, rating float64) (bool, error)
 	ClearRating(ctx context.Context, profileID string, mediaID string) (bool, error)
 	AddToWatchlist(ctx context.Context, profileID string, mediaID string) (bool, error)
@@ -521,6 +532,7 @@ type QueryResolver interface {
 	Recommendations(ctx context.Context, profileID string, mediaType *model.MediaType, limit *int, offset *int, refresh *bool) ([]*model.Recommendation, error)
 	RecommendationRows(ctx context.Context, profileID string, rows *int, perRow *int) ([]*model.RecommendationRow, error)
 	ContinueWatching(ctx context.Context, profileID string, limit *int) ([]*model.ContinueItem, error)
+	ContinueRewatching(ctx context.Context, profileID string, limit *int) ([]*model.ContinueItem, error)
 	History(ctx context.Context, profileID string, limit *int) ([]*model.HistoryEntry, error)
 	Watchlist(ctx context.Context, profileID string) ([]*model.Title, error)
 	LikedTitles(ctx context.Context, profileID string, limit *int) ([]*model.Title, error)
@@ -555,6 +567,7 @@ type TitleResolver interface {
 	Rating(ctx context.Context, obj *model.Title, profileID string) (*float64, error)
 	InWatchlist(ctx context.Context, obj *model.Title, profileID string) (bool, error)
 	Notifying(ctx context.Context, obj *model.Title, profileID string) (bool, error)
+	Rewatch(ctx context.Context, obj *model.Title, profileID string) (*model.Rewatch, error)
 }
 
 type executableSchema graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot]
@@ -1201,6 +1214,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.StartNeoworksSignIn(childComplexity, args["returnTo"].(*string)), true
+	case "Mutation.startRewatch":
+		if e.ComplexityRoot.Mutation.StartRewatch == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_startRewatch_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.StartRewatch(childComplexity, args["profileId"].(string), args["titleId"].(string)), true
+	case "Mutation.stopRewatch":
+		if e.ComplexityRoot.Mutation.StopRewatch == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_stopRewatch_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.StopRewatch(childComplexity, args["profileId"].(string), args["titleId"].(string)), true
 	case "Mutation.syncNeoworks":
 		if e.ComplexityRoot.Mutation.SyncNeoworks == nil {
 			break
@@ -1736,6 +1771,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.CheckTmdbKey(childComplexity, args["key"].(string)), true
+	case "Query.continueRewatching":
+		if e.ComplexityRoot.Query.ContinueRewatching == nil {
+			break
+		}
+
+		args, err := ec.field_Query_continueRewatching_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.ContinueRewatching(childComplexity, args["profileId"].(string), args["limit"].(*int)), true
 	case "Query.continueWatching":
 		if e.ComplexityRoot.Query.ContinueWatching == nil {
 			break
@@ -2052,6 +2098,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.ResolvedStream.URL(childComplexity), true
+
+	case "Rewatch.finished":
+		if e.ComplexityRoot.Rewatch.Finished == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Rewatch.Finished(childComplexity), true
+	case "Rewatch.startedAt":
+		if e.ComplexityRoot.Rewatch.StartedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Rewatch.StartedAt(childComplexity), true
 
 	case "Season.airDate":
 		if e.ComplexityRoot.Season.AirDate == nil {
@@ -2505,6 +2564,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Title.ReleaseDate(childComplexity), true
+	case "Title.rewatch":
+		if e.ComplexityRoot.Title.Rewatch == nil {
+			break
+		}
+
+		args, err := ec.field_Title_rewatch_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Title.Rewatch(childComplexity, args["profileId"].(string)), true
 	case "Title.runtime":
 		if e.ComplexityRoot.Title.Runtime == nil {
 			break
@@ -2841,6 +2911,19 @@ type Title {
   inWatchlist(profileId: ID!): Boolean!
   "Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List."
   notifying(profileId: ID!): Boolean!
+  "The profile's latest rewatch of this movie or series; null when there never was one."
+  rewatch(profileId: ID!): Rewatch
+}
+
+"""
+A second run through a movie or series. While it is going, ` + "`" + `progress` + "`" + ` of the title and its
+episodes is the rewatch's own, so Continue watching, history and recommendations stay as the
+first watch left them.
+"""
+type Rewatch {
+  startedAt: String!
+  "True once the movie, or every aired episode, was watched again."
+  finished: Boolean!
 }
 
 type Season {
@@ -3279,6 +3362,8 @@ type Query {
   recommendations(profileId: ID!, mediaType: MediaType, limit: Int = 24, offset: Int = 0, refresh: Boolean = false): [Recommendation!]!
   recommendationRows(profileId: ID!, rows: Int = 8, perRow: Int = 20): [RecommendationRow!]!
   continueWatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
+  "Rewatches still going, most recent first: the movie, or the episode of the series to continue or start next."
+  continueRewatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
   history(profileId: ID!, limit: Int = 50): [HistoryEntry!]!
   watchlist(profileId: ID!): [Title!]!
   "Titles the profile rated well (I like this, Love this), latest rating first."
@@ -3360,6 +3445,10 @@ type Mutation {
   resolveBestStream(streamIds: [ID!]!): ResolvedStream!
 
   recordProgress(profileId: ID!, mediaId: ID!, progressSeconds: Float!, durationSeconds: Float!): WatchProgress!
+  "Starts a rewatch of a movie or series from the beginning; an earlier rewatch's progress is dropped, the first watch's is kept."
+  startRewatch(profileId: ID!, titleId: ID!): Rewatch!
+  "Ends the rewatch and forgets its progress; the first watch's progress is read again."
+  stopRewatch(profileId: ID!, titleId: ID!): Boolean!
   setRating(profileId: ID!, mediaId: ID!, rating: Float!): Boolean!
   clearRating(profileId: ID!, mediaId: ID!): Boolean!
   addToWatchlist(profileId: ID!, mediaId: ID!): Boolean!
@@ -3839,6 +3928,16 @@ func (ec *executionContext) childFields_ResolvedStream(ctx context.Context, fiel
 	return nil, fmt.Errorf("no field named %q was found under type ResolvedStream", field.Name)
 }
 
+func (ec *executionContext) childFields_Rewatch(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "startedAt":
+		return ec.fieldContext_Rewatch_startedAt(ctx, field)
+	case "finished":
+		return ec.fieldContext_Rewatch_finished(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Rewatch", field.Name)
+}
+
 func (ec *executionContext) childFields_Season(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "id":
@@ -4039,6 +4138,8 @@ func (ec *executionContext) childFields_Title(ctx context.Context, field graphql
 		return ec.fieldContext_Title_inWatchlist(ctx, field)
 	case "notifying":
 		return ec.fieldContext_Title_notifying(ctx, field)
+	case "rewatch":
+		return ec.fieldContext_Title_rewatch(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Title", field.Name)
 }
@@ -4841,6 +4942,50 @@ func (ec *executionContext) field_Mutation_startNeoworksSignIn_args(ctx context.
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_startRewatch_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "titleId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["titleId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_stopRewatch_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "titleId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["titleId"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updateProfile_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -5158,6 +5303,28 @@ func (ec *executionContext) field_Query_checkTmdbKey_args(ctx context.Context, r
 		return nil, err
 	}
 	args["key"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_continueRewatching_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "limit",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg1
 	return args, nil
 }
 
@@ -5630,6 +5797,20 @@ func (ec *executionContext) field_Title_related_args(ctx context.Context, rawArg
 		return nil, err
 	}
 	args["limit"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Title_rewatch_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
 	return args, nil
 }
 
@@ -7288,6 +7469,94 @@ func (ec *executionContext) fieldContext_Mutation_recordProgress(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_recordProgress_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_startRewatch(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_startRewatch(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().StartRewatch(ctx, fc.Args["profileId"].(string), fc.Args["titleId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Rewatch) graphql.Marshaler {
+			return ec.marshalNRewatch2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRewatch(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_startRewatch(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Rewatch(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_startRewatch_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_stopRewatch(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_stopRewatch(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().StopRewatch(ctx, fc.Args["profileId"].(string), fc.Args["titleId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_stopRewatch(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_stopRewatch_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -10858,6 +11127,50 @@ func (ec *executionContext) fieldContext_Query_continueWatching(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_continueRewatching(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_continueRewatching(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().ContinueRewatching(ctx, fc.Args["profileId"].(string), fc.Args["limit"].(*int))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.ContinueItem) graphql.Marshaler {
+			return ec.marshalNContinueItem2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐContinueItemᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_continueRewatching(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_ContinueItem(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_continueRewatching_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_history(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -11770,6 +12083,52 @@ func (ec *executionContext) _ResolvedStream_streamId(ctx context.Context, field 
 }
 func (ec *executionContext) fieldContext_ResolvedStream_streamId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("ResolvedStream", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _Rewatch_startedAt(ctx context.Context, field graphql.CollectedField, obj *model.Rewatch) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Rewatch_startedAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.StartedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Rewatch_startedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Rewatch", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Rewatch_finished(ctx context.Context, field graphql.CollectedField, obj *model.Rewatch) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Rewatch_finished(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Finished, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Rewatch_finished(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Rewatch", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _Season_id(ctx context.Context, field graphql.CollectedField, obj *model.Season) (ret graphql.Marshaler) {
@@ -13818,6 +14177,50 @@ func (ec *executionContext) fieldContext_Title_notifying(ctx context.Context, fi
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Title_notifying_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Title_rewatch(ctx context.Context, field graphql.CollectedField, obj *model.Title) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Title_rewatch(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Title().Rewatch(ctx, obj, fc.Args["profileId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Rewatch) graphql.Marshaler {
+			return ec.marshalORewatch2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRewatch(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Title_rewatch(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Title",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Rewatch(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Title_rewatch_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -16205,6 +16608,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "startRewatch":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_startRewatch(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "stopRewatch":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_stopRewatch(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "setRating":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_setRating(ctx, field)
@@ -17534,6 +17951,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "continueRewatching":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_continueRewatching(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "history":
 			field := field
 
@@ -18017,6 +18456,50 @@ func (ec *executionContext) _ResolvedStream(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._ResolvedStream_quality(ctx, field, obj)
 		case "streamId":
 			out.Values[i] = ec._ResolvedStream_streamId(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var rewatchImplementors = []string{"Rewatch"}
+
+func (ec *executionContext) _Rewatch(ctx context.Context, sel ast.SelectionSet, obj *model.Rewatch) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, rewatchImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Rewatch")
+		case "startedAt":
+			out.Values[i] = ec._Rewatch_startedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "finished":
+			out.Values[i] = ec._Rewatch_finished(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -18909,6 +19392,39 @@ func (ec *executionContext) _Title(ctx context.Context, sel ast.SelectionSet, ob
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "rewatch":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Title_rewatch(ctx, field, obj)
 				return res
 			}
 
@@ -20172,6 +20688,20 @@ func (ec *executionContext) marshalNResolvedStream2ᚖgithubᚗcomᚋLetsmoeᚋo
 	return ec._ResolvedStream(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNRewatch2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRewatch(ctx context.Context, sel ast.SelectionSet, v model.Rewatch) graphql.Marshaler {
+	return ec._Rewatch(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRewatch2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRewatch(ctx context.Context, sel ast.SelectionSet, v *model.Rewatch) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Rewatch(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNSeason2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSeasonᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Season) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
@@ -20800,6 +21330,13 @@ func (ec *executionContext) marshalOPluginAccount2ᚖgithubᚗcomᚋLetsmoeᚋot
 		return graphql.Null
 	}
 	return ec._PluginAccount(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalORewatch2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐRewatch(ctx context.Context, sel ast.SelectionSet, v *model.Rewatch) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Rewatch(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
