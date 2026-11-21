@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
-import com.letsmoe.otter.BuildConfig
+import com.letsmoe.otter.core.BuildConfig
 import java.net.Inet4Address
 
 /**

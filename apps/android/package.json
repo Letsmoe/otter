@@ -3,14 +3,14 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
-		"build:backend": "bun ../backend/scripts/build-server.ts --out app/src/main/jniLibs/arm64-v8a/libotter.so",
-		"build:plugins": "cd ../backend && bun scripts/bundle-plugins.ts --release --out ../android/app/src/main/assets/plugins",
+		"build:backend": "bun ../backend/scripts/build-server.ts --out core/src/main/jniLibs/arm64-v8a/libotter.so",
+		"build:plugins": "cd ../backend && bun scripts/bundle-plugins.ts --release --out ../android/core/src/main/assets/plugins",
 		"build": "bun run build:backend && bun run build:plugins",
-		"apk": "bun run build && ./gradlew assembleRelease",
-		"android": "bun run build && ./gradlew installDebug && adb shell am start -n com.letsmoe.otter/com.letsmoe.otter.MainActivity",
-		"android:ui": "./gradlew installDebug && adb shell am start -S -n com.letsmoe.otter/com.letsmoe.otter.MainActivity",
+		"apk": "bun run build && ./gradlew :app:assembleRelease",
+		"android": "bun run build && ./gradlew :app:installDebug && adb shell am start -n com.letsmoe.otter/com.letsmoe.otter.MainActivity",
+		"android:ui": "./gradlew :app:installDebug && adb shell am start -S -n com.letsmoe.otter/com.letsmoe.otter.MainActivity",
 		"android:watch": "bun scripts/watch.ts",
-		"android:release": "bun run build && ./gradlew installRelease && adb shell am start -n com.letsmoe.otter/com.letsmoe.otter.MainActivity",
+		"android:release": "bun run build && ./gradlew :app:installRelease && adb shell am start -n com.letsmoe.otter/com.letsmoe.otter.MainActivity",
 		"logs": "adb logcat -s OtterBackend:* AndroidRuntime:E"
 	}
 }

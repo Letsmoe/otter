@@ -8,7 +8,7 @@ import android.net.LinkProperties
 import android.net.Network
 import android.os.Build
 import android.util.Log
-import com.letsmoe.otter.BuildConfig
+import com.letsmoe.otter.core.BuildConfig
 import java.io.File
 import java.io.IOException
 import java.io.InputStream

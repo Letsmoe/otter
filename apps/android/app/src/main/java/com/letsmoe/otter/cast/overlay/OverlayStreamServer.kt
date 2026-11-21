@@ -3,7 +3,7 @@ package com.letsmoe.otter.cast.overlay
 import android.content.Context
 import android.util.Log
 import androidx.media3.common.util.UnstableApi
-import com.letsmoe.otter.BuildConfig
+import com.letsmoe.otter.core.BuildConfig
 import com.letsmoe.otter.cast.session.SessionEncoder
 import com.letsmoe.otter.cast.session.SESSION_TAG
 import com.letsmoe.otter.cast.session.SessionJob

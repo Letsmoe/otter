@@ -51,8 +51,9 @@ fun PluginSheet(plugin: PluginFields, viewModel: PluginsViewModel) {
     GlassBottomSheet(onDismiss = { viewModel.openName = null }) {
         Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
             SheetHeader(plugin, viewModel)
-            if (!plugin.description.isNullOrEmpty()) {
-                Text(plugin.description, fontSize = 14.sp, lineHeight = 22.sp, color = Color.White.copy(alpha = 0.75f))
+            val description = plugin.description
+            if (!description.isNullOrEmpty()) {
+                Text(description, fontSize = 14.sp, lineHeight = 22.sp, color = Color.White.copy(alpha = 0.75f))
             }
             if (!plugin.available) {
                 Text("Unavailable on this device.", fontSize = 14.sp, color = Color(0xFFFBBF24))
@@ -62,8 +63,9 @@ fun PluginSheet(plugin: PluginFields, viewModel: PluginsViewModel) {
                     CapabilityRow(capabilityLabel(capability))
                 }
             }
-            if (plugin.account != null) {
-                PluginAccountSection(plugin, plugin.account, viewModel)
+            val account = plugin.account
+            if (account != null) {
+                PluginAccountSection(plugin, account, viewModel)
             }
             if (plugin.settings.isNotEmpty()) {
                 SettingsFields(plugin, draft)
@@ -139,8 +141,9 @@ private fun TextField(field: PluginFields.Setting, draft: MutableMap<String, Str
             isPassword = field.type == "password",
             textColor = Color.White.copy(alpha = 0.75f),
         )
-        if (!field.description.isNullOrEmpty()) {
-            Text(field.description, fontSize = 12.sp, color = Color.White.copy(alpha = 0.4f))
+        val description = field.description
+        if (!description.isNullOrEmpty()) {
+            Text(description, fontSize = 12.sp, color = Color.White.copy(alpha = 0.4f))
         }
     }
 }

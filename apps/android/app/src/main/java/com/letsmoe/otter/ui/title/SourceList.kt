@@ -134,8 +134,9 @@ private fun SourceRow(stream: StreamLink, onClick: () -> Unit, modifier: Modifie
 @Composable
 private fun SourceTitle(stream: StreamLink) {
     var label = "Link"
-    if (stream.label != null) {
-        label = stream.label
+    val streamLabel = stream.label
+    if (streamLabel != null) {
+        label = streamLabel
     }
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))

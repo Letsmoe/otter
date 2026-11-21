@@ -36,8 +36,9 @@ import com.letsmoe.otter.ui.theme.OtterColors
 fun PluginAccountSection(plugin: PluginFields, account: PluginFields.Account, viewModel: PluginsViewModel) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Account", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-        if (account.username != null && account.loggedIn) {
-            LoggedIn(plugin, account.username, viewModel)
+        val username = account.username
+        if (username != null && account.loggedIn) {
+            LoggedIn(plugin, username, viewModel)
         } else {
             LoginForm(plugin, account, viewModel)
         }

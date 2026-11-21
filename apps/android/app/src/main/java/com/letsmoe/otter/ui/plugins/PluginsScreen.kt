@@ -125,10 +125,11 @@ private fun PluginRow(plugin: PluginFields, viewModel: PluginsViewModel) {
 }
 
 fun pluginName(plugin: PluginFields): String {
-    if (plugin.displayName.isNullOrEmpty()) {
+    val displayName = plugin.displayName
+    if (displayName.isNullOrEmpty()) {
         return plugin.name
     }
-    return plugin.displayName
+    return displayName
 }
 
 private fun needsSetup(plugin: PluginFields): Boolean {

@@ -7,7 +7,7 @@ import android.graphics.Paint
 import androidx.media3.common.util.UnstableApi
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.letsmoe.otter.BuildConfig
+import com.letsmoe.otter.core.BuildConfig
 import com.letsmoe.otter.graphql.type.SubtitleSize
 import com.letsmoe.otter.graphql.type.SubtitleStyle
 import com.letsmoe.otter.ui.player.CaptionLook

@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.apollo)
 }
 
 // Uploads the R8 mapping to PostHog, so error reports show real class names and lines. Only CI
@@ -33,12 +32,7 @@ android {
         buildConfigField("int", "BUILD_NUMBER", providers.environmentVariable("OTTER_BUILD_NUMBER").orElse("0").get())
         // "release" or "nightly": the update channel this APK was published on (CI sets it).
         buildConfigField("String", "UPDATE_CHANNEL", "\"${providers.environmentVariable("OTTER_UPDATE_CHANNEL").orElse("release").get()}\"")
-        // Not 47832 (Capacitor app): both may run at once.
-        buildConfigField("int", "BACKEND_PORT", "47833")
-        // Stream-only port on the Wi-Fi interface, read by Chromecasts.
-        buildConfigField("int", "BACKEND_LAN_PORT", "47834")
-        // Loopback only: the encoder that draws captions and hints into the TV's picture.
-        buildConfigField("int", "OVERLAY_PORT", "47835")
+        // Backend ports are in :core's BuildConfig.
         // GitHub repository whose releases the in-app updater installs.
         buildConfigField("String", "UPDATE_REPOSITORY", "\"Letsmoe/otter\"")
     }
@@ -101,21 +95,8 @@ android {
     }
 }
 
-// Profile avatars are shared with the Capacitor app (static/avatars/*.webp → assets/avatars).
-androidComponents {
-    onVariants { variant ->
-        variant.sources.assets?.addStaticSourceDirectory("../../mobile/static")
-    }
-}
-
-apollo {
-    service("otter") {
-        packageName.set("com.letsmoe.otter.graphql")
-        schemaFiles.from(file("../../backend/internal/api/graphql/schema/otter.graphql"))
-    }
-}
-
 dependencies {
+    implementation(project(":core"))
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)

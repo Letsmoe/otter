@@ -1,6 +1,6 @@
 /**
  * Poor man's hot reload: rebuilds and reinstalls the debug app whenever a file
- * under app/src changes, then restarts it on the connected phone. Kotlin-only:
+ * under app/src or core/src changes, then restarts it on the connected phone. Kotlin-only:
  * the Go backend (libotter.so) and plugin bundles are reused as they are, which
  * keeps a round trip around 10 s. Run `bun run build` first after Go changes.
  *
@@ -10,7 +10,7 @@ import { watch } from 'node:fs';
 import { resolve } from 'node:path';
 
 const ANDROID_DIR = resolve(import.meta.dir, '..');
-const SOURCE_DIR = resolve(ANDROID_DIR, 'app/src');
+const SOURCE_DIRS = [resolve(ANDROID_DIR, 'app/src'), resolve(ANDROID_DIR, 'core/src')];
 const ACTIVITY = 'com.letsmoe.otter/com.letsmoe.otter.MainActivity';
 // Agents write several files in a row; wait for them to finish before building.
 const SETTLE_MILLISECONDS = 1000;
@@ -28,7 +28,7 @@ async function installAndRestart(): Promise<void> {
 	building = true;
 	const startedAt = performance.now();
 	console.log('\n[watch] building…');
-	const installed = await run(['./gradlew', 'installDebug', '-q']);
+	const installed = await run(['./gradlew', ':app:installDebug', '-q']);
 	if (installed) {
 		// -S stops the running app first, so the new code is what starts.
 		await run(['adb', 'shell', 'am', 'start', '-S', '-n', ACTIVITY]);
@@ -53,5 +53,7 @@ function onChange(): void {
 	settleTimer = setTimeout(installAndRestart, SETTLE_MILLISECONDS);
 }
 
-watch(SOURCE_DIR, { recursive: true }, onChange);
-console.log(`[watch] watching ${SOURCE_DIR}`);
+for (const sourceDir of SOURCE_DIRS) {
+	watch(sourceDir, { recursive: true }, onChange);
+	console.log(`[watch] watching ${sourceDir}`);
+}

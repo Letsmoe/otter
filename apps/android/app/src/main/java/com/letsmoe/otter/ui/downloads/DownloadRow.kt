@@ -93,8 +93,9 @@ fun DownloadThumbnail(imageUrl: String?, playable: Boolean, onClick: () -> Unit)
 private fun rowName(item: DownloadItem): String {
     val episode = item.episode ?: return item.titleName
     var episodeName = "Episode ${episode.episodeNumber}"
-    if (!episode.name.isNullOrEmpty()) {
-        episodeName = episode.name
+    val name = episode.name
+    if (!name.isNullOrEmpty()) {
+        episodeName = name
     }
     return "${episode.episodeNumber}. $episodeName"
 }
@@ -109,10 +110,11 @@ private fun statusLine(item: DownloadItem): String {
 }
 
 private fun failureText(item: DownloadItem): String {
-    if (item.error.isNullOrEmpty()) {
+    val error = item.error
+    if (error.isNullOrEmpty()) {
         return "Download failed"
     }
-    return item.error
+    return error
 }
 
 private fun progressText(item: DownloadItem): String {

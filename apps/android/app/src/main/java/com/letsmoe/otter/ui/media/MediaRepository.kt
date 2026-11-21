@@ -71,12 +71,14 @@ object MediaRepository {
         val data = run { OtterApi.client.query(ContinueWatchingQuery(profileId, limit)).execute() }
         data.continueWatching.map { entry ->
             var item = entry.title.titleCard.toRailItem()
-            if (entry.progress != null) {
-                val progress = entry.progress.progressFields
+            val entryProgress = entry.progress
+            if (entryProgress != null) {
+                val progress = entryProgress.progressFields
                 item = item.copy(progress = progressFraction(progress.progressSeconds, progress.durationSeconds))
             }
-            if (entry.episode != null) {
-                item = item.withEpisode(entry.episode.episodeRef)
+            val episode = entry.episode
+            if (episode != null) {
+                item = item.withEpisode(episode.episodeRef)
             }
             item
         }
@@ -90,8 +92,9 @@ object MediaRepository {
                 progress = progressFraction(progress.progressSeconds, progress.durationSeconds),
                 watchedAt = progress.updatedAt,
             )
-            if (entry.episode != null) {
-                item = item.withEpisode(entry.episode.episodeRef)
+            val episode = entry.episode
+            if (episode != null) {
+                item = item.withEpisode(episode.episodeRef)
             }
             item
         }

@@ -38,8 +38,9 @@ fun SeriesEpisodesQuery.Title.toEpisodes(): List<SeasonEpisode> =
     seasons.flatMap { season ->
         season.episodes.map { episode ->
             var progress: Float? = null
-            if (episode.progress != null) {
-                progress = progressFraction(episode.progress.progressSeconds, episode.progress.durationSeconds)
+            val episodeProgress = episode.progress
+            if (episodeProgress != null) {
+                progress = progressFraction(episodeProgress.progressSeconds, episodeProgress.durationSeconds)
             }
             SeasonEpisode(
                 id = episode.episodeRef.id,
