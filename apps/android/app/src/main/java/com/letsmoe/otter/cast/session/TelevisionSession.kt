@@ -12,6 +12,9 @@ import java.util.UUID
 // The encoder runs this far ahead of the TV's picture: what the TV has buffered, and how long a switch takes to show.
 const val SESSION_LEAD_MICROSECONDS = 2_500_000L
 
+// The TV plays a sample this long after the encoder took it: it is written a lead ahead of the clock and shown a lead behind.
+const val SESSION_SOUND_LEAD_MILLISECONDS = 2 * SESSION_LEAD_MICROSECONDS / 1000
+
 /** What one job of a TV session shows. */
 sealed interface SessionScreen {
     /** Otter's "Connected" screen, while nothing plays. */
@@ -28,6 +31,21 @@ sealed interface SessionScreen {
 
     /** Backdrops that change while the TV watches, painted frame by frame by [frames]. */
     data class Screensaver(val frames: LiveFrames) : SessionScreen
+
+    /** "Still watching?" while the next episode waits for an answer on the phone. */
+    data object StillWatching : SessionScreen
+}
+
+/**
+ * What a session shows while no title or loading screen runs: the question "Still watching?"
+ * while it waits for an answer, else the screen [chosen] for it (the idle screen, the title being
+ * browsed or the screensaver).
+ */
+fun idleScreenOf(askingStillWatching: Boolean, chosen: SessionScreen): SessionScreen {
+    if (askingStillWatching) {
+        return SessionScreen.StillWatching
+    }
+    return chosen
 }
 
 /**
