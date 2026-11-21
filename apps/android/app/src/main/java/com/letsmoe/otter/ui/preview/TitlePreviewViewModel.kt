@@ -33,6 +33,14 @@ class TitlePreviewViewModel(private val titleId: String) : ViewModel() {
 
     private val profileId: String = ProfileSession.activeProfile.value?.id.orEmpty()
 
+    // The sheet swaps its buttons for the list of shelves while this is set.
+    private val mutablePickingShelf = MutableStateFlow(false)
+    val pickingShelf: StateFlow<Boolean> = mutablePickingShelf
+
+    fun setPickingShelf(picking: Boolean) {
+        mutablePickingShelf.value = picking
+    }
+
     init {
         viewModelScope.launch { load() }
     }

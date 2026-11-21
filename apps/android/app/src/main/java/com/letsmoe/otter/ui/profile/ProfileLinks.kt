@@ -26,6 +26,7 @@ import com.adamglin.phosphoricons.regular.CaretRight
 import com.adamglin.phosphoricons.regular.ClockCounterClockwise
 import com.adamglin.phosphoricons.regular.GearSix
 import com.adamglin.phosphoricons.regular.PuzzlePiece
+import com.adamglin.phosphoricons.regular.Rows
 import com.adamglin.phosphoricons.regular.Users
 import com.letsmoe.otter.ui.components.PRESSED_SCALE_LARGE
 import com.letsmoe.otter.ui.components.frostedGlass
@@ -35,6 +36,7 @@ private val cardShape = RoundedCornerShape(24.dp)
 
 /** The app's other pages, listed openly on the profile page (they used to hide in a menu). */
 class ProfileLinkActions(
+    val onShelves: () -> Unit,
     val onHistory: () -> Unit,
     val onPlugins: () -> Unit,
     val onSettings: () -> Unit,
@@ -44,6 +46,8 @@ class ProfileLinkActions(
 @Composable
 fun ProfileLinks(actions: ProfileLinkActions, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth().frostedGlass(cardShape).clip(cardShape)) {
+        LinkRow("My Shelves", PhosphorIcons.Regular.Rows, actions.onShelves)
+        LinkDivider()
         LinkRow("Watch History", PhosphorIcons.Regular.ClockCounterClockwise, actions.onHistory)
         LinkDivider()
         LinkRow("Plugins", PhosphorIcons.Regular.PuzzlePiece, actions.onPlugins)
