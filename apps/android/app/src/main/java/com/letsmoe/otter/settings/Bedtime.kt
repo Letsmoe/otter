@@ -18,4 +18,12 @@ object Bedtime {
         val minutesSinceBedtime = Math.floorMod(nowMinutes - bedtimeMinutes, MINUTES_PER_DAY)
         return minutesSinceBedtime < BEDTIME_NIGHT_MINUTES
     }
+
+    /** Minutes from [nowMinutes] until the next bedtime; null once the night has started. */
+    fun minutesUntil(bedtimeMinutes: Int, nowMinutes: Int): Int? {
+        if (hasStarted(bedtimeMinutes, nowMinutes)) {
+            return null
+        }
+        return Math.floorMod(bedtimeMinutes - nowMinutes, MINUTES_PER_DAY)
+    }
 }

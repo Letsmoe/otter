@@ -284,6 +284,7 @@ type ComplexityRoot struct {
 		Settings                func(childComplexity int) int
 		Status                  func(childComplexity int) int
 		Subtitles               func(childComplexity int, mediaID string, profileID *string) int
+		TimeSlot                func(childComplexity int, profileID string, minutes int, limit *int) int
 		Title                   func(childComplexity int, id string) int
 		TogetherRoom            func(childComplexity int) int
 		Trending                func(childComplexity int, mediaType *model.MediaType) int
@@ -384,6 +385,13 @@ type ComplexityRoot struct {
 		Source          func(childComplexity int) int
 		SrtURL          func(childComplexity int) int
 		VttURL          func(childComplexity int) int
+	}
+
+	TimeSlotItem struct {
+		Episode func(childComplexity int) int
+		Minutes func(childComplexity int) int
+		Reason  func(childComplexity int) int
+		Title   func(childComplexity int) int
 	}
 
 	Title struct {
@@ -521,6 +529,7 @@ type QueryResolver interface {
 	Recommendations(ctx context.Context, profileID string, mediaType *model.MediaType, limit *int, offset *int, refresh *bool) ([]*model.Recommendation, error)
 	RecommendationRows(ctx context.Context, profileID string, rows *int, perRow *int) ([]*model.RecommendationRow, error)
 	ContinueWatching(ctx context.Context, profileID string, limit *int) ([]*model.ContinueItem, error)
+	TimeSlot(ctx context.Context, profileID string, minutes int, limit *int) ([]*model.TimeSlotItem, error)
 	History(ctx context.Context, profileID string, limit *int) ([]*model.HistoryEntry, error)
 	Watchlist(ctx context.Context, profileID string) ([]*model.Title, error)
 	LikedTitles(ctx context.Context, profileID string, limit *int) ([]*model.Title, error)
@@ -1922,6 +1931,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.Subtitles(childComplexity, args["mediaId"].(string), args["profileId"].(*string)), true
+	case "Query.timeSlot":
+		if e.ComplexityRoot.Query.TimeSlot == nil {
+			break
+		}
+
+		args, err := ec.field_Query_timeSlot_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.TimeSlot(childComplexity, args["profileId"].(string), args["minutes"].(int), args["limit"].(*int)), true
 	case "Query.title":
 		if e.ComplexityRoot.Query.Title == nil {
 			break
@@ -2365,6 +2385,31 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Subtitle.VttURL(childComplexity), true
+
+	case "TimeSlotItem.episode":
+		if e.ComplexityRoot.TimeSlotItem.Episode == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TimeSlotItem.Episode(childComplexity), true
+	case "TimeSlotItem.minutes":
+		if e.ComplexityRoot.TimeSlotItem.Minutes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TimeSlotItem.Minutes(childComplexity), true
+	case "TimeSlotItem.reason":
+		if e.ComplexityRoot.TimeSlotItem.Reason == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TimeSlotItem.Reason(childComplexity), true
+	case "TimeSlotItem.title":
+		if e.ComplexityRoot.TimeSlotItem.Title == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TimeSlotItem.Title(childComplexity), true
 
 	case "Title.backdropPath":
 		if e.ComplexityRoot.Title.BackdropPath == nil {
@@ -2962,6 +3007,17 @@ type ContinueItem {
   progress: WatchProgress
 }
 
+"One suggestion for a time budget."
+type TimeSlotItem {
+  title: Title!
+  "For a series: the episode to play."
+  episode: Episode
+  "How long it still takes."
+  minutes: Int!
+  "Why it is offered, e.g. \"Next episode\", \"Pick up where you stopped\", \"From My List\", \"Recommended\"."
+  reason: String!
+}
+
 type HistoryEntry {
   title: Title!
   episode: Episode
@@ -3279,6 +3335,8 @@ type Query {
   recommendations(profileId: ID!, mediaType: MediaType, limit: Int = 24, offset: Int = 0, refresh: Boolean = false): [Recommendation!]!
   recommendationRows(profileId: ID!, rows: Int = 8, perRow: Int = 20): [RecommendationRow!]!
   continueWatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
+  "What fits into the given minutes: what the profile is in the middle of (next episodes, movies not finished), then short films from My List and recommendations. Items that use the time best come first within each group."
+  timeSlot(profileId: ID!, minutes: Int!, limit: Int = 12): [TimeSlotItem!]!
   history(profileId: ID!, limit: Int = 50): [HistoryEntry!]!
   watchlist(profileId: ID!): [Title!]!
   "Titles the profile rated well (I like this, Love this), latest rating first."
@@ -3973,6 +4031,20 @@ func (ec *executionContext) childFields_Subtitle(ctx context.Context, field grap
 		return ec.fieldContext_Subtitle_srtUrl(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Subtitle", field.Name)
+}
+
+func (ec *executionContext) childFields_TimeSlotItem(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "title":
+		return ec.fieldContext_TimeSlotItem_title(ctx, field)
+	case "episode":
+		return ec.fieldContext_TimeSlotItem_episode(ctx, field)
+	case "minutes":
+		return ec.fieldContext_TimeSlotItem_minutes(ctx, field)
+	case "reason":
+		return ec.fieldContext_TimeSlotItem_reason(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type TimeSlotItem", field.Name)
 }
 
 func (ec *executionContext) childFields_Title(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -5460,6 +5532,36 @@ func (ec *executionContext) field_Query_subtitles_args(ctx context.Context, rawA
 		return nil, err
 	}
 	args["profileId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_timeSlot_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "minutes",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNInt2int(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["minutes"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "limit",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg2
 	return args, nil
 }
 
@@ -10858,6 +10960,50 @@ func (ec *executionContext) fieldContext_Query_continueWatching(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_timeSlot(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_timeSlot(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().TimeSlot(ctx, fc.Args["profileId"].(string), fc.Args["minutes"].(int), fc.Args["limit"].(*int))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.TimeSlotItem) graphql.Marshaler {
+			return ec.marshalNTimeSlotItem2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTimeSlotItemᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_timeSlot(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_TimeSlotItem(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_timeSlot_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_history(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -12977,6 +13123,116 @@ func (ec *executionContext) _Subtitle_srtUrl(ctx context.Context, field graphql.
 }
 func (ec *executionContext) fieldContext_Subtitle_srtUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Subtitle", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _TimeSlotItem_title(ctx context.Context, field graphql.CollectedField, obj *model.TimeSlotItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TimeSlotItem_title(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Title, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Title) graphql.Marshaler {
+			return ec.marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TimeSlotItem_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TimeSlotItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Title(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TimeSlotItem_episode(ctx context.Context, field graphql.CollectedField, obj *model.TimeSlotItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TimeSlotItem_episode(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Episode, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Episode) graphql.Marshaler {
+			return ec.marshalOEpisode2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_TimeSlotItem_episode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TimeSlotItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Episode(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TimeSlotItem_minutes(ctx context.Context, field graphql.CollectedField, obj *model.TimeSlotItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TimeSlotItem_minutes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Minutes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TimeSlotItem_minutes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TimeSlotItem", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _TimeSlotItem_reason(ctx context.Context, field graphql.CollectedField, obj *model.TimeSlotItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TimeSlotItem_reason(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Reason, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TimeSlotItem_reason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TimeSlotItem", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Title_id(ctx context.Context, field graphql.CollectedField, obj *model.Title) (ret graphql.Marshaler) {
@@ -17534,6 +17790,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "timeSlot":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_timeSlot(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "history":
 			field := field
 
@@ -18503,6 +18781,57 @@ func (ec *executionContext) _Subtitle(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "srtUrl":
 			out.Values[i] = ec._Subtitle_srtUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var timeSlotItemImplementors = []string{"TimeSlotItem"}
+
+func (ec *executionContext) _TimeSlotItem(ctx context.Context, sel ast.SelectionSet, obj *model.TimeSlotItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, timeSlotItemImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TimeSlotItem")
+		case "title":
+			out.Values[i] = ec._TimeSlotItem_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "episode":
+			out.Values[i] = ec._TimeSlotItem_episode(ctx, field, obj)
+		case "minutes":
+			out.Values[i] = ec._TimeSlotItem_minutes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reason":
+			out.Values[i] = ec._TimeSlotItem_reason(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -20391,6 +20720,32 @@ func (ec *executionContext) unmarshalNSubtitleStyle2githubᚗcomᚋLetsmoeᚋott
 
 func (ec *executionContext) marshalNSubtitleStyle2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐSubtitleStyle(ctx context.Context, sel ast.SelectionSet, v model.SubtitleStyle) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNTimeSlotItem2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTimeSlotItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TimeSlotItem) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNTimeSlotItem2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTimeSlotItem(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTimeSlotItem2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTimeSlotItem(ctx context.Context, sel ast.SelectionSet, v *model.TimeSlotItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TimeSlotItem(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNTitle2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx context.Context, sel ast.SelectionSet, v model.Title) graphql.Marshaler {
