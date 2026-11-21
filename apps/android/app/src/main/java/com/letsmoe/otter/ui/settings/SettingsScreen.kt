@@ -38,6 +38,8 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.CaretRight
 import com.letsmoe.otter.api.ServerSettings
+import com.letsmoe.otter.cast.browse.TelevisionBrowse
+import com.letsmoe.otter.cast.browse.TelevisionScreensaver
 import com.letsmoe.otter.notifications.NotificationItem
 import com.letsmoe.otter.notifications.NotificationsRepository
 import com.letsmoe.otter.notifications.PhoneNotifications
@@ -251,6 +253,16 @@ private fun PlaybackGroup() {
         SettingsDivider()
         PlaybackSwitchRow("Title on the TV at the start", "Shows the title, episode and end time for a few seconds", PlaybackSettings.televisionTitleCard) { enabled ->
             PlaybackSettings.televisionTitleCard = enabled
+        }
+        SettingsDivider()
+        PlaybackSwitchRow("Show what you browse on the TV", "A connected TV shows the title you are looking at while nothing plays", PlaybackSettings.televisionBrowse) { enabled ->
+            PlaybackSettings.televisionBrowse = enabled
+            TelevisionBrowse.settingChanged()
+        }
+        SettingsDivider()
+        PlaybackSwitchRow("Screensaver on the TV", "An idle TV slowly shows backdrops from My List and what you are watching", PlaybackSettings.televisionScreensaver) { enabled ->
+            PlaybackSettings.televisionScreensaver = enabled
+            TelevisionScreensaver.settingChanged()
         }
         SettingsDivider()
         PlaybackSwitchRow("Brighten dark scenes on the TV", "Lifts shadows from the next episode or seek on", PlaybackSettings.brightenDarkScenes) { enabled ->

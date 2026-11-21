@@ -191,6 +191,7 @@ fun TracksSheetContent(
     onSubtitle: (Int) -> Unit,
     onVoiceBoost: () -> Unit,
     onEvenVolume: () -> Unit,
+    onAudioDelay: (Int) -> Unit,
     captionTweaks: CaptionTweaksUi?,
 ) {
     Row(Modifier.fillMaxSize().padding(horizontal = 40.dp, vertical = 24.dp), horizontalArrangement = Arrangement.spacedBy(40.dp)) {
@@ -198,6 +199,9 @@ fun TracksSheetContent(
             if (state.canBoostVoice) {
                 AudioSwitchRow("Voice boost", "Dialogue over music and effects", state.voiceBoost, onVoiceBoost)
                 AudioSwitchRow("Even volume", "Quieter loud scenes, clearer quiet ones", state.evenVolume, onEvenVolume)
+            }
+            if (state.canDelayAudio) {
+                AudioDelayRow(state.audioDelayMillis, onAudioDelay)
             }
         }
         val subtitleOptions = listOf(TrackOption(-1, "Off")) + state.subtitleTracks

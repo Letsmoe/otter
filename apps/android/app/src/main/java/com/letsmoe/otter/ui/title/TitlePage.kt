@@ -145,8 +145,9 @@ private fun TitleSummary(
             }
         }
         PlayButton(playButton.label, playButton.busy, playButton.ready, playButton.disabled, playButton.onClick)
+        SuggestedTelevisionButton(enabled = !playButton.disabled, onPlay = playButton.onClick)
         playExtras()
-        Overview(detail.overview)
+        Overview(detail.overview) { expanded -> showDescriptionOnTelevision(detail, expanded) }
         CreditLines(creditLines)
         ActionRow(
             title = detail.title,
@@ -166,8 +167,9 @@ private fun TitleSummary(
     }
 }
 
+// Tapping the description shows all of it, tapping again folds it back; [onExpandedChange] hears both.
 @Composable
-private fun Overview(overview: String?) {
+private fun Overview(overview: String?, onExpandedChange: (Boolean) -> Unit) {
     if (overview.isNullOrEmpty()) {
         return
     }
@@ -183,7 +185,10 @@ private fun Overview(overview: String?) {
         color = Color.White.copy(alpha = 0.85f),
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
+        modifier = Modifier.fillMaxWidth().clickable {
+            expanded = !expanded
+            onExpandedChange(expanded)
+        },
     )
 }
 

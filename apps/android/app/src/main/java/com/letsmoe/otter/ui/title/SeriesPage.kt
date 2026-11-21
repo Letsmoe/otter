@@ -112,6 +112,7 @@ private fun EpisodesTab(detail: TitleDetail, episodes: EpisodesState, seriesView
                 onPlay = { episode -> onPlay(PlayRequest(episode.id)) },
                 onShare = shareEpisode,
                 downloadButton = slots.episodeDownloadButton,
+                onOverviewExpanded = { episode, expanded -> showEpisodeOnTelevision(detail, episode, expanded) },
             )
         }
     }
@@ -157,7 +158,8 @@ private fun seriesPlayLabel(upNext: UpNext?, vpnBlocked: Boolean): String {
     return "Play ${upNext.episode.code}"
 }
 
-private fun seriesFacts(detail: TitleDetail): List<String> {
+/** "2022", "2 Seasons", "★ 8.7" and the first two genres. */
+fun seriesFacts(detail: TitleDetail): List<String> {
     val facts = mutableListOf<String>()
     detail.year?.let { year -> facts.add(year.toString()) }
     if (detail.regularSeasonCount == 1) {

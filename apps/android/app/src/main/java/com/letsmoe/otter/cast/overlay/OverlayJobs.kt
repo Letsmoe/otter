@@ -10,7 +10,8 @@ private const val KEPT_JOBS = 4
  * One overlay stream a TV was handed: the title's stream on loopback
  * ([sourceUrl], played from [startSeconds]), at most [maxHeight] lines tall,
  * with [plan] drawn in. The live inputs are asked while encoding, so a
- * changed setting reaches the TV without a restart. [onFailure] hears when
+ * changed setting reaches the TV without a restart; so is the plan, which
+ * changes when the viewer picks other captions. [onFailure] hears when
  * encoding fails, so the TV can get the plain stream instead.
  */
 class OverlayJob(
@@ -18,12 +19,15 @@ class OverlayJob(
     val sourceMimeType: String?,
     val startSeconds: Double,
     val maxHeight: Int,
-    val plan: OverlayPlan,
+    initialPlan: OverlayPlan,
     val live: OverlayLiveInputs = OverlayLiveInputs(),
     val brightensDarkScenes: Boolean = false,
     val onFailure: (OverlayJob, Exception) -> Unit,
 ) {
     val id: String = UUID.randomUUID().toString()
+
+    @Volatile
+    var plan: OverlayPlan = initialPlan
 
     fun captionLook(): CaptionLook = live.captionLook()
 
@@ -40,13 +44,26 @@ class OverlayJob(
     fun replayUntilSeconds(): Double? = live.replayUntilSeconds()
 
     fun stopsAfterEpisode(): Boolean = live.stopsAfterEpisode()
+
+    fun askingStillWatching(): Boolean = live.askingStillWatching()
+
+    fun audioGain(): Float = live.audioGain()
+
+    fun audioDelayMillis(): Int = live.audioDelayMillis()
+
+    /** The same title and picture from [seconds] on, as a new job. */
+    fun restartedAt(seconds: Double): OverlayJob {
+        return OverlayJob(sourceUrl, sourceMimeType, seconds, maxHeight, plan, live, brightensDarkScenes, onFailure)
+    }
 }
 
 /**
  * What can change while a stream plays: the profile's caption look, a cancelled next-episode
  * card, the viewer's caption timing (positive: later), voice boost, even volume, the Watch
- * Together room, a replay with captions (until that second of the title) and stopping after
- * this episode.
+ * Together room, a replay with captions (until that second of the title), stopping after
+ * this episode, the question "Still watching?" waiting for an answer on the phone, the
+ * sound's gain (0 to 1) for the sleep timer's fade, and how far the TV's sound is moved
+ * against the picture (positive: later).
  */
 class OverlayLiveInputs(
     val captionLook: () -> CaptionLook = { CaptionLook.DEFAULT },
@@ -57,6 +74,9 @@ class OverlayLiveInputs(
     val evenVolume: () -> Boolean = { false },
     val replayUntilSeconds: () -> Double? = { null },
     val stopsAfterEpisode: () -> Boolean = { false },
+    val askingStillWatching: () -> Boolean = { false },
+    val audioGain: () -> Float = { 1f },
+    val audioDelayMillis: () -> Int = { 0 },
 )
 
 /** The overlay streams the loopback server can encode, by id. */
