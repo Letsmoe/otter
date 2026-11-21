@@ -51,6 +51,7 @@ object TelevisionConnection {
 
     fun initialize(context: Context) {
         applicationContext = context.applicationContext
+        KnownTelevisions.initialize(applicationContext)
         val castContext = castContext() ?: return
         castContext.sessionManager.addSessionManagerListener(castSessionListener, CastSession::class.java)
         castContext.sessionManager.currentCastSession?.let(::onChromecastConnected)
@@ -61,6 +62,7 @@ object TelevisionConnection {
 
     fun connectDlna(renderer: DlnaRenderer) {
         disconnect()
+        KnownTelevisions.remember(renderer)
         mutableTarget.value = TelevisionTarget.Dlna(renderer, DlnaPlayer(applicationContext, renderer))
     }
 
