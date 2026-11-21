@@ -32,6 +32,9 @@ import com.adamglin.phosphoricons.bold.X
 import com.adamglin.phosphoricons.fill.Play
 import com.letsmoe.otter.downloads.DownloadItem
 import com.letsmoe.otter.downloads.DownloadsRepository
+import com.letsmoe.otter.downloads.SmartDownloadStore
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.letsmoe.otter.downloads.formatSize
 import com.letsmoe.otter.toasts.ToastKind
 import com.letsmoe.otter.toasts.Toasts
@@ -55,6 +58,7 @@ fun DownloadRow(
         Column(Modifier.weight(1f)) {
             Text(rowName(item), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(statusLine(item), fontSize = 12.sp, color = statusColor(item), maxLines = 2, overflow = TextOverflow.Ellipsis)
+            SmartLabel(item.id)
         }
         if (editing) {
             Box(Modifier.pressable { onDelete(item) }.size(36.dp).frostedGlass(CircleShape), contentAlignment = Alignment.Center) {
@@ -67,6 +71,16 @@ fun DownloadRow(
             }
         }
     }
+}
+
+/** Marks a download that Smart Downloads made, which it also deletes once watched. */
+@Composable
+private fun SmartLabel(downloadId: String) {
+    val smartIds by SmartDownloadStore.smartIds.collectAsStateWithLifecycle()
+    if (downloadId !in smartIds) {
+        return
+    }
+    Text("Smart download", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = OtterColors.accent)
 }
 
 @Composable
