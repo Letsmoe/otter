@@ -37,6 +37,7 @@ import com.letsmoe.otter.cast.overlay.loadOverlayPlan
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.reporting.ErrorReporting
 import com.letsmoe.otter.settings.PlaybackSettings
+import com.letsmoe.otter.toasts.Toasts
 import com.letsmoe.otter.ui.player.SleepTimer
 import com.letsmoe.otter.ui.player.TELEVISION_SOUND_LEAD_MILLISECONDS
 import com.letsmoe.otter.ui.player.audio.steppedAudioDelay
@@ -591,10 +592,31 @@ class DlnaPlayer(private val context: Context, initialRenderer: DlnaRenderer) : 
     // A TV that got another address from the router answers the SSDP search under it.
     private suspend fun findTelevisionAgain(unreachable: TelevisionUnreachableException) {
         val found = discoverRenderers(context).firstOrNull { candidate -> candidate.id == renderer.id }
-        if (found == null || found.controlUrl == renderer.controlUrl) {
+        if (found == null) {
+            switchOnTelevision(unreachable)
+            return
+        }
+        if (found.controlUrl == renderer.controlUrl) {
             throw unreachable
         }
         journal.note("Found the TV again at ${found.controlUrl}", mapOf("tv_previous_control_url" to renderer.controlUrl))
+        useRenderer(found)
+    }
+
+    // A TV in standby doesn't answer the search: with its MAC address known it is woken and waited for.
+    private suspend fun switchOnTelevision(unreachable: TelevisionUnreachableException) {
+        if (WakeableTelevisions.macAddressOf(renderer.id) == null) {
+            throw unreachable
+        }
+        Toasts.push("Switching on ${renderer.name}…")
+        journal.note("The TV isn't answering; sending Wake-on-LAN")
+        val awake = wakeTelevision(context, renderer) ?: throw unreachable
+        journal.note("The TV woke up at ${awake.controlUrl}")
+        useRenderer(awake)
+    }
+
+    private fun useRenderer(found: DlnaRenderer) {
+        WakeableTelevisions.learn(found)
         renderer = found
         client = DlnaClient(found, journal)
     }
