@@ -70,6 +70,7 @@ import com.letsmoe.otter.ui.television.CarryOnHost
 import com.letsmoe.otter.ui.television.LostTelevisionHost
 import com.letsmoe.otter.ui.television.TelevisionNowPlayingBar
 import com.letsmoe.otter.ui.television.TelevisionRemoteHost
+import com.letsmoe.otter.ui.television.TelevisionVolumeDisplay
 import com.letsmoe.otter.ui.title.LinkedEpisode
 import com.letsmoe.otter.ui.title.TitleScreen
 import com.letsmoe.otter.ui.upcoming.UpcomingScreen
@@ -158,6 +159,7 @@ private fun AppShell(startTab: Tab) {
             CarryOnHost(onContinueOnPhone = { request ->
                 navController.navigate(Routes.player(request.mediaId, request.streamId, startSeconds = request.startSeconds))
             })
+            TelevisionVolumeDisplay(Modifier.align(Alignment.TopCenter))
             ChallengeSheetHost()
             SheetHostOutlet(sheetHost)
             AppOverlays()
