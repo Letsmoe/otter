@@ -5,12 +5,16 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import androidx.media3.common.C
+import androidx.media3.common.Effect
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.effect.OverlayEffect
+import androidx.media3.effect.TextureOverlay
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.DefaultEncoderFactory
 import androidx.media3.transformer.EditedMediaItem
+import androidx.media3.transformer.Effects
 import androidx.media3.transformer.EditedMediaItemSequence
 import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
@@ -87,10 +91,17 @@ class StillEncoder(private val context: Context, private val job: StillJob) {
         val picture = EditedMediaItem.Builder(mediaItem)
             .setDurationUs(job.durationSeconds * MICROSECONDS_PER_SECOND)
             .setFrameRate(STILL_FRAME_RATE)
+            .setEffects(Effects(emptyList(), videoEffects()))
             .build()
         // An image has no sound of its own: Transformer makes silence for the forced audio track.
         val sequence = EditedMediaItemSequence.Builder(picture).experimentalSetForceAudioTrack(true).build()
         return Composition.Builder(sequence).build()
+    }
+
+    private fun videoEffects(): List<Effect> {
+        val liveFrames = job.liveFrames ?: return emptyList()
+        val overlays: List<TextureOverlay> = listOf(LiveFrameOverlay(liveFrames))
+        return listOf(OverlayEffect(overlays))
     }
 
     // Transformer wants a path; the muxer writes to the TV instead, so nothing is created there.
