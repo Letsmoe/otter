@@ -118,7 +118,7 @@ private fun ColumnScope.RemoteContent(target: TelevisionTarget, onContinueOnPhon
     when (page) {
         RemotePage.MAIN -> PlayingRemote(target, viewModel, state, position, onOpen = { chosen -> page = chosen }, onContinueOnPhone = onContinueOnPhone)
         RemotePage.CAPTIONS -> SubPage(onBack = { page = RemotePage.MAIN }) {
-            TelevisionCaptionsContent(state, viewModel::chooseAudio, viewModel::chooseSubtitle)
+            TelevisionCaptionsContent(state, viewModel::chooseAudio, viewModel::chooseSubtitle, viewModel::nudgeAudioDelay)
         }
         RemotePage.SOURCES -> SubPage(onBack = { page = RemotePage.MAIN }) {
             SourcesSheetContent(state.sources, state.currentSourceId, state.chosenSourceId, state.searchingSources, { sourceId ->

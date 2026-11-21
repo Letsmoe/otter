@@ -32,6 +32,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.Effect
+import com.letsmoe.otter.ui.player.audio.AudioDelayAudioProcessor
 import com.letsmoe.otter.ui.player.audio.EvenVolumeAudioProcessor
 import com.letsmoe.otter.ui.player.audio.SleepFadeAudioProcessor
 import com.letsmoe.otter.ui.player.audio.VoiceBoostAudioProcessor
@@ -109,9 +110,8 @@ class OverlayEncoder(
             .setMimeType(job.sourceMimeType)
             .setClippingConfiguration(clipping)
             .build()
-        val audioProcessors: List<AudioProcessor> = listOf(LiveVoiceBoost(job), LiveEvenVolume(job), LiveSleepFade(job))
         return EditedMediaItem.Builder(mediaItem)
-            .setEffects(Effects(audioProcessors, videoEffects()))
+            .setEffects(Effects(titleSoundProcessors(job), videoEffects()))
             .build()
     }
 
@@ -168,11 +168,28 @@ internal class LiveEvenVolume(private val job: OverlayJob) : EvenVolumeAudioProc
     }
 }
 
+/** The TV's audio delay: the sound moved against the picture, as set for this TV while the stream plays. */
+@UnstableApi
+private class LiveAudioDelay(private val job: OverlayJob) : AudioDelayAudioProcessor() {
+
+    override fun currentDelayMillis(): Int = job.audioDelayMillis()
+}
+
 /** The sleep timer's fade in the TV's sound; last in the chain, so it fades whatever the other processors made. */
 @UnstableApi
 private class LiveSleepFade(private val job: OverlayJob) : SleepFadeAudioProcessor() {
 
     override fun currentGain(): Float = job.audioGain()
+}
+
+/**
+ * What the phone does to a title's sound for the TV: voice boost and even volume, then
+ * [conversion] (a TV session's mix-down and resampling), then the audio delay, which counts
+ * frames of the final rate, and the sleep timer's fade last.
+ */
+@UnstableApi
+internal fun titleSoundProcessors(job: OverlayJob, conversion: List<AudioProcessor> = emptyList()): List<AudioProcessor> {
+    return listOf(LiveVoiceBoost(job), LiveEvenVolume(job)) + conversion + listOf(LiveAudioDelay(job), LiveSleepFade(job))
 }
 
 /** Drops metadata the muxer refuses (e.g. the source's own tags), as Media3's file muxers do. */

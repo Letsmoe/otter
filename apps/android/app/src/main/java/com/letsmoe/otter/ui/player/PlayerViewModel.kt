@@ -237,6 +237,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             voiceBoost = previous.voiceBoost,
             evenVolume = previous.evenVolume,
             captionLook = previous.captionLook,
+            audioDelayMillis = previous.audioDelayMillis,
         )
     }
 
@@ -691,7 +692,9 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         television.addListener(playerListener)
         televisionPlayer = television
         streamPlayback.fitsScreen = { stream -> television.fits(qualityHeight(stream)) }
-        mutableState.update { current -> current.copy(castDeviceName = target.name, castsToTelevision = true) }
+        mutableState.update { current ->
+            current.copy(castDeviceName = target.name, castsToTelevision = true, audioDelayMillis = television.audioDelayMillis)
+        }
     }
 
     /** Connects a DLNA TV and moves playback there (via [handOver]), where it is right now. */
@@ -933,6 +936,13 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     /** Dialogue boost on or off for every title of the profile. */
     fun toggleVoiceBoost() {
         ProfilePreferences.change(PreferenceChange(voiceBoost = !voiceBoost.enabled))
+    }
+
+    /** Moves the TV's sound against the picture by one more step (negative: earlier), for this TV from now on. */
+    fun nudgeAudioDelay(stepMillis: Int) {
+        val television = televisionPlayer ?: return
+        val delayMillis = television.changeAudioDelay(stepMillis)
+        mutableState.update { current -> current.copy(audioDelayMillis = delayMillis) }
     }
 
     /** Even volume on or off on this phone; a TV's sound follows within seconds. */
