@@ -288,6 +288,7 @@ type ComplexityRoot struct {
 		TogetherRoom            func(childComplexity int) int
 		Trending                func(childComplexity int, mediaType *model.MediaType) int
 		UnreadNotificationCount func(childComplexity int, profileID string) int
+		UpcomingEpisodes        func(childComplexity int, profileID string, days *int) int
 		WatchedActors           func(childComplexity int, profileID string, mediaType model.MediaType, limit *int) int
 		Watchlist               func(childComplexity int, profileID string) int
 	}
@@ -444,6 +445,11 @@ type ComplexityRoot struct {
 		Room    func(childComplexity int) int
 	}
 
+	UpcomingEpisode struct {
+		Episode func(childComplexity int) int
+		Series  func(childComplexity int) int
+	}
+
 	WatchProgress struct {
 		Completed       func(childComplexity int) int
 		DurationSeconds func(childComplexity int) int
@@ -521,6 +527,7 @@ type QueryResolver interface {
 	Recommendations(ctx context.Context, profileID string, mediaType *model.MediaType, limit *int, offset *int, refresh *bool) ([]*model.Recommendation, error)
 	RecommendationRows(ctx context.Context, profileID string, rows *int, perRow *int) ([]*model.RecommendationRow, error)
 	ContinueWatching(ctx context.Context, profileID string, limit *int) ([]*model.ContinueItem, error)
+	UpcomingEpisodes(ctx context.Context, profileID string, days *int) ([]*model.UpcomingEpisode, error)
 	History(ctx context.Context, profileID string, limit *int) ([]*model.HistoryEntry, error)
 	Watchlist(ctx context.Context, profileID string) ([]*model.Title, error)
 	LikedTitles(ctx context.Context, profileID string, limit *int) ([]*model.Title, error)
@@ -1961,6 +1968,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.UnreadNotificationCount(childComplexity, args["profileId"].(string)), true
+	case "Query.upcomingEpisodes":
+		if e.ComplexityRoot.Query.UpcomingEpisodes == nil {
+			break
+		}
+
+		args, err := ec.field_Query_upcomingEpisodes_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.UpcomingEpisodes(childComplexity, args["profileId"].(string), args["days"].(*int)), true
 	case "Query.watchedActors":
 		if e.ComplexityRoot.Query.WatchedActors == nil {
 			break
@@ -2654,6 +2672,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.TogetherUpdate.Room(childComplexity), true
 
+	case "UpcomingEpisode.episode":
+		if e.ComplexityRoot.UpcomingEpisode.Episode == nil {
+			break
+		}
+
+		return e.ComplexityRoot.UpcomingEpisode.Episode(childComplexity), true
+	case "UpcomingEpisode.series":
+		if e.ComplexityRoot.UpcomingEpisode.Series == nil {
+			break
+		}
+
+		return e.ComplexityRoot.UpcomingEpisode.Series(childComplexity), true
+
 	case "WatchProgress.completed":
 		if e.ComplexityRoot.WatchProgress.Completed == nil {
 			break
@@ -2960,6 +2991,13 @@ type ContinueItem {
   "For series: the episode to continue or the next one."
   episode: Episode
   progress: WatchProgress
+}
+
+"An episode that has not aired yet."
+type UpcomingEpisode {
+  series: Title!
+  "Its airDate (yyyy-MM-dd, TMDB's) is today or within the asked days."
+  episode: Episode!
 }
 
 type HistoryEntry {
@@ -3279,6 +3317,8 @@ type Query {
   recommendations(profileId: ID!, mediaType: MediaType, limit: Int = 24, offset: Int = 0, refresh: Boolean = false): [Recommendation!]!
   recommendationRows(profileId: ID!, rows: Int = 8, perRow: Int = 20): [RecommendationRow!]!
   continueWatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
+  "Episodes airing from today within days (default four weeks, at most 90), soonest first, of the series on the profile's My List or watched in the last months; air dates from TMDB."
+  upcomingEpisodes(profileId: ID!, days: Int = 28): [UpcomingEpisode!]!
   history(profileId: ID!, limit: Int = 50): [HistoryEntry!]!
   watchlist(profileId: ID!): [Title!]!
   "Titles the profile rated well (I like this, Love this), latest rating first."
@@ -4089,6 +4129,16 @@ func (ec *executionContext) childFields_TogetherUpdate(ctx context.Context, fiel
 		return ec.fieldContext_TogetherUpdate_message(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type TogetherUpdate", field.Name)
+}
+
+func (ec *executionContext) childFields_UpcomingEpisode(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "series":
+		return ec.fieldContext_UpcomingEpisode_series(ctx, field)
+	case "episode":
+		return ec.fieldContext_UpcomingEpisode_episode(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type UpcomingEpisode", field.Name)
 }
 
 func (ec *executionContext) childFields_WatchProgress(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -5502,6 +5552,28 @@ func (ec *executionContext) field_Query_unreadNotificationCount_args(ctx context
 		return nil, err
 	}
 	args["profileId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_upcomingEpisodes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "days",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["days"] = arg1
 	return args, nil
 }
 
@@ -10858,6 +10930,50 @@ func (ec *executionContext) fieldContext_Query_continueWatching(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_upcomingEpisodes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_upcomingEpisodes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().UpcomingEpisodes(ctx, fc.Args["profileId"].(string), fc.Args["days"].(*int))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.UpcomingEpisode) graphql.Marshaler {
+			return ec.marshalNUpcomingEpisode2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐUpcomingEpisodeᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_upcomingEpisodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_UpcomingEpisode(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_upcomingEpisodes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_history(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -14140,6 +14256,70 @@ func (ec *executionContext) fieldContext_TogetherUpdate_message(_ context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return ec.childFields_TogetherMessage(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpcomingEpisode_series(ctx context.Context, field graphql.CollectedField, obj *model.UpcomingEpisode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UpcomingEpisode_series(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Series, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Title) graphql.Marshaler {
+			return ec.marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitle(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_UpcomingEpisode_series(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpcomingEpisode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Title(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpcomingEpisode_episode(ctx context.Context, field graphql.CollectedField, obj *model.UpcomingEpisode) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UpcomingEpisode_episode(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Episode, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Episode) graphql.Marshaler {
+			return ec.marshalNEpisode2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐEpisode(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_UpcomingEpisode_episode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpcomingEpisode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Episode(ctx, field)
 		},
 	}
 	return fc, nil
@@ -17534,6 +17714,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "upcomingEpisodes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_upcomingEpisodes(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "history":
 			field := field
 
@@ -19142,6 +19344,50 @@ func (ec *executionContext) _TogetherUpdate(ctx context.Context, sel ast.Selecti
 	return out
 }
 
+var upcomingEpisodeImplementors = []string{"UpcomingEpisode"}
+
+func (ec *executionContext) _UpcomingEpisode(ctx context.Context, sel ast.SelectionSet, obj *model.UpcomingEpisode) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, upcomingEpisodeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UpcomingEpisode")
+		case "series":
+			out.Values[i] = ec._UpcomingEpisode_series(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "episode":
+			out.Values[i] = ec._UpcomingEpisode_episode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var watchProgressImplementors = []string{"WatchProgress"}
 
 func (ec *executionContext) _WatchProgress(ctx context.Context, sel ast.SelectionSet, obj *model.WatchProgress) graphql.Marshaler {
@@ -20495,6 +20741,32 @@ func (ec *executionContext) marshalNTogetherUpdate2ᚖgithubᚗcomᚋLetsmoeᚋo
 		return graphql.Null
 	}
 	return ec._TogetherUpdate(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNUpcomingEpisode2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐUpcomingEpisodeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UpcomingEpisode) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNUpcomingEpisode2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐUpcomingEpisode(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNUpcomingEpisode2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐUpcomingEpisode(ctx context.Context, sel ast.SelectionSet, v *model.UpcomingEpisode) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UpcomingEpisode(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNWatchProgress2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐWatchProgress(ctx context.Context, sel ast.SelectionSet, v model.WatchProgress) graphql.Marshaler {

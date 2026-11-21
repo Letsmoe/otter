@@ -172,6 +172,13 @@ type ContinueItem {
   progress: WatchProgress
 }
 
+"An episode that has not aired yet."
+type UpcomingEpisode {
+  series: Title!
+  "Its airDate (yyyy-MM-dd, TMDB's) is today or within the asked days."
+  episode: Episode!
+}
+
 type HistoryEntry {
   title: Title!
   episode: Episode
@@ -489,6 +496,8 @@ type Query {
   recommendations(profileId: ID!, mediaType: MediaType, limit: Int = 24, offset: Int = 0, refresh: Boolean = false): [Recommendation!]!
   recommendationRows(profileId: ID!, rows: Int = 8, perRow: Int = 20): [RecommendationRow!]!
   continueWatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
+  "Episodes airing from today within days (default four weeks, at most 90), soonest first, of the series on the profile's My List or watched in the last months; air dates from TMDB."
+  upcomingEpisodes(profileId: ID!, days: Int = 28): [UpcomingEpisode!]!
   history(profileId: ID!, limit: Int = 50): [HistoryEntry!]!
   watchlist(profileId: ID!): [Title!]!
   "Titles the profile rated well (I like this, Love this), latest rating first."
