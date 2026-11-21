@@ -18,6 +18,8 @@ object PlaybackSettings {
     private const val KEY_AUTO_SKIP_INTRO = "autoSkipIntro"
     private const val KEY_TELEVISION_OVERLAYS = "televisionOverlays"
     private const val KEY_TELEVISION_TITLE_CARD = "televisionTitleCard"
+    private const val KEY_EVEN_VOLUME = "evenVolume"
+    private const val KEY_BRIGHTEN_DARK_SCENES = "brightenDarkScenes"
 
     private lateinit var preferences: SharedPreferences
 
@@ -42,6 +44,20 @@ object PlaybackSettings {
         get() = preferences.getBoolean(KEY_TELEVISION_OVERLAYS, true)
         set(value) {
             preferences.edit { putBoolean(KEY_TELEVISION_OVERLAYS, value) }
+        }
+
+    /** Evens out loud and quiet passages, on the phone and in the sound the phone makes for a TV. */
+    var evenVolume: Boolean
+        get() = preferences.getBoolean(KEY_EVEN_VOLUME, false)
+        set(value) {
+            preferences.edit { putBoolean(KEY_EVEN_VOLUME, value) }
+        }
+
+    /** Lifts the shadows of the picture the phone makes for a TV, from its next stream on. */
+    var brightenDarkScenes: Boolean
+        get() = preferences.getBoolean(KEY_BRIGHTEN_DARK_SCENES, false)
+        set(value) {
+            preferences.edit { putBoolean(KEY_BRIGHTEN_DARK_SCENES, value) }
         }
 
     /** Whether a TV with drawn-in hints shows the title and episode for a few seconds when a title starts. */

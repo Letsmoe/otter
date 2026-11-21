@@ -20,6 +20,7 @@ class OverlayJob(
     val maxHeight: Int,
     val plan: OverlayPlan,
     val live: OverlayLiveInputs = OverlayLiveInputs(),
+    val brightensDarkScenes: Boolean = false,
     val onFailure: (OverlayJob, Exception) -> Unit,
 ) {
     val id: String = UUID.randomUUID().toString()
@@ -33,11 +34,19 @@ class OverlayJob(
     fun voiceBoost(): Boolean = live.voiceBoost()
 
     fun together(): TogetherMoments = live.together()
+
+    fun evenVolume(): Boolean = live.evenVolume()
+
+    fun replayUntilSeconds(): Double? = live.replayUntilSeconds()
+
+    fun stopsAfterEpisode(): Boolean = live.stopsAfterEpisode()
 }
 
 /**
  * What can change while a stream plays: the profile's caption look, a cancelled next-episode
- * card, the viewer's caption timing (positive: later), voice boost and the Watch Together room.
+ * card, the viewer's caption timing (positive: later), voice boost, even volume, the Watch
+ * Together room, a replay with captions (until that second of the title) and stopping after
+ * this episode.
  */
 class OverlayLiveInputs(
     val captionLook: () -> CaptionLook = { CaptionLook.DEFAULT },
@@ -45,6 +54,9 @@ class OverlayLiveInputs(
     val captionDelaySeconds: () -> Double = { 0.0 },
     val voiceBoost: () -> Boolean = { false },
     val together: () -> TogetherMoments = { TogetherMoments() },
+    val evenVolume: () -> Boolean = { false },
+    val replayUntilSeconds: () -> Double? = { null },
+    val stopsAfterEpisode: () -> Boolean = { false },
 )
 
 /** The overlay streams the loopback server can encode, by id. */

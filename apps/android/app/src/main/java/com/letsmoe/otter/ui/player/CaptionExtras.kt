@@ -29,6 +29,8 @@ data class CaptionExtrasState(
     /** While casting, the phone lists what was just said, from this file. */
     val transcriptSubtitleId: String? = null,
     val transcriptCues: List<CaptionCue> = emptyList(),
+    /** A replay with captions shows them until this second of the title; null when none runs. */
+    val replayUntilSeconds: Double? = null,
 )
 
 /** Keeps the caption tweaks of one title; [onPhoneDelay] reloads the phone's captions with a new delay. */
@@ -50,6 +52,14 @@ class CaptionExtras(private val scope: CoroutineScope, private val onPhoneDelay:
         secondLoad?.cancel()
         transcriptLoad?.cancel()
         mutableState.value = CaptionExtrasState()
+    }
+
+    fun startReplay(untilSeconds: Double) {
+        mutableState.update { current -> current.copy(replayUntilSeconds = untilSeconds) }
+    }
+
+    fun endReplay() {
+        mutableState.update { current -> current.copy(replayUntilSeconds = null) }
     }
 
     /** Lists [subtitle]'s lines while casting; the same file isn't loaded twice. */

@@ -31,6 +31,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import androidx.media3.common.audio.AudioProcessor
+import androidx.media3.common.Effect
+import com.letsmoe.otter.ui.player.audio.EvenVolumeAudioProcessor
 import com.letsmoe.otter.ui.player.audio.VoiceBoostAudioProcessor
 import java.io.File
 import java.io.OutputStream
@@ -119,12 +121,20 @@ class OverlayEncoder(
             .setMimeType(job.sourceMimeType)
             .setClippingConfiguration(clipping)
             .build()
+        val audioProcessors: List<AudioProcessor> = listOf(LiveVoiceBoost(job), LiveEvenVolume(job))
+        return EditedMediaItem.Builder(mediaItem)
+            .setEffects(Effects(audioProcessors, videoEffects()))
+            .build()
+    }
+
+    // The shadows are lifted first, so captions and cards keep their own colours.
+    private fun videoEffects(): List<Effect> {
         val overlays: List<TextureOverlay> = listOf(OverlayPainter(job))
         val overlay = OverlayEffect(overlays)
-        val audioProcessors: List<AudioProcessor> = listOf(LiveVoiceBoost(job))
-        return EditedMediaItem.Builder(mediaItem)
-            .setEffects(Effects(audioProcessors, listOf(overlay)))
-            .build()
+        if (!job.brightensDarkScenes) {
+            return listOf(overlay)
+        }
+        return listOf(darkSceneLift(), overlay)
     }
 
     // Transformer wants a path; the muxer below writes to the TV instead, so nothing is created there.
@@ -142,6 +152,16 @@ private class LiveVoiceBoost(private val job: OverlayJob) : VoiceBoostAudioProce
 
     override fun queueInput(inputBuffer: ByteBuffer) {
         enabled = job.voiceBoost()
+        super.queueInput(inputBuffer)
+    }
+}
+
+/** Even volume in the TV's sound, switched with the phone's setting while the stream plays. */
+@UnstableApi
+private class LiveEvenVolume(private val job: OverlayJob) : EvenVolumeAudioProcessor() {
+
+    override fun queueInput(inputBuffer: ByteBuffer) {
+        enabled = job.evenVolume()
         super.queueInput(inputBuffer)
     }
 }

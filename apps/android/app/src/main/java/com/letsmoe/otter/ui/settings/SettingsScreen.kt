@@ -241,9 +241,21 @@ private fun PlaybackGroup() {
             }, showLabel = false)
         }
         SettingsDivider()
-        TelevisionOverlaysRow()
+        PlaybackSwitchRow("Even volume", "Quieter loud scenes, clearer quiet ones; on TVs too", PlaybackSettings.evenVolume) { enabled ->
+            PlaybackSettings.evenVolume = enabled
+        }
         SettingsDivider()
-        TelevisionTitleCardRow()
+        PlaybackSwitchRow("Draw on the TV picture", "Captions, skip and next-episode hints on any TV; uses more battery", PlaybackSettings.televisionOverlays) { enabled ->
+            PlaybackSettings.televisionOverlays = enabled
+        }
+        SettingsDivider()
+        PlaybackSwitchRow("Title on the TV at the start", "Shows the title, episode and end time for a few seconds", PlaybackSettings.televisionTitleCard) { enabled ->
+            PlaybackSettings.televisionTitleCard = enabled
+        }
+        SettingsDivider()
+        PlaybackSwitchRow("Brighten dark scenes on the TV", "Lifts shadows from the next episode or seek on", PlaybackSettings.brightenDarkScenes) { enabled ->
+            PlaybackSettings.brightenDarkScenes = enabled
+        }
         profile?.let { activeProfile ->
             SettingsDivider()
             CaptionSettingsRows(activeProfile)
@@ -251,32 +263,18 @@ private fun PlaybackGroup() {
     }
 }
 
+// A device setting with a switch; [stored] is read once, [onChange] saves.
 @Composable
-private fun TelevisionOverlaysRow() {
-    var drawn by remember { mutableStateOf(PlaybackSettings.televisionOverlays) }
+private fun PlaybackSwitchRow(title: String, description: String, stored: Boolean, onChange: (Boolean) -> Unit) {
+    var checked by remember { mutableStateOf(stored) }
     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text("Draw on the TV picture", fontSize = 14.sp)
-            Text("Captions, skip and next-episode hints on any TV; uses more battery", fontSize = 12.sp, color = Color.White.copy(alpha = 0.45f))
+            Text(title, fontSize = 14.sp)
+            Text(description, fontSize = 12.sp, color = Color.White.copy(alpha = 0.45f))
         }
-        OtterSwitch(drawn) { enabled ->
-            drawn = enabled
-            PlaybackSettings.televisionOverlays = enabled
-        }
-    }
-}
-
-@Composable
-private fun TelevisionTitleCardRow() {
-    var shown by remember { mutableStateOf(PlaybackSettings.televisionTitleCard) }
-    Row(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
-            Text("Title on the TV at the start", fontSize = 14.sp)
-            Text("Shows the title and episode for a few seconds", fontSize = 12.sp, color = Color.White.copy(alpha = 0.45f))
-        }
-        OtterSwitch(shown) { enabled ->
-            shown = enabled
-            PlaybackSettings.televisionTitleCard = enabled
+        OtterSwitch(checked) { enabled ->
+            checked = enabled
+            onChange(enabled)
         }
     }
 }

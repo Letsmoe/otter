@@ -55,6 +55,7 @@ private const val CARD_PADDING = 22f
 private const val CARD_TITLE_SIZE = 32f
 private const val CARD_LABEL_SIZE = 26f
 private const val CARD_LINE_GAP = 8f
+private const val STOPPING_LABEL = "Stopping after this episode"
 private val CARD_FILL = Color.argb(222, 18, 18, 22)
 private val CARD_PROGRESS = Color.argb(70, 255, 255, 255)
 private val LABEL_COLOR = Color.argb(184, 255, 255, 255)
@@ -95,10 +96,16 @@ class OverlayPainter(private val job: OverlayJob) : BitmapOverlay() {
         return bitmap
     }
 
-    // A card the viewer cancelled on the phone leaves the picture too.
+    // A card the viewer cancelled on the phone leaves the picture too; stopping after this episode replaces it.
     private fun visibleFrameAt(seconds: Double): OverlayFrame {
-        val frame = job.plan.frameAt(seconds, job.captionDelaySeconds())
-        if (frame.upNextSecondsLeft == null || !job.upNextDismissed()) {
+        val frame = job.plan.frameAt(seconds, job.captionDelaySeconds(), job.replayUntilSeconds())
+        if (frame.upNextSecondsLeft == null) {
+            return frame
+        }
+        if (job.stopsAfterEpisode()) {
+            return frame.copy(upNextSecondsLeft = null, upNextProgress = null, skipLabel = STOPPING_LABEL)
+        }
+        if (!job.upNextDismissed()) {
             return frame
         }
         return frame.copy(upNextSecondsLeft = null, upNextProgress = null)

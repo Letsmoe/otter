@@ -66,6 +66,10 @@ data class PlayerUiState(
     val castsToTelevision: Boolean = false,
     /** Dialogue boost of the profile; it only works on the phone's own speakers. */
     val voiceBoost: Boolean = false,
+    /** Even volume on this phone (and in the sound it makes for a TV). */
+    val evenVolume: Boolean = false,
+    /** Nothing plays after the episode playing now. */
+    val stopsAfterEpisode: Boolean = false,
     /** The profile's caption size and style. */
     val captionLook: CaptionLook = CaptionLook.DEFAULT,
 ) {

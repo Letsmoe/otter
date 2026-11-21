@@ -38,6 +38,8 @@ import com.letsmoe.otter.toasts.Toasts
 import com.letsmoe.otter.together.MediaPayload
 import com.letsmoe.otter.together.PlayerReport
 import com.letsmoe.otter.together.TogetherSession
+import com.letsmoe.otter.cast.overlay.CaptionCue
+import com.letsmoe.otter.ui.player.audio.EvenVolumeAudioProcessor
 import com.letsmoe.otter.ui.player.audio.VoiceBoostAudioProcessor
 import com.letsmoe.otter.ui.player.audio.VoiceBoostRenderersFactory
 import kotlinx.coroutines.Deferred
@@ -53,6 +55,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
 private const val POSITION_POLL_MILLISECONDS = 250L
+// How far "Replay with captions" goes back.
+private const val REPLAY_SECONDS = 10.0
 // Matches the end screen's countdown.
 private const val NEXT_EPISODE_DELAY_MILLISECONDS = 8000L
 // Playback starts without captions when the backend needs longer than this to find them.
@@ -69,9 +73,10 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private var request = request
 
     private val voiceBoost = VoiceBoostAudioProcessor()
+    private val evenVolume = EvenVolumeAudioProcessor().apply { enabled = PlaybackSettings.evenVolume }
 
     // Plays on the phone, or on a Chromecast once one is picked in the cast menu.
-    val player: Player = buildPlayer(application, voiceBoost)
+    val player: Player = buildPlayer(application, voiceBoost, evenVolume)
 
     // Set while a DLNA TV plays; every control then goes to it. Owned by TelevisionConnection, never released here.
     private var televisionPlayer: DlnaPlayer? = null
@@ -87,7 +92,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     val previewPlayer: ExoPlayer
         get() = framePreview.player
 
-    private val mutableState = MutableStateFlow(PlayerUiState(mediaId = request.mediaId))
+    private val mutableState = MutableStateFlow(PlayerUiState(mediaId = request.mediaId, evenVolume = PlaybackSettings.evenVolume))
     val state: StateFlow<PlayerUiState> = mutableState
 
     private val mutablePosition = MutableStateFlow(PlaybackPosition())
@@ -202,6 +207,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         clearPlayers()
         trackCatalog = TrackCatalog.Empty
         startSubtitleLoad(mediaId)
+        televisionPlayer?.stopsAfterEpisode = false
         mutableState.update { fresh(mediaId, it) }
         mutablePosition.value = PlaybackPosition()
         loadMediaInfo(mediaId)
@@ -217,6 +223,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
             castDeviceName = previous.castDeviceName,
             castsToTelevision = previous.castsToTelevision,
             voiceBoost = previous.voiceBoost,
+            evenVolume = previous.evenVolume,
             captionLook = previous.captionLook,
         )
     }
@@ -514,7 +521,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     // The end screen counts down in animation frames, which stop while the phone is locked;
     // the next episode starts regardless, on the phone or on a TV.
     private fun continueWithNextEpisode() {
-        if (media?.nextEpisodeId == null) {
+        if (media?.nextEpisodeId == null || mutableState.value.stopsAfterEpisode) {
             return
         }
         nextEpisodeJob?.cancel()
@@ -859,6 +866,7 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         shownSubtitle = null
         captionExtras.reset()
         televisionPlayer?.captionDelaySeconds = 0.0
+        televisionPlayer?.endReplay()
         subtitlesLoad = viewModelScope.async { loadSubtitlesOfProfile(mediaId) }
     }
 
@@ -895,6 +903,52 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         ProfilePreferences.change(PreferenceChange(voiceBoost = !voiceBoost.enabled))
     }
 
+    /** Even volume on or off on this phone; a TV's sound follows within seconds. */
+    fun toggleEvenVolume() {
+        val enabled = !evenVolume.enabled
+        PlaybackSettings.evenVolume = enabled
+        evenVolume.enabled = enabled
+        mutableState.update { current -> current.copy(evenVolume = enabled) }
+    }
+
+    /** Nothing plays after the episode playing now; the next title starts without this again. */
+    fun toggleStopAfterEpisode() {
+        val stopping = !mutableState.value.stopsAfterEpisode
+        televisionPlayer?.stopsAfterEpisode = stopping
+        mutableState.update { current -> current.copy(stopsAfterEpisode = stopping) }
+        if (stopping) {
+            upNextOffer.cancel()
+        }
+    }
+
+    /** Goes back [REPLAY_SECONDS] and shows captions until where it was, even when they are off. */
+    fun replayWithCaptions() {
+        val now = positionSeconds
+        replayFrom(now - REPLAY_SECONDS, now)
+    }
+
+    /** Plays a line from "Just said" again, with captions until where playback is now. */
+    fun replayLine(line: CaptionCue) {
+        replayFrom(line.startSeconds + captionExtras.state.value.delaySeconds, positionSeconds)
+    }
+
+    private fun replayFrom(startSeconds: Double, untilSeconds: Double) {
+        loadTranscript()
+        captionExtras.startReplay(untilSeconds)
+        televisionPlayer?.startReplay(untilSeconds, subtitleFile(transcriptSubtitle()))
+        seekTo(startSeconds.coerceAtLeast(0.0))
+    }
+
+    // Back where the replay started: captions follow the viewer's choice again.
+    private fun endReplayAt(positionSeconds: Double) {
+        val until = captionExtras.state.value.replayUntilSeconds ?: return
+        if (positionSeconds < until) {
+            return
+        }
+        captionExtras.endReplay()
+        televisionPlayer?.endReplay()
+    }
+
     // Position, progress and frame preview -------------------------------------
 
     private suspend fun pollPosition() {
@@ -913,8 +967,9 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     private fun followSegments(positionSeconds: Double) {
         mutableSkipButton.value = skipTracker.jumpAt(positionSeconds)
         val inCredits = skipTracker.isInCredits(positionSeconds)
-        upNextOffer.follow(inCredits, activePlayer.isPlaying, nextEpisode())
+        upNextOffer.follow(inCredits, activePlayer.isPlaying, offeredNextEpisode())
         skipIntroAt(positionSeconds)
+        endReplayAt(positionSeconds)
         // Back before the credits, the TV's card may show again, like the phone's.
         if (!inCredits) {
             televisionPlayer?.upNextDismissed = false
@@ -929,6 +984,14 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
         }
         val target = skipTracker.autoSkipTarget(positionSeconds) ?: return
         seekTo(target)
+    }
+
+    // None when the viewer stops after this episode: the card isn't offered.
+    private fun offeredNextEpisode(): PlayerEpisode? {
+        if (mutableState.value.stopsAfterEpisode) {
+            return null
+        }
+        return nextEpisode()
     }
 
     private fun nextEpisode(): PlayerEpisode? {
@@ -1045,8 +1108,8 @@ class PlayerViewModel(application: Application, request: PlayerRequest, private 
     }
 }
 
-private fun buildPlayer(application: Application, voiceBoost: VoiceBoostAudioProcessor): Player {
-    val localPlayer = ExoPlayer.Builder(application, VoiceBoostRenderersFactory(application, voiceBoost)).build()
+private fun buildPlayer(application: Application, voiceBoost: VoiceBoostAudioProcessor, evenVolume: EvenVolumeAudioProcessor): Player {
+    val localPlayer = ExoPlayer.Builder(application, VoiceBoostRenderersFactory(application, voiceBoost, evenVolume)).build()
     return try {
         val remotePlayer = RemoteCastPlayer.Builder(application)
             .setMediaItemConverter(LanMediaItemConverter(application))

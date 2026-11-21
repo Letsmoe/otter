@@ -41,6 +41,8 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
 import com.adamglin.phosphoricons.regular.CardsThree
 import com.adamglin.phosphoricons.regular.Gauge
+import com.adamglin.phosphoricons.regular.Moon
+import com.adamglin.phosphoricons.regular.Rewind
 import com.adamglin.phosphoricons.regular.SkipForward
 import com.adamglin.phosphoricons.regular.Stack
 import com.adamglin.phosphoricons.regular.Subtitles
@@ -155,6 +157,7 @@ private fun ActionRow(state: PlayerUiState, actions: PlayerActions, modifier: Mo
         horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        ActionButton(PhosphorIcons.Regular.Rewind, "Replay with captions", actions.replayWithCaptions)
         ActionButton(PhosphorIcons.Regular.Gauge, "Speed (${formatSpeed(state.speed)}x)") { actions.openSheet(PlayerSheetKind.SPEED) }
         if (state.hasAudioSheet) {
             ActionButton(PhosphorIcons.Regular.Subtitles, "Audio & Subtitles") { actions.openSheet(PlayerSheetKind.TRACKS) }
@@ -167,9 +170,17 @@ private fun ActionRow(state: PlayerUiState, actions: PlayerActions, modifier: Mo
         }
         ActionButton(PhosphorIcons.Regular.UsersThree, "Together") { actions.openSheet(PlayerSheetKind.TOGETHER) }
         if (state.hasNextEpisode) {
+            ActionButton(PhosphorIcons.Regular.Moon, stopAfterLabel(state.stopsAfterEpisode), actions.toggleStopAfterEpisode)
             ActionButton(PhosphorIcons.Regular.SkipForward, "Next Ep.", actions.playNext)
         }
     }
+}
+
+private fun stopAfterLabel(stopping: Boolean): String {
+    if (stopping) {
+        return "Stops after this"
+    }
+    return "Stop after this"
 }
 
 fun formatSpeed(speed: Float): String {

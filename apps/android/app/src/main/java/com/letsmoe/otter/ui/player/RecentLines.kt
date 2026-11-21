@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.letsmoe.otter.cast.overlay.CaptionCue
+import com.letsmoe.otter.ui.components.pressable
 
 private const val RECENT_LINE_COUNT = 4
 
@@ -24,18 +25,19 @@ fun recentLines(cues: List<CaptionCue>, seconds: Double, delaySeconds: Double): 
     return cues.filter { cue -> cue.startSeconds <= captionSeconds }.takeLast(RECENT_LINE_COUNT)
 }
 
-/** "What did they say?" while casting: the latest lines, the newest brightest. */
+/** "What did they say?" while casting: the latest lines, the newest brightest; tapping one plays it again. */
 @Composable
-fun RecentLines(lines: List<CaptionCue>, modifier: Modifier = Modifier) {
+fun RecentLines(lines: List<CaptionCue>, onReplay: (CaptionCue) -> Unit, modifier: Modifier = Modifier) {
     if (lines.isEmpty()) {
         return
     }
     Column(modifier.widthIn(max = 560.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Just said", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.45f))
+        Text("Just said · tap a line to hear it again", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.45f))
         lines.forEachIndexed { index, line ->
             val newest = index == lines.lastIndex
             Text(
                 line.text,
+                Modifier.pressable { onReplay(line) },
                 textAlign = TextAlign.Center,
                 fontSize = lineSize(newest),
                 fontWeight = lineWeight(newest),
