@@ -65,6 +65,9 @@ import com.letsmoe.otter.ui.player.PlayerUiState
 import com.letsmoe.otter.ui.player.PlayerViewModel
 import com.letsmoe.otter.ui.player.StillWatchingCard
 import com.letsmoe.otter.ui.player.reportsTouches
+import com.letsmoe.otter.ui.player.SleepTimer
+import com.letsmoe.otter.ui.player.SleepTimerSheetContent
+import com.letsmoe.otter.ui.player.sleepMinutesLabel
 import com.letsmoe.otter.ui.player.SourcesSheetContent
 import com.letsmoe.otter.ui.player.SpeedSheetContent
 import com.letsmoe.otter.ui.player.TelevisionPlayback
@@ -85,7 +88,7 @@ private val SLIDER_TRACK_HEIGHT = 6.dp
 private val SLIDER_THUMB_SIZE = 18.dp
 private val SLIDER_THUMB_TOUCHED_SIZE = 26.dp
 
-private enum class RemotePage { MAIN, CAPTIONS, SOURCES, SPEED }
+private enum class RemotePage { MAIN, CAPTIONS, SOURCES, SPEED, SLEEP }
 
 /** The remote for the connected TV, over everything; [onContinueOnPhone] opens the player screen. */
 @Composable
@@ -125,6 +128,13 @@ private fun ColumnScope.RemoteContent(target: TelevisionTarget, onContinueOnPhon
         }
         RemotePage.SPEED -> SubPage(onBack = { page = RemotePage.MAIN }) {
             SpeedSheetContent(state.speed, viewModel::chooseSpeed)
+        }
+        RemotePage.SLEEP -> SubPage(onBack = { page = RemotePage.MAIN }) {
+            val run by viewModel.sleepTimerRun.collectAsStateWithLifecycle()
+            SleepTimerSheetContent(
+                run, state.stopsAfterEpisode, state.hasNextEpisode,
+                viewModel::startSleepTimer, viewModel::sleepAtEndOfEpisode, viewModel::cancelSleepTimer,
+            )
         }
     }
 }
@@ -389,7 +399,19 @@ private fun RemoteSettings(state: PlayerUiState, onOpen: (RemotePage) -> Unit) {
         if (!state.castsToTelevision) {
             SettingsRow("Speed", "${state.speed}×") { onOpen(RemotePage.SPEED) }
         }
+        SettingsRow("Sleep timer", sleepLabel(state)) { onOpen(RemotePage.SLEEP) }
     }
+}
+
+private fun sleepLabel(state: PlayerUiState): String {
+    val run = SleepTimer.shared.run.value
+    if (run != null) {
+        return sleepMinutesLabel(run.minutes)
+    }
+    if (state.stopsAfterEpisode) {
+        return "End of episode"
+    }
+    return "Off"
 }
 
 private fun captionLabel(state: PlayerUiState): String {

@@ -46,6 +46,7 @@ import com.adamglin.phosphoricons.regular.Rewind
 import com.adamglin.phosphoricons.regular.SkipForward
 import com.adamglin.phosphoricons.regular.Stack
 import com.adamglin.phosphoricons.regular.Subtitles
+import com.adamglin.phosphoricons.regular.Timer
 import com.adamglin.phosphoricons.regular.UsersThree
 import com.letsmoe.otter.ui.components.pressable
 
@@ -169,6 +170,7 @@ private fun ActionRow(state: PlayerUiState, actions: PlayerActions, modifier: Mo
             ActionButton(PhosphorIcons.Regular.CardsThree, "Episodes") { actions.openSheet(PlayerSheetKind.EPISODES) }
         }
         ActionButton(PhosphorIcons.Regular.UsersThree, "Together") { actions.openSheet(PlayerSheetKind.TOGETHER) }
+        ActionButton(PhosphorIcons.Regular.Timer, "Sleep timer") { actions.openSheet(PlayerSheetKind.SLEEP) }
         if (state.hasNextEpisode) {
             ActionButton(PhosphorIcons.Regular.Moon, stopAfterLabel(state), actions.toggleStopAfterEpisode)
             ActionButton(PhosphorIcons.Regular.SkipForward, "Next Ep.", actions.playNext)
