@@ -233,7 +233,7 @@ func (mirror profileMirror) unmirroredProfileNamed(ctx context.Context, name str
 // deleteLocal removes a profile another device deleted, with what it recorded.
 func (mirror profileMirror) deleteLocal(ctx context.Context, link mirroredRow) error {
 	err := mirror.database.Tx(ctx, func(tx *db.DB) error {
-		for _, table := range []string{"watch_history", "user_rating", "watchlist"} {
+		for _, table := range []string{"watch_history", "user_rating", "watchlist", "dismissed_title"} {
 			if _, err := tx.Exec(ctx, "DELETE FROM "+table+" WHERE profile_id = $id", db.Vars{"id": link.LocalKey}); err != nil {
 				return err
 			}

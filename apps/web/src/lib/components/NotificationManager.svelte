@@ -5,7 +5,12 @@
 	import CheckCircleIcon from 'phosphor-svelte/lib/CheckCircleIcon';
 	import WarningCircleIcon from 'phosphor-svelte/lib/WarningCircleIcon';
 	import InfoIcon from 'phosphor-svelte/lib/InfoIcon';
-	import { notifications } from '$lib/stores/notifications';
+	import { notifications, type Notification } from '$lib/stores/notifications';
+
+	function useAction(entry: Notification) {
+		notifications.dismiss(entry.id);
+		entry.action?.run();
+	}
 
 	function iconFor(kind: string) {
 		if (kind === 'success') return CheckCircleIcon;
@@ -34,6 +39,15 @@
 		>
 			<span class="mt-0.5 shrink-0 {colorFor(entry.kind)}"><Icon size={18} weight="fill" /></span>
 			<span class="text-base-content flex-1 text-sm">{entry.message}</span>
+			{#if entry.action}
+				<button
+					type="button"
+					class="text-primary shrink-0 text-sm font-semibold hover:underline"
+					onclick={() => useAction(entry)}
+				>
+					{entry.action.label}
+				</button>
+			{/if}
 			<button
 				type="button"
 				class="text-base-content/40 hover:text-base-content shrink-0"

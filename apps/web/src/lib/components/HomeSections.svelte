@@ -4,10 +4,13 @@
 	import MediaRail from './MediaRail.svelte';
 	import { activeProfile } from '@letsmoe/otter-app/profile';
 	import { sidebarFocus } from '$lib/stores/focus';
+	import { notifications } from '$lib/stores/notifications';
 	import {
+		dismissRecommendation,
 		fetchContinueWatching,
 		fetchRecommendationRows,
 		fetchTrending,
+		restoreRecommendation,
 		detailPath,
 		type RailItem,
 		type RecommendationRail
@@ -70,6 +73,49 @@
 
 	function openItem(item: RailItem) {
 		goto(detailPath(item));
+	}
+
+	function withoutItem(rails: RecommendationRail[], itemId: string): RecommendationRail[] {
+		return rails.map((rail) => ({
+			...rail,
+			items: rail.items.filter((entry) => entry.id !== itemId)
+		}));
+	}
+
+	async function reloadRecommendations(profileId: string) {
+		recommendationRails = await fetchRecommendationRows(profileId, 8, RAIL_SIZE);
+	}
+
+	async function undoDismiss(profileId: string, item: RailItem) {
+		try {
+			await restoreRecommendation(profileId, item.id);
+		} catch {
+			notifications.push(`Could not bring back ${item.title}`, 'error');
+			return;
+		}
+		await reloadRecommendations(profileId);
+	}
+
+	// "Not for me": the card goes right away, the backend learns from it.
+	async function dismissItem(item: RailItem) {
+		const profile = $activeProfile;
+		if (!profile) return;
+		recommendationRails = withoutItem(recommendationRails, item.id);
+		if (hero?.id === item.id) {
+			const remaining = recommendationRails.flatMap((rail) => rail.items);
+			hero = pickHero([...remaining, ...continueItems, ...trendingItems]);
+		}
+		try {
+			await dismissRecommendation(profile.id, item.id);
+		} catch {
+			notifications.push(`Could not hide ${item.title}`, 'error');
+			await reloadRecommendations(profile.id);
+			return;
+		}
+		notifications.push(`${item.title} won't be recommended again`, 'info', {
+			label: 'Undo',
+			run: () => undoDismiss(profile.id, item)
+		});
 	}
 
 	// Vertical coordination between the hero and the rails below it. Each section
@@ -148,6 +194,7 @@
 				title={rail.title}
 				items={rail.items}
 				onselect={openItem}
+				ondismiss={dismissItem}
 				onedge={(direction) => move(railKey(rail), direction)}
 			/>
 		{/if}

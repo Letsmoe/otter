@@ -325,6 +325,15 @@ export async function clearUserRating(profileId: string, mediaId: string): Promi
 	await otter.mutation({ clearRating: { __args: { profileId, mediaId } } });
 }
 
+/** "Not for me": the profile's recommendations drop the title and learn from it. */
+export async function dismissRecommendation(profileId: string, mediaId: string): Promise<void> {
+	await otter.mutation({ dismissRecommendation: { __args: { profileId, mediaId } } });
+}
+
+export async function restoreRecommendation(profileId: string, mediaId: string): Promise<void> {
+	await otter.mutation({ restoreRecommendation: { __args: { profileId, mediaId } } });
+}
+
 /** Records playback progress for resume + recommendations. Best-effort. */
 export async function recordProgress(input: {
 	profileId: string;

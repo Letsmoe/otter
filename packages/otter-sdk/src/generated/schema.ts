@@ -565,6 +565,10 @@ export interface Mutation {
     recordProgress: WatchProgress
     setRating: Scalars['Boolean']
     clearRating: Scalars['Boolean']
+    /** "Not for me" on a recommendation: the profile never gets this title suggested again, and titles like it rank lower. */
+    dismissRecommendation: Scalars['Boolean']
+    /** Undo dismissRecommendation. */
+    restoreRecommendation: Scalars['Boolean']
     addToWatchlist: Scalars['Boolean']
     removeFromWatchlist: Scalars['Boolean']
     /** The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it. */
@@ -1218,6 +1222,10 @@ export interface MutationGenqlSelection{
     recordProgress?: (WatchProgressGenqlSelection & { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], progressSeconds: Scalars['Float'], durationSeconds: Scalars['Float']} })
     setRating?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], rating: Scalars['Float']} }
     clearRating?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
+    /** "Not for me" on a recommendation: the profile never gets this title suggested again, and titles like it rank lower. */
+    dismissRecommendation?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
+    /** Undo dismissRecommendation. */
+    restoreRecommendation?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
     addToWatchlist?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
     removeFromWatchlist?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
     /** The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it. */

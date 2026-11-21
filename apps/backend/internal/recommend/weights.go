@@ -23,6 +23,9 @@ const (
 	weightSave           = 1.5
 	weightPartialWatch   = 1.0
 	weightEarlyAbandon   = -1.5
+	// weightNotForMe is a title hidden with "Not for me": a clear no, a little
+	// softer than rating it 2/10 since the profile may never have watched it.
+	weightNotForMe = -2.0
 	// titleWeightCap bounds one title's summed signal, so a series binged
 	// episode by episode doesn't drown out everything else.
 	titleWeightCap = 6.0
