@@ -50,6 +50,7 @@ fun TogetherRoomView(room: TogetherRoom, modifier: Modifier = Modifier) {
         CodeHero(room.code)
         PeersCard(room)
         NowPlayingCard()
+        MovieNightCard()
     }
 }
 

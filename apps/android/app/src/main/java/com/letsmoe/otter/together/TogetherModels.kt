@@ -49,6 +49,15 @@ data class ChatPayload(val text: String) : TogetherPayload
 
 data class ReactionPayload(val emoji: String) : TogetherPayload
 
+/** Movie night: someone puts a title on the ballot. Web clients ignore the vote.* payloads. */
+data class SuggestPayload(val mediaId: String, val title: String, val year: Int?, val posterPath: String?) : TogetherPayload
+
+/** Movie night: someone's vote, replacing their earlier one. */
+data class VotePayload(val mediaId: String) : TogetherPayload
+
+/** Movie night: the host closed the vote; the winner opens as a media payload right after. */
+data class VoteResultPayload(val mediaId: String, val title: String) : TogetherPayload
+
 data class RemotePlayback(val payload: PlaybackPayload, val receivedAtMilliseconds: Long)
 
 data class TogetherMessage(val from: TogetherPeer, val payload: String)
