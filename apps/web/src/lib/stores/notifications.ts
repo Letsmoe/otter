@@ -4,10 +4,17 @@ import { writable } from 'svelte/store';
 // (e.g. "Download started"). Entries auto-dismiss after a timeout.
 export type NotificationKind = 'info' | 'success' | 'error';
 
+/** A button on a notification, e.g. "Undo". The notification closes when it is used. */
+export interface NotificationAction {
+	label: string;
+	run: () => void;
+}
+
 export interface Notification {
 	id: string;
 	message: string;
 	kind: NotificationKind;
+	action?: NotificationAction;
 }
 
 const AUTO_DISMISS_MS = 6000;
@@ -20,10 +27,14 @@ function createNotifications() {
 		update((list) => list.filter((entry) => entry.id !== id));
 	}
 
-	function push(message: string, kind: NotificationKind = 'info'): string {
+	function push(
+		message: string,
+		kind: NotificationKind = 'info',
+		action?: NotificationAction
+	): string {
 		counter += 1;
 		const id = `${Date.now()}-${counter}`;
-		update((list) => [{ id, message, kind }, ...list]);
+		update((list) => [{ id, message, kind, action }, ...list]);
 		setTimeout(() => dismiss(id), AUTO_DISMISS_MS);
 		return id;
 	}

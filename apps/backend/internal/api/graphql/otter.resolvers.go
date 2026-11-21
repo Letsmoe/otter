@@ -170,6 +170,32 @@ func (r *mutationResolver) ClearRating(ctx context.Context, profileID string, me
 	return true, nil
 }
 
+// DismissRecommendation is the resolver for the dismissRecommendation field.
+func (r *mutationResolver) DismissRecommendation(ctx context.Context, profileID string, mediaID string) (bool, error) {
+	profile, ref, err := profileAndRecommendable(profileID, mediaID)
+	if err != nil {
+		return false, err
+	}
+	if err := r.Profiles.DismissTitle(ctx, profile, ref); err != nil {
+		return false, err
+	}
+	r.Recommender.Forget(profile)
+	return true, nil
+}
+
+// RestoreRecommendation is the resolver for the restoreRecommendation field.
+func (r *mutationResolver) RestoreRecommendation(ctx context.Context, profileID string, mediaID string) (bool, error) {
+	profile, ref, err := profileAndRecommendable(profileID, mediaID)
+	if err != nil {
+		return false, err
+	}
+	if err := r.Profiles.RestoreTitle(ctx, profile, ref); err != nil {
+		return false, err
+	}
+	r.Recommender.Forget(profile)
+	return true, nil
+}
+
 // AddToWatchlist is the resolver for the addToWatchlist field.
 func (r *mutationResolver) AddToWatchlist(ctx context.Context, profileID string, mediaID string) (bool, error) {
 	profile, ref, err := profileAndMedia(profileID, mediaID)

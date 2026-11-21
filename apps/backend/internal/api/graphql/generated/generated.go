@@ -129,6 +129,7 @@ type ComplexityRoot struct {
 		CreateProfile          func(childComplexity int, name string, avatarURL *string, pin *string, isChild *bool, languages []string) int
 		DeleteDownload         func(childComplexity int, id string) int
 		DeleteProfile          func(childComplexity int, id string) int
+		DismissRecommendation  func(childComplexity int, profileID string, mediaID string) int
 		FailChallenge          func(childComplexity int, id string, reason string, linkGone *bool) int
 		FindStreams            func(childComplexity int, id string) int
 		HostTogether           func(childComplexity int, profileID string) int
@@ -142,6 +143,7 @@ type ComplexityRoot struct {
 		RemoveFromWatchlist    func(childComplexity int, profileID string, mediaID string) int
 		ResolveBestStream      func(childComplexity int, streamIds []string) int
 		ResolveStream          func(childComplexity int, streamID string) int
+		RestoreRecommendation  func(childComplexity int, profileID string, mediaID string) int
 		SendTogether           func(childComplexity int, payload string) int
 		SetNotifying           func(childComplexity int, profileID string, mediaID string, notifying bool) int
 		SetPluginEnabled       func(childComplexity int, name string, enabled bool) int
@@ -469,6 +471,8 @@ type MutationResolver interface {
 	RecordProgress(ctx context.Context, profileID string, mediaID string, progressSeconds float64, durationSeconds float64) (*model.WatchProgress, error)
 	SetRating(ctx context.Context, profileID string, mediaID string, rating float64) (bool, error)
 	ClearRating(ctx context.Context, profileID string, mediaID string) (bool, error)
+	DismissRecommendation(ctx context.Context, profileID string, mediaID string) (bool, error)
+	RestoreRecommendation(ctx context.Context, profileID string, mediaID string) (bool, error)
 	AddToWatchlist(ctx context.Context, profileID string, mediaID string) (bool, error)
 	RemoveFromWatchlist(ctx context.Context, profileID string, mediaID string) (bool, error)
 	SetNotifying(ctx context.Context, profileID string, mediaID string, notifying bool) (bool, error)
@@ -985,6 +989,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeleteProfile(childComplexity, args["id"].(string)), true
+	case "Mutation.dismissRecommendation":
+		if e.ComplexityRoot.Mutation.DismissRecommendation == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_dismissRecommendation_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.DismissRecommendation(childComplexity, args["profileId"].(string), args["mediaId"].(string)), true
 	case "Mutation.failChallenge":
 		if e.ComplexityRoot.Mutation.FailChallenge == nil {
 			break
@@ -1118,6 +1133,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.ResolveStream(childComplexity, args["streamId"].(string)), true
+	case "Mutation.restoreRecommendation":
+		if e.ComplexityRoot.Mutation.RestoreRecommendation == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_restoreRecommendation_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.RestoreRecommendation(childComplexity, args["profileId"].(string), args["mediaId"].(string)), true
 	case "Mutation.sendTogether":
 		if e.ComplexityRoot.Mutation.SendTogether == nil {
 			break
@@ -3362,6 +3388,10 @@ type Mutation {
   recordProgress(profileId: ID!, mediaId: ID!, progressSeconds: Float!, durationSeconds: Float!): WatchProgress!
   setRating(profileId: ID!, mediaId: ID!, rating: Float!): Boolean!
   clearRating(profileId: ID!, mediaId: ID!): Boolean!
+  "\"Not for me\" on a recommendation: the profile never gets this title suggested again, and titles like it rank lower."
+  dismissRecommendation(profileId: ID!, mediaId: ID!): Boolean!
+  "Undo dismissRecommendation."
+  restoreRecommendation(profileId: ID!, mediaId: ID!): Boolean!
   addToWatchlist(profileId: ID!, mediaId: ID!): Boolean!
   removeFromWatchlist(profileId: ID!, mediaId: ID!): Boolean!
   "The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it."
@@ -4453,6 +4483,28 @@ func (ec *executionContext) field_Mutation_deleteProfile_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_dismissRecommendation_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "mediaId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mediaId"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_failChallenge_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4676,6 +4728,28 @@ func (ec *executionContext) field_Mutation_resolveStream_args(ctx context.Contex
 		return nil, err
 	}
 	args["streamId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_restoreRecommendation_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "profileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["profileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "mediaId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mediaId"] = arg1
 	return args, nil
 }
 
@@ -7376,6 +7450,94 @@ func (ec *executionContext) fieldContext_Mutation_clearRating(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_clearRating_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_dismissRecommendation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_dismissRecommendation(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().DismissRecommendation(ctx, fc.Args["profileId"].(string), fc.Args["mediaId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_dismissRecommendation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_dismissRecommendation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_restoreRecommendation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_restoreRecommendation(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().RestoreRecommendation(ctx, fc.Args["profileId"].(string), fc.Args["mediaId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_restoreRecommendation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_restoreRecommendation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -16215,6 +16377,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "clearRating":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_clearRating(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "dismissRecommendation":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_dismissRecommendation(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "restoreRecommendation":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_restoreRecommendation(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

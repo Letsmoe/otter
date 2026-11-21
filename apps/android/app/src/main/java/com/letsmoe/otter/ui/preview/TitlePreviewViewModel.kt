@@ -9,6 +9,7 @@ import com.letsmoe.otter.api.tmdbImageUrl
 import com.letsmoe.otter.ui.components.ActorItem
 import com.letsmoe.otter.graphql.TitlePreviewQuery
 import com.letsmoe.otter.profiles.ProfileSession
+import com.letsmoe.otter.ui.media.RecommendationDismissals
 import com.letsmoe.otter.ui.media.TitleActions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -65,6 +66,15 @@ class TitlePreviewViewModel(private val titleId: String) : ViewModel() {
         val inMyList = !current.inMyList
         mutableDetail.update { detail -> detail?.copy(inMyList = inMyList) }
         viewModelScope.launch { saveMyList(inMyList) }
+    }
+
+    /** "Not for me": the recommendations drop the title; [onHidden] runs once the backend has it. */
+    fun hideFromRecommendations(titleName: String, onHidden: () -> Unit) {
+        viewModelScope.launch {
+            if (RecommendationDismissals.dismiss(profileId, titleId, titleName)) {
+                onHidden()
+            }
+        }
     }
 
     private suspend fun saveMyList(inMyList: Boolean) {

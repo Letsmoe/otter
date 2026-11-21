@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import ArrowRightIcon from 'phosphor-svelte/lib/ArrowRightIcon';
+	import EyeSlashIcon from 'phosphor-svelte/lib/EyeSlashIcon';
 	import FocusList from './FocusList.svelte';
 	import { sidebarFocus } from '$lib/stores/focus';
 	import type { RailItem } from '@letsmoe/otter-app/discovery';
@@ -22,6 +23,8 @@
 		scroll?: 'center' | 'top';
 		// When set, a leading card links to the full browse grid.
 		seeAll?: { href: string; label: string };
+		// When set, poster cards get a "Not for me" button.
+		ondismiss?: (item: RailItem) => void;
 	}
 
 	let {
@@ -31,8 +34,15 @@
 		onedge,
 		variant = 'poster',
 		scroll = 'center',
-		seeAll
+		seeAll,
+		ondismiss
 	}: Props = $props();
+
+	function dismissEntry(event: MouseEvent, entry: RailItem) {
+		// The card around the button would open the title.
+		event.stopPropagation();
+		ondismiss?.(entry);
+	}
 
 	// Rails stay scannable: overflow-scroll horizontally, never more than 25 cards.
 	const MAX_RAIL_ITEMS = 25;
@@ -131,7 +141,7 @@
 						{/if}
 					</div>
 				{:else}
-					<div class="flex w-48 shrink-0 flex-col gap-2">
+					<div class="group flex w-48 shrink-0 flex-col gap-2">
 						<div class="tv-card relative aspect-[2/3] w-48">
 							{#if entry.posterUrl}
 								<img
@@ -144,6 +154,17 @@
 								<div class="flex h-full w-full items-center justify-center">
 									<span class="text-5xl opacity-10">🎬</span>
 								</div>
+							{/if}
+							{#if ondismiss}
+								<button
+									type="button"
+									class="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-black"
+									aria-label="Not for me: {entry.title}"
+									title="Not for me"
+									onclick={(event) => dismissEntry(event, entry)}
+								>
+									<EyeSlashIcon size={16} weight="bold" />
+								</button>
 							{/if}
 						</div>
 						<p class="text-base-content line-clamp-1 text-sm font-medium">{entry.title}</p>

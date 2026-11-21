@@ -9,7 +9,10 @@ import kotlinx.coroutines.launch
 
 enum class ToastKind { INFO, SUCCESS, ERROR }
 
-data class Toast(val id: Long, val message: String, val kind: ToastKind)
+/** A button on a toast, e.g. "Undo"; the toast closes when it is tapped. */
+class ToastAction(val label: String, val onClick: () -> Unit)
+
+data class Toast(val id: Long, val message: String, val kind: ToastKind, val action: ToastAction? = null)
 
 /** App-wide transient messages ("Saved", "Alex joined Watch Together"); mirrors stores/notifications.ts. */
 object Toasts {
@@ -21,9 +24,9 @@ object Toasts {
 
     private var counter = 0L
 
-    fun push(message: String, kind: ToastKind = ToastKind.INFO) {
+    fun push(message: String, kind: ToastKind = ToastKind.INFO, action: ToastAction? = null) {
         counter += 1
-        val toast = Toast(counter, message, kind)
+        val toast = Toast(counter, message, kind, action)
         mutableEntries.update { current -> listOf(toast) + current }
         AppScope.launch {
             delay(AUTO_DISMISS_MILLISECONDS)
