@@ -182,6 +182,19 @@ export interface WatchProgress {
     __typename: 'WatchProgress'
 }
 
+
+/** A moment of a movie or episode the profile saved while watching. */
+export interface Bookmark {
+    id: Scalars['ID']
+    /** The movie or episode. */
+    mediaId: Scalars['ID']
+    positionSeconds: Scalars['Float']
+    /** The caption line spoken at that moment; null when there was none. */
+    caption: (Scalars['String'] | null)
+    createdAt: Scalars['String']
+    __typename: 'Bookmark'
+}
+
 export interface ContinueItem {
     title: Title
     /** For series: the episode to continue or the next one. */
@@ -466,6 +479,8 @@ export interface Query {
     continueWatching: ContinueItem[]
     history: HistoryEntry[]
     watchlist: Title[]
+    /** The profile's bookmarks of a movie, or of all episodes of a series (in watching order), earliest moment first. */
+    bookmarks: Bookmark[]
     /** Titles the profile rated well (I like this, Love this), latest rating first. */
     likedTitles: Title[]
     /** Newest first. */
@@ -544,6 +559,9 @@ export interface Mutation {
     recordProgress: WatchProgress
     setRating: Scalars['Boolean']
     clearRating: Scalars['Boolean']
+    /** Saves the position of a movie or episode, with the caption line spoken then. */
+    addBookmark: Bookmark
+    removeBookmark: Scalars['Boolean']
     addToWatchlist: Scalars['Boolean']
     removeFromWatchlist: Scalars['Boolean']
     /** The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it. */
@@ -797,6 +815,20 @@ export interface WatchProgressGenqlSelection{
     durationSeconds?: boolean | number
     completed?: boolean | number
     updatedAt?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** A moment of a movie or episode the profile saved while watching. */
+export interface BookmarkGenqlSelection{
+    id?: boolean | number
+    /** The movie or episode. */
+    mediaId?: boolean | number
+    positionSeconds?: boolean | number
+    /** The caption line spoken at that moment; null when there was none. */
+    caption?: boolean | number
+    createdAt?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1095,6 +1127,8 @@ export interface QueryGenqlSelection{
     continueWatching?: (ContinueItemGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     history?: (HistoryEntryGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     watchlist?: (TitleGenqlSelection & { __args: {profileId: Scalars['ID']} })
+    /** The profile's bookmarks of a movie, or of all episodes of a series (in watching order), earliest moment first. */
+    bookmarks?: (BookmarkGenqlSelection & { __args: {profileId: Scalars['ID'], titleId: Scalars['ID']} })
     /** Titles the profile rated well (I like this, Love this), latest rating first. */
     likedTitles?: (TitleGenqlSelection & { __args: {profileId: Scalars['ID'], limit?: (Scalars['Int'] | null)} })
     /** Newest first. */
@@ -1175,6 +1209,9 @@ export interface MutationGenqlSelection{
     recordProgress?: (WatchProgressGenqlSelection & { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], progressSeconds: Scalars['Float'], durationSeconds: Scalars['Float']} })
     setRating?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], rating: Scalars['Float']} }
     clearRating?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
+    /** Saves the position of a movie or episode, with the caption line spoken then. */
+    addBookmark?: (BookmarkGenqlSelection & { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID'], positionSeconds: Scalars['Float'], caption?: (Scalars['String'] | null)} })
+    removeBookmark?: { __args: {profileId: Scalars['ID'], bookmarkId: Scalars['ID']} }
     addToWatchlist?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
     removeFromWatchlist?: { __args: {profileId: Scalars['ID'], mediaId: Scalars['ID']} }
     /** The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it. */
@@ -1341,6 +1378,14 @@ export interface SubscriptionGenqlSelection{
     export const isWatchProgress = (obj?: { __typename?: any } | null): obj is WatchProgress => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isWatchProgress"')
       return WatchProgress_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const Bookmark_possibleTypes: string[] = ['Bookmark']
+    export const isBookmark = (obj?: { __typename?: any } | null): obj is Bookmark => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isBookmark"')
+      return Bookmark_possibleTypes.includes(obj.__typename)
     }
     
 

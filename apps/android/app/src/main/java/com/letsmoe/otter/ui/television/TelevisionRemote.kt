@@ -154,7 +154,7 @@ private fun PlayingRemote(
         RemoteScrubber(position, state.durationSeconds, viewModel::seekTo)
         TransportRow(state, viewModel)
         VolumeRow()
-        RemoteSettings(state, onOpen)
+        RemoteSettings(state, onOpen, viewModel::bookmarkHere)
         RemoteActions(onContinueOnPhone)
     }
 }
@@ -371,12 +371,13 @@ private fun VolumeRow() {
 }
 
 @Composable
-private fun RemoteSettings(state: PlayerUiState, onOpen: (RemotePage) -> Unit) {
+private fun RemoteSettings(state: PlayerUiState, onOpen: (RemotePage) -> Unit, onBookmark: () -> Unit) {
     Column(
         Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.06f), RoundedCornerShape(20.dp)).padding(horizontal = 16.dp),
     ) {
         SettingsRow("Captions", captionLabel(state)) { onOpen(RemotePage.CAPTIONS) }
         SettingsRow("Source & language", sourceLabel(state)) { onOpen(RemotePage.SOURCES) }
+        SettingsRow("Bookmark this moment", "Save", onBookmark)
         // DLNA TVs play at normal speed only.
         if (!state.castsToTelevision) {
             SettingsRow("Speed", "${state.speed}×") { onOpen(RemotePage.SPEED) }

@@ -39,6 +39,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Regular
+import com.adamglin.phosphoricons.regular.BookmarkSimple
 import com.adamglin.phosphoricons.regular.CardsThree
 import com.adamglin.phosphoricons.regular.Gauge
 import com.adamglin.phosphoricons.regular.Moon
@@ -168,6 +169,7 @@ private fun ActionRow(state: PlayerUiState, actions: PlayerActions, modifier: Mo
         if (state.episodes.isNotEmpty()) {
             ActionButton(PhosphorIcons.Regular.CardsThree, "Episodes") { actions.openSheet(PlayerSheetKind.EPISODES) }
         }
+        ActionButton(PhosphorIcons.Regular.BookmarkSimple, "Bookmark", actions.bookmark)
         ActionButton(PhosphorIcons.Regular.UsersThree, "Together") { actions.openSheet(PlayerSheetKind.TOGETHER) }
         if (state.hasNextEpisode) {
             ActionButton(PhosphorIcons.Regular.Moon, stopAfterLabel(state.stopsAfterEpisode), actions.toggleStopAfterEpisode)

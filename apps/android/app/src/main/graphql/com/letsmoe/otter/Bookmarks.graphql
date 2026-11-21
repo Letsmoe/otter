@@ -1,0 +1,23 @@
+fragment BookmarkFields on Bookmark {
+  id
+  mediaId
+  positionSeconds
+  caption
+  createdAt
+}
+
+query TitleBookmarks($profileId: ID!, $titleId: ID!) {
+  bookmarks(profileId: $profileId, titleId: $titleId) {
+    ...BookmarkFields
+  }
+}
+
+mutation AddBookmark($profileId: ID!, $mediaId: ID!, $positionSeconds: Float!, $caption: String) {
+  addBookmark(profileId: $profileId, mediaId: $mediaId, positionSeconds: $positionSeconds, caption: $caption) {
+    ...BookmarkFields
+  }
+}
+
+mutation RemoveBookmark($profileId: ID!, $bookmarkId: ID!) {
+  removeBookmark(profileId: $profileId, bookmarkId: $bookmarkId)
+}

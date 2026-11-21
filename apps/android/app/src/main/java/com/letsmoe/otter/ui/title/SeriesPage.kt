@@ -32,6 +32,7 @@ private enum class SeriesTab(val label: String) {
     EPISODES("Episodes"),
     RELATED("More Like This"),
     TRAILERS("Trailers & More"),
+    BOOKMARKS("Bookmarks"),
 }
 
 private val seriesTabs = SeriesTab.entries.map { tab -> tab to tab.label }
@@ -75,8 +76,15 @@ fun SeriesPage(
             SeriesTab.EPISODES -> EpisodesTab(detail, episodes, seriesViewModel, slots, onPlay)
             SeriesTab.RELATED -> RelatedTab(rails, onOpenItem)
             SeriesTab.TRAILERS -> TrailerTab(detail.trailerKey, detail.title, Modifier.padding(horizontal = 12.dp))
+            SeriesTab.BOOKMARKS -> BookmarksTab(detail.id, { mediaId -> episodeLabel(episodes, mediaId) }, onPlay, Modifier.padding(horizontal = 12.dp))
         }
     }
+}
+
+// "S1:E3 Name" of the series' episode, for a bookmark's heading.
+private fun episodeLabel(episodes: EpisodesState, mediaId: String): String? {
+    val episode = episodes.episodes.firstOrNull { candidate -> candidate.id == mediaId } ?: return null
+    return "${episode.code} ${episode.displayName}"
 }
 
 @Composable

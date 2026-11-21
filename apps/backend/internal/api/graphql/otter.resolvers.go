@@ -170,6 +170,32 @@ func (r *mutationResolver) ClearRating(ctx context.Context, profileID string, me
 	return true, nil
 }
 
+// AddBookmark is the resolver for the addBookmark field.
+func (r *mutationResolver) AddBookmark(ctx context.Context, profileID string, mediaID string, positionSeconds float64, caption *string) (*model.Bookmark, error) {
+	profile, ref, err := profileAndMedia(profileID, mediaID)
+	if err != nil {
+		return nil, err
+	}
+	bookmark, err := r.Profiles.AddBookmark(ctx, profile, ref, positionSeconds, valueOr(caption, ""))
+	if err != nil {
+		return nil, err
+	}
+	return bookmarkModel(*bookmark), nil
+}
+
+// RemoveBookmark is the resolver for the removeBookmark field.
+func (r *mutationResolver) RemoveBookmark(ctx context.Context, profileID string, bookmarkID string) (bool, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return false, err
+	}
+	id, err := parseBookmark(bookmarkID)
+	if err != nil {
+		return false, err
+	}
+	return true, r.Profiles.RemoveBookmark(ctx, profile, id)
+}
+
 // AddToWatchlist is the resolver for the addToWatchlist field.
 func (r *mutationResolver) AddToWatchlist(ctx context.Context, profileID string, mediaID string) (bool, error) {
 	profile, ref, err := profileAndMedia(profileID, mediaID)
@@ -785,6 +811,27 @@ func (r *queryResolver) Watchlist(ctx context.Context, profileID string) ([]*mod
 		return nil, err
 	}
 	return titleModels(titles), nil
+}
+
+// Bookmarks is the resolver for the bookmarks field.
+func (r *queryResolver) Bookmarks(ctx context.Context, profileID string, titleID string) ([]*model.Bookmark, error) {
+	profile, err := parseProfile(profileID)
+	if err != nil {
+		return nil, err
+	}
+	ref, err := parseMedia(titleID, library.MediaTypeMovie, library.MediaTypeSeries)
+	if err != nil {
+		return nil, err
+	}
+	bookmarks, err := r.Services.Profiles.Bookmarks(ctx, profile, ref)
+	if err != nil {
+		return nil, err
+	}
+	models := make([]*model.Bookmark, 0, len(bookmarks))
+	for _, bookmark := range bookmarks {
+		models = append(models, bookmarkModel(bookmark))
+	}
+	return models, nil
 }
 
 // LikedTitles is the resolver for the likedTitles field.

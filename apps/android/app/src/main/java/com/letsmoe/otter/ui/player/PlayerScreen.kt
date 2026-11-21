@@ -115,6 +115,7 @@ private fun PlayerContent(viewModel: PlayerViewModel, onBack: () -> Unit) {
         toggleLock = { chrome.locked = !chrome.locked; sheet = null; chrome.show() },
         replayWithCaptions = { viewModel.replayWithCaptions(); chrome.show() },
         toggleStopAfterEpisode = { viewModel.toggleStopAfterEpisode(); chrome.show() },
+        bookmark = { viewModel.bookmarkHere(); chrome.show() },
     )
 
     // The sheets' glass blurs the video (or the casting backdrop) behind them.

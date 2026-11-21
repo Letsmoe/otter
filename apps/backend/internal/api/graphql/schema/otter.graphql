@@ -165,6 +165,17 @@ type WatchProgress {
   updatedAt: String!
 }
 
+"A moment of a movie or episode the profile saved while watching."
+type Bookmark {
+  id: ID!
+  "The movie or episode."
+  mediaId: ID!
+  positionSeconds: Float!
+  "The caption line spoken at that moment; null when there was none."
+  caption: String
+  createdAt: String!
+}
+
 type ContinueItem {
   title: Title!
   "For series: the episode to continue or the next one."
@@ -491,6 +502,8 @@ type Query {
   continueWatching(profileId: ID!, limit: Int = 20): [ContinueItem!]!
   history(profileId: ID!, limit: Int = 50): [HistoryEntry!]!
   watchlist(profileId: ID!): [Title!]!
+  "The profile's bookmarks of a movie, or of all episodes of a series (in watching order), earliest moment first."
+  bookmarks(profileId: ID!, titleId: ID!): [Bookmark!]!
   "Titles the profile rated well (I like this, Love this), latest rating first."
   likedTitles(profileId: ID!, limit: Int = 30): [Title!]!
   "Newest first."
@@ -572,6 +585,9 @@ type Mutation {
   recordProgress(profileId: ID!, mediaId: ID!, progressSeconds: Float!, durationSeconds: Float!): WatchProgress!
   setRating(profileId: ID!, mediaId: ID!, rating: Float!): Boolean!
   clearRating(profileId: ID!, mediaId: ID!): Boolean!
+  "Saves the position of a movie or episode, with the caption line spoken then."
+  addBookmark(profileId: ID!, mediaId: ID!, positionSeconds: Float!, caption: String): Bookmark!
+  removeBookmark(profileId: ID!, bookmarkId: ID!): Boolean!
   addToWatchlist(profileId: ID!, mediaId: ID!): Boolean!
   removeFromWatchlist(profileId: ID!, mediaId: ID!): Boolean!
   "The Notify me bell: news about a movie or series on or off, on My List or not. Adding to or removing from My List resets it."

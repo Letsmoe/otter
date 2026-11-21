@@ -137,6 +137,16 @@ func streamModels(streams []library.Stream) []*model.Stream {
 	return models
 }
 
+func bookmarkModel(bookmark profiles.Bookmark) *model.Bookmark {
+	return &model.Bookmark{
+		ID:              formatID(kindBookmark, bookmark.ID),
+		MediaID:         mediaID(bookmark.Ref()),
+		PositionSeconds: bookmark.PositionSeconds,
+		Caption:         optional(bookmark.Caption),
+		CreatedAt:       bookmark.CreatedAt,
+	}
+}
+
 func progressModel(entry *profiles.WatchEntry) *model.WatchProgress {
 	if entry == nil {
 		return nil
