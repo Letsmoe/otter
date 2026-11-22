@@ -132,10 +132,15 @@ fun TitlesHome(mediaType: MediaType, takeFocus: Boolean, onOpenItem: (RailItem) 
     val carousel = rememberHeroCarousel(mediaType, state)
     val actions = RowActions(onOpenItem = onOpenItem, onOpenPerson = onOpenPerson)
     val rows = rowsOnceFeaturedArrives(mediaType, state)
+    // Below its own rows home keeps going with catalog rows as focus nears the end.
+    val moreRowsViewModel = viewModel(key = "tv-more-rows-$mediaType") { MoreRowsViewModel(mediaType) }
+    val moreRows by moreRowsViewModel.rows.collectAsStateWithLifecycle()
+    val shownGenres = state.genreRails.map { rail -> rail.genre }
     HeroRowsPage(
         firstRowSpace = POSTER_ROW_SPACE,
-        rows = homePageRows(rows, state.actors, actions),
+        rows = homePageRows(rows + moreRows, state.actors, actions),
         backdrop = { modifier -> HeroBackdrop(carousel.current, modifier) },
+        onNearEnd = { moreRowsViewModel.loadMore(shownGenres) },
     ) {
         Box(Modifier.fillMaxSize()) {
             Column(

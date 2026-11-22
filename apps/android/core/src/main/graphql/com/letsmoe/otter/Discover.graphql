@@ -1,0 +1,12 @@
+query Discover($mediaType: MediaType!, $query: String, $filter: DiscoverFilter, $page: Int!) {
+  discover(mediaType: $mediaType, query: $query, filter: $filter, page: $page) {
+    hasMore
+    items {
+      ...TitleCard
+    }
+  }
+}
+
+query DiscoverGenres($mediaType: MediaType!) {
+  discoverGenres(mediaType: $mediaType)
+}

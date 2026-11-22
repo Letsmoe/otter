@@ -67,22 +67,13 @@ class TvSettingsViewModel : ViewModel() {
         }
     }
 
-    /** The language's name; the code itself for one not in [titleLanguages]. */
-    fun titleLanguageName(): String {
-        val known = titleLanguages.firstOrNull { language -> language.first == titleLanguage }
-        if (known == null) {
-            return titleLanguage
+    fun chooseTitleLanguage(language: String) {
+        if (language == titleLanguage) {
+            return
         }
-        return known.second
-    }
-
-    /** Moves to the next language in [titleLanguages], wrapping around. */
-    fun nextTitleLanguage() {
-        val position = titleLanguages.indexOfFirst { language -> language.first == titleLanguage }
-        val next = titleLanguages[(position + 1) % titleLanguages.size].first
         val previous = titleLanguage
-        titleLanguage = next
-        save(SettingsInput(tmdbLanguage = Optional.present(next)), undo = { titleLanguage = previous })
+        titleLanguage = language
+        save(SettingsInput(tmdbLanguage = Optional.present(language)), undo = { titleLanguage = previous })
     }
 
     fun toggleRequireVpn() {

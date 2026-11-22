@@ -5,15 +5,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -24,130 +30,168 @@ import androidx.tv.material3.Text
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
 import com.adamglin.phosphoricons.bold.MagnifyingGlass
+import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.tv.theme.TvColors
 import com.letsmoe.otter.tv.theme.TvSpacing
 import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.tv.ui.components.CARD_SPACING
+import com.letsmoe.otter.tv.ui.components.PillButton
 import com.letsmoe.otter.tv.ui.components.PosterCard
 import com.letsmoe.otter.tv.ui.components.REGULAR_POSTER_WIDTH
+import com.letsmoe.otter.tv.ui.components.SelectField
 import com.letsmoe.otter.tv.ui.components.SelectableChip
 import com.letsmoe.otter.tv.ui.components.TextFieldLook
 import com.letsmoe.otter.tv.ui.components.TvTextField
 import com.letsmoe.otter.ui.media.RailItem
-import com.letsmoe.otter.ui.search.FilterGroup
-import com.letsmoe.otter.ui.search.SearchState
-import com.letsmoe.otter.ui.search.SearchType
-import com.letsmoe.otter.ui.search.SearchViewModel
 
-// Room for the top bar above the search field.
-private val TOP_BAR_SPACE = 64.dp
-private val FIELD_WIDTH = 360.dp
+// Room for the top bar above the page.
+private val TOP_BAR_SPACE = 72.dp
+private val PANEL_WIDTH = 250.dp
+// The next page loads once focus is this many titles from the end.
+private const val LOAD_AHEAD_ITEMS = 12
 
-/** Search: a field, what to search and its filters, then the results as a poster grid (trending until something is typed). */
+/**
+ * Search: the field, the category (movies or shows) and the filters on the left, the results on
+ * the right as a poster grid that keeps loading as focus nears its end. Without a query the grid
+ * shows the catalog, sorted and narrowed by the same filters.
+ */
 @Composable
 fun SearchScreen(onOpenItem: (RailItem) -> Unit) {
-    val viewModel = viewModel(key = "tv-search") { SearchViewModel() }
+    val viewModel = viewModel(key = "tv-search") { TvSearchViewModel() }
     val state by viewModel.state.collectAsStateWithLifecycle()
-    Column(
-        modifier = Modifier.fillMaxSize().padding(top = TOP_BAR_SPACE),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+    Row(
+        modifier = Modifier.fillMaxSize().padding(top = TOP_BAR_SPACE, start = TvSpacing.screenHorizontal),
+        horizontalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        SearchBar(state, viewModel)
-        for (group in state.filterGroups) {
-            FilterRow(group, chosenOption(state, group), onSelect = { value -> viewModel.selectFilter(group, value) })
+        SearchPanel(state, viewModel)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            ResultsHeading(state)
+            ResultsGrid(state, onOpenItem, onNearEnd = viewModel::loadMore)
         }
-        Text(
-            resultsTitle(state),
-            fontSize = TvType.rowTitle,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(start = TvSpacing.screenHorizontal, top = 6.dp),
-        )
-        PosterGrid(shownTitles(state), onOpenItem)
     }
 }
 
 @Composable
-private fun SearchBar(state: SearchState, viewModel: SearchViewModel) {
-    Row(
-        modifier = Modifier.padding(horizontal = TvSpacing.screenHorizontal),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+private fun SearchPanel(state: TvSearchState, viewModel: TvSearchViewModel) {
+    Column(
+        modifier = Modifier
+            .width(PANEL_WIDTH)
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(top = 6.dp, bottom = TvSpacing.screenVertical),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TvTextField(
             value = state.query,
             onValueChange = viewModel::onQueryChange,
             look = TextFieldLook(
-                placeholder = "Titles, people, genres",
+                placeholder = "Search",
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 icon = PhosphorIcons.Bold.MagnifyingGlass,
+                compact = true,
             ),
-            modifier = Modifier.width(FIELD_WIDTH),
+            modifier = Modifier.fillMaxWidth(),
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            for (type in SearchType.entries) {
-                SelectableChip(type.label, selected = type == state.type, onClick = { viewModel.selectType(type) })
-            }
-        }
-    }
-}
-
-/** One filter group (Rating, Length, Seasons): its label, then a chip per option. */
-@Composable
-private fun FilterRow(group: FilterGroup, chosen: String, onSelect: (String) -> Unit) {
-    Row(
-        modifier = Modifier.padding(horizontal = TvSpacing.screenHorizontal),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(group.label, fontSize = TvType.detail, color = TvColors.secondaryContent, modifier = Modifier.width(64.dp))
-        for (option in group.options) {
-            SelectableChip(option.label, selected = option.value == chosen, onClick = { onSelect(option.value) })
-        }
+        CategoryChips(state.mediaType, viewModel::selectMediaType)
+        FilterFields(state, viewModel)
     }
 }
 
 @Composable
-private fun PosterGrid(titles: List<RailItem>, onOpenItem: (RailItem) -> Unit) {
+private fun CategoryChips(selected: MediaType, onSelect: (MediaType) -> Unit) {
+    Row(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        SelectableChip("Movies", selected = selected == MediaType.MOVIE, onClick = { onSelect(MediaType.MOVIE) })
+        SelectableChip("Shows", selected = selected == MediaType.SERIES, onClick = { onSelect(MediaType.SERIES) })
+    }
+}
+
+/** Sort (only without a query: search results stay in relevance order), genre, years, rating and length or seasons. */
+@Composable
+private fun FilterFields(state: TvSearchState, viewModel: TvSearchViewModel) {
+    val filters = state.filters
+    val fieldModifier = Modifier.fillMaxWidth()
+    if (!state.hasQuery) {
+        SelectField("Sort by", sortOptions, filters.sort, { value -> viewModel.changeFilters { current -> current.copy(sort = value) } }, fieldModifier)
+    }
+    SelectField("Genre", genreOptions(state.genres), filters.genre, { value -> viewModel.changeFilters { current -> current.copy(genre = value) } }, fieldModifier)
+    SelectField("Released", yearOptions, filters.years, { value -> viewModel.changeFilters { current -> current.copy(years = value) } }, fieldModifier)
+    SelectField("Rating", ratingOptions, filters.rating, { value -> viewModel.changeFilters { current -> current.copy(rating = value) } }, fieldModifier)
+    if (state.mediaType == MediaType.MOVIE) {
+        SelectField("Length", lengthOptions, filters.length, { value -> viewModel.changeFilters { current -> current.copy(length = value) } }, fieldModifier)
+    } else {
+        SelectField("Seasons", seasonOptions, filters.seasons, { value -> viewModel.changeFilters { current -> current.copy(seasons = value) } }, fieldModifier)
+    }
+    if (filters != SearchFilters()) {
+        PillButton("Reset filters", onClick = { viewModel.changeFilters { SearchFilters() } }, modifier = Modifier.padding(top = 4.dp))
+    }
+}
+
+/** The category as the heading, with what it shows under it. */
+@Composable
+private fun ResultsHeading(state: TvSearchState) {
+    Column(Modifier.padding(top = 4.dp)) {
+        Text(categoryName(state.mediaType), fontSize = TvType.screenTitle, fontWeight = FontWeight.SemiBold)
+        Text(resultsNote(state), fontSize = TvType.detail, color = TvColors.secondaryContent)
+    }
+}
+
+@Composable
+private fun ResultsGrid(state: TvSearchState, onOpenItem: (RailItem) -> Unit, onNearEnd: () -> Unit) {
+    val gridState = rememberLazyGridState()
+    LoadNearEnd(gridState, onNearEnd)
+    // A new search or filter starts at the top.
+    LaunchedEffect(state.query, state.mediaType, state.filters) { gridState.scrollToItem(0) }
     LazyVerticalGrid(
+        state = gridState,
         columns = GridCells.FixedSize(REGULAR_POSTER_WIDTH),
         modifier = Modifier.fillMaxSize(),
         // Room for the focused poster to grow without being clipped.
-        contentPadding = PaddingValues(horizontal = TvSpacing.screenHorizontal, vertical = 10.dp),
+        contentPadding = PaddingValues(top = 10.dp, bottom = 40.dp, end = TvSpacing.screenHorizontal),
         horizontalArrangement = Arrangement.spacedBy(CARD_SPACING),
         verticalArrangement = Arrangement.spacedBy(CARD_SPACING + 6.dp),
     ) {
-        items(titles, key = { item -> item.id }) { item ->
+        items(state.items, key = { item -> item.id }) { item ->
             PosterCard(item, REGULAR_POSTER_WIDTH, onFocus = {}, onClick = { onOpenItem(item) })
         }
     }
 }
 
-// A group nobody touched shows its first option ("Any") as chosen.
-private fun chosenOption(state: SearchState, group: FilterGroup): String {
-    val chosen = state.chosenFilters[group.key]
-    if (chosen == null) {
-        return group.defaultValue
+@Composable
+private fun LoadNearEnd(gridState: LazyGridState, onNearEnd: () -> Unit) {
+    LaunchedEffect(gridState) {
+        snapshotFlow { nearEnd(gridState) }.collect { near ->
+            if (near) {
+                onNearEnd()
+            }
+        }
     }
-    return chosen
 }
 
-// Without a query the grid shows what's trending.
-private fun shownTitles(state: SearchState): List<RailItem> {
-    if (!state.hasQuery) {
-        return state.trending
-    }
-    return state.results
+private fun nearEnd(gridState: LazyGridState): Boolean {
+    val layout = gridState.layoutInfo
+    val lastVisible = layout.visibleItemsInfo.lastOrNull() ?: return false
+    return lastVisible.index >= layout.totalItemsCount - LOAD_AHEAD_ITEMS
 }
 
-private fun resultsTitle(state: SearchState): String {
-    if (!state.hasQuery) {
-        return "Trending"
+private fun categoryName(mediaType: MediaType): String {
+    if (mediaType == MediaType.SERIES) {
+        return "Shows"
     }
-    if (state.searching && state.results.isEmpty()) {
-        return "Searching…"
+    return "Movies"
+}
+
+private fun resultsNote(state: TvSearchState): String {
+    if (state.failed && state.items.isEmpty()) {
+        return "Couldn't load titles. Change a filter to try again."
     }
-    if (state.results.isEmpty()) {
-        return "Nothing found for “${state.query}”"
+    if (state.items.isEmpty() && state.loading) {
+        return "Loading…"
     }
-    return "Results"
+    if (state.items.isEmpty()) {
+        return "Nothing matches. Try other filters."
+    }
+    if (state.hasQuery) {
+        return "Results for “${state.query.trim()}”"
+    }
+    return sortOptions.first { option -> option.value == state.filters.sort }.label
 }

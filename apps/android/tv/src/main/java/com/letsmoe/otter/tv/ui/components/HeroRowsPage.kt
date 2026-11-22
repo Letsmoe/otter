@@ -50,6 +50,7 @@ fun HeroRowsPage(
     firstRowSpace: Dp,
     rows: List<PageRow>,
     backdrop: @Composable (Modifier) -> Unit,
+    onNearEnd: () -> Unit = {},
     hero: @Composable () -> Unit,
 ) {
     val listState = rememberLazyListState()
@@ -57,6 +58,7 @@ fun HeroRowsPage(
     var focusedRowResizes by remember { mutableIntStateOf(0) }
     ScrollFocusedRowIntoPlace(listState, focusedRow)
     KeepGrownRowOnScreen(listState, focusedRow, focusedRowResizes)
+    AskForRowsNearEnd(focusedRow, rows.size, onNearEnd)
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val heroHeight = maxHeight - firstRowSpace
         backdrop(Modifier.parallax(listState, heroHeight))
@@ -110,6 +112,19 @@ private fun ScrollFocusedRowIntoPlace(listState: LazyListState, focusedRow: Int)
         }
         // Item 0 is the hero, so row n is item n + 1; a negative offset leaves room above it.
         listState.animateScrollToItem(focusedRow + 1, -topLine)
+    }
+}
+
+// Focus this many rows from the last one asks for more, so they're there before focus gets there.
+private const val ROWS_AHEAD = 3
+
+/** Tells [onNearEnd] once focus is within [ROWS_AHEAD] rows of the end, and again each time rows were added. */
+@Composable
+private fun AskForRowsNearEnd(focusedRow: Int, rowCount: Int, onNearEnd: () -> Unit) {
+    LaunchedEffect(focusedRow, rowCount) {
+        if (rowCount > 0 && focusedRow >= rowCount - ROWS_AHEAD) {
+            onNearEnd()
+        }
     }
 }
 

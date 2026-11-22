@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -28,6 +29,9 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Icon
 import androidx.tv.material3.Text
@@ -36,8 +40,34 @@ import com.letsmoe.otter.tv.theme.TvType
 
 private val FIELD_SHAPE = RoundedCornerShape(10.dp)
 
-/** What the field shows and how it types. */
-class TextFieldLook(val placeholder: String, val keyboardOptions: KeyboardOptions, val icon: ImageVector? = null)
+/** What the field shows and how it types; [compact] is a lower, fully rounded pill with smaller text. */
+class TextFieldLook(
+    val placeholder: String,
+    val keyboardOptions: KeyboardOptions,
+    val icon: ImageVector? = null,
+    val compact: Boolean = false,
+) {
+    fun shape(): Shape {
+        if (compact) {
+            return CircleShape
+        }
+        return FIELD_SHAPE
+    }
+
+    fun fontSize(): TextUnit {
+        if (compact) {
+            return TvType.body
+        }
+        return TvType.sectionTitle
+    }
+
+    fun verticalPadding(): Dp {
+        if (compact) {
+            return 7.dp
+        }
+        return 11.dp
+    }
+}
 
 /**
  * A one-line text field for the remote. Android TV opens its keyboard whenever a text field gets
@@ -72,13 +102,13 @@ private fun FieldBox(value: String, look: TextFieldLook, refocus: Boolean, onRef
     }
     FocusableSurface(
         onClick = onClick,
-        shape = FIELD_SHAPE,
+        shape = look.shape(),
         focusedScale = 1f,
         focusedContainerColor = TvColors.subtleFill,
         modifier = Modifier.fillMaxWidth().focusRequester(boxFocus),
     ) {
         FieldDecoration(value, look, borderColor = Color.Transparent) {
-            Text(value, fontSize = TvType.sectionTitle, color = TvColors.baseContent, maxLines = 1)
+            Text(value, fontSize = look.fontSize(), color = TvColors.baseContent, maxLines = 1)
         }
     }
 }
@@ -102,7 +132,7 @@ private fun EditingField(
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
-        textStyle = TextStyle(fontSize = TvType.sectionTitle, color = TvColors.baseContent),
+        textStyle = TextStyle(fontSize = look.fontSize(), color = TvColors.baseContent),
         cursorBrush = SolidColor(Color.White),
         keyboardOptions = look.keyboardOptions,
         keyboardActions = KeyboardActions(onAny = { onDone() }),
@@ -127,9 +157,9 @@ private fun FieldDecoration(value: String, look: TextFieldLook, borderColor: Col
     Row(
         Modifier
             .fillMaxWidth()
-            .background(TvColors.subtleFill, FIELD_SHAPE)
-            .border(2.dp, borderColor, FIELD_SHAPE)
-            .padding(horizontal = 16.dp, vertical = 11.dp),
+            .background(TvColors.subtleFill, look.shape())
+            .border(2.dp, borderColor, look.shape())
+            .padding(horizontal = 16.dp, vertical = look.verticalPadding()),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -139,7 +169,7 @@ private fun FieldDecoration(value: String, look: TextFieldLook, borderColor: Col
         }
         Box {
             if (value.isEmpty()) {
-                Text(look.placeholder, fontSize = TvType.sectionTitle, color = TvColors.neutralContent)
+                Text(look.placeholder, fontSize = look.fontSize(), color = TvColors.neutralContent)
             }
             content()
         }

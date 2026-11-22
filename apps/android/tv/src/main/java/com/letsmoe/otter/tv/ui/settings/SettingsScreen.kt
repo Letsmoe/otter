@@ -30,6 +30,10 @@ import com.letsmoe.otter.tv.theme.TvColors
 import com.letsmoe.otter.tv.theme.TvSpacing
 import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.tv.ui.components.FocusableSurface
+import com.letsmoe.otter.tv.ui.components.SelectField
+import com.letsmoe.otter.tv.ui.components.SelectOption
+
+private val titleLanguageOptions = titleLanguages.map { language -> SelectOption(language.first, language.second) }
 
 // Clears the top bar above the list.
 private val LIST_TOP = 96.dp
@@ -47,7 +51,14 @@ fun SettingsScreen() {
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         GroupTitle("Titles")
-        ValueRow("Title language", "Names and descriptions of titles loaded from now on", viewModel.titleLanguageName(), viewModel::nextTitleLanguage)
+        SelectField(
+            "Title language",
+            titleLanguageOptions,
+            selected = viewModel.titleLanguage,
+            onSelect = viewModel::chooseTitleLanguage,
+            description = "Names and descriptions of titles loaded from now on",
+            modifier = Modifier.width(LIST_WIDTH),
+        )
         GroupTitle("Streaming")
         SwitchRow("Require VPN", "No lookups or playback without a VPN", viewModel.requireVpn, viewModel::toggleRequireVpn)
         GroupTitle("Playback")
