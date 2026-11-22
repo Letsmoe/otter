@@ -16,6 +16,19 @@ type genreListResponse struct {
 	Genres []Genre `json:"genres"`
 }
 
+// GenresOf lists the genres TMDB has for movies or series, in the response language.
+func (c *Client) GenresOf(ctx context.Context, mediaType string) ([]Genre, error) {
+	path := "/genre/movie/list"
+	if mediaType == "series" {
+		path = "/genre/tv/list"
+	}
+	var response genreListResponse
+	if err := c.get(ctx, path, nil, &response); err != nil {
+		return nil, err
+	}
+	return response.Genres, nil
+}
+
 // GenreNames returns the names of the given genre ids. Unknown ids are skipped.
 func (c *Client) GenreNames(ctx context.Context, ids []int) []string {
 	names := c.genreTable(ctx)

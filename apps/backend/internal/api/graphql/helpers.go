@@ -110,6 +110,36 @@ func titleFilter(filter *model.TitleFilter) library.TitleFilter {
 	}
 }
 
+func discoverFilter(filter *model.DiscoverFilter) library.DiscoverFilter {
+	if filter == nil {
+		return library.DiscoverFilter{}
+	}
+	return library.DiscoverFilter{
+		Genre:      valueOr(filter.Genre, ""),
+		MinYear:    valueOr(filter.MinYear, 0),
+		MaxYear:    valueOr(filter.MaxYear, 0),
+		MinRating:  valueOr(filter.MinRating, 0),
+		MinRuntime: valueOr(filter.MinRuntime, 0),
+		MaxRuntime: valueOr(filter.MaxRuntime, 0),
+		MinSeasons: valueOr(filter.MinSeasons, 0),
+		MaxSeasons: valueOr(filter.MaxSeasons, 0),
+		Sort:       discoverSortOf(filter.Sort),
+	}
+}
+
+func discoverSortOf(sort *model.DiscoverSort) string {
+	if sort == nil {
+		return library.DiscoverSortPopular
+	}
+	switch *sort {
+	case model.DiscoverSortTopRated:
+		return library.DiscoverSortTopRated
+	case model.DiscoverSortNewest:
+		return library.DiscoverSortNewest
+	}
+	return library.DiscoverSortPopular
+}
+
 // likedRefs returns the titles rated at least library.WellRatedMinimum,
 // latest rating first.
 func likedRefs(ratings []profiles.Rating, limit int) []library.MediaRef {

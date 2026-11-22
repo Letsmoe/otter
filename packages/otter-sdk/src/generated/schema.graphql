@@ -249,6 +249,39 @@ input TitleFilter {
   maxSeasons: Int
 }
 
+"""
+Narrows Query.discover; omitted fields don't filter. Years are release (movies) or first air (series) years, runtime is in minutes.
+"""
+input DiscoverFilter {
+  genre: String
+  minYear: Int
+  maxYear: Int
+  minRating: Float
+  minRuntime: Int
+  maxRuntime: Int
+  minSeasons: Int
+  maxSeasons: Int
+
+  """
+  Only applies without a query; search results keep TMDB's relevance order.
+  """
+  sort: DiscoverSort = POPULAR
+}
+
+enum DiscoverSort {
+  POPULAR
+  TOP_RATED
+  NEWEST
+}
+
+"""
+One page of titles; hasMore says whether the next page exists. A filtered page can be short or empty while more follow.
+"""
+type TitlePage {
+  items: [Title!]!
+  hasMore: Boolean!
+}
+
 """Titles featuring the lead actor of a title the profile rated well."""
 type MoreWithRow {
   person: Person!
@@ -587,6 +620,16 @@ type Query {
 
   """TMDB search; results are stored as titles."""
   search(query: String!, mediaType: MediaType, limit: Int = 20, filter: TitleFilter): [Title!]!
+
+  """
+  Pages (from 1) through TMDB's matches for query, or without one through its catalog, narrowed by filter; results are stored as titles.
+  """
+  discover(mediaType: MediaType!, query: String, filter: DiscoverFilter, page: Int = 1): TitlePage!
+
+  """
+  TMDB's genre names for movies or series, for Query.discover's genre filter.
+  """
+  discoverGenres(mediaType: MediaType!): [String!]!
   trending(mediaType: MediaType): [Title!]!
 
   """

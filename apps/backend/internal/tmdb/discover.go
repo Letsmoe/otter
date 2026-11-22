@@ -24,6 +24,51 @@ type DiscoverOptions struct {
 	MinVotes  int
 	MaxVotes  int
 	MinRating float64
+	// MinYear and MaxYear bound the release (movies) or first air (series) year.
+	MinYear int
+	MaxYear int
+	// MinRuntime and MaxRuntime are minutes.
+	MinRuntime int
+	MaxRuntime int
+}
+
+// DiscoverPage reads one page (from 1) of Discover and says how many pages there are.
+func (c *Client) DiscoverPage(ctx context.Context, mediaType string, options DiscoverOptions, page int) ([]SearchResult, int, error) {
+	params := options.params()
+	addRangeParams(params, mediaType, options)
+	params["page"] = strconv.Itoa(page)
+	var response SearchResponse
+	if err := c.get(ctx, discoverPath(mediaType), params, &response); err != nil {
+		return nil, 0, err
+	}
+	return response.Results, response.TotalPages, nil
+}
+
+func discoverPath(mediaType string) string {
+	if mediaType == "series" {
+		return "/discover/tv"
+	}
+	return "/discover/movie"
+}
+
+// addRangeParams adds the year and runtime bounds; movies and series name their dates differently.
+func addRangeParams(params map[string]string, mediaType string, options DiscoverOptions) {
+	dateField := "primary_release_date"
+	if mediaType == "series" {
+		dateField = "first_air_date"
+	}
+	if options.MinYear > 0 {
+		params[dateField+".gte"] = strconv.Itoa(options.MinYear) + "-01-01"
+	}
+	if options.MaxYear > 0 {
+		params[dateField+".lte"] = strconv.Itoa(options.MaxYear) + "-12-31"
+	}
+	if options.MinRuntime > 0 {
+		params["with_runtime.gte"] = strconv.Itoa(options.MinRuntime)
+	}
+	if options.MaxRuntime > 0 {
+		params["with_runtime.lte"] = strconv.Itoa(options.MaxRuntime)
+	}
 }
 
 // Discover lists movies or series straight from TMDB's catalog, sorted by
@@ -38,10 +83,7 @@ func (c *Client) Discover(ctx context.Context, mediaType string, genreID int, so
 
 // DiscoverWith is Discover with extra filters.
 func (c *Client) DiscoverWith(ctx context.Context, mediaType string, options DiscoverOptions, pages int) ([]SearchResult, error) {
-	path := "/discover/movie"
-	if mediaType == "series" {
-		path = "/discover/tv"
-	}
+	path := discoverPath(mediaType)
 	params := options.params()
 	results := []SearchResult{}
 	for page := 1; page <= pages; page++ {

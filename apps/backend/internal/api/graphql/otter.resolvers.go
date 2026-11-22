@@ -606,6 +606,20 @@ func (r *queryResolver) Search(ctx context.Context, query string, mediaType *mod
 	return titleModels(titles), nil
 }
 
+// Discover is the resolver for the discover field.
+func (r *queryResolver) Discover(ctx context.Context, mediaType model.MediaType, query *string, filter *model.DiscoverFilter, page *int) (*model.TitlePage, error) {
+	result, err := r.Library.Discover(ctx, libraryMediaType(mediaType), valueOr(query, ""), discoverFilter(filter), valueOr(page, 1))
+	if err != nil {
+		return nil, err
+	}
+	return &model.TitlePage{Items: titleModels(result.Titles), HasMore: result.HasMore}, nil
+}
+
+// DiscoverGenres is the resolver for the discoverGenres field.
+func (r *queryResolver) DiscoverGenres(ctx context.Context, mediaType model.MediaType) ([]string, error) {
+	return r.Library.GenresOf(ctx, libraryMediaType(mediaType))
+}
+
 // Trending is the resolver for the trending field.
 func (r *queryResolver) Trending(ctx context.Context, mediaType *model.MediaType) ([]*model.Title, error) {
 	titles, err := r.Library.Trending(ctx, optionalMediaType(mediaType))

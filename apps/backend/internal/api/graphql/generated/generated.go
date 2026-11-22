@@ -265,6 +265,8 @@ type ComplexityRoot struct {
 		CatalogTheme            func(childComplexity int, mediaType model.MediaType, theme model.CatalogTheme) int
 		CheckTmdbKey            func(childComplexity int, key string) int
 		ContinueWatching        func(childComplexity int, profileID string, limit *int) int
+		Discover                func(childComplexity int, mediaType model.MediaType, query *string, filter *model.DiscoverFilter, page *int) int
+		DiscoverGenres          func(childComplexity int, mediaType model.MediaType) int
 		Downloads               func(childComplexity int, profileID string) int
 		DownloadsFolder         func(childComplexity int) int
 		Episode                 func(childComplexity int, id string) int
@@ -422,6 +424,11 @@ type ComplexityRoot struct {
 		Year          func(childComplexity int) int
 	}
 
+	TitlePage struct {
+		HasMore func(childComplexity int) int
+		Items   func(childComplexity int) int
+	}
+
 	TitleVideo struct {
 		Key  func(childComplexity int) int
 		Name func(childComplexity int) int
@@ -517,6 +524,8 @@ type QueryResolver interface {
 	Episode(ctx context.Context, id string) (*model.Episode, error)
 	Person(ctx context.Context, id string) (*model.Person, error)
 	Search(ctx context.Context, query string, mediaType *model.MediaType, limit *int, filter *model.TitleFilter) ([]*model.Title, error)
+	Discover(ctx context.Context, mediaType model.MediaType, query *string, filter *model.DiscoverFilter, page *int) (*model.TitlePage, error)
+	DiscoverGenres(ctx context.Context, mediaType model.MediaType) ([]string, error)
 	Trending(ctx context.Context, mediaType *model.MediaType) ([]*model.Title, error)
 	NewAndComingSoon(ctx context.Context, mediaType model.MediaType) ([]*model.Title, error)
 	WatchedActors(ctx context.Context, profileID string, mediaType model.MediaType, limit *int) ([]*model.Person, error)
@@ -1755,6 +1764,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.ContinueWatching(childComplexity, args["profileId"].(string), args["limit"].(*int)), true
+	case "Query.discover":
+		if e.ComplexityRoot.Query.Discover == nil {
+			break
+		}
+
+		args, err := ec.field_Query_discover_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Discover(childComplexity, args["mediaType"].(model.MediaType), args["query"].(*string), args["filter"].(*model.DiscoverFilter), args["page"].(*int)), true
+	case "Query.discoverGenres":
+		if e.ComplexityRoot.Query.DiscoverGenres == nil {
+			break
+		}
+
+		args, err := ec.field_Query_discoverGenres_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.DiscoverGenres(childComplexity, args["mediaType"].(model.MediaType)), true
 	case "Query.downloads":
 		if e.ComplexityRoot.Query.Downloads == nil {
 			break
@@ -2598,6 +2629,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Title.Year(childComplexity), true
 
+	case "TitlePage.hasMore":
+		if e.ComplexityRoot.TitlePage.HasMore == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TitlePage.HasMore(childComplexity), true
+	case "TitlePage.items":
+		if e.ComplexityRoot.TitlePage.Items == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TitlePage.Items(childComplexity), true
+
 	case "TitleVideo.key":
 		if e.ComplexityRoot.TitleVideo.Key == nil {
 			break
@@ -2732,6 +2776,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputDiscoverFilter,
 		ec.unmarshalInputPluginSettingInput,
 		ec.unmarshalInputSettingsInput,
 		ec.unmarshalInputTitleFilter,
@@ -3037,6 +3082,32 @@ input TitleFilter {
   maxSeasons: Int
 }
 
+"Narrows Query.discover; omitted fields don't filter. Years are release (movies) or first air (series) years, runtime is in minutes."
+input DiscoverFilter {
+  genre: String
+  minYear: Int
+  maxYear: Int
+  minRating: Float
+  minRuntime: Int
+  maxRuntime: Int
+  minSeasons: Int
+  maxSeasons: Int
+  "Only applies without a query; search results keep TMDB's relevance order."
+  sort: DiscoverSort = POPULAR
+}
+
+enum DiscoverSort {
+  POPULAR
+  TOP_RATED
+  NEWEST
+}
+
+"One page of titles; hasMore says whether the next page exists. A filtered page can be short or empty while more follow."
+type TitlePage {
+  items: [Title!]!
+  hasMore: Boolean!
+}
+
 "Titles featuring the lead actor of a title the profile rated well."
 type MoreWithRow {
   person: Person!
@@ -3311,6 +3382,10 @@ type Query {
   person(id: ID!): Person
   "TMDB search; results are stored as titles."
   search(query: String!, mediaType: MediaType, limit: Int = 20, filter: TitleFilter): [Title!]!
+  "Pages (from 1) through TMDB's matches for query, or without one through its catalog, narrowed by filter; results are stored as titles."
+  discover(mediaType: MediaType!, query: String, filter: DiscoverFilter, page: Int = 1): TitlePage!
+  "TMDB's genre names for movies or series, for Query.discover's genre filter."
+  discoverGenres(mediaType: MediaType!): [String!]!
   trending(mediaType: MediaType): [Title!]!
   "Upcoming releases (soonest first), then recent ones (newest first). Series: currently airing."
   newAndComingSoon(mediaType: MediaType!): [Title!]!
@@ -4097,6 +4172,16 @@ func (ec *executionContext) childFields_Title(ctx context.Context, field graphql
 		return ec.fieldContext_Title_notifying(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Title", field.Name)
+}
+
+func (ec *executionContext) childFields_TitlePage(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "items":
+		return ec.fieldContext_TitlePage_items(ctx, field)
+	case "hasMore":
+		return ec.fieldContext_TitlePage_hasMore(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type TitlePage", field.Name)
 }
 
 func (ec *executionContext) childFields_TitleVideo(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -5248,6 +5333,58 @@ func (ec *executionContext) field_Query_continueWatching_args(ctx context.Contex
 		return nil, err
 	}
 	args["limit"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_discoverGenres_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaType",
+		func(ctx context.Context, v any) (model.MediaType, error) {
+			return ec.unmarshalNMediaType2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mediaType"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_discover_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "mediaType",
+		func(ctx context.Context, v any) (model.MediaType, error) {
+			return ec.unmarshalNMediaType2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐMediaType(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mediaType"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "query",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["query"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "filter",
+		func(ctx context.Context, v any) (*model.DiscoverFilter, error) {
+			return ec.unmarshalODiscoverFilter2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDiscoverFilter(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "page",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["page"] = arg3
 	return args, nil
 }
 
@@ -10419,6 +10556,94 @@ func (ec *executionContext) fieldContext_Query_search(ctx context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_discover(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_discover(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Discover(ctx, fc.Args["mediaType"].(model.MediaType), fc.Args["query"].(*string), fc.Args["filter"].(*model.DiscoverFilter), fc.Args["page"].(*int))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.TitlePage) graphql.Marshaler {
+			return ec.marshalNTitlePage2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitlePage(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_discover(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_TitlePage(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_discover_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_discoverGenres(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_discoverGenres(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().DiscoverGenres(ctx, fc.Args["mediaType"].(model.MediaType))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []string) graphql.Marshaler {
+			return ec.marshalNString2ᚕstringᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_discoverGenres(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_discoverGenres_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_trending(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -13947,6 +14172,61 @@ func (ec *executionContext) fieldContext_Title_notifying(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _TitlePage_items(ctx context.Context, field graphql.CollectedField, obj *model.TitlePage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TitlePage_items(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Items, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Title) graphql.Marshaler {
+			return ec.marshalNTitle2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TitlePage_items(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TitlePage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Title(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TitlePage_hasMore(ctx context.Context, field graphql.CollectedField, obj *model.TitlePage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TitlePage_hasMore(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HasMore, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TitlePage_hasMore(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TitlePage", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
 func (ec *executionContext) _TitleVideo_key(ctx context.Context, field graphql.CollectedField, obj *model.TitleVideo) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -15510,6 +15790,96 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
+
+func (ec *executionContext) unmarshalInputDiscoverFilter(ctx context.Context, obj any) (model.DiscoverFilter, error) {
+	var it model.DiscoverFilter
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["sort"]; !present {
+		asMap["sort"] = "POPULAR"
+	}
+
+	fieldsInOrder := [...]string{"genre", "minYear", "maxYear", "minRating", "minRuntime", "maxRuntime", "minSeasons", "maxSeasons", "sort"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "genre":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("genre"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Genre = data
+		case "minYear":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minYear"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MinYear = data
+		case "maxYear":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxYear"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxYear = data
+		case "minRating":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minRating"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MinRating = data
+		case "minRuntime":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minRuntime"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MinRuntime = data
+		case "maxRuntime":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxRuntime"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxRuntime = data
+		case "minSeasons":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minSeasons"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MinSeasons = data
+		case "maxSeasons":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxSeasons"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxSeasons = data
+		case "sort":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+			data, err := ec.unmarshalODiscoverSort2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDiscoverSort(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Sort = data
+		}
+	}
+	return it, nil
+}
 
 func (ec *executionContext) unmarshalInputPluginSettingInput(ctx context.Context, obj any) (model.PluginSettingInput, error) {
 	var it model.PluginSettingInput
@@ -17465,6 +17835,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "discover":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_discover(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "discoverGenres":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_discoverGenres(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "trending":
 			field := field
 
@@ -19157,6 +19571,50 @@ func (ec *executionContext) _Title(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
+var titlePageImplementors = []string{"TitlePage"}
+
+func (ec *executionContext) _TitlePage(ctx context.Context, sel ast.SelectionSet, obj *model.TitlePage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, titlePageImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TitlePage")
+		case "items":
+			out.Values[i] = ec._TitlePage_items(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "hasMore":
+			out.Values[i] = ec._TitlePage_hasMore(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var titleVideoImplementors = []string{"TitleVideo"}
 
 func (ec *executionContext) _TitleVideo(ctx context.Context, sel ast.SelectionSet, obj *model.TitleVideo) graphql.Marshaler {
@@ -20674,6 +21132,20 @@ func (ec *executionContext) marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋin
 	return ec._Title(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNTitlePage2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitlePage(ctx context.Context, sel ast.SelectionSet, v model.TitlePage) graphql.Marshaler {
+	return ec._TitlePage(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTitlePage2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitlePage(ctx context.Context, sel ast.SelectionSet, v *model.TitlePage) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TitlePage(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNTitleVideo2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleVideoᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TitleVideo) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
@@ -20969,6 +21441,30 @@ func (ec *executionContext) unmarshalOCatalogSort2ᚖgithubᚗcomᚋLetsmoeᚋot
 }
 
 func (ec *executionContext) marshalOCatalogSort2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐCatalogSort(ctx context.Context, sel ast.SelectionSet, v *model.CatalogSort) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalODiscoverFilter2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDiscoverFilter(ctx context.Context, v any) (*model.DiscoverFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputDiscoverFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalODiscoverSort2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDiscoverSort(ctx context.Context, v any) (*model.DiscoverSort, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.DiscoverSort)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalODiscoverSort2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐDiscoverSort(ctx context.Context, sel ast.SelectionSet, v *model.DiscoverSort) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

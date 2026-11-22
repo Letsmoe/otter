@@ -51,6 +51,20 @@ type Credit struct {
 	Order     int     `json:"order"`
 }
 
+// Narrows Query.discover; omitted fields don't filter. Years are release (movies) or first air (series) years, runtime is in minutes.
+type DiscoverFilter struct {
+	Genre      *string  `json:"genre,omitempty"`
+	MinYear    *int     `json:"minYear,omitempty"`
+	MaxYear    *int     `json:"maxYear,omitempty"`
+	MinRating  *float64 `json:"minRating,omitempty"`
+	MinRuntime *int     `json:"minRuntime,omitempty"`
+	MaxRuntime *int     `json:"maxRuntime,omitempty"`
+	MinSeasons *int     `json:"minSeasons,omitempty"`
+	MaxSeasons *int     `json:"maxSeasons,omitempty"`
+	// Only applies without a query; search results keep TMDB's relevance order.
+	Sort *DiscoverSort `json:"sort,omitempty"`
+}
+
 // A movie or episode saved for offline playback.
 type Download struct {
 	ID     string         `json:"id"`
@@ -419,6 +433,12 @@ type TitleFilter struct {
 	MaxSeasons *int     `json:"maxSeasons,omitempty"`
 }
 
+// One page of titles; hasMore says whether the next page exists. A filtered page can be short or empty while more follow.
+type TitlePage struct {
+	Items   []*Title `json:"items"`
+	HasMore bool     `json:"hasMore"`
+}
+
 // One of a title's YouTube videos.
 type TitleVideo struct {
 	// YouTube video key.
@@ -634,6 +654,63 @@ func (e *ChallengeKind) UnmarshalJSON(b []byte) error {
 }
 
 func (e ChallengeKind) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type DiscoverSort string
+
+const (
+	DiscoverSortPopular  DiscoverSort = "POPULAR"
+	DiscoverSortTopRated DiscoverSort = "TOP_RATED"
+	DiscoverSortNewest   DiscoverSort = "NEWEST"
+)
+
+var AllDiscoverSort = []DiscoverSort{
+	DiscoverSortPopular,
+	DiscoverSortTopRated,
+	DiscoverSortNewest,
+}
+
+func (e DiscoverSort) IsValid() bool {
+	switch e {
+	case DiscoverSortPopular, DiscoverSortTopRated, DiscoverSortNewest:
+		return true
+	}
+	return false
+}
+
+func (e DiscoverSort) String() string {
+	return string(e)
+}
+
+func (e *DiscoverSort) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DiscoverSort(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DiscoverSort", str)
+	}
+	return nil
+}
+
+func (e DiscoverSort) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *DiscoverSort) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e DiscoverSort) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

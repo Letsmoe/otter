@@ -221,6 +221,16 @@ export interface Recommendation {
     __typename: 'Recommendation'
 }
 
+export type DiscoverSort = 'POPULAR' | 'TOP_RATED' | 'NEWEST'
+
+
+/** One page of titles; hasMore says whether the next page exists. A filtered page can be short or empty while more follow. */
+export interface TitlePage {
+    items: Title[]
+    hasMore: Scalars['Boolean']
+    __typename: 'TitlePage'
+}
+
 
 /** Titles featuring the lead actor of a title the profile rated well. */
 export interface MoreWithRow {
@@ -460,6 +470,10 @@ export interface Query {
     person: (Person | null)
     /** TMDB search; results are stored as titles. */
     search: Title[]
+    /** Pages (from 1) through TMDB's matches for query, or without one through its catalog, narrowed by filter; results are stored as titles. */
+    discover: TitlePage
+    /** TMDB's genre names for movies or series, for Query.discover's genre filter. */
+    discoverGenres: Scalars['String'][]
     trending: Title[]
     /** Upcoming releases (soonest first), then recent ones (newest first). Series: currently airing. */
     newAndComingSoon: Title[]
@@ -864,6 +878,21 @@ export interface RecommendationGenqlSelection{
 export interface TitleFilter {minRating?: (Scalars['Float'] | null),minRuntime?: (Scalars['Int'] | null),maxRuntime?: (Scalars['Int'] | null),minSeasons?: (Scalars['Int'] | null),maxSeasons?: (Scalars['Int'] | null)}
 
 
+/** Narrows Query.discover; omitted fields don't filter. Years are release (movies) or first air (series) years, runtime is in minutes. */
+export interface DiscoverFilter {genre?: (Scalars['String'] | null),minYear?: (Scalars['Int'] | null),maxYear?: (Scalars['Int'] | null),minRating?: (Scalars['Float'] | null),minRuntime?: (Scalars['Int'] | null),maxRuntime?: (Scalars['Int'] | null),minSeasons?: (Scalars['Int'] | null),maxSeasons?: (Scalars['Int'] | null),
+/** Only applies without a query; search results keep TMDB's relevance order. */
+sort?: (DiscoverSort | null)}
+
+
+/** One page of titles; hasMore says whether the next page exists. A filtered page can be short or empty while more follow. */
+export interface TitlePageGenqlSelection{
+    items?: TitleGenqlSelection
+    hasMore?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
 /** Titles featuring the lead actor of a title the profile rated well. */
 export interface MoreWithRowGenqlSelection{
     person?: PersonGenqlSelection
@@ -1105,6 +1134,10 @@ export interface QueryGenqlSelection{
     person?: (PersonGenqlSelection & { __args: {id: Scalars['ID']} })
     /** TMDB search; results are stored as titles. */
     search?: (TitleGenqlSelection & { __args: {query: Scalars['String'], mediaType?: (MediaType | null), limit?: (Scalars['Int'] | null), filter?: (TitleFilter | null)} })
+    /** Pages (from 1) through TMDB's matches for query, or without one through its catalog, narrowed by filter; results are stored as titles. */
+    discover?: (TitlePageGenqlSelection & { __args: {mediaType: MediaType, query?: (Scalars['String'] | null), filter?: (DiscoverFilter | null), page?: (Scalars['Int'] | null)} })
+    /** TMDB's genre names for movies or series, for Query.discover's genre filter. */
+    discoverGenres?: { __args: {mediaType: MediaType} }
     trending?: (TitleGenqlSelection & { __args?: {mediaType?: (MediaType | null)} })
     /** Upcoming releases (soonest first), then recent ones (newest first). Series: currently airing. */
     newAndComingSoon?: (TitleGenqlSelection & { __args: {mediaType: MediaType} })
@@ -1408,6 +1441,14 @@ export interface SubscriptionGenqlSelection{
     
 
 
+    const TitlePage_possibleTypes: string[] = ['TitlePage']
+    export const isTitlePage = (obj?: { __typename?: any } | null): obj is TitlePage => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isTitlePage"')
+      return TitlePage_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
     const MoreWithRow_possibleTypes: string[] = ['MoreWithRow']
     export const isMoreWithRow = (obj?: { __typename?: any } | null): obj is MoreWithRow => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isMoreWithRow"')
@@ -1611,6 +1652,12 @@ export const enumMediaType = {
    MOVIE: 'MOVIE' as const,
    SERIES: 'SERIES' as const,
    EPISODE: 'EPISODE' as const
+}
+
+export const enumDiscoverSort = {
+   POPULAR: 'POPULAR' as const,
+   TOP_RATED: 'TOP_RATED' as const,
+   NEWEST: 'NEWEST' as const
 }
 
 export const enumSubtitleSize = {

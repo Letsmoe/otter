@@ -68,6 +68,20 @@ func (c *Client) SearchSeries(ctx context.Context, query string, limit int) ([]S
 	return c.searchPages(ctx, "/search/tv", query, limit, nil)
 }
 
+// SearchPage reads one page (from 1) of a movie or series search and says how many pages there are.
+func (c *Client) SearchPage(ctx context.Context, mediaType string, query string, page int) ([]SearchResult, int, error) {
+	path := "/search/movie"
+	if mediaType == "series" {
+		path = "/search/tv"
+	}
+	var response SearchResponse
+	params := map[string]string{"query": query, "page": strconv.Itoa(page), "include_adult": "false"}
+	if err := c.get(ctx, path, params, &response); err != nil {
+		return nil, 0, err
+	}
+	return response.Results, response.TotalPages, nil
+}
+
 // Recommendations returns TMDB's "recommended" titles for a movie or series.
 // mediaType is "movie" or "series" (mapped to the /movie or /tv endpoint).
 func (c *Client) Recommendations(ctx context.Context, mediaType string, tmdbID int) ([]SearchResult, error) {
