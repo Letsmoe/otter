@@ -2,6 +2,7 @@ package com.letsmoe.otter.tv.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,25 +15,39 @@ import androidx.compose.ui.unit.dp
 import com.letsmoe.otter.tv.R
 import com.letsmoe.otter.tv.theme.TvSpacing
 
-/** The wordmark with the app's [tabs] right after it on the left, the VPN state and [trailing] on the right. */
+/**
+ * The app's top bar: the wordmark on the left when [showWordmark], the [tabs] centred, the VPN
+ * state and [trailing] on the right.
+ */
 @Composable
-fun TopBar(modifier: Modifier = Modifier, tabs: @Composable () -> Unit = {}, trailing: @Composable () -> Unit = {}) {
-    Row(
+fun TopBar(
+    modifier: Modifier = Modifier,
+    showWordmark: Boolean = true,
+    tabs: @Composable () -> Unit = {},
+    trailing: @Composable () -> Unit = {},
+) {
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = TvSpacing.screenHorizontal, vertical = 20.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+            .padding(horizontal = TvSpacing.screenHorizontal, vertical = 16.dp),
     ) {
-        Image(
-            painter = painterResource(R.drawable.otter_wordmark),
-            contentDescription = "Otter",
-            modifier = Modifier.height(16.dp),
-        )
-        Row(Modifier.weight(1f).padding(start = 8.dp)) {
+        if (showWordmark) {
+            Image(
+                painter = painterResource(R.drawable.otter_wordmark),
+                contentDescription = "Otter",
+                modifier = Modifier.align(Alignment.CenterStart).height(16.dp),
+            )
+        }
+        Box(Modifier.align(Alignment.Center)) {
             tabs()
         }
-        VpnIndicator()
-        trailing()
+        Row(
+            modifier = Modifier.align(Alignment.CenterEnd),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            VpnIndicator()
+            trailing()
+        }
     }
 }

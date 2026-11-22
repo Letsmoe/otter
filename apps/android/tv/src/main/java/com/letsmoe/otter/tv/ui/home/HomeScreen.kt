@@ -66,6 +66,7 @@ fun HomeScreen(onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> Unit) {
         }
         TopBar(
             modifier = topBarFade(),
+            showWordmark = false,
             tabs = { HomeTabs(tab, onSelect = { selected -> tab = selected }) },
             trailing = { ProfileButton() },
         )
