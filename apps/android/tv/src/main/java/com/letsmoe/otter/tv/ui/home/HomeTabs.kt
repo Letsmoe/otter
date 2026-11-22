@@ -14,6 +14,7 @@ import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Icon
@@ -24,15 +25,20 @@ import androidx.tv.material3.TabRowDefaults
 import androidx.tv.material3.Text
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Bold
+import com.adamglin.phosphoricons.bold.GearSix
 import com.adamglin.phosphoricons.bold.MagnifyingGlass
 import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.tv.theme.TvType
 
-/** The top bar's tabs; Search has no media type and shows as an icon, the others are home categories. */
-enum class HomeTab(val label: String, val mediaType: MediaType?) {
-    MOVIES("Movies", MediaType.MOVIE),
-    SHOWS("Shows", MediaType.SERIES),
-    SEARCH("Search", null),
+/**
+ * The top bar's tabs: the home categories by [mediaType], then Search and Settings, which have
+ * none and show as their [icon].
+ */
+enum class HomeTab(val label: String, val mediaType: MediaType?, val icon: ImageVector?) {
+    MOVIES("Movies", MediaType.MOVIE, null),
+    SHOWS("Shows", MediaType.SERIES, null),
+    SEARCH("Search", null, PhosphorIcons.Bold.MagnifyingGlass),
+    SETTINGS("Settings", null, PhosphorIcons.Bold.GearSix),
 }
 
 private val BAR_FILL = Color.Black.copy(alpha = 0.45f)
@@ -97,8 +103,9 @@ private fun tabColors() = TabDefaults.pillIndicatorTabColors(
 @Composable
 private fun TabLabel(tab: HomeTab) {
     val padding = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-    if (tab == HomeTab.SEARCH) {
-        Icon(PhosphorIcons.Bold.MagnifyingGlass, contentDescription = tab.label, modifier = padding.size(16.dp))
+    val icon = tab.icon
+    if (icon != null) {
+        Icon(icon, contentDescription = tab.label, modifier = padding.size(16.dp))
         return
     }
     Text(tab.label, fontSize = TvType.body, fontWeight = FontWeight.SemiBold, modifier = padding)

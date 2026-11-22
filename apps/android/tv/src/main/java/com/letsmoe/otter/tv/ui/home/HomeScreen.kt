@@ -46,6 +46,7 @@ import com.letsmoe.otter.tv.ui.components.PillButton
 import com.letsmoe.otter.tv.ui.components.ProfileButton
 import com.letsmoe.otter.tv.ui.components.TopBar
 import com.letsmoe.otter.tv.ui.search.SearchScreen
+import com.letsmoe.otter.tv.ui.settings.SettingsScreen
 import com.letsmoe.otter.ui.home.HomeRow
 import com.letsmoe.otter.ui.home.TitlesPageState
 import com.letsmoe.otter.ui.home.TitlesPageViewModel
@@ -86,11 +87,15 @@ fun HomeScreen(onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> Unit) {
 
 @Composable
 private fun TabContent(tab: HomeTab, takeFocus: Boolean, onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> Unit) {
-    val mediaType = tab.mediaType
-    if (mediaType == null) {
+    if (tab == HomeTab.SEARCH) {
         SearchScreen(onOpenItem)
         return
     }
+    if (tab == HomeTab.SETTINGS) {
+        SettingsScreen()
+        return
+    }
+    val mediaType = tab.mediaType ?: return
     TitlesHome(mediaType, takeFocus, onOpenItem, onOpenPerson)
 }
 
