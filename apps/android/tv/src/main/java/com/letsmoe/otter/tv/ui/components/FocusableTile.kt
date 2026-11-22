@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -105,6 +106,32 @@ fun PillButton(
         }
     }
 }
+
+/** A round button with only an icon, styled like [PillButton]; [label] is read out by screen readers. */
+@Composable
+fun IconButton(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.size(ICON_BUTTON_SIZE),
+        shape = ClickableSurfaceDefaults.shape(CircleShape),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.1f),
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = TvColors.subtleFill,
+            contentColor = TvColors.baseContent,
+            focusedContainerColor = Color.White,
+            focusedContentColor = Color.Black,
+            pressedContainerColor = Color.White,
+            pressedContentColor = Color.Black,
+        ),
+    ) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = label, modifier = Modifier.size(16.dp))
+        }
+    }
+}
+
+// As tall as a PillButton, so both sit on one line.
+private val ICON_BUTTON_SIZE = 31.dp
 
 /** A message in the middle of the screen with a way to try again. */
 @Composable

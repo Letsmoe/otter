@@ -1,31 +1,17 @@
 package com.letsmoe.otter.tv.ui.home
 
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.unit.dp
 import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.ui.home.TitlesPageState
@@ -40,12 +26,14 @@ private const val ROTATE_MILLISECONDS = 8_000L
 
 /**
  * The titles the hero cycles through while focus is on its buttons: the featured title, then the
- * top trending ones. Keeps which of them are on My List, asked once per title.
+ * top trending ones. Keeps which of them are on My List and how they're rated, asked once per title.
  */
 class HeroCarousel(
     val titles: List<HeroTitle>,
     private val scope: CoroutineScope,
     private val inMyList: MutableMap<String, Boolean>,
+    // A title without a rating maps to null; a missing key means not asked yet.
+    private val ratings: MutableMap<String, Double?>,
     private val indexState: MutableIntState,
 ) {
     val index: Int get() = indexState.intValue.coerceIn(0, maxOf(titles.size - 1, 0))
@@ -93,6 +81,48 @@ class HeroCarousel(
             inMyList[titleId] = false
         }
     }
+
+    fun ratingOf(titleId: String): Double? {
+        return ratings[titleId]
+    }
+
+    /** Rates the current title; choosing its current rating again clears it. Undone when the backend refuses. */
+    fun rate(rating: Double) {
+        val title = current ?: return
+        val titleId = title.item.id
+        val previous = ratingOf(titleId)
+        var wanted: Double? = rating
+        if (previous == rating) {
+            wanted = null
+        }
+        ratings[titleId] = wanted
+        scope.launch {
+            try {
+                saveRating(titleId, wanted)
+            } catch (error: Exception) {
+                ratings[titleId] = previous
+            }
+        }
+    }
+
+    suspend fun loadRating(titleId: String) {
+        if (ratings.containsKey(titleId)) {
+            return
+        }
+        try {
+            ratings[titleId] = TitleActions.ratingOf(profileId(), titleId)
+        } catch (error: Exception) {
+            ratings[titleId] = null
+        }
+    }
+}
+
+private suspend fun saveRating(titleId: String, rating: Double?) {
+    if (rating == null) {
+        TitleActions.clearRating(profileId(), titleId)
+        return
+    }
+    TitleActions.setRating(profileId(), titleId, rating)
 }
 
 private fun profileId(): String {
@@ -103,12 +133,14 @@ private fun profileId(): String {
 fun rememberHeroCarousel(mediaType: MediaType, state: TitlesPageState): HeroCarousel {
     val scope = rememberCoroutineScope()
     val inMyList = remember(mediaType) { mutableStateMapOf<String, Boolean>() }
+    val ratings = remember(mediaType) { mutableStateMapOf<String, Double?>() }
     val indexState = remember(mediaType) { mutableIntStateOf(0) }
-    val carousel = HeroCarousel(carouselTitles(state), scope, inMyList, indexState)
+    val carousel = HeroCarousel(carouselTitles(state), scope, inMyList, ratings, indexState)
     val current = carousel.current
     LaunchedEffect(current?.item?.id) {
         if (current != null) {
             carousel.loadMyListState(current.item.id)
+            carousel.loadRating(current.item.id)
         }
     }
     LaunchedEffect(indexState.intValue, carousel.titles.size) {
@@ -135,32 +167,4 @@ fun carouselKeys(event: KeyEvent, direction: Key, move: () -> Unit): Boolean {
     }
     move()
     return true
-}
-
-/** One dot per title, centred under the hero; the current one is a wider pill. */
-@Composable
-fun CarouselDots(carousel: HeroCarousel, modifier: Modifier = Modifier) {
-    if (carousel.titles.size < 2) {
-        return
-    }
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(5.dp),
-    ) {
-        carousel.titles.forEachIndexed { position, _ ->
-            CarouselDot(current = position == carousel.index)
-        }
-    }
-}
-
-@Composable
-private fun CarouselDot(current: Boolean) {
-    var targetWidth = 6.dp
-    var color = Color.White.copy(alpha = 0.35f)
-    if (current) {
-        targetWidth = 16.dp
-        color = Color.White
-    }
-    val width by animateDpAsState(targetWidth, label = "dotWidth")
-    Box(Modifier.width(width).height(6.dp).background(color, CircleShape))
 }

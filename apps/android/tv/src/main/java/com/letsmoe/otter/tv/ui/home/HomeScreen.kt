@@ -42,7 +42,9 @@ import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.tv.theme.TvSpacing
 import com.letsmoe.otter.tv.ui.components.POSTER_ROW_SPACE
 import com.letsmoe.otter.tv.ui.components.HeroRowsPage
+import com.letsmoe.otter.tv.ui.components.IconButton
 import com.letsmoe.otter.tv.ui.components.PillButton
+import com.letsmoe.otter.tv.ui.components.RatingButton
 import com.letsmoe.otter.tv.ui.components.ProfileButton
 import com.letsmoe.otter.tv.ui.components.TopBar
 import com.letsmoe.otter.tv.ui.search.SearchScreen
@@ -128,7 +130,6 @@ fun TitlesHome(mediaType: MediaType, takeFocus: Boolean, onOpenItem: (RailItem) 
                 HeroInfo(carousel.current)
                 FeaturedActions(carousel, actions, takeFocus)
             }
-            CarouselDots(carousel, Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp))
         }
     }
 }
@@ -148,12 +149,12 @@ private fun rowsOnceFeaturedArrives(mediaType: MediaType, state: TitlesPageState
         return emptyList()
     }
     val profileName = ProfileSession.activeProfile.value?.name.orEmpty()
-    return state.toRows(pageLabels(mediaType, profileName)).withActorsRow(state.actors.isNotEmpty())
+    return state.toRows(pageLabels(mediaType, profileName), recommendedFirst = true).withActorsRow(state.actors.isNotEmpty())
 }
 
 /**
- * More info and My List for the carousel's current title; left on More info and right on My List
- * move through the carousel. Focus starts here once, when the featured title first arrives; it
+ * More info, My List and the rating for the carousel's current title; left on More info and right
+ * on the rating thumb move through the carousel. Focus starts here once, when the featured title first arrives; it
  * reloads on resume and may change, which must not pull focus back from the rows. Without
  * [takeFocus] (the tab bar has it), focus stays where it is.
  */
@@ -191,11 +192,11 @@ private fun FeaturedActions(carousel: HeroCarousel, actions: RowActions, takeFoc
                 .focusRequester(openButton)
                 .onPreviewKeyEvent { event -> carouselKeys(event, Key.DirectionLeft, carousel::previous) },
         )
-        PillButton(
-            "My List",
-            onClick = carousel::toggleMyList,
-            icon = myListIcon,
-            modifier = Modifier.onPreviewKeyEvent { event -> carouselKeys(event, Key.DirectionRight, carousel::next) },
+        IconButton(myListIcon, "My List", onClick = carousel::toggleMyList)
+        RatingButton(
+            carousel.ratingOf(current.item.id),
+            onRate = carousel::rate,
+            thumbModifier = Modifier.onPreviewKeyEvent { event -> carouselKeys(event, Key.DirectionRight, carousel::next) },
         )
     }
 }

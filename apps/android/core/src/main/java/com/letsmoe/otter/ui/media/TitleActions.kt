@@ -6,6 +6,7 @@ import com.letsmoe.otter.graphql.AddToWatchlistMutation
 import com.letsmoe.otter.graphql.ClearRatingMutation
 import com.letsmoe.otter.graphql.FindStreamsMutation
 import com.letsmoe.otter.graphql.InWatchlistQuery
+import com.letsmoe.otter.graphql.PlayerRatingQuery
 import com.letsmoe.otter.graphql.RemoveFromWatchlistMutation
 import com.letsmoe.otter.graphql.SetNotifyingMutation
 import com.letsmoe.otter.graphql.SetRatingMutation
@@ -28,6 +29,12 @@ object TitleActions {
             return
         }
         OtterApi.client.mutation(RemoveFromWatchlistMutation(profileId, mediaId)).execute().dataOrThrow()
+    }
+
+    /** The profile's rating of the title on the 1-10 scale; null when it isn't rated. */
+    suspend fun ratingOf(profileId: String, mediaId: String): Double? {
+        val data = OtterApi.client.query(PlayerRatingQuery(mediaId, profileId)).execute().dataOrThrow()
+        return data.title?.rating
     }
 
     suspend fun setNotifying(profileId: String, mediaId: String, notifying: Boolean) {

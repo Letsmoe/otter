@@ -45,12 +45,13 @@ private class RowSpec(
 /**
  * The page's rows in order: personal rows, Top 10, then themed, recommendation and genre rows
  * interleaved so styles and topics vary. Each row loses titles an earlier row shows;
- * rows left with too few titles are dropped.
+ * rows left with too few titles are dropped. [recommendedFirst] (the TV) puts Recommended before
+ * the personal rows.
  */
-fun TitlesPageState.toRows(labels: PageLabels): List<HomeRow> {
+fun TitlesPageState.toRows(labels: PageLabels, recommendedFirst: Boolean = false): List<HomeRow> {
     val filter = RepeatFilter(featuredIds())
     val rows = mutableListOf<HomeRow>()
-    for (spec in orderedSpecs(labels)) {
+    for (spec in orderedSpecs(labels, recommendedFirst)) {
         val row = spec.toRow(filter)
         if (row != null) {
             rows.add(row)
@@ -78,16 +79,22 @@ private fun RowSpec.toRow(filter: RepeatFilter): PosterRow? {
     return PosterRow(key, title, unique, style)
 }
 
-private fun TitlesPageState.orderedSpecs(labels: PageLabels): List<RowSpec> {
+private fun TitlesPageState.orderedSpecs(labels: PageLabels, recommendedFirst: Boolean): List<RowSpec> {
     val plural = labels.plural
-    val head = listOf(
+    val recommendedSpec = RowSpec("recommended", "Recommended $plural", recommended, RailStyle.LARGE)
+    val personal = listOf(
         RowSpec("continue", labels.continueTitle, continueWatching, minimumItems = 1),
         RowSpec("my-list", "My List", myList, minimumItems = 1),
+    )
+    val discovery = listOf(
         RowSpec("top-ten", "Top 10 $plural Today", topTenItems(), RailStyle.TOP_TEN, keepsAllItems = true),
         RowSpec("new", labels.newRow, newAndComingSoon, RailStyle.WIDE),
-        RowSpec("recommended", "Recommended $plural", recommended, RailStyle.LARGE),
-        RowSpec("popular", "Popular $plural", popular, RailStyle.LARGE),
     )
+    val popularSpec = RowSpec("popular", "Popular $plural", popular, RailStyle.LARGE)
+    var head = personal + discovery + recommendedSpec + popularSpec
+    if (recommendedFirst) {
+        head = listOf(recommendedSpec) + personal + discovery + popularSpec
+    }
     val genres = genreRails.map { rail -> RowSpec("genre-${rail.genre}", "${rail.genre} $plural", rail.items) }
     val body = interleave(variedSpecs(plural), genres)
     val tail = RowSpec("watch-again", "Watch It Again", watchAgain, minimumItems = 1)

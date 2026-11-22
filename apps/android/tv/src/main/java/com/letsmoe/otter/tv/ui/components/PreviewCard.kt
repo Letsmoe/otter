@@ -40,6 +40,7 @@ import kotlinx.coroutines.delay
 private const val PREVIEW_DELAY_MILLISECONDS = 1_500L
 // A previewing card grows to this many times its size in both directions.
 private const val PREVIEW_SCALE = 2f
+private const val TRAILER_ASPECT = 16f / 9f
 private val PREVIEW_LOGO_MAX_WIDTH = 190.dp
 private val PREVIEW_LOGO_MAX_HEIGHT = 60.dp
 private const val PREVIEW_OVERVIEW_MAX_LINES = 3
@@ -61,7 +62,11 @@ fun PreviewCard(
 ) {
     var focused by remember { mutableStateOf(false) }
     val previewing = rememberPreviewing(focused, canPreview(item))
-    val size = cardSize(restingWidth, restingHeight, previewing)
+    var trailerPlaying by remember(item.id) { mutableStateOf(false) }
+    if (!previewing) {
+        trailerPlaying = false
+    }
+    val size = cardSize(restingWidth, restingHeight, previewing, trailerPlaying)
     val width by animateDpAsState(size.width, label = "previewCardWidth")
     val height by animateDpAsState(size.height, label = "previewCardHeight")
     Column {
@@ -81,7 +86,7 @@ fun PreviewCard(
         ) {
             Crossfade(previewing, label = "previewCardContent") { showPreview ->
                 if (showPreview) {
-                    PreviewContent(item)
+                    PreviewContent(item, onTrailerPlaying = { playing -> trailerPlaying = playing })
                 } else {
                     resting()
                 }
@@ -131,11 +136,19 @@ private fun rememberPreviewing(focused: Boolean, allowed: Boolean): Boolean {
 
 private class CardSize(val width: Dp, val height: Dp)
 
-private fun cardSize(restingWidth: Dp, restingHeight: Dp, previewing: Boolean): CardSize {
+/**
+ * Resting; grown to twice the size while the trailer loads; then landscape for the trailer, as
+ * wide as the grown poster was tall, like the poster turning on its side.
+ */
+private fun cardSize(restingWidth: Dp, restingHeight: Dp, previewing: Boolean, trailerPlaying: Boolean): CardSize {
     if (!previewing) {
         return CardSize(restingWidth, restingHeight)
     }
-    return CardSize(restingWidth * PREVIEW_SCALE, restingHeight * PREVIEW_SCALE)
+    val grownHeight = restingHeight * PREVIEW_SCALE
+    if (trailerPlaying) {
+        return CardSize(grownHeight, grownHeight / TRAILER_ASPECT)
+    }
+    return CardSize(restingWidth * PREVIEW_SCALE, grownHeight)
 }
 
 // A grown card scaling up like a resting one would cover its neighbours.
@@ -146,9 +159,12 @@ private fun focusedScaleFor(previewing: Boolean): Float {
     return 1.08f
 }
 
-/** The poster, then the trailer cropped over it once its first frame is there, and the logo at the bottom left. */
+/**
+ * The poster, then the trailer over it once its first frame is there (the card turns landscape
+ * for it, told through [onTrailerPlaying]), and the logo at the bottom left.
+ */
 @Composable
-private fun PreviewContent(item: RailItem) {
+private fun PreviewContent(item: RailItem, onTrailerPlaying: (Boolean) -> Unit) {
     val extras by rememberTitleExtras(item.id)
     var trailerShowing by remember(item.id) { mutableStateOf(false) }
     var trailerEnded by remember(item.id) { mutableStateOf(false) }
@@ -159,10 +175,14 @@ private fun PreviewContent(item: RailItem) {
         if (trailerKey != null && !trailerEnded) {
             PreviewTrailer(
                 trailerKey,
-                onReady = { trailerShowing = true },
+                onReady = {
+                    trailerShowing = true
+                    onTrailerPlaying(true)
+                },
                 onEnded = {
                     trailerShowing = false
                     trailerEnded = true
+                    onTrailerPlaying(false)
                 },
                 modifier = Modifier.fillMaxSize().graphicsLayer { alpha = trailerAlpha },
             )
