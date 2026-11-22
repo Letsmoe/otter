@@ -1,8 +1,10 @@
 package com.letsmoe.otter.tv.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -43,7 +45,8 @@ fun HomeTabs(selected: HomeTab, onSelect: (HomeTab) -> Unit) {
     TabRow(
         selectedTabIndex = selectedIndex,
         containerColor = Color.Transparent,
-        separator = {},
+        // TabRow places one separator between each pair of tabs, so it must lay something out.
+        separator = { Spacer(Modifier.width(4.dp)) },
         indicator = { tabPositions, doesTabRowHaveFocus ->
             TabRowDefaults.PillIndicator(
                 currentTabPosition = tabPositions[selectedIndex],
