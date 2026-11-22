@@ -100,7 +100,7 @@ private fun profileId(): String {
 }
 
 @Composable
-fun rememberHeroCarousel(mediaType: MediaType, state: TitlesPageState, rotating: Boolean): HeroCarousel {
+fun rememberHeroCarousel(mediaType: MediaType, state: TitlesPageState): HeroCarousel {
     val scope = rememberCoroutineScope()
     val inMyList = remember(mediaType) { mutableStateMapOf<String, Boolean>() }
     val indexState = remember(mediaType) { mutableIntStateOf(0) }
@@ -111,10 +111,7 @@ fun rememberHeroCarousel(mediaType: MediaType, state: TitlesPageState, rotating:
             carousel.loadMyListState(current.item.id)
         }
     }
-    LaunchedEffect(indexState.intValue, rotating, carousel.titles.size) {
-        if (!rotating) {
-            return@LaunchedEffect
-        }
+    LaunchedEffect(indexState.intValue, carousel.titles.size) {
         delay(ROTATE_MILLISECONDS)
         carousel.next()
     }
@@ -140,7 +137,7 @@ fun carouselKeys(event: KeyEvent, direction: Key, move: () -> Unit): Boolean {
     return true
 }
 
-/** One dot per title; the current one is a wider pill, like Prime Video's hero. */
+/** One dot per title, centred under the hero; the current one is a wider pill. */
 @Composable
 fun CarouselDots(carousel: HeroCarousel, modifier: Modifier = Modifier) {
     if (carousel.titles.size < 2) {

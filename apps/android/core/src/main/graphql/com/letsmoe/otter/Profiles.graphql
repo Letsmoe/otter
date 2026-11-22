@@ -78,5 +78,13 @@ query SpotlightTitle($id: ID!) {
     runtime
     seasonCount
     voteAverage
+    credits {
+      person {
+        name
+      }
+      role
+      job
+      order
+    }
   }
 }

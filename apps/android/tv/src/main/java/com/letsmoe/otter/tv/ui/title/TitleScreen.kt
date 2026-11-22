@@ -17,15 +17,16 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.letsmoe.otter.graphql.type.MediaType
+import com.letsmoe.otter.tv.ui.components.CAPTIONED_ROW_SPACE
+import com.letsmoe.otter.tv.ui.components.CaptionedLandscapeCard
 import com.letsmoe.otter.tv.ui.components.CardRow
 import com.letsmoe.otter.tv.ui.components.FailedNotice
+import com.letsmoe.otter.tv.ui.components.FullBleedBackdrop
 import com.letsmoe.otter.tv.ui.components.HeroRowsPage
+import com.letsmoe.otter.tv.ui.components.LANDSCAPE_CARD_WIDTH
 import com.letsmoe.otter.tv.ui.components.PageRow
-import com.letsmoe.otter.tv.ui.components.PosterCardContent
-import com.letsmoe.otter.tv.ui.components.PreviewCard
 import com.letsmoe.otter.tv.ui.components.PreviewInfo
 import com.letsmoe.otter.tv.ui.components.rememberRowPreview
-import com.letsmoe.otter.tv.ui.components.REGULAR_POSTER_WIDTH
 import com.letsmoe.otter.tv.ui.components.TopBar
 import com.letsmoe.otter.tv.ui.home.ActorRow
 import com.letsmoe.otter.tv.ui.home.topBarFade
@@ -48,9 +49,8 @@ import com.letsmoe.otter.ui.title.seriesFacts
 import com.letsmoe.otter.ui.title.seriesPlayLabel
 import com.letsmoe.otter.vpn.VpnStatusStore
 
-// Under a movie's hero only the first row's title peeks, so the page doesn't open on other movies.
-// Under a series' hero: the seasons and episodes.
-private val MOVIE_FIRST_ROW_SPACE = 36.dp
+// Under a movie's hero: More Like This. Under a series' hero: the seasons and episodes.
+private val MOVIE_FIRST_ROW_SPACE = CAPTIONED_ROW_SPACE
 private val SERIES_FIRST_ROW_SPACE = 196.dp
 
 /** What a title page does with what's selected on it. */
@@ -140,7 +140,7 @@ private fun TitleLayout(detail: TitleDetail, firstRowSpace: Dp, rows: List<PageR
     HeroRowsPage(
         firstRowSpace = firstRowSpace,
         rows = rows,
-        backdrop = { modifier -> TitleBackdrop(detail.bannerUrl, modifier) },
+        backdrop = { modifier -> FullBleedBackdrop(detail.bannerUrl, modifier) },
     ) {
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Bottom) {
             header()
@@ -163,22 +163,13 @@ private fun relatedRows(rails: RailsState, cast: List<ActorItem>, navigation: Ti
     return rows
 }
 
-/** Posters that preview their trailer when focus rests on them, with the title's info below the row. */
+/** Captioned cards that preview their trailer when focus rests on them, with the title's info below the row. */
 @Composable
 private fun RailRow(title: String, items: List<RailItem>, onOpenItem: (RailItem) -> Unit) {
     val preview = rememberRowPreview()
     CardRow(title, below = { PreviewInfo(preview.item) }) {
         items(items, key = { item -> item.id }) { item ->
-            PreviewCard(
-                item,
-                restingWidth = REGULAR_POSTER_WIDTH,
-                restingHeight = REGULAR_POSTER_WIDTH * 3f / 2f,
-                onFocus = {},
-                onClick = { onOpenItem(item) },
-                rowPreview = preview,
-            ) {
-                PosterCardContent(item)
-            }
+            CaptionedLandscapeCard(item, LANDSCAPE_CARD_WIDTH, onClick = { onOpenItem(item) }, rowPreview = preview)
         }
     }
 }

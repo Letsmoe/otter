@@ -24,7 +24,26 @@ data class TitleExtras(
     val runtimeMinutes: Int? = null,
     val seasonCount: Int = 0,
     val voteAverage: Double = 0.0,
+    val starring: List<String> = emptyList(),
+    val directors: List<String> = emptyList(),
 )
+
+private const val STARRING_COUNT = 3
+
+/** "Cillian Murphy, Emily Blunt, Matt Damon. Directed by Christopher Nolan."; null without credits. */
+fun TitleExtras.creditLine(): String? {
+    val sentences = mutableListOf<String>()
+    if (starring.isNotEmpty()) {
+        sentences.add(starring.joinToString(", ") + ".")
+    }
+    if (directors.isNotEmpty()) {
+        sentences.add("Directed by " + directors.joinToString(", ") + ".")
+    }
+    if (sentences.isEmpty()) {
+        return null
+    }
+    return sentences.joinToString(" ")
+}
 
 /** "1h 57m" for a movie, "3 Seasons" for a series; null while unknown. */
 fun TitleExtras.lengthLabel(mediaType: MediaType): String? {
@@ -102,8 +121,25 @@ object TitleExtrasCache {
             runtimeMinutes = title.runtime,
             seasonCount = title.seasonCount,
             voteAverage = title.voteAverage,
+            starring = starringOf(title),
+            directors = directorsOf(title),
         )
     }
+}
+
+private fun starringOf(title: SpotlightTitleQuery.Title): List<String> {
+    return title.credits
+        .filter { credit -> credit.role == "cast" }
+        .sortedBy { credit -> credit.order }
+        .take(STARRING_COUNT)
+        .map { credit -> credit.person.name }
+}
+
+private fun directorsOf(title: SpotlightTitleQuery.Title): List<String> {
+    return title.credits
+        .filter { credit -> credit.role == "crew" && credit.job == "Director" }
+        .map { credit -> credit.person.name }
+        .distinct()
 }
 
 private fun nonBlank(text: String?): String? {

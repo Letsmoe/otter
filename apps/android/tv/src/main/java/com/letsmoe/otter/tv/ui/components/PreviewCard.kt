@@ -114,6 +114,29 @@ fun PreviewCard(
     }
 }
 
+/** A 16:9 [PreviewCard] of [width] with the title and a second line under it. */
+@Composable
+fun CaptionedLandscapeCard(
+    item: RailItem,
+    width: Dp,
+    onClick: () -> Unit,
+    rowPreview: RowPreview? = null,
+) {
+    Column {
+        PreviewCard(
+            item,
+            restingWidth = width,
+            restingHeight = width * 9f / 16f,
+            onFocus = {},
+            onClick = onClick,
+            rowPreview = rowPreview,
+        ) {
+            LandscapeCardContent(item)
+        }
+        CardCaption(item, width)
+    }
+}
+
 // Continue watching opens an episode or resumes; a trailer there would be in the way.
 private fun canPreview(item: RailItem): Boolean {
     return item.episodeId == null && item.progress == null

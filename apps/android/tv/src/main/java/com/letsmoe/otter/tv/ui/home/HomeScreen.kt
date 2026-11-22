@@ -1,6 +1,5 @@
 package com.letsmoe.otter.tv.ui.home
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,12 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -41,7 +38,8 @@ import com.adamglin.phosphoricons.fill.Info
 import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.tv.theme.TvSpacing
-import com.letsmoe.otter.tv.ui.components.BackdropRowsPage
+import com.letsmoe.otter.tv.ui.components.CAPTIONED_ROW_SPACE
+import com.letsmoe.otter.tv.ui.components.HeroRowsPage
 import com.letsmoe.otter.tv.ui.components.PillButton
 import com.letsmoe.otter.tv.ui.components.ProfileButton
 import com.letsmoe.otter.tv.ui.components.TopBar
@@ -55,8 +53,6 @@ import com.letsmoe.otter.ui.home.withActorsRow
 import com.letsmoe.otter.ui.media.RailItem
 import kotlinx.coroutines.delay
 
-// Scrolling fast through a row shouldn't reload the backdrop for every card it passes.
-private const val HERO_SETTLE_MILLISECONDS = 250L
 // Rows wait this long for the featured title, so focus starts on its buttons rather than a card.
 private const val FEATURED_WAIT_MILLISECONDS = 3_000L
 
@@ -91,7 +87,7 @@ fun topBarFade(): Modifier {
     return Modifier.background(Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.9f), 1f to Color.Transparent))
 }
 
-/** One home category (movies or shows): a hero for the featured or focused title, then the rows. */
+/** One home category (movies or shows): the hero cycling through featured titles, then the rows. */
 @Composable
 fun TitlesHome(mediaType: MediaType, onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> Unit) {
     val viewModel = viewModel(key = "tv-titles-$mediaType") { TitlesPageViewModel(mediaType) }
@@ -99,57 +95,25 @@ fun TitlesHome(mediaType: MediaType, onOpenItem: (RailItem) -> Unit, onOpenPerso
     // Back from a title or the player (same activity, no resume), Continue Watching and My List should be current.
     LaunchedEffect(Unit) { viewModel.loadPersonalRows() }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.loadPersonalRows() }
-    val hero = rememberSettledHero(mediaType)
-    // The hero cycles while no card has focus; on a card it shows that card's title.
-    val carousel = rememberHeroCarousel(mediaType, state, rotating = hero.focusedItem == null)
-    val heroTitle = heroFor(hero.settledItem, carousel)
-    val actions = RowActions(
-        onFocusItem = { item -> hero.focusedItem = item },
-        onOpenItem = onOpenItem,
-        onOpenPerson = onOpenPerson,
-    )
+    val carousel = rememberHeroCarousel(mediaType, state)
+    val actions = RowActions(onOpenItem = onOpenItem, onOpenPerson = onOpenPerson)
     val rows = rowsOnceFeaturedArrives(mediaType, state)
-    BackdropRowsPage(
+    HeroRowsPage(
+        firstRowSpace = CAPTIONED_ROW_SPACE,
         rows = homePageRows(rows, state.actors, actions),
-        backdrop = { HeroBackdrop(heroTitle) },
+        backdrop = { modifier -> HeroBackdrop(carousel.current, modifier) },
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Bottom),
-        ) {
-            HeroInfo(heroTitle)
-            FeaturedActions(
-                carousel,
-                actions,
-                browsingRows = hero.focusedItem != null,
-                onFocusFeatured = { hero.focusedItem = null },
-            )
+        Box(Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(bottom = 30.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Bottom),
+            ) {
+                HeroInfo(carousel.current)
+                FeaturedActions(carousel, actions)
+            }
+            CarouselDots(carousel, Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp))
         }
     }
-}
-
-/** The card the hero follows; [settledItem] catches up once focus rests on a card for a moment. */
-private class HeroState {
-    var focusedItem by mutableStateOf<RailItem?>(null)
-    var settledItem by mutableStateOf<RailItem?>(null)
-}
-
-@Composable
-private fun rememberSettledHero(mediaType: MediaType): HeroState {
-    val hero = remember(mediaType) { HeroState() }
-    LaunchedEffect(hero.focusedItem) {
-        delay(HERO_SETTLE_MILLISECONDS)
-        hero.settledItem = hero.focusedItem
-    }
-    return hero
-}
-
-// Without a focused card the hero shows the carousel's current title.
-private fun heroFor(focused: RailItem?, carousel: HeroCarousel): HeroTitle? {
-    if (focused != null) {
-        return HeroTitle(focused)
-    }
-    return carousel.current
 }
 
 /**
@@ -174,17 +138,9 @@ private fun rowsOnceFeaturedArrives(mediaType: MediaType, state: TitlesPageState
  * More info and My List for the carousel's current title; left on More info and right on My List
  * move through the carousel. Focus starts here once, when the featured title first arrives; it
  * reloads on resume and may change, which must not pull focus back from the rows.
- *
- * While [browsingRows], the buttons fade out but stay focusable, so Up from the first row still
- * lands on them.
  */
 @Composable
-private fun FeaturedActions(
-    carousel: HeroCarousel,
-    actions: RowActions,
-    browsingRows: Boolean,
-    onFocusFeatured: () -> Unit,
-) {
+private fun FeaturedActions(carousel: HeroCarousel, actions: RowActions) {
     val current = carousel.current ?: return
     val openButton = remember { FocusRequester() }
     var focusedOnce by rememberSaveable { mutableStateOf(false) }
@@ -198,16 +154,10 @@ private fun FeaturedActions(
     if (carousel.isInMyList(current.item.id)) {
         myListIcon = PhosphorIcons.Bold.Check
     }
-    var targetAlpha = 1f
-    if (browsingRows) {
-        targetAlpha = 0f
-    }
-    val alpha by animateFloatAsState(targetAlpha, label = "featuredActionsAlpha")
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TvSpacing.screenHorizontal)
-            .graphicsLayer { this.alpha = alpha },
+            .padding(horizontal = TvSpacing.screenHorizontal),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -218,25 +168,13 @@ private fun FeaturedActions(
             primary = true,
             modifier = Modifier
                 .focusRequester(openButton)
-                .onFocusGained(onFocusFeatured)
                 .onPreviewKeyEvent { event -> carouselKeys(event, Key.DirectionLeft, carousel::previous) },
         )
         PillButton(
             "My List",
             onClick = carousel::toggleMyList,
             icon = myListIcon,
-            modifier = Modifier
-                .onFocusGained(onFocusFeatured)
-                .onPreviewKeyEvent { event -> carouselKeys(event, Key.DirectionRight, carousel::next) },
+            modifier = Modifier.onPreviewKeyEvent { event -> carouselKeys(event, Key.DirectionRight, carousel::next) },
         )
-        CarouselDots(carousel, Modifier.padding(start = 10.dp))
-    }
-}
-
-private fun Modifier.onFocusGained(action: () -> Unit): Modifier {
-    return onFocusChanged { state ->
-        if (state.isFocused) {
-            action()
-        }
     }
 }

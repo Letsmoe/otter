@@ -17,10 +17,15 @@ import com.letsmoe.otter.tv.theme.TvType
 
 val CARD_SPACING = 14.dp
 val REGULAR_POSTER_WIDTH = 104.dp
-// Home cards stay small enough that the row band under the hero leaves it room for the details.
-val LARGE_POSTER_WIDTH = 104.dp
 val WIDE_CARD_WIDTH = 200.dp
-val REGULAR_LANDSCAPE_WIDTH = 150.dp
+// Five of them and their gaps fill the width between the screen margins.
+val LANDSCAPE_CARD_WIDTH = 160.dp
+
+/**
+ * Space a row of captioned landscape cards takes under a hero: its title, the cards with room to
+ * grow when focused, the two caption lines and a margin to the screen's bottom edge.
+ */
+val CAPTIONED_ROW_SPACE = 200.dp
 
 /** Where a focused card's top lands in a list of rows: just below its row's title. */
 val ROW_FOCUS_LINE = 34.dp
