@@ -31,6 +31,16 @@ type Title {
 
   """YouTube key of the trailer."""
   trailerKey: String
+
+  """
+  YouTube trailers, teasers, clips and featurettes, trailers first. Empty until the detail was fetched.
+  """
+  videos: [TitleVideo!]!
+
+  """
+  TMDB paths of scene stills (backdrops without text). Empty until the detail was fetched.
+  """
+  scenePaths: [String!]!
   genres: [String!]!
   keywords: [String!]!
 
@@ -61,6 +71,16 @@ type Title {
   Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List.
   """
   notifying(profileId: ID!): Boolean!
+}
+
+"""One of a title's YouTube videos."""
+type TitleVideo {
+  """YouTube video key."""
+  key: String!
+  name: String!
+
+  """TMDB's type: Trailer, Teaser, Clip, Featurette or Behind the Scenes."""
+  type: String!
 }
 
 type Season {

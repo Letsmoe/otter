@@ -385,7 +385,11 @@ type Title struct {
 	BackdropPath *string `json:"backdropPath,omitempty"`
 	LogoPath     *string `json:"logoPath,omitempty"`
 	// YouTube key of the trailer.
-	TrailerKey *string  `json:"trailerKey,omitempty"`
+	TrailerKey *string `json:"trailerKey,omitempty"`
+	// YouTube trailers, teasers, clips and featurettes, trailers first. Empty until the detail was fetched.
+	Videos []*TitleVideo `json:"videos"`
+	// TMDB paths of scene stills (backdrops without text). Empty until the detail was fetched.
+	ScenePaths []string `json:"scenePaths"`
 	Genres     []string `json:"genres"`
 	Keywords   []string `json:"keywords"`
 	// False for titles only seen in lists; reading them through Query.title fetches the rest.
@@ -413,6 +417,15 @@ type TitleFilter struct {
 	MaxRuntime *int     `json:"maxRuntime,omitempty"`
 	MinSeasons *int     `json:"minSeasons,omitempty"`
 	MaxSeasons *int     `json:"maxSeasons,omitempty"`
+}
+
+// One of a title's YouTube videos.
+type TitleVideo struct {
+	// YouTube video key.
+	Key  string `json:"key"`
+	Name string `json:"name"`
+	// TMDB's type: Trailer, Teaser, Clip, Featurette or Behind the Scenes.
+	Type string `json:"type"`
 }
 
 // An app payload (JSON) from another participant.

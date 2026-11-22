@@ -43,7 +43,17 @@ func titleModel(title library.Title) *model.Title {
 		Genres:        nonNil(title.Genres),
 		Keywords:      nonNil(title.Keywords),
 		DetailFetched: title.DetailFetchedAt != "",
+		Videos:        titleVideoModels(title.Videos),
+		ScenePaths:    nonNil(title.ScenePaths),
 	}
+}
+
+func titleVideoModels(videos []library.TitleVideo) []*model.TitleVideo {
+	models := make([]*model.TitleVideo, 0, len(videos))
+	for _, video := range videos {
+		models = append(models, &model.TitleVideo{Key: video.Key, Name: video.Name, Type: video.Type})
+	}
+	return models
 }
 
 func titleModels(titles []library.Title) []*model.Title {

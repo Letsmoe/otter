@@ -37,6 +37,16 @@ type Title struct {
 	Keywords        []string `json:"keywords"`
 	Adult           bool     `json:"adult"`
 	DetailFetchedAt string   `json:"detail_fetched_at"`
+	// Videos and ScenePaths are only known once the detail is fetched.
+	Videos     []TitleVideo `json:"videos"`
+	ScenePaths []string     `json:"scene_paths"`
+}
+
+// TitleVideo is one of a title's YouTube videos: a trailer, teaser, clip or featurette.
+type TitleVideo struct {
+	Key  string `json:"key"`
+	Name string `json:"name"`
+	Type string `json:"type"`
 }
 
 // Ref identifies the title in the library.

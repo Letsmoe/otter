@@ -38,6 +38,10 @@ export interface Title {
     logoPath: (Scalars['String'] | null)
     /** YouTube key of the trailer. */
     trailerKey: (Scalars['String'] | null)
+    /** YouTube trailers, teasers, clips and featurettes, trailers first. Empty until the detail was fetched. */
+    videos: TitleVideo[]
+    /** TMDB paths of scene stills (backdrops without text). Empty until the detail was fetched. */
+    scenePaths: Scalars['String'][]
     genres: Scalars['String'][]
     keywords: Scalars['String'][]
     /** False for titles only seen in lists; reading them through Query.title fetches the rest. */
@@ -57,6 +61,17 @@ export interface Title {
     /** Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List. */
     notifying: Scalars['Boolean']
     __typename: 'Title'
+}
+
+
+/** One of a title's YouTube videos. */
+export interface TitleVideo {
+    /** YouTube video key. */
+    key: Scalars['String']
+    name: Scalars['String']
+    /** TMDB's type: Trailer, Teaser, Clip, Featurette or Behind the Scenes. */
+    type: Scalars['String']
+    __typename: 'TitleVideo'
 }
 
 export interface Season {
@@ -646,6 +661,10 @@ export interface TitleGenqlSelection{
     logoPath?: boolean | number
     /** YouTube key of the trailer. */
     trailerKey?: boolean | number
+    /** YouTube trailers, teasers, clips and featurettes, trailers first. Empty until the detail was fetched. */
+    videos?: TitleVideoGenqlSelection
+    /** TMDB paths of scene stills (backdrops without text). Empty until the detail was fetched. */
+    scenePaths?: boolean | number
     genres?: boolean | number
     keywords?: boolean | number
     /** False for titles only seen in lists; reading them through Query.title fetches the rest. */
@@ -664,6 +683,18 @@ export interface TitleGenqlSelection{
     inWatchlist?: { __args: {profileId: Scalars['ID']} }
     /** Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List. */
     notifying?: { __args: {profileId: Scalars['ID']} }
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+
+/** One of a title's YouTube videos. */
+export interface TitleVideoGenqlSelection{
+    /** YouTube video key. */
+    key?: boolean | number
+    name?: boolean | number
+    /** TMDB's type: Trailer, Teaser, Clip, Featurette or Behind the Scenes. */
+    type?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1261,6 +1292,14 @@ export interface SubscriptionGenqlSelection{
     export const isTitle = (obj?: { __typename?: any } | null): obj is Title => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isTitle"')
       return Title_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const TitleVideo_possibleTypes: string[] = ['TitleVideo']
+    export const isTitleVideo = (obj?: { __typename?: any } | null): obj is TitleVideo => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isTitleVideo"')
+      return TitleVideo_possibleTypes.includes(obj.__typename)
     }
     
 

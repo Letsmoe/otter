@@ -34,6 +34,8 @@ func movieTitle(detail *tmdb.MovieDetail) Title {
 		Genres:        genreNames(detail.Genres),
 		Keywords:      detail.Keywords.Names(),
 		Adult:         detail.Adult,
+		Videos:        pickVideos(detail.Videos.Results),
+		ScenePaths:    pickScenes(detail.Images.Backdrops),
 	}
 }
 
@@ -58,6 +60,8 @@ func seriesTitle(detail *tmdb.SeriesDetail) Title {
 		Genres:        genreNames(detail.Genres),
 		Keywords:      detail.Keywords.Names(),
 		Adult:         detail.Adult,
+		Videos:        pickVideos(detail.Videos.Results),
+		ScenePaths:    pickScenes(detail.Images.Backdrops),
 	}
 }
 
@@ -133,6 +137,55 @@ func pickTrailer(videos []tmdb.Video) string {
 		}
 	}
 	return ""
+}
+
+// maxVideosStored and maxScenesStored cap what a title page's row shows.
+const (
+	maxVideosStored = 12
+	maxScenesStored = 16
+)
+
+// shownVideoTypes are the TMDB video types worth a card, trailers first.
+var shownVideoTypes = []string{"Trailer", "Teaser", "Clip", "Featurette", "Behind the Scenes"}
+
+// pickVideos keeps the YouTube videos of shownVideoTypes, ordered by type
+// (trailers first) and TMDB's order within a type.
+func pickVideos(videos []tmdb.Video) []TitleVideo {
+	picked := []TitleVideo{}
+	for _, videoType := range shownVideoTypes {
+		picked = append(picked, youTubeVideosOfType(videos, videoType)...)
+	}
+	if len(picked) > maxVideosStored {
+		picked = picked[:maxVideosStored]
+	}
+	return picked
+}
+
+func youTubeVideosOfType(videos []tmdb.Video, videoType string) []TitleVideo {
+	matching := []TitleVideo{}
+	for _, video := range videos {
+		if video.Site != "YouTube" || video.Type != videoType {
+			continue
+		}
+		matching = append(matching, TitleVideo{Key: video.Key, Name: video.Name, Type: video.Type})
+	}
+	return matching
+}
+
+// pickScenes keeps backdrops without a language: stills without title text,
+// in TMDB's order (best voted first).
+func pickScenes(backdrops []tmdb.Image) []string {
+	scenes := []string{}
+	for _, backdrop := range backdrops {
+		if len(scenes) == maxScenesStored {
+			break
+		}
+		if backdrop.ISO6391 != "" {
+			continue
+		}
+		scenes = append(scenes, backdrop.FilePath)
+	}
+	return scenes
 }
 
 // pickLogo prefers an English logo, then a language-neutral one.

@@ -407,6 +407,7 @@ type ComplexityRoot struct {
 		Related       func(childComplexity int, limit *int) int
 		ReleaseDate   func(childComplexity int) int
 		Runtime       func(childComplexity int) int
+		ScenePaths    func(childComplexity int) int
 		SeasonCount   func(childComplexity int) int
 		Seasons       func(childComplexity int) int
 		Status        func(childComplexity int) int
@@ -415,9 +416,16 @@ type ComplexityRoot struct {
 		Title         func(childComplexity int) int
 		TmdbID        func(childComplexity int) int
 		TrailerKey    func(childComplexity int) int
+		Videos        func(childComplexity int) int
 		VoteAverage   func(childComplexity int) int
 		VoteCount     func(childComplexity int) int
 		Year          func(childComplexity int) int
+	}
+
+	TitleVideo struct {
+		Key  func(childComplexity int) int
+		Name func(childComplexity int) int
+		Type func(childComplexity int) int
 	}
 
 	TogetherMessage struct {
@@ -2511,6 +2519,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Title.Runtime(childComplexity), true
+	case "Title.scenePaths":
+		if e.ComplexityRoot.Title.ScenePaths == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Title.ScenePaths(childComplexity), true
 	case "Title.seasonCount":
 		if e.ComplexityRoot.Title.SeasonCount == nil {
 			break
@@ -2559,6 +2573,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Title.TrailerKey(childComplexity), true
+	case "Title.videos":
+		if e.ComplexityRoot.Title.Videos == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Title.Videos(childComplexity), true
 	case "Title.voteAverage":
 		if e.ComplexityRoot.Title.VoteAverage == nil {
 			break
@@ -2577,6 +2597,25 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Title.Year(childComplexity), true
+
+	case "TitleVideo.key":
+		if e.ComplexityRoot.TitleVideo.Key == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TitleVideo.Key(childComplexity), true
+	case "TitleVideo.name":
+		if e.ComplexityRoot.TitleVideo.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TitleVideo.Name(childComplexity), true
+	case "TitleVideo.type":
+		if e.ComplexityRoot.TitleVideo.Type == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TitleVideo.Type(childComplexity), true
 
 	case "TogetherMessage.from":
 		if e.ComplexityRoot.TogetherMessage.From == nil {
@@ -2821,6 +2860,10 @@ type Title {
   logoPath: String
   "YouTube key of the trailer."
   trailerKey: String
+  "YouTube trailers, teasers, clips and featurettes, trailers first. Empty until the detail was fetched."
+  videos: [TitleVideo!]!
+  "TMDB paths of scene stills (backdrops without text). Empty until the detail was fetched."
+  scenePaths: [String!]!
   genres: [String!]!
   keywords: [String!]!
   "False for titles only seen in lists; reading them through Query.title fetches the rest."
@@ -2841,6 +2884,15 @@ type Title {
   inWatchlist(profileId: ID!): Boolean!
   "Whether the profile gets news about this title: the Notify me bell's choice, else whether it is on My List."
   notifying(profileId: ID!): Boolean!
+}
+
+"One of a title's YouTube videos."
+type TitleVideo {
+  "YouTube video key."
+  key: String!
+  name: String!
+  "TMDB's type: Trailer, Teaser, Clip, Featurette or Behind the Scenes."
+  type: String!
 }
 
 type Season {
@@ -4015,6 +4067,10 @@ func (ec *executionContext) childFields_Title(ctx context.Context, field graphql
 		return ec.fieldContext_Title_logoPath(ctx, field)
 	case "trailerKey":
 		return ec.fieldContext_Title_trailerKey(ctx, field)
+	case "videos":
+		return ec.fieldContext_Title_videos(ctx, field)
+	case "scenePaths":
+		return ec.fieldContext_Title_scenePaths(ctx, field)
 	case "genres":
 		return ec.fieldContext_Title_genres(ctx, field)
 	case "keywords":
@@ -4041,6 +4097,18 @@ func (ec *executionContext) childFields_Title(ctx context.Context, field graphql
 		return ec.fieldContext_Title_notifying(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Title", field.Name)
+}
+
+func (ec *executionContext) childFields_TitleVideo(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "key":
+		return ec.fieldContext_TitleVideo_key(ctx, field)
+	case "name":
+		return ec.fieldContext_TitleVideo_name(ctx, field)
+	case "type":
+		return ec.fieldContext_TitleVideo_type(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type TitleVideo", field.Name)
 }
 
 func (ec *executionContext) childFields_TogetherMessage(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -13416,6 +13484,61 @@ func (ec *executionContext) fieldContext_Title_trailerKey(_ context.Context, fie
 	return graphql.NewScalarFieldContext("Title", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _Title_videos(ctx context.Context, field graphql.CollectedField, obj *model.Title) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Title_videos(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Videos, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.TitleVideo) graphql.Marshaler {
+			return ec.marshalNTitleVideo2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleVideoᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Title_videos(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Title",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_TitleVideo(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Title_scenePaths(ctx context.Context, field graphql.CollectedField, obj *model.Title) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Title_scenePaths(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ScenePaths, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []string) graphql.Marshaler {
+			return ec.marshalNString2ᚕstringᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Title_scenePaths(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Title", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
 func (ec *executionContext) _Title_genres(ctx context.Context, field graphql.CollectedField, obj *model.Title) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -13822,6 +13945,75 @@ func (ec *executionContext) fieldContext_Title_notifying(ctx context.Context, fi
 		return fc, err
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _TitleVideo_key(ctx context.Context, field graphql.CollectedField, obj *model.TitleVideo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TitleVideo_key(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Key, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TitleVideo_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TitleVideo", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _TitleVideo_name(ctx context.Context, field graphql.CollectedField, obj *model.TitleVideo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TitleVideo_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TitleVideo_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TitleVideo", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _TitleVideo_type(ctx context.Context, field graphql.CollectedField, obj *model.TitleVideo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TitleVideo_type(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Type, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TitleVideo_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TitleVideo", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _TogetherMessage_from(ctx context.Context, field graphql.CollectedField, obj *model.TogetherMessage) (ret graphql.Marshaler) {
@@ -18599,6 +18791,16 @@ func (ec *executionContext) _Title(ctx context.Context, sel ast.SelectionSet, ob
 			out.Values[i] = ec._Title_logoPath(ctx, field, obj)
 		case "trailerKey":
 			out.Values[i] = ec._Title_trailerKey(ctx, field, obj)
+		case "videos":
+			out.Values[i] = ec._Title_videos(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "scenePaths":
+			out.Values[i] = ec._Title_scenePaths(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "genres":
 			out.Values[i] = ec._Title_genres(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -18932,6 +19134,55 @@ func (ec *executionContext) _Title(ctx context.Context, sel ast.SelectionSet, ob
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var titleVideoImplementors = []string{"TitleVideo"}
+
+func (ec *executionContext) _TitleVideo(ctx context.Context, sel ast.SelectionSet, obj *model.TitleVideo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, titleVideoImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TitleVideo")
+		case "key":
+			out.Values[i] = ec._TitleVideo_key(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._TitleVideo_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._TitleVideo_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -20421,6 +20672,32 @@ func (ec *executionContext) marshalNTitle2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋin
 		return graphql.Null
 	}
 	return ec._Title(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNTitleVideo2ᚕᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleVideoᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TitleVideo) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNTitleVideo2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleVideo(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTitleVideo2ᚖgithubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTitleVideo(ctx context.Context, sel ast.SelectionSet, v *model.TitleVideo) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TitleVideo(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNTmdbKeyStatus2githubᚗcomᚋLetsmoeᚋotterᚋinternalᚋapiᚋgraphqlᚋmodelᚐTmdbKeyStatus(ctx context.Context, v any) (model.TmdbKeyStatus, error) {
