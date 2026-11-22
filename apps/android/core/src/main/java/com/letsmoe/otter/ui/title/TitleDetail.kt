@@ -14,6 +14,11 @@ data class DirectorPerson(val personId: String, val name: String)
 
 data class SeasonInfo(val seasonNumber: Int, val name: String?, val episodeCount: Int)
 
+/** One of a title's YouTube videos; [type] is TMDB's ("Trailer", "Clip", …). */
+data class TitleVideo(val key: String, val name: String, val type: String) {
+    val thumbnailUrl: String get() = "https://img.youtube.com/vi/$key/hqdefault.jpg"
+}
+
 data class TitleDetail(
     val id: String,
     val mediaType: MediaType,
@@ -35,6 +40,9 @@ data class TitleDetail(
     /** News about it reaches this profile (the Notify me bell, by default My List). */
     val notifying: Boolean,
     val rating: Double?,
+    val videos: List<TitleVideo> = emptyList(),
+    /** Scene stills (backdrops without text) as image URLs. */
+    val sceneUrls: List<String> = emptyList(),
 ) {
     /** Seasons without specials. */
     val regularSeasonCount: Int get() = seasons.count { season -> season.seasonNumber > 0 }
@@ -67,6 +75,8 @@ fun TitleDetailQuery.Title.toDetail(): TitleDetail {
         inWatchlist = inWatchlist,
         notifying = notifying,
         rating = rating,
+        videos = videos.map { video -> TitleVideo(video.key, video.name, video.type) },
+        sceneUrls = scenePaths.mapNotNull { path -> backdropUrl(path) },
     )
 }
 

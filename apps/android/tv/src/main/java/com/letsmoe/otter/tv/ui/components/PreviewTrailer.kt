@@ -21,11 +21,18 @@ import com.letsmoe.otter.ui.title.TrailerStreams
 import com.letsmoe.otter.ui.title.toMediaSource
 
 /**
- * A title's YouTube trailer, played once with sound and cropped to fill [modifier]. [onReady] says
- * the first frame is there, [onEnded] that it finished; it pauses while the app is in the background.
+ * A title's YouTube trailer, played once with sound, cropped to fill [modifier] unless
+ * [contentScale] says otherwise. [onReady] says the first frame is there, [onEnded] that it
+ * finished; it pauses while the app is in the background.
  */
 @Composable
-fun PreviewTrailer(trailerKey: String, onReady: () -> Unit, onEnded: () -> Unit, modifier: Modifier = Modifier) {
+fun PreviewTrailer(
+    trailerKey: String,
+    onReady: () -> Unit,
+    onEnded: () -> Unit,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Crop,
+) {
     val context = LocalContext.current
     val currentOnReady by rememberUpdatedState(onReady)
     val currentOnEnded by rememberUpdatedState(onEnded)
@@ -57,5 +64,5 @@ fun PreviewTrailer(trailerKey: String, onReady: () -> Unit, onEnded: () -> Unit,
     }
     LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { player.pause() }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { player.play() }
-    ContentFrame(player, modifier, surfaceType = SURFACE_TYPE_TEXTURE_VIEW, contentScale = ContentScale.Crop)
+    ContentFrame(player, modifier, surfaceType = SURFACE_TYPE_TEXTURE_VIEW, contentScale = contentScale)
 }

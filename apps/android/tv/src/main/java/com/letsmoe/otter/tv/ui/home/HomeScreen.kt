@@ -61,30 +61,45 @@ import kotlinx.coroutines.delay
 // Rows wait this long for the featured title, so focus starts on its buttons rather than a card.
 private const val FEATURED_WAIT_MILLISECONDS = 3_000L
 
-/** Home: the Movies, Shows and Search tabs in the top bar over the selected one. */
+/** Home: the Movies, Shows, Search and Settings tabs in the top bar over the selected [tab]. */
 @Composable
-fun HomeScreen(onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> Unit) {
-    var tab by rememberSaveable { mutableStateOf(HomeTab.MOVIES) }
+fun HomeScreen(tab: HomeTab, onSelectTab: (HomeTab) -> Unit, onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> Unit) {
     var tabsFocused by remember { mutableStateOf(false) }
     val page = remember { FocusRequester() }
     Box(Modifier.fillMaxSize()) {
         key(tab) {
-            // Down from the tab bar returns to what had focus here, or the first thing that can take it.
-            Box(Modifier.fillMaxSize().focusRequester(page).focusRestorer()) {
+            Box(Modifier.pageFocusEntry(page)) {
                 // A tab switched to from the tab bar leaves focus there.
                 TabContent(tab, takeFocus = !tabsFocused, onOpenItem, onOpenPerson)
             }
         }
-        TopBar(
-            modifier = topBarFade(),
-            tabs = {
-                Box(Modifier.onFocusChanged { state -> tabsFocused = state.hasFocus }) {
-                    HomeTabs(tab, page, onSelect = { selected -> tab = selected })
-                }
-            },
-            trailing = { ProfileButton() },
-        )
+        AppTopBar(tab, page, selectOnFocus = true, onSelectTab, onTabsFocused = { focused -> tabsFocused = focused })
     }
+}
+
+/** A page under [AppTopBar]: Down from the tabs returns to what had focus here, or the first thing that can take it. */
+fun Modifier.pageFocusEntry(page: FocusRequester): Modifier {
+    return fillMaxSize().focusRequester(page).focusRestorer()
+}
+
+/** The wordmark, the home tabs and the profile, over home and title pages alike. */
+@Composable
+fun AppTopBar(
+    tab: HomeTab,
+    page: FocusRequester,
+    selectOnFocus: Boolean,
+    onSelectTab: (HomeTab) -> Unit,
+    onTabsFocused: (Boolean) -> Unit = {},
+) {
+    TopBar(
+        modifier = topBarFade(),
+        tabs = {
+            Box(Modifier.onFocusChanged { state -> onTabsFocused(state.hasFocus) }) {
+                HomeTabs(tab, page, selectOnFocus, onSelect = onSelectTab)
+            }
+        },
+        trailing = { ProfileButton() },
+    )
 }
 
 @Composable

@@ -7,7 +7,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
@@ -46,16 +49,22 @@ private val BAR_FILL = Color.Black.copy(alpha = 0.45f)
 private val RESTING_PILL = Color.White.copy(alpha = 0.22f)
 
 /**
- * The tabs in a translucent capsule, the selected one on a light pill. Like every TV tab row,
- * moving focus onto a tab switches to it, so focus coming up from the page always lands on the
- * selected tab, never on whichever tab happens to be closest. Down goes to [page]: the page's list
- * reaches up behind the bar, so Compose's own search doesn't count it as below the tabs.
+ * The tabs in a translucent capsule, the selected one on a light pill. On home ([selectOnFocus]),
+ * like every TV tab row, moving focus onto a tab switches to it; elsewhere a tab is selected with
+ * OK and the pill follows focus. Focus coming up from the page always lands on the selected tab,
+ * never on whichever tab happens to be closest. Down goes to [page]: the page's list reaches up
+ * behind the bar, so Compose's own search doesn't count it as below the tabs.
  */
 @Composable
-fun HomeTabs(selected: HomeTab, page: FocusRequester, onSelect: (HomeTab) -> Unit) {
+fun HomeTabs(selected: HomeTab, page: FocusRequester, selectOnFocus: Boolean, onSelect: (HomeTab) -> Unit) {
     val tabs = HomeTab.entries
     val selectedIndex = tabs.indexOf(selected)
     val selectedTab = remember { FocusRequester() }
+    var focusedIndex by remember { mutableIntStateOf(selectedIndex) }
+    var pillIndex = selectedIndex
+    if (!selectOnFocus) {
+        pillIndex = focusedIndex
+    }
     TabRow(
         selectedTabIndex = selectedIndex,
         containerColor = Color.Transparent,
@@ -63,7 +72,7 @@ fun HomeTabs(selected: HomeTab, page: FocusRequester, onSelect: (HomeTab) -> Uni
         separator = { Spacer(Modifier.width(4.dp)) },
         indicator = { tabPositions, doesTabRowHaveFocus ->
             TabRowDefaults.PillIndicator(
-                currentTabPosition = tabPositions[selectedIndex],
+                currentTabPosition = tabPositions[pillIndex],
                 doesTabRowHaveFocus = doesTabRowHaveFocus,
                 activeColor = Color.White,
                 inactiveColor = RESTING_PILL,
@@ -75,14 +84,20 @@ fun HomeTabs(selected: HomeTab, page: FocusRequester, onSelect: (HomeTab) -> Uni
             .background(BAR_FILL, CircleShape)
             .padding(4.dp),
     ) {
-        for (tab in tabs) {
+        tabs.forEachIndexed { index, tab ->
             var tabModifier: Modifier = Modifier.focusProperties { down = page }
             if (tab == selected) {
                 tabModifier = tabModifier.focusRequester(selectedTab)
             }
             Tab(
                 selected = tab == selected,
-                onFocus = { onSelect(tab) },
+                onFocus = {
+                    focusedIndex = index
+                    if (selectOnFocus) {
+                        onSelect(tab)
+                    }
+                },
+                onClick = { onSelect(tab) },
                 colors = tabColors(),
                 modifier = tabModifier,
             ) {
