@@ -25,8 +25,6 @@ import com.letsmoe.otter.tv.ui.components.FullBleedBackdrop
 import com.letsmoe.otter.tv.ui.components.HeroRowsPage
 import com.letsmoe.otter.tv.ui.components.LANDSCAPE_CARD_WIDTH
 import com.letsmoe.otter.tv.ui.components.PageRow
-import com.letsmoe.otter.tv.ui.components.PreviewInfo
-import com.letsmoe.otter.tv.ui.components.rememberRowPreview
 import com.letsmoe.otter.tv.ui.components.TopBar
 import com.letsmoe.otter.tv.ui.home.ActorRow
 import com.letsmoe.otter.tv.ui.home.topBarFade
@@ -163,13 +161,12 @@ private fun relatedRows(rails: RailsState, cast: List<ActorItem>, navigation: Ti
     return rows
 }
 
-/** Captioned cards that preview their trailer when focus rests on them, with the title's info below the row. */
+/** Captioned cards that grow into a trailer preview with the title's details when focus rests on them. */
 @Composable
 private fun RailRow(title: String, items: List<RailItem>, onOpenItem: (RailItem) -> Unit) {
-    val preview = rememberRowPreview()
-    CardRow(title, below = { PreviewInfo(preview.item) }) {
+    CardRow(title) {
         items(items, key = { item -> item.id }) { item ->
-            CaptionedLandscapeCard(item, LANDSCAPE_CARD_WIDTH, onClick = { onOpenItem(item) }, rowPreview = preview)
+            CaptionedLandscapeCard(item, LANDSCAPE_CARD_WIDTH, onClick = { onOpenItem(item) })
         }
     }
 }

@@ -7,7 +7,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,12 +40,14 @@ private val RESTING_PILL = Color.White.copy(alpha = 0.22f)
 
 /**
  * The tabs in a translucent capsule, the selected one on a light pill. Like every TV tab row,
- * moving focus onto a tab switches to it.
+ * moving focus onto a tab switches to it, so focus coming up from the page always lands on the
+ * selected tab, never on whichever tab happens to be closest.
  */
 @Composable
 fun HomeTabs(selected: HomeTab, onSelect: (HomeTab) -> Unit) {
     val tabs = HomeTab.entries
     val selectedIndex = tabs.indexOf(selected)
+    val selectedTab = remember { FocusRequester() }
     TabRow(
         selectedTabIndex = selectedIndex,
         containerColor = Color.Transparent,
@@ -55,13 +61,21 @@ fun HomeTabs(selected: HomeTab, onSelect: (HomeTab) -> Unit) {
                 inactiveColor = RESTING_PILL,
             )
         },
-        modifier = Modifier.background(BAR_FILL, CircleShape).padding(4.dp),
+        modifier = Modifier
+            .focusProperties { onEnter = { selectedTab.requestFocus() } }
+            .background(BAR_FILL, CircleShape)
+            .padding(4.dp),
     ) {
         for (tab in tabs) {
+            var tabModifier: Modifier = Modifier
+            if (tab == selected) {
+                tabModifier = Modifier.focusRequester(selectedTab)
+            }
             Tab(
                 selected = tab == selected,
                 onFocus = { onSelect(tab) },
                 colors = tabColors(),
+                modifier = tabModifier,
             ) {
                 TabLabel(tab)
             }

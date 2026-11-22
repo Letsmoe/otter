@@ -1,13 +1,8 @@
 package com.letsmoe.otter.tv.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +24,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -37,44 +32,23 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import com.letsmoe.otter.tv.theme.TvColors
-import com.letsmoe.otter.tv.theme.TvSpacing
 import com.letsmoe.otter.tv.theme.TvType
 import com.letsmoe.otter.ui.media.RailItem
 import kotlinx.coroutines.delay
 
-// Focus rests this long on a card before it widens into a preview.
+// Focus rests this long on a card before it grows into a preview.
 private const val PREVIEW_DELAY_MILLISECONDS = 1_500L
 private const val PREVIEW_ASPECT = 16f / 9f
+// A landscape card grows to this many times its size in both directions.
+private const val LANDSCAPE_PREVIEW_SCALE = 2f
 private val PREVIEW_LOGO_MAX_WIDTH = 190.dp
 private val PREVIEW_LOGO_MAX_HEIGHT = 60.dp
-private val PREVIEW_INFO_WIDTH = 560.dp
-
-/** Which card of a row is previewing, so the row can show that title's facts and description below. */
-class RowPreview {
-    var item by mutableStateOf<RailItem?>(null)
-        private set
-
-    fun start(previewed: RailItem) {
-        item = previewed
-    }
-
-    /** Ends [previewed]'s preview; a later card's preview that already started stays. */
-    fun end(previewed: RailItem) {
-        if (item == previewed) {
-            item = null
-        }
-    }
-}
-
-@Composable
-fun rememberRowPreview(): RowPreview {
-    return remember { RowPreview() }
-}
+private const val PREVIEW_OVERVIEW_MAX_LINES = 3
 
 /**
- * A title card that, once focus rests on it, widens to 16:9 at the same height and plays the
- * trailer with the title's logo over it. [resting] is the card's usual inside. [rowPreview] hears
- * about the preview when the row shows the title's info below it.
+ * A title card that, once focus rests on it, grows into a preview playing the trailer with the
+ * title's logo over it: a landscape card to twice its size, a poster to 16:9 at its height.
+ * [resting] is the card's usual inside; [below] goes under the card and knows whether it previews.
  */
 @Composable
 fun PreviewCard(
@@ -83,57 +57,62 @@ fun PreviewCard(
     restingHeight: Dp,
     onFocus: () -> Unit,
     onClick: () -> Unit,
-    rowPreview: RowPreview? = null,
+    below: @Composable (previewing: Boolean) -> Unit = {},
     resting: @Composable () -> Unit,
 ) {
     var focused by remember { mutableStateOf(false) }
     val previewing = rememberPreviewing(focused, canPreview(item))
-    ReportPreview(item, previewing, rowPreview)
-    val width by animateDpAsState(cardWidth(restingWidth, restingHeight, previewing), label = "previewCardWidth")
-    FocusableSurface(
-        onClick = onClick,
-        shape = CARD_SHAPE,
-        focusedScale = focusedScaleFor(previewing),
-        modifier = Modifier
-            .width(width)
-            .height(restingHeight)
-            .onFocusChanged { state ->
-                focused = state.isFocused
-                if (state.isFocused) {
-                    onFocus()
+    val size = cardSize(restingWidth, restingHeight, previewing)
+    val width by animateDpAsState(size.width, label = "previewCardWidth")
+    val height by animateDpAsState(size.height, label = "previewCardHeight")
+    Column {
+        FocusableSurface(
+            onClick = onClick,
+            shape = CARD_SHAPE,
+            focusedScale = focusedScaleFor(previewing),
+            modifier = Modifier
+                .width(width)
+                .height(height)
+                .onFocusChanged { state ->
+                    focused = state.isFocused
+                    if (state.isFocused) {
+                        onFocus()
+                    }
+                },
+        ) {
+            Crossfade(previewing, label = "previewCardContent") { showPreview ->
+                if (showPreview) {
+                    PreviewContent(item)
+                } else {
+                    resting()
                 }
-            },
-    ) {
-        Crossfade(previewing, label = "previewCardContent") { showPreview ->
-            if (showPreview) {
-                PreviewContent(item)
-            } else {
-                resting()
             }
         }
+        below(previewing)
     }
 }
 
-/** A 16:9 [PreviewCard] of [width] with the title and a second line under it. */
+/**
+ * A 16:9 [PreviewCard] of [width] with the title and a second line under it; while it previews,
+ * the title's facts and description instead.
+ */
 @Composable
-fun CaptionedLandscapeCard(
-    item: RailItem,
-    width: Dp,
-    onClick: () -> Unit,
-    rowPreview: RowPreview? = null,
-) {
-    Column {
-        PreviewCard(
-            item,
-            restingWidth = width,
-            restingHeight = width * 9f / 16f,
-            onFocus = {},
-            onClick = onClick,
-            rowPreview = rowPreview,
-        ) {
-            LandscapeCardContent(item)
-        }
-        CardCaption(item, width)
+fun CaptionedLandscapeCard(item: RailItem, width: Dp, onClick: () -> Unit) {
+    PreviewCard(
+        item,
+        restingWidth = width,
+        restingHeight = width * 9f / 16f,
+        onFocus = {},
+        onClick = onClick,
+        below = { previewing ->
+            if (previewing) {
+                PreviewDetails(item, width * LANDSCAPE_PREVIEW_SCALE)
+            } else {
+                CardCaption(item, width)
+            }
+        },
+    ) {
+        LandscapeCardContent(item)
     }
 }
 
@@ -156,31 +135,19 @@ private fun rememberPreviewing(focused: Boolean, allowed: Boolean): Boolean {
     return previewing
 }
 
-@Composable
-private fun ReportPreview(item: RailItem, previewing: Boolean, rowPreview: RowPreview?) {
-    if (rowPreview == null) {
-        return
-    }
-    LaunchedEffect(item, previewing) {
-        if (previewing) {
-            rowPreview.start(item)
-        } else {
-            rowPreview.end(item)
-        }
-    }
-    DisposableEffect(item) {
-        onDispose { rowPreview.end(item) }
-    }
-}
+private class CardSize(val width: Dp, val height: Dp)
 
-private fun cardWidth(restingWidth: Dp, restingHeight: Dp, previewing: Boolean): Dp {
+private fun cardSize(restingWidth: Dp, restingHeight: Dp, previewing: Boolean): CardSize {
     if (!previewing) {
-        return restingWidth
+        return CardSize(restingWidth, restingHeight)
     }
-    return maxOf(restingWidth, restingHeight * PREVIEW_ASPECT)
+    if (restingWidth > restingHeight) {
+        return CardSize(restingWidth * LANDSCAPE_PREVIEW_SCALE, restingHeight * LANDSCAPE_PREVIEW_SCALE)
+    }
+    return CardSize(restingHeight * PREVIEW_ASPECT, restingHeight)
 }
 
-// A widened card growing like a poster would cover its neighbours.
+// A grown card scaling up like a resting one would cover its neighbours.
 private fun focusedScaleFor(previewing: Boolean): Float {
     if (previewing) {
         return 1.03f
@@ -235,61 +202,42 @@ private fun previewImage(item: RailItem): String? {
     return item.posterUrl
 }
 
-/** The previewed title's facts and description under a row; slides open while a card previews. */
+/** Under a previewing card: the title, its facts line and the description. */
 @Composable
-fun PreviewInfo(item: RailItem?) {
-    // Kept through the closing animation, after the preview already ended.
-    val lastItem = remember { mutableStateOf<RailItem?>(null) }
-    if (item != null) {
-        lastItem.value = item
-    }
-    AnimatedVisibility(
-        visible = item != null,
-        enter = expandVertically() + fadeIn(),
-        exit = shrinkVertically() + fadeOut(),
-    ) {
-        val shown = lastItem.value ?: return@AnimatedVisibility
-        PreviewInfoText(shown)
-    }
-}
-
-@Composable
-private fun PreviewInfoText(item: RailItem) {
+fun PreviewDetails(item: RailItem, width: Dp) {
     val extras by rememberTitleExtras(item.id)
     Column(
-        modifier = Modifier
-            .padding(start = TvSpacing.screenHorizontal, top = 2.dp, bottom = 6.dp)
-            .width(PREVIEW_INFO_WIDTH),
+        modifier = Modifier.width(width).padding(top = 10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(previewFacts(item, extras), fontSize = TvType.body, color = TvColors.secondaryContent, maxLines = 1)
+        Text(item.title, fontSize = TvType.body, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(previewFacts(item, extras), fontSize = TvType.caption, fontWeight = FontWeight.SemiBold, color = TvColors.secondaryContent, maxLines = 1, overflow = TextOverflow.Ellipsis)
         val overview = extras?.overview
         if (overview != null) {
             Text(
                 overview,
-                fontSize = TvType.body,
-                lineHeight = 19.sp,
+                fontSize = TvType.detail,
+                lineHeight = 16.sp,
                 color = Color.White.copy(alpha = 0.82f),
-                maxLines = 2,
+                maxLines = PREVIEW_OVERVIEW_MAX_LINES,
                 overflow = TextOverflow.Ellipsis,
             )
         }
     }
 }
 
-// "Comedy · Crime  ·  2026  ·  1h 57m", or the season count for a series.
+// "Comedy, Crime  ·  2026  ·  1h 57m  ·  ★ 7.4", with the season count for a series.
 private fun previewFacts(item: RailItem, extras: TitleExtras?): String {
     val parts = mutableListOf<String>()
     if (extras != null && extras.genres.isNotEmpty()) {
-        parts.add(extras.genres.take(2).joinToString(" · "))
+        parts.add(extras.genres.take(2).joinToString(", "))
     }
     val year = item.year
     if (year != null) {
         parts.add(year.toString())
     }
-    val length = extras?.lengthLabel(item.mediaType)
-    if (length != null) {
-        parts.add(length)
+    if (extras != null) {
+        parts.addAll(listOfNotNull(extras.lengthLabel(item.mediaType), extras.ratingLabel()))
     }
     return parts.joinToString("  ·  ")
 }

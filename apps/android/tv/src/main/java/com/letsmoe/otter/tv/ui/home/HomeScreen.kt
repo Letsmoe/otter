@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.graphics.Brush
@@ -56,31 +57,36 @@ import kotlinx.coroutines.delay
 // Rows wait this long for the featured title, so focus starts on its buttons rather than a card.
 private const val FEATURED_WAIT_MILLISECONDS = 3_000L
 
-/** Home: the Search, Movies and Shows tabs in the top bar over the selected one. */
+/** Home: the Movies, Shows and Search tabs in the top bar over the selected one. */
 @Composable
 fun HomeScreen(onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> Unit) {
     var tab by rememberSaveable { mutableStateOf(HomeTab.MOVIES) }
+    var tabsFocused by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxSize()) {
         key(tab) {
-            TabContent(tab, onOpenItem, onOpenPerson)
+            // A tab switched to from the tab bar leaves focus there.
+            TabContent(tab, takeFocus = !tabsFocused, onOpenItem, onOpenPerson)
         }
         TopBar(
             modifier = topBarFade(),
-            showWordmark = false,
-            tabs = { HomeTabs(tab, onSelect = { selected -> tab = selected }) },
+            tabs = {
+                Box(Modifier.onFocusChanged { state -> tabsFocused = state.hasFocus }) {
+                    HomeTabs(tab, onSelect = { selected -> tab = selected })
+                }
+            },
             trailing = { ProfileButton() },
         )
     }
 }
 
 @Composable
-private fun TabContent(tab: HomeTab, onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> Unit) {
+private fun TabContent(tab: HomeTab, takeFocus: Boolean, onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> Unit) {
     val mediaType = tab.mediaType
     if (mediaType == null) {
         SearchScreen(onOpenItem)
         return
     }
-    TitlesHome(mediaType, onOpenItem, onOpenPerson)
+    TitlesHome(mediaType, takeFocus, onOpenItem, onOpenPerson)
 }
 
 /** Rows scroll under the top bar; the fade keeps it readable over them. */
@@ -90,7 +96,7 @@ fun topBarFade(): Modifier {
 
 /** One home category (movies or shows): the hero cycling through featured titles, then the rows. */
 @Composable
-fun TitlesHome(mediaType: MediaType, onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> Unit) {
+fun TitlesHome(mediaType: MediaType, takeFocus: Boolean, onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> Unit) {
     val viewModel = viewModel(key = "tv-titles-$mediaType") { TitlesPageViewModel(mediaType) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     // Back from a title or the player (same activity, no resume), Continue Watching and My List should be current.
@@ -110,7 +116,7 @@ fun TitlesHome(mediaType: MediaType, onOpenItem: (RailItem) -> Unit, onOpenPerso
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Bottom),
             ) {
                 HeroInfo(carousel.current)
-                FeaturedActions(carousel, actions)
+                FeaturedActions(carousel, actions, takeFocus)
             }
             CarouselDots(carousel, Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp))
         }
@@ -138,16 +144,20 @@ private fun rowsOnceFeaturedArrives(mediaType: MediaType, state: TitlesPageState
 /**
  * More info and My List for the carousel's current title; left on More info and right on My List
  * move through the carousel. Focus starts here once, when the featured title first arrives; it
- * reloads on resume and may change, which must not pull focus back from the rows.
+ * reloads on resume and may change, which must not pull focus back from the rows. Without
+ * [takeFocus] (the tab bar has it), focus stays where it is.
  */
 @Composable
-private fun FeaturedActions(carousel: HeroCarousel, actions: RowActions) {
+private fun FeaturedActions(carousel: HeroCarousel, actions: RowActions, takeFocus: Boolean) {
     val current = carousel.current ?: return
     val openButton = remember { FocusRequester() }
     var focusedOnce by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        if (!focusedOnce) {
-            focusedOnce = true
+        if (focusedOnce) {
+            return@LaunchedEffect
+        }
+        focusedOnce = true
+        if (takeFocus) {
             openButton.requestFocus()
         }
     }

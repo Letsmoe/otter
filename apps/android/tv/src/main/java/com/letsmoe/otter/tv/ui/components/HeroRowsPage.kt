@@ -19,15 +19,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 
 // Rows below the first scroll to just under the top bar.
 private val ROWS_TOP_LINE = 56.dp
 val ROW_SPACING = 12.dp
 // The backdrop moves at this share of the scroll speed: the parallax.
 private const val PARALLAX_FACTOR = 0.5f
+private const val GROW_SETTLE_MILLISECONDS = 250L
 // Focus is in the hero; rows count from 0.
 private const val HERO_FOCUSED = -1
 
@@ -51,7 +54,9 @@ fun HeroRowsPage(
 ) {
     val listState = rememberLazyListState()
     var focusedRow by remember { mutableIntStateOf(HERO_FOCUSED) }
+    var focusedRowResizes by remember { mutableIntStateOf(0) }
     ScrollFocusedRowIntoPlace(listState, focusedRow)
+    KeepGrownRowOnScreen(listState, focusedRow, focusedRowResizes)
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val heroHeight = maxHeight - firstRowSpace
         backdrop(Modifier.parallax(listState, heroHeight))
@@ -70,7 +75,14 @@ fun HeroRowsPage(
                 }
                 rows.forEachIndexed { index, row ->
                     item(key = row.key) {
-                        Box(Modifier.reportFocus(index) { focusedRow = it }) {
+                        val rowModifier = Modifier
+                            .reportFocus(index) { focusedRow = it }
+                            .onSizeChanged {
+                                if (index == focusedRow) {
+                                    focusedRowResizes++
+                                }
+                            }
+                        Box(rowModifier) {
                             row.content()
                         }
                     }
@@ -99,6 +111,29 @@ private fun ScrollFocusedRowIntoPlace(listState: LazyListState, focusedRow: Int)
         // Item 0 is the hero, so row n is item n + 1; a negative offset leaves room above it.
         listState.animateScrollToItem(focusedRow + 1, -topLine)
     }
+}
+
+/**
+ * A card growing into a preview makes its row taller; when the row then runs off the bottom of
+ * the screen, it moves up under the top bar like a focused later row. Shrinking back moves nothing.
+ */
+@Composable
+private fun KeepGrownRowOnScreen(listState: LazyListState, focusedRow: Int, resizes: Int) {
+    val topLine = with(LocalDensity.current) { ROWS_TOP_LINE.roundToPx() }
+    LaunchedEffect(resizes) {
+        // The card grows in an animation; act once it has settled, not on every frame of it.
+        delay(GROW_SETTLE_MILLISECONDS)
+        if (focusedRow == HERO_FOCUSED || !rowRunsOffScreen(listState, focusedRow + 1)) {
+            return@LaunchedEffect
+        }
+        listState.animateScrollToItem(focusedRow + 1, -topLine)
+    }
+}
+
+private fun rowRunsOffScreen(listState: LazyListState, itemIndex: Int): Boolean {
+    val layout = listState.layoutInfo
+    val row = layout.visibleItemsInfo.firstOrNull { item -> item.index == itemIndex } ?: return false
+    return row.offset + row.size > layout.viewportEndOffset
 }
 
 // A page whose first screen shows only the hero (a movie) scrolls its first row up like any other.
