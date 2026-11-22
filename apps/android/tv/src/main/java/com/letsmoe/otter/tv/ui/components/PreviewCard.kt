@@ -38,17 +38,16 @@ import kotlinx.coroutines.delay
 
 // Focus rests this long on a card before it grows into a preview.
 private const val PREVIEW_DELAY_MILLISECONDS = 1_500L
-private const val PREVIEW_ASPECT = 16f / 9f
-// A landscape card grows to this many times its size in both directions.
-private const val LANDSCAPE_PREVIEW_SCALE = 2f
+// A previewing card grows to this many times its size in both directions.
+private const val PREVIEW_SCALE = 2f
 private val PREVIEW_LOGO_MAX_WIDTH = 190.dp
 private val PREVIEW_LOGO_MAX_HEIGHT = 60.dp
 private const val PREVIEW_OVERVIEW_MAX_LINES = 3
 
 /**
- * A title card that, once focus rests on it, grows into a preview playing the trailer with the
- * title's logo over it: a landscape card to twice its size, a poster to 16:9 at its height.
- * [resting] is the card's usual inside; [below] goes under the card and knows whether it previews.
+ * A title card that, once focus rests on it, grows to twice its size and plays the trailer with
+ * the title's logo over it. [resting] is the card's usual inside; [below] goes under the card and
+ * knows whether it previews.
  */
 @Composable
 fun PreviewCard(
@@ -92,27 +91,22 @@ fun PreviewCard(
     }
 }
 
-/**
- * A 16:9 [PreviewCard] of [width] with the title and a second line under it; while it previews,
- * the title's facts and description instead.
- */
+/** A 2:3 poster [PreviewCard] of [width]; while it previews, the title's details show under it. */
 @Composable
-fun CaptionedLandscapeCard(item: RailItem, width: Dp, onClick: () -> Unit) {
+fun PosterPreviewCard(item: RailItem, width: Dp, onClick: () -> Unit) {
     PreviewCard(
         item,
         restingWidth = width,
-        restingHeight = width * 9f / 16f,
+        restingHeight = width * 3f / 2f,
         onFocus = {},
         onClick = onClick,
         below = { previewing ->
             if (previewing) {
-                PreviewDetails(item, width * LANDSCAPE_PREVIEW_SCALE)
-            } else {
-                CardCaption(item, width)
+                PreviewDetails(item, width * PREVIEW_SCALE)
             }
         },
     ) {
-        LandscapeCardContent(item)
+        PosterCardContent(item)
     }
 }
 
@@ -141,10 +135,7 @@ private fun cardSize(restingWidth: Dp, restingHeight: Dp, previewing: Boolean): 
     if (!previewing) {
         return CardSize(restingWidth, restingHeight)
     }
-    if (restingWidth > restingHeight) {
-        return CardSize(restingWidth * LANDSCAPE_PREVIEW_SCALE, restingHeight * LANDSCAPE_PREVIEW_SCALE)
-    }
-    return CardSize(restingHeight * PREVIEW_ASPECT, restingHeight)
+    return CardSize(restingWidth * PREVIEW_SCALE, restingHeight * PREVIEW_SCALE)
 }
 
 // A grown card scaling up like a resting one would cover its neighbours.
@@ -155,7 +146,7 @@ private fun focusedScaleFor(previewing: Boolean): Float {
     return 1.08f
 }
 
-/** The backdrop, then the trailer over it once its first frame is there, and the logo at the bottom left. */
+/** The poster, then the trailer cropped over it once its first frame is there, and the logo at the bottom left. */
 @Composable
 private fun PreviewContent(item: RailItem) {
     val extras by rememberTitleExtras(item.id)
@@ -194,12 +185,13 @@ private fun alphaFor(visible: Boolean): Float {
     return 0f
 }
 
+// Previews are portrait like the cards, so the poster fits them; the backdrop is the fallback.
 private fun previewImage(item: RailItem): String? {
-    val backdrop = item.backdropUrl
-    if (backdrop != null) {
-        return backdrop
+    val poster = item.posterUrl
+    if (poster != null) {
+        return poster
     }
-    return item.posterUrl
+    return item.backdropUrl
 }
 
 /** Under a previewing card: the title, its facts line and the description. */

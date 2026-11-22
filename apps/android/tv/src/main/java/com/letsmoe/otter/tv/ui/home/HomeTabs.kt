@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,10 +42,11 @@ private val RESTING_PILL = Color.White.copy(alpha = 0.22f)
 /**
  * The tabs in a translucent capsule, the selected one on a light pill. Like every TV tab row,
  * moving focus onto a tab switches to it, so focus coming up from the page always lands on the
- * selected tab, never on whichever tab happens to be closest.
+ * selected tab, never on whichever tab happens to be closest. Down goes to [page]: the page's list
+ * reaches up behind the bar, so Compose's own search doesn't count it as below the tabs.
  */
 @Composable
-fun HomeTabs(selected: HomeTab, onSelect: (HomeTab) -> Unit) {
+fun HomeTabs(selected: HomeTab, page: FocusRequester, onSelect: (HomeTab) -> Unit) {
     val tabs = HomeTab.entries
     val selectedIndex = tabs.indexOf(selected)
     val selectedTab = remember { FocusRequester() }
@@ -62,14 +64,15 @@ fun HomeTabs(selected: HomeTab, onSelect: (HomeTab) -> Unit) {
             )
         },
         modifier = Modifier
-            .focusProperties { onEnter = { selectedTab.requestFocus() } }
+            // A focus group that enters on the selected tab.
+            .focusRestorer(selectedTab)
             .background(BAR_FILL, CircleShape)
             .padding(4.dp),
     ) {
         for (tab in tabs) {
-            var tabModifier: Modifier = Modifier
+            var tabModifier: Modifier = Modifier.focusProperties { down = page }
             if (tab == selected) {
-                tabModifier = Modifier.focusRequester(selectedTab)
+                tabModifier = tabModifier.focusRequester(selectedTab)
             }
             Tab(
                 selected = tab == selected,

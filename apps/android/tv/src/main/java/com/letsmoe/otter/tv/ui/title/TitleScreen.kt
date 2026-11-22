@@ -17,13 +17,13 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.letsmoe.otter.graphql.type.MediaType
-import com.letsmoe.otter.tv.ui.components.CAPTIONED_ROW_SPACE
-import com.letsmoe.otter.tv.ui.components.CaptionedLandscapeCard
 import com.letsmoe.otter.tv.ui.components.CardRow
+import com.letsmoe.otter.tv.ui.components.POSTER_ROW_SPACE
+import com.letsmoe.otter.tv.ui.components.PosterPreviewCard
+import com.letsmoe.otter.tv.ui.components.REGULAR_POSTER_WIDTH
 import com.letsmoe.otter.tv.ui.components.FailedNotice
 import com.letsmoe.otter.tv.ui.components.FullBleedBackdrop
 import com.letsmoe.otter.tv.ui.components.HeroRowsPage
-import com.letsmoe.otter.tv.ui.components.LANDSCAPE_CARD_WIDTH
 import com.letsmoe.otter.tv.ui.components.PageRow
 import com.letsmoe.otter.tv.ui.components.TopBar
 import com.letsmoe.otter.tv.ui.home.ActorRow
@@ -48,7 +48,7 @@ import com.letsmoe.otter.ui.title.seriesPlayLabel
 import com.letsmoe.otter.vpn.VpnStatusStore
 
 // Under a movie's hero: More Like This. Under a series' hero: the seasons and episodes.
-private val MOVIE_FIRST_ROW_SPACE = CAPTIONED_ROW_SPACE
+private val MOVIE_FIRST_ROW_SPACE = POSTER_ROW_SPACE
 private val SERIES_FIRST_ROW_SPACE = 196.dp
 
 /** What a title page does with what's selected on it. */
@@ -166,7 +166,7 @@ private fun relatedRows(rails: RailsState, cast: List<ActorItem>, navigation: Ti
 private fun RailRow(title: String, items: List<RailItem>, onOpenItem: (RailItem) -> Unit) {
     CardRow(title) {
         items(items, key = { item -> item.id }) { item ->
-            CaptionedLandscapeCard(item, LANDSCAPE_CARD_WIDTH, onClick = { onOpenItem(item) })
+            PosterPreviewCard(item, REGULAR_POSTER_WIDTH, onClick = { onOpenItem(item) })
         }
     }
 }

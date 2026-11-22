@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -39,7 +40,7 @@ import com.adamglin.phosphoricons.fill.Info
 import com.letsmoe.otter.graphql.type.MediaType
 import com.letsmoe.otter.profiles.ProfileSession
 import com.letsmoe.otter.tv.theme.TvSpacing
-import com.letsmoe.otter.tv.ui.components.CAPTIONED_ROW_SPACE
+import com.letsmoe.otter.tv.ui.components.POSTER_ROW_SPACE
 import com.letsmoe.otter.tv.ui.components.HeroRowsPage
 import com.letsmoe.otter.tv.ui.components.PillButton
 import com.letsmoe.otter.tv.ui.components.ProfileButton
@@ -62,16 +63,20 @@ private const val FEATURED_WAIT_MILLISECONDS = 3_000L
 fun HomeScreen(onOpenItem: (RailItem) -> Unit, onOpenPerson: (String) -> Unit) {
     var tab by rememberSaveable { mutableStateOf(HomeTab.MOVIES) }
     var tabsFocused by remember { mutableStateOf(false) }
+    val page = remember { FocusRequester() }
     Box(Modifier.fillMaxSize()) {
         key(tab) {
-            // A tab switched to from the tab bar leaves focus there.
-            TabContent(tab, takeFocus = !tabsFocused, onOpenItem, onOpenPerson)
+            // Down from the tab bar returns to what had focus here, or the first thing that can take it.
+            Box(Modifier.fillMaxSize().focusRequester(page).focusRestorer()) {
+                // A tab switched to from the tab bar leaves focus there.
+                TabContent(tab, takeFocus = !tabsFocused, onOpenItem, onOpenPerson)
+            }
         }
         TopBar(
             modifier = topBarFade(),
             tabs = {
                 Box(Modifier.onFocusChanged { state -> tabsFocused = state.hasFocus }) {
-                    HomeTabs(tab, onSelect = { selected -> tab = selected })
+                    HomeTabs(tab, page, onSelect = { selected -> tab = selected })
                 }
             },
             trailing = { ProfileButton() },
@@ -106,7 +111,7 @@ fun TitlesHome(mediaType: MediaType, takeFocus: Boolean, onOpenItem: (RailItem) 
     val actions = RowActions(onOpenItem = onOpenItem, onOpenPerson = onOpenPerson)
     val rows = rowsOnceFeaturedArrives(mediaType, state)
     HeroRowsPage(
-        firstRowSpace = CAPTIONED_ROW_SPACE,
+        firstRowSpace = POSTER_ROW_SPACE,
         rows = homePageRows(rows, state.actors, actions),
         backdrop = { modifier -> HeroBackdrop(carousel.current, modifier) },
     ) {

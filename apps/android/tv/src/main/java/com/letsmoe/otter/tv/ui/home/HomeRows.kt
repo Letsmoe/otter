@@ -5,13 +5,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import com.letsmoe.otter.tv.theme.TvSpacing
 import com.letsmoe.otter.tv.ui.components.ActorCard
-import com.letsmoe.otter.tv.ui.components.CaptionedLandscapeCard
 import com.letsmoe.otter.tv.ui.components.CardRow
-import com.letsmoe.otter.tv.ui.components.LANDSCAPE_CARD_WIDTH
 import com.letsmoe.otter.tv.ui.components.PageRow
-import com.letsmoe.otter.tv.ui.components.PosterCardContent
-import com.letsmoe.otter.tv.ui.components.PreviewCard
+import com.letsmoe.otter.tv.ui.components.PosterPreviewCard
 import com.letsmoe.otter.tv.ui.components.RANK_NUMBER_WIDTH
+import com.letsmoe.otter.tv.ui.components.REGULAR_POSTER_WIDTH
 import com.letsmoe.otter.tv.ui.components.TOP_TEN_POSTER_WIDTH
 import com.letsmoe.otter.tv.ui.components.TopTenCard
 import com.letsmoe.otter.ui.components.ActorItem
@@ -55,28 +53,17 @@ private fun PosterRowContent(row: PosterRow, actions: RowActions) {
 
 /**
  * [position] is the card's 1-based place in its row; the Top 10 row shows it as the rank. Every
- * other row is landscape cards captioned below; cards preview their trailer when focus rests on them.
+ * row is posters that grow into a trailer preview with details when focus rests on them.
  */
 @Composable
 private fun TitleCardFor(style: RailStyle, item: RailItem, position: Int, actions: RowActions) {
     if (style == RailStyle.TOP_TEN) {
-        TopTenCard(position) { TopTenPoster(item, actions) }
+        TopTenCard(position, posterHeight = TOP_TEN_POSTER_WIDTH * 3f / 2f) {
+            PosterPreviewCard(item, TOP_TEN_POSTER_WIDTH, onClick = { actions.onOpenItem(item) })
+        }
         return
     }
-    CaptionedLandscapeCard(item, LANDSCAPE_CARD_WIDTH, onClick = { actions.onOpenItem(item) })
-}
-
-@Composable
-private fun TopTenPoster(item: RailItem, actions: RowActions) {
-    PreviewCard(
-        item,
-        restingWidth = TOP_TEN_POSTER_WIDTH,
-        restingHeight = TOP_TEN_POSTER_WIDTH * 3f / 2f,
-        onFocus = {},
-        onClick = { actions.onOpenItem(item) },
-    ) {
-        PosterCardContent(item)
-    }
+    PosterPreviewCard(item, REGULAR_POSTER_WIDTH, onClick = { actions.onOpenItem(item) })
 }
 
 /** A row of round actor portraits. */

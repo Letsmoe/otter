@@ -96,45 +96,16 @@ fun WideCardContent(item: RailItem) {
     }
 }
 
-/** A wide card's picture alone (the backdrop, badge and progress), for cards captioned below. */
+/**
+ * A Top 10 [card] (a poster of [posterHeight]) with its place as a large outlined number on its
+ * left, level with the poster's bottom edge even while the card grows into a preview.
+ */
 @Composable
-fun LandscapeCardContent(item: RailItem) {
-    Box(Modifier.fillMaxSize()) {
-        CardImage(wideImage(item), item.title)
-        CardBadge(item.badge, Modifier.align(Alignment.TopStart))
-        CardProgress(item.progress, Modifier.align(Alignment.BottomStart))
-    }
-}
-
-/** The title and a short second line ("S1, E7", "Recently Added", the year) under a landscape card. */
-@Composable
-fun CardCaption(item: RailItem, width: Dp, modifier: Modifier = Modifier) {
-    Column(modifier.width(width).padding(top = 8.dp)) {
-        Text(item.title, fontSize = TvType.detail, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        val secondLine = captionSecondLine(item)
-        if (secondLine != null) {
-            Text(secondLine, fontSize = TvType.caption, color = TvColors.secondaryContent, maxLines = 1, overflow = TextOverflow.Ellipsis)
+fun TopTenCard(rank: Int, posterHeight: Dp, card: @Composable () -> Unit) {
+    Row(verticalAlignment = Alignment.Top) {
+        Box(Modifier.height(posterHeight), contentAlignment = Alignment.BottomStart) {
+            RankNumber(rank.toString())
         }
-    }
-}
-
-private fun captionSecondLine(item: RailItem): String? {
-    val subtitle = item.subtitle
-    if (subtitle != null) {
-        return subtitle
-    }
-    val label = item.label
-    if (label != null) {
-        return label
-    }
-    return item.year?.toString()
-}
-
-/** A Top 10 [card] (a poster) with its place as a large outlined number on its left. */
-@Composable
-fun TopTenCard(rank: Int, card: @Composable () -> Unit) {
-    Row(verticalAlignment = Alignment.Bottom) {
-        RankNumber(rank.toString())
         card()
     }
 }
